@@ -1,0 +1,26 @@
+{
+  "name": "ASSALAM COOP",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:assets": "npx @capacitor/assets generate --androidProject frontend/android --iosProject frontend/ios/App --pwaManifestPath frontend/public/manifest.webmanifest",
+    "cap:assets:android": "npx @capacitor/assets generate --android --androidProject frontend/android",
+    "cap:assets:ios": "npx @capacitor/assets generate --ios --iosProject frontend/ios/App",
+    "cap:assets:pwa": "npx @capacitor/assets generate --pwa --pwaManifestPath frontend/public/manifest.webmanifest",
+    "assets:placeholders": "node scripts/generate-placeholder-assets.mjs",
+    "assets:brand": "node scripts/generate-branded-assets.mjs --force"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/ios": "^6.2.1",
+    "@capacitor/assets": "^3.0.0",
+    "typescript": "^5.9.3"
+  }
+}
