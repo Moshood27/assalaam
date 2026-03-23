@@ -6,7 +6,7 @@ const apiTarget = process.env.VITE_PROXY_TARGET || 'http://localhost:8000'
 export default defineConfig({
     plugins: [vue()],
     // ADD THIS LINE FOR PRODUCTION
-    base: '/',
+    base: '/app/',
     server: {
         host: '0.0.0.0',
         port: 5174,
