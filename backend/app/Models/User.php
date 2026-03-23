@@ -1,0 +1,187 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Scheme;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'address',
+        'device_token',
+        'fcm_token',
+        'password',
+        'branch_id',
+        'membership_number',
+        'balance',
+        'created_at',
+        'is_admin',
+        'is_defaulter',
+        'paystack_customer_code',
+        'dva_account_number',
+        'dva_bank_name',
+        'dva_account_name',
+        'passport_path',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_admin' => 'boolean',
+            'is_defaulter' => 'boolean',
+            'balance' => 'decimal:2',
+        ];
+    }
+
+    public function walletTransactions()
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function contributions()
+    {
+        return $this->hasMany(Contribution::class);
+    }
+
+    public function qardHasans()
+    {
+        return $this->hasMany(\App\Models\QardHasan::class);
+    }
+
+    public function utilityTransactions()
+    {
+        return $this->hasMany(UtilityTransaction::class);
+    }
+
+    public function savingsGoals()
+    {
+        return $this->hasMany(\App\Models\SavingsGoal::class);
+    }
+
+    public function goalBookings()
+    {
+        return $this->hasMany(\App\Models\GoalBooking::class);
+    }
+
+    /**
+     * Compute Savings + Shares totals and 2x eligibility for this user.
+     * Returns array: [savings, shares, base, eligibility]
+     */
+    public function savingsSharesEligibility(): array
+    {
+        // Scheme IDs for Savings and Shares
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id', 'name');
+
+        $savings = 0.0;
+        $shares = 0.0;
+
+        if (isset($schemes['Savings'])) {
+            $savings = (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Savings'])
+                ->sum('amount');
+        }
+        if (isset($schemes['Shares'])) {
+            $shares = (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Shares'])
+                ->sum('amount');
+        }
+
+        $base = round($savings + $shares, 2);
+        $eligibility = round($base * 2, 2);
+
+        return [
+            'savings' => $savings,
+            'shares' => $shares,
+            'base' => $base,
+            'eligibility' => $eligibility,
+        ];
+    }
+
+    /**
+     * Months since the user joined (based on created_at).
+     */
+    public function monthsInSystem(): int
+    {
+        if (!$this->created_at) {
+            return 0;
+        }
+        return Carbon::parse($this->created_at)->diffInMonths(now());
+    }
+
+    /**
+     * Whether the user has any completed loan (status completed or paid >= principal).
+     */
+    public function hasCompletedLoan(): bool
+    {
+        return $this->qardHasans()
+            ->where(function ($q) {
+                $q->where('status', 'completed')
+                  ->orWhereColumn('paid_amount', '>=', 'principal_amount');
+            })
+            ->exists();
+    }
+
+    /**
+     * Policy-aware eligibility for principal amount.
+     * - If first loan (no completed loans): 5% of (Savings + Shares)
+     * - Otherwise: 2x (Savings + Shares)
+     */
+    public function adjustedLoanEligibility(): array
+    {
+        $calc = $this->savingsSharesEligibility();
+        $base = (float) ($calc['base'] ?? 0);
+        $months = $this->monthsInSystem();
+        $hasCompleted = $this->hasCompletedLoan();
+        $isFirstLoan = !$hasCompleted;
+
+        $adjusted = $isFirstLoan ? round($base * 0.05, 2) : round($base * 2, 2);
+
+        return array_merge($calc, [
+            'months_in_system' => $months,
+            'is_first_loan' => $isFirstLoan,
+            'eligibility_adjusted' => $adjusted,
+        ]);
+    }
+}

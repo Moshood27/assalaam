@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\ProductResource\Pages;
+use App\Models\Product;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Table;
+
+class ProductResource extends Resource
+{
+    protected static ?string $model = Product::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationGroup = 'Coop Store';
+    protected static ?int $navigationSort = 90;
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('description')
+                    ->rows(3)
+                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('cost_price')
+                    ->label('Cost Price (₦)')
+                    ->required()
+                    ->numeric()
+                    ->minValue(0.01)
+                    ->prefix('₦')
+                    ->step('0.01'),
+                Forms\Components\TextInput::make('markup_percent')
+                    ->label('Markup %')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
+                    ->step('0.01')
+                    ->default(10),
+                Forms\Components\TextInput::make('image_url')
+                    ->label('Image URL')
+                    ->columnSpanFull(),
+                Forms\Components\Toggle::make('is_active')
+                    ->label('Active')
+                    ->default(true),
+                Forms\Components\Placeholder::make('selling_price_preview')
+                    ->label('Selling Price (auto)')
+                    ->content(fn ($record, $get) => (function () use ($record, $get) {
+                        $cost = (float) ($get('cost_price') ?? ($record->cost_price ?? 0));
+                        $pct = (float) ($get('markup_percent') ?? ($record->markup_percent ?? 0));
+                        $sp = round($cost * (1 + max(0.0, $pct) / 100.0), 2);
+                        return '₦ ' . number_format($sp, 2);
+                    })()),
+            ])->columns(2);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')->searchable()->wrap()->limit(40),
+                TextColumn::make('cost_price')->label('Cost')->money('ngn', true)->sortable(),
+                TextColumn::make('markup_percent')->label('Markup %')->formatStateUsing(fn ($state) => number_format((float)$state, 2) . '%')->sortable(),
+                TextColumn::make('selling_price')->label('Selling')->money('ngn', true)->sortable(),
+                TextColumn::make('created_at')->since()->label('Created')->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('is_active')->boolean()->label('Active')->alignCenter(),
+            ])
+            ->filters([
+                Tables\Filters\TernaryFilter::make('is_active')->label('Active')
+                    ->trueLabel('Active')->falseLabel('Inactive')->placeholder('All'),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListProducts::route('/'),
+            'create' => Pages\CreateProduct::route('/create'),
+            'edit' => Pages\EditProduct::route('/{record}/edit'),
+        ];
+    }
+}

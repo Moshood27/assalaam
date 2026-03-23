@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Root-level shim to run Laravel Sail from the backend directory
+# This allows commands like: ./vendor/bin/sail artisan key:generate
+set -e
+# Determine the directory of this script (project_root/vendor/bin)
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+# Go to the project root from vendor/bin
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# Change into the Laravel app directory
+cd "$PROJECT_ROOT/backend"
+# Execute the real Sail binary shipped with the Laravel app
+exec sh ./vendor/bin/sail "$@"

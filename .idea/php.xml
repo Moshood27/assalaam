@@ -201,6 +201,30 @@
       <path value="$PROJECT_DIR$/backend/vendor/tijsverkoyen/css-to-inline-styles" />
       <path value="$PROJECT_DIR$/backend/vendor/nunomaduro/collision" />
       <path value="$PROJECT_DIR$/backend/vendor/monolog/monolog" />
+      <path value="$PROJECT_DIR$/backend/vendor/fig/http-message-util" />
+      <path value="$PROJECT_DIR$/backend/vendor/beste/json" />
+      <path value="$PROJECT_DIR$/backend/vendor/beste/in-memory-cache" />
+      <path value="$PROJECT_DIR$/backend/vendor/beste/clock" />
+      <path value="$PROJECT_DIR$/backend/vendor/rize/uri-template" />
+      <path value="$PROJECT_DIR$/backend/vendor/kreait/laravel-firebase" />
+      <path value="$PROJECT_DIR$/backend/vendor/kreait/firebase-tokens" />
+      <path value="$PROJECT_DIR$/backend/vendor/kreait/firebase-php" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/auth" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/longrunning" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/protobuf" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/common-protos" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/grpc-gcp" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/gax" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/cloud-core" />
+      <path value="$PROJECT_DIR$/backend/vendor/google/cloud-storage" />
+      <path value="$PROJECT_DIR$/backend/vendor/grpc/grpc" />
+      <path value="$PROJECT_DIR$/backend/vendor/cuyz/valinor" />
+      <path value="$PROJECT_DIR$/backend/vendor/firebase/php-jwt" />
+      <path value="$PROJECT_DIR$/backend/vendor/lcobucci/jwt" />
+      <path value="$PROJECT_DIR$/backend/vendor/mtdowling/jmespath.php" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/cache-contracts" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/cache" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/var-exporter" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2">

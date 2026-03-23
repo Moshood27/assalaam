@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Filament\Resources\ContributionResource\Pages;
+
+use App\Filament\Resources\ContributionResource;
+use Filament\Actions;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Tables;
+
+class ListContributions extends ListRecords
+{
+    protected static string $resource = ContributionResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getTableHeaderActions(): array
+    {
+        return [
+            Tables\Actions\Action::make('print')
+                ->label('Print')
+                ->icon('heroicon-o-printer')
+                ->extraAttributes(['onclick' => 'window.print()']),
+        ];
+    }
+}
