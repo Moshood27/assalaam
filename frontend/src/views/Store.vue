@@ -65,7 +65,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../http'
 
 const items = ref([])
 const loading = ref(false)
@@ -81,9 +81,8 @@ const load = async (p = 1) => {
   error.value = ''
   try {
     page.value = p
-    const token = localStorage.getItem('token')
-    const { data } = await axios.get(`/api/products?page=${p}&q=${encodeURIComponent(q.value || '')}` , {
-      headers: { Authorization: `Bearer ${token}` }
+    const { data } = await axios.get('/api/products', {
+      params: { page: p, q: q.value || '' }
     })
     const list = Array.isArray(data) ? data : (data?.data || [])
     items.value = list

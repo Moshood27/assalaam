@@ -1,0 +1,26 @@
+diff --git a/node_modules/@capgo/capacitor-native-biometric/android/build.gradle b/node_modules/@capgo/capacitor-native-biometric/android/build.gradle
+index e7bfb85..cb81dff 100644
+--- a/node_modules/@capgo/capacitor-native-biometric/android/build.gradle
++++ b/node_modules/@capgo/capacitor-native-biometric/android/build.gradle
+@@ -12,10 +12,13 @@ buildscript {
+     }
+     dependencies {
+         classpath 'com.android.tools.build:gradle:8.2.1'
++        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20"
++
+     }
+ }
+ 
+ apply plugin: 'com.android.library'
++apply plugin: 'kotlin-android'
+ 
+ android {
+     namespace "ee.forgr.biometric.capacitornativebiometric"
+@@ -46,6 +49,7 @@ repositories {
+ 
+ dependencies {
+     implementation 'androidx.biometric:biometric:1.1.0'
++    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20" 
+     implementation fileTree(dir: 'libs', include: ['*.jar'])
+     implementation project(':capacitor-android')
+     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
