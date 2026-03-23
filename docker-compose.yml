@@ -1,32 +1,26 @@
-version: '3.8'
-
 services:
-  # --- 1. WEB PROXY (Nginx) ---
+  # 1. Internal Nginx (The bridge between Global Proxy and your Code)
   proxy:
     image: nginx:1.25-alpine
     container_name: islamcoop-nginx
     restart: unless-stopped
-#    ports:
-#      - "80:80"
-#      - "443:443"
     volumes:
       - ./backend:/var/www/html
-      - ./frontend/dist:/var/www/html/public/app
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./frontend/dist:/var/www/html/public/app # Your built Vue files
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d # Your routing rules
     networks:
       - islamcoop-network
-      - gateway-network
+      - gateway-network # Joins the Global Proxy network
     depends_on:
       app:
-        condition: service_healthy
+        condition: service_started
 
-  # --- 2. PHP-FPM APP ---
+  # 2. PHP-FPM Application (Laravel)
   app:
     build:
       context: ./backend
-      dockerfile: ../docker/php/Dockerfile
-    container_name: attaqwa-app
+      dockerfile: ../docker/php/Dockerfile # The one we updated with 'intl'
+    container_name: islamcoop-app
     restart: unless-stopped
     working_dir: /var/www/html
     env_file: [ ".env" ]
@@ -34,18 +28,11 @@ services:
       - ./backend:/var/www/html
     networks:
       - islamcoop-network
-      - gateway-network
-    healthcheck:
-      test: ["CMD-SHELL", "php-fpm -t || exit 1"]
-      interval: 30s
-      retries: 3
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_started
 
-  # --- 3. QUEUE WORKER (Crucial for Paystack) ---
+  # 3. Queue Worker (Processes payments and background tasks)
   worker:
     build:
       context: ./backend
@@ -59,50 +46,43 @@ services:
       - ./backend:/var/www/html
     networks:
       - islamcoop-network
-      - gateway-network
     depends_on:
-      app:
-        condition: service_started
+      - app
 
-  # --- 4. DATABASE ---
+  # 4. Database (MySQL 8.4)
   db:
     image: mysql:8.4
-    container_name: attaqwa-db
+    container_name: islamcoop-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
       - islamcoop-db-data:/var/lib/mysql
     networks:
       - islamcoop-network
-      - gateway-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
       interval: 10s
+      timeout: 5s
       retries: 5
 
-  # --- 5. REDIS ---
+  # 5. Redis (Cache and Queue driver)
   redis:
     image: redis:alpine
-    container_name: attaqwa-redis
+    container_name: islamcoop-redis
     restart: unless-stopped
     networks:
       - islamcoop-network
-      - gateway-network
-
-
 
 networks:
-  islamcoop-network:
+  islamcoop-network: # Private internal project network
     driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1350
+  gateway-network: # Shared network with Nginx Proxy Manager
+    external: true
 
 volumes:
   islamcoop-db-data:
-    driver: bridge
-  gateway-network:
-    external: true
+    driver: local
