@@ -99,6 +99,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const base = import.meta?.env?.BASE_URL || '/'
+const basePath = (base && base.endsWith('/')) ? base : `${base}/`
 
 const schemes = ref([])
 const paymentList = ref([])
@@ -143,11 +148,11 @@ const initiatePayment = async () => {
       // Allocate from wallet
       await axios.post('/api/wallet/allocate', { items: paymentList.value })
       alert('Allocation successful!')
-      window.location.assign('/dashboard')
+      router.replace({ name: 'dashboard' })
       return
     }
     // Otherwise, go through Paystack checkout
-    const callback_url = `${window.location.origin}/payment-callback`
+    const callback_url = `${window.location.origin}${basePath}payment-callback`
     const { data } = await axios.post('/api/initiate-payment', { items: paymentList.value, callback_url })
     window.location.href = data.checkout_url
   } catch (e) {

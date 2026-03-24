@@ -109,6 +109,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const base = import.meta?.env?.BASE_URL || '/'
+const basePath = (base && base.endsWith('/')) ? base : `${base}/`
 
 const wallet = ref({ balance: 0, virtual_account: {} })
 const transactions = ref([])
@@ -146,7 +151,7 @@ const loadMore = async () => {
 const initTopup = async () => {
   try {
     loading.value = true
-    const callback_url = `${window.location.origin}/wallet-callback`
+    const callback_url = `${window.location.origin}${basePath}wallet-callback`
     const { data } = await axios.post('/api/wallet/topup/initiate', { amount: Number(topupAmount.value), callback_url })
     window.location.href = data.checkout_url
   } catch (e) {
@@ -175,7 +180,7 @@ const copy = async (text) => {
 
 const goAllocate = () => {
   // Send user to make payment page; they can toggle wallet allocation there
-  window.location.assign('/pay')
+  router.push({ name: 'pay' })
 }
 
 onMounted(loadWallet)
