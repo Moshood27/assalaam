@@ -18,6 +18,7 @@ const VTUHistory = () => import('../views/VTUHistory.vue')
 const Agm = () => import('../views/Agm.vue')
 const AgmSession = () => import('../views/AgmSession.vue')
 const Store = () => import('../views/Store.vue')
+const OrderReceipt = () => import('../views/OrderReceipt.vue')
 const Privacy = () => import('../views/Privacy.vue')
 const Policy = () => import('../views/Policy.vue')
 const Support = () => import('../views/Support.vue')
@@ -39,6 +40,8 @@ const routes = [
   { path: '/settings', name: 'settings', component: Settings, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/store', name: 'store', component: Store, meta: { requiresAuth: true } },
+  { path: '/store/orders', name: 'store.orders', component: () => import('../views/StoreOrders.vue'), meta: { requiresAuth: true } },
+  { path: '/store/orders/:id', name: 'store.order', component: OrderReceipt, meta: { requiresAuth: true } },
   { path: '/goals', name: 'goals', component: () => import('../views/Goals.vue'), meta: { requiresAuth: true } },
   // VTU
   { path: '/vtu', name: 'vtu', component: VTU, meta: { requiresAuth: true } },
