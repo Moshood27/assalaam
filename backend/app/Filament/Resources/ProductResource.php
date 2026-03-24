@@ -44,8 +44,15 @@ class ProductResource extends Resource
                     ->maxValue(100)
                     ->step('0.01')
                     ->default(10),
-                Forms\Components\TextInput::make('image_url')
-                    ->label('Image URL')
+                Forms\Components\FileUpload::make('image_url')
+                    ->label('Image')
+                    ->image()
+                    ->maxSize(1024) // KB
+                    ->disk('public')
+                    ->directory('products')
+                    ->openable()
+                    ->downloadable()
+                    ->imagePreviewHeight('150')
                     ->columnSpanFull(),
                 Forms\Components\Toggle::make('is_active')
                     ->label('Active')

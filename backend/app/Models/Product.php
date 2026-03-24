@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -35,5 +37,27 @@ class Product extends Model
         $price = $cost + ($cost * ($percent / 100));
         // Ensure 2dp string to be consistent with decimal casts
         return number_format($price, 2, '.', '');
+    }
+
+    /**
+     * Ensure the stored image path is exposed as a public URL for the frontend.
+     * Accepts either a full URL, a /storage path, or a disk-relative path like 'products/abc.jpg'.
+     */
+    public function getImageUrlAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        $val = (string) $value;
+        if (Str::startsWith($val, ['http://', 'https://', '/storage/'])) {
+            return $val;
+        }
+        // Treat as a path on the public disk (where Filament uploads by default in this resource)
+        try {
+            return Storage::disk('public')->url($val);
+        } catch (\Throwable $e) {
+            // Fallback to original value if disk/url resolution fails
+            return $val;
+        }
     }
 }
