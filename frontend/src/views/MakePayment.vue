@@ -56,6 +56,7 @@
             <button @click="removeFromList(index)" class="text-rose-400 text-sm">✕</button>
           </div>
         </div>
+        <div ref="summaryEnd"></div>
       </div>
       <div v-else class="card p-6 text-center empty-state">No schemes added yet.</div>
     </div>
@@ -97,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
@@ -113,6 +114,7 @@ const loading = ref(false)
 const isFine = ref(false)
 const payFromWallet = ref(false)
 const walletBalance = ref(0)
+const summaryEnd = ref(null)
 
 const totalAmount = computed(() => paymentList.value.reduce((sum, i) => sum + Number(i.amount || 0), 0))
 
@@ -122,6 +124,12 @@ const addToList = () => {
   const s = schemes.value.find(x => String(x.id) == String(selectedSchemeId.value))
   if (!s) return
   paymentList.value.push({ scheme_id: s.id, scheme_name: s.name, amount: Number(inputAmount.value), category: isFine.value ? 'fine' : 'deposit' })
+  // Smooth scroll to the end of the payment summary after DOM updates
+  nextTick(() => {
+    try {
+      summaryEnd.value?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    } catch (_) {}
+  })
   selectedSchemeId.value = ''
   inputAmount.value = ''
   isFine.value = false
