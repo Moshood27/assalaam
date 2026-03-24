@@ -6,6 +6,7 @@ import axios from 'axios'
 //   e.g. http://localhost or http://10.0.2.2 (Android emulator), without trailing slash.
 const origin = import.meta?.env?.VITE_API_URL || ''
 axios.defaults.baseURL = origin
+const base = import.meta?.env?.BASE_URL || '/'
 
 // Apply a reasonable default timeout; can be overridden via VITE_HTTP_TIMEOUT (ms)
 const timeout = Number(import.meta?.env?.VITE_HTTP_TIMEOUT || 15000)
@@ -36,10 +37,11 @@ axios.interceptors.response.use(
       // Try to redirect if router is available (SPA context)
       try {
         const current = window?.location?.pathname || '/'
-        if (hadAdmin && current.startsWith('/admin')) {
-          window.location.href = '/admin/login'
+        const basePath = (base && base.endsWith('/')) ? base : `${base}/`
+        if (hadAdmin && current.startsWith(`${basePath}admin`)) {
+          window.location.href = `${basePath}admin/login`
         } else {
-          window.location.href = '/login'
+          window.location.href = `${basePath}login`
         }
       } catch (_) {}
     }

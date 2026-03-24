@@ -265,7 +265,9 @@ const load = async () => {
 
 const logout = () => {
   localStorage.removeItem('token')
-  window.location.assign('/login')
+  const base = import.meta?.env?.BASE_URL || '/'
+  const basePath = (base && base.endsWith('/')) ? base : `${base}/`
+  window.location.assign(`${basePath}login`)
 }
 
 const checkZakat = async () => {
