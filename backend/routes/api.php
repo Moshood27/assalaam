@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\AgmController;
 use App\Http\Controllers\Api\GuarantorController;
 use App\Http\Controllers\Api\ZakatController;
+use App\Http\Controllers\Api\AdminProductController;
 
 Route::get('/health', function () {
     return response()
@@ -168,4 +169,11 @@ Route::middleware('auth:sanctum')->prefix('admin/import')->group(function () {
 // Admin VTU endpoints
 Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/vtu')->group(function () {
     Route::get('/transactions', [AdminUtilityController::class, 'transactions']);
+});
+
+// Admin products management (images)
+Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/products')->group(function () {
+    Route::get('/', [AdminProductController::class, 'index']);
+    Route::post('/{id}/image', [AdminProductController::class, 'uploadImage']);
+    Route::delete('/{id}/image', [AdminProductController::class, 'deleteImage']);
 });

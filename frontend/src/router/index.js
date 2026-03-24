@@ -28,6 +28,7 @@ const AdminRegister = () => import('../views/admin/AdminRegister.vue')
 const AdminForgot = () => import('../views/admin/AdminForgotPassword.vue')
 const AdminImports = () => import('../views/admin/AdminImports.vue')
 const AdminVTU = () => import('../views/admin/AdminVTU.vue')
+const AdminProducts = () => import('../views/admin/AdminProducts.vue')
 
 const routes = [
   { path: '/', redirect: '/dashboard' },
@@ -68,6 +69,7 @@ const routes = [
   { path: '/admin/forgot', name: 'admin.forgot', component: AdminForgot, meta: { guest: true } },
   { path: '/admin/imports', name: 'admin.imports', component: AdminImports, meta: { requiresAdmin: true } },
   { path: '/admin/vtu', name: 'admin.vtu', component: AdminVTU, meta: { requiresAdmin: true } },
+  { path: '/admin/products', name: 'admin.products', component: AdminProducts, meta: { requiresAdmin: true } },
 ]
 
 const router = createRouter({
