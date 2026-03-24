@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Scheme;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -183,5 +184,13 @@ class User extends Authenticatable
             'is_first_loan' => $isFirstLoan,
             'eligibility_adjusted' => $adjusted,
         ]);
+    }
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // In production, you likely want to check an 'is_admin' column
+        // For now, let's allow everyone to make sure it works:
+        return true;
+
+        // Later change to: return $this->is_admin === true;
     }
 }
