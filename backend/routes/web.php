@@ -19,22 +19,33 @@ Route::get('/storage/{path}', function (string $path) {
         abort(404);
     }
 
-    if (!Storage::disk('public')->exists($path)) {
-        abort(404);
+    // 1) Prefer files stored on the public disk (storage/app/public)
+    if (Storage::disk('public')->exists($path)) {
+        $mime = Storage::disk('public')->mimeType($path) ?: 'application/octet-stream';
+        $stream = Storage::disk('public')->readStream($path);
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }, 200, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
     }
 
-    $mime = Storage::disk('public')->mimeType($path) ?: 'application/octet-stream';
-    $stream = Storage::disk('public')->readStream($path);
+    // 2) Fallback: support legacy/public uploads under public/<path>
+    $publicFile = public_path($path);
+    if (is_file($publicFile)) {
+        $mime = function_exists('mime_content_type') ? (mime_content_type($publicFile) ?: 'application/octet-stream') : 'application/octet-stream';
+        return response()->file($publicFile, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
+    }
 
-    return response()->stream(function () use ($stream) {
-        fpassthru($stream);
-        if (is_resource($stream)) {
-            fclose($stream);
-        }
-    }, 200, [
-        'Content-Type' => $mime,
-        'Cache-Control' => 'public, max-age=31536000',
-    ]);
+    abort(404);
 })->where('path', '.*');
 
 // Explicit proxy endpoint that always goes through Laravel (bypasses web server static file handling).
