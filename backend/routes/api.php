@@ -41,6 +41,12 @@ Route::prefix('admin')->group(function () {
     Route::post('/forgot-password', [AdminAuthController::class, 'forgotPassword'])->middleware('throttle:login');
 });
 
+// Admin: save push token endpoints (protected)
+Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin')->group(function () {
+    Route::post('/push/token', [ProfileController::class, 'savePushToken']);
+    Route::post('/fcm-token', [ProfileController::class, 'savePushToken']);
+});
+
 // Webhook (public, signature-verified inside controller)
 Route::post('/webhooks/paystack', [WebhookController::class, 'handlePaystack']);
 Route::post('/webhooks/flutterwave', [WebhookController::class, 'handleFlutterwave']);
