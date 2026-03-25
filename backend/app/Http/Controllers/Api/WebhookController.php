@@ -121,17 +121,25 @@ class WebhookController extends Controller
                         ]);
                     }
 
-                    // Best-effort SMS notification to member
+                    // Best-effort SMS + Push notification to member
                     try {
                         $loan = QardHasan::with('user')->find($loanRep->qard_hasan_id);
                         if ($loan && $loan->user) {
                             $remaining = max(0, (float) $loan->principal_amount - (float) $loan->paid_amount);
                             $sms = app(\App\Services\SmsService::class);
+                            $push = app(\App\Services\PushService::class);
                             $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'. Ref: '.($loanRep->reference);
                             $sms->send($loan->user->phone ?? null, $msg);
+                            $push->send($loan->user->device_token ?? null, 'Repayment Received', $msg, [
+                                'type' => 'loan_repayment',
+                                'loan_id' => $loan->id,
+                                'qard_id_string' => $loan->qard_id_string,
+                                'amount' => (float) $loanRep->amount,
+                                'reference' => (string) $loanRep->reference,
+                            ]);
                         }
                     } catch (\Throwable $e) {
-                        // ignore SMS errors
+                        // ignore notification errors
                     }
 
                     return response()->json(['status' => 'success']);
@@ -246,7 +254,7 @@ class WebhookController extends Controller
                     'channel' => $vdChannel,
                 ]);
 
-                // Notify user (non-blocking)
+                // Notify user (non-blocking) + best-effort Push
                 try {
                     $topupUser->notify(new PaymentNotification(
                         title: 'Wallet Top-up Successful',
@@ -255,6 +263,17 @@ class WebhookController extends Controller
                         reference: $reference,
                         source: 'wallet_topup'
                     ));
+
+                    // Fire push notification to device
+                    $push = app(\App\Services\PushService::class);
+                    $fresh = $topupUser->fresh();
+                    $newBal = (float) ($fresh->balance ?? 0);
+                    $push->send($fresh->device_token ?? null, 'Wallet Top-up Successful', 'Your wallet has been credited successfully.', [
+                        'type' => 'wallet_topup',
+                        'amount' => (float) $amountNgn,
+                        'reference' => (string) $reference,
+                        'balance' => $newBal,
+                    ]);
                 } catch (\Throwable $e) {
                     Log::warning('Failed to send wallet top-up notification', [
                         'reference' => $reference,
@@ -298,7 +317,7 @@ class WebhookController extends Controller
                 $contribution->save();
             }
 
-            // Notify user (non-blocking)
+            // Notify user (non-blocking) + best-effort Push
             try {
                 if ($user) {
                     $user->notify(new PaymentNotification(
@@ -308,6 +327,15 @@ class WebhookController extends Controller
                         reference: $reference,
                         source: 'scheme_payment'
                     ));
+
+                    // Fire push notification to device
+                    $push = app(\App\Services\PushService::class);
+                    $push->send($user->device_token ?? null, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
+                        'type' => 'scheme_payment',
+                        'amount' => (float) $expectedTotal,
+                        'reference' => (string) $reference,
+                        'route' => '/dashboard',
+                    ]);
                 }
             } catch (\Throwable $e) {
                 Log::warning('Failed to send scheme payment notification', [
@@ -450,17 +478,25 @@ class WebhookController extends Controller
                 ]);
             }
 
-            // Best-effort SMS notification to member
+            // Best-effort SMS + Push notification to member
             try {
                 $loan = QardHasan::with('user')->find($loanRep->qard_hasan_id);
                 if ($loan && $loan->user) {
                     $remaining = max(0, (float) $loan->principal_amount - (float) $loan->paid_amount);
                     $sms = app(\App\Services\SmsService::class);
+                    $push = app(\App\Services\PushService::class);
                     $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'. Ref: '.($loanRep->reference);
                     $sms->send($loan->user->phone ?? null, $msg);
+                    $push->send($loan->user->device_token ?? null, 'Repayment Received', $msg, [
+                        'type' => 'loan_repayment',
+                        'loan_id' => $loan->id,
+                        'qard_id_string' => $loan->qard_id_string,
+                        'amount' => (float) $loanRep->amount,
+                        'reference' => (string) $loanRep->reference,
+                    ]);
                 }
             } catch (\Throwable $e) {
-                // ignore SMS errors
+                // ignore notification errors
             }
 
             return response()->json(['status' => 'success']);
@@ -490,7 +526,7 @@ class WebhookController extends Controller
                 $contribution->save();
             }
 
-            // Notify user (non-blocking)
+            // Notify user (non-blocking) + best-effort Push
             try {
                 if ($user) {
                     $user->notify(new PaymentNotification(
@@ -500,6 +536,15 @@ class WebhookController extends Controller
                         reference: $reference,
                         source: 'scheme_payment'
                     ));
+
+                    // Fire push notification to device
+                    $push = app(\App\Services\PushService::class);
+                    $push->send($user->device_token ?? null, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
+                        'type' => 'scheme_payment',
+                        'amount' => (float) $expectedTotal,
+                        'reference' => (string) $reference,
+                        'route' => '/dashboard',
+                    ]);
                 }
             } catch (\Throwable $e) {
                 Log::warning('Failed to send scheme payment notification (flutterwave)', [
