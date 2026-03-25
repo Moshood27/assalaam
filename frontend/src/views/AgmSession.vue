@@ -31,7 +31,7 @@
               </div>
               <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div v-for="c in pos.candidates" :key="c.id" class="p-3 border rounded-lg flex gap-3 items-start">
-                  <img v-if="c.photo_url" :src="c.photo_url" alt="photo" class="w-12 h-12 rounded object-cover" />
+                  <img v-if="c.photo_url" :src="getImageUrl(c.photo_url)" alt="photo" class="w-12 h-12 rounded object-cover" />
                   <div class="flex-1">
                     <div class="font-bold text-slate-800">{{ c.name }}</div>
                     <p class="text-[12px] text-slate-600 whitespace-pre-line">{{ c.manifesto || '—' }}</p>
@@ -102,7 +102,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import axios from '../http'
+import getImageUrl from '../utils/image'
 
 const route = useRoute()
 const id = Number(route.params.id)

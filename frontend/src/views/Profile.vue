@@ -12,7 +12,7 @@
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <div class="flex items-center gap-3 mb-3">
           <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden bg-emerald-700 text-white">
-            <img v-if="profile.passport_url" :src="profile.passport_url" alt="Profile photo" class="w-12 h-12 object-cover" />
+            <img v-if="profile.passport_url" :src="getImageUrl(profile.passport_url)" alt="Profile photo" class="w-12 h-12 object-cover" />
             <span v-else>{{ (profile.full_name || 'M')[0] }}</span>
           </div>
           <div>
@@ -169,7 +169,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../http'
+import getImageUrl from '../utils/image'
 
 const profile = ref({})
 const bvnAssigned = ref(false)

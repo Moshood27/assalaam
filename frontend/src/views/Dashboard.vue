@@ -3,7 +3,7 @@
     <header class="p-4 flex justify-between items-center bg-white/80 backdrop-blur border-b">
       <button class="flex items-center gap-2 min-w-0" @click="$router.push('/profile')">
         <div class="w-10 h-10 rounded-full overflow-hidden bg-emerald-700 flex items-center justify-center text-white font-bold text-xl">
-          <img v-if="dashboardData.passport_url" :src="dashboardData.passport_url" alt="Profile photo" class="w-10 h-10 object-cover" />
+          <img v-if="dashboardData.passport_url" :src="getImageUrl(dashboardData.passport_url)" alt="Profile photo" class="w-10 h-10 object-cover" />
           <span v-else>{{ (dashboardData.full_name || 'M')[0] }}</span>
         </div>
         <div class="text-left min-w-0">
@@ -187,7 +187,8 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import axios from '../http'
+import getImageUrl from '../utils/image'
 import { useModal } from '../composables/useModal'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'

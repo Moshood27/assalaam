@@ -30,7 +30,7 @@
           <div v-if="!items.length" class="text-slate-500 text-sm">No products found.</div>
           <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <li v-for="p in items" :key="p.id" class="p-3 bg-white border rounded-xl shadow-sm flex gap-3">
-              <img v-if="p.image_url" :src="p.image_url" alt="image" class="w-16 h-16 rounded object-cover" />
+              <img v-if="p.image_url" :src="getImageUrl(p.image_url)" alt="image" class="w-16 h-16 rounded object-cover" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-3 mb-1">
                   <div class="font-bold text-slate-800 truncate">{{ p.name }}</div>
@@ -112,6 +112,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from '../http'
+import getImageUrl from '../utils/image'
 import { useRouter } from 'vue-router'
 
 const items = ref([])
