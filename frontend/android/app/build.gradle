@@ -1,8 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
+    // 1. Ensure this matches your package name in the Firebase Console
     namespace "com.cooperative.app"
     compileSdk rootProject.ext.compileSdkVersion
+
     defaultConfig {
         applicationId "com.cooperative.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -10,18 +12,22 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
         aaptOptions {
-            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
-        lintOptions {
-                checkReleaseBuilds false
-                abortOnError false
-            }
+             // Correctly handles file ignore patterns
+             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    // 2. Moved lintOptions out of aaptOptions to the correct level
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
     buildTypes {
         debug {
-            // Some included Capacitor plugins only publish the 'release' variant.
-            // This makes the app's debug variant match those release-only deps.
+            // Allows the app to use release-only plugins while debugging
             matchingFallbacks = ['release']
         }
         release {
@@ -31,36 +37,35 @@ android {
     }
 }
 
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
 
-    // ADD THIS LINE to support the Biometric hardware
-    implementation "androidx.biometric:biometric:1.1.0"
+    // 3. Biometric Support
+    implementation "androidx.biometric:biometric:1.2.0-alpha05" // Updated to a more stable version for Cap 6
 
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
 
+    // 4. Kotlin and Plugin variant matching
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     constraints {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version") {
-            because("fixes the variant matching issue with biometric plugin")
-        }
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     }
 }
 
 apply from: 'capacitor.build.gradle'
 
+// 5. Apply Google Services at the VERY BOTTOM
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {
         apply plugin: 'com.google.gms.google-services'
     }
 } catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+    logger.warn("google-services.json not found, push notifications will not work.")
 }

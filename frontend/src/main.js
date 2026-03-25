@@ -18,12 +18,14 @@ function setupIdleLogout(router, timeoutMs = 120000) {
     localStorage.removeItem('token')
     localStorage.removeItem('admin_token')
 
-    // Redirect based on current path
+    // Redirect based on current path; use window.location for reliability in Capacitor WebView
+    const base = import.meta?.env?.BASE_URL || '/'
+    const basePath = (base && base.endsWith('/')) ? base : `${base}/`
     const current = window?.location?.pathname || '/'
-    if (hadAdmin && current.startsWith('/admin')) {
-      router.replace({ name: 'admin.login' }).catch(() => {})
+    if (hadAdmin && current.startsWith(`${basePath}admin`)) {
+      window.location.href = `${basePath}admin/login`
     } else {
-      router.replace({ name: 'login' }).catch(() => {})
+      window.location.href = `${basePath}login`
     }
   }
 
@@ -89,26 +91,42 @@ router.isReady().then(async () => {
       } catch (_) {
         PushNotifications = window?.Capacitor?.Plugins?.PushNotifications
       }
-      if (PushNotifications?.requestPermissions && PushNotifications?.register) {
-        const perm = await PushNotifications.requestPermissions()
-        if (perm?.receive === 'granted') {
-          await PushNotifications.register()
-        }
-        PushNotifications.addListener('registration', async (token) => {
+      if (PushNotifications?.checkPermissions && PushNotifications?.requestPermissions && PushNotifications?.register) {
+        // Add listeners early to avoid race conditions
+        await PushNotifications.addListener('registration', async (token) => {
           try {
             const value = token?.value || ''
             if (value) {
-              console.log('Real Device Token:', value)
+              console.log('Token:', value)
               await axios.post('/api/user/fcm-token', { token: value })
             }
           } catch (e) {
             console.warn('Failed to send FCM token to backend', e)
           }
         })
+
+        await PushNotifications.addListener('registrationError', (error) => {
+          console.error('Push registration error: ', error)
+        })
+
+        // 1) Check current status
+        let permStatus = await PushNotifications.checkPermissions()
+        // 2) If not granted, request it
+        if (permStatus?.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions()
+        }
+        // 3) ONLY if granted, register the device
+        if (permStatus?.receive === 'granted') {
+          await PushNotifications.register()
+        } else {
+          console.warn('User denied push permissions')
+          return
+        }
       }
     }
   } catch (e) {
-    // If plugin not available (web build), ignore
+    // Show an alert to avoid native crash and surface the error to user
+    try { alert('Push Setup Error: ' + (e?.message || e)) } catch (_) {}
   }
 })
 

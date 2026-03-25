@@ -20,9 +20,8 @@ async function loadPlugin() {
   } catch (_) {}
 
   try {
-    // Tell Vite to ignore resolving this import in web context and avoid static analysis by using a non-literal id
-    const id = 'capacitor-native-biometric'
-    const mod = await import(/* @vite-ignore */ id)
+    // Tell Vite to ignore resolving this import in web context. Use the correct package id.
+    const mod = await import(/* @vite-ignore */ '@capgo/capacitor-native-biometric')
     NativeBiometric = mod?.NativeBiometric || mod?.default?.NativeBiometric || mod?.default || mod
   } catch (e) {
     // Plugin not available (web or not installed)
