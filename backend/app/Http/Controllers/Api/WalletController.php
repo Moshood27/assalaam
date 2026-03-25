@@ -173,10 +173,17 @@ class WalletController extends Controller
 
         $reference = 'WALLET_ALLOC_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
 
-        DB::transaction(function () use ($user, $items, $reference, $total) {
+        $insufficient = false;
+        DB::transaction(function () use ($user, $items, $reference, $total, &$insufficient) {
+            $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+            if ((float)$lockedUser->balance < (float)$total) {
+                $insufficient = true;
+                return;
+            }
+
             foreach ($items as $item) {
                 Contribution::create([
-                    'user_id' => $user->id,
+                    'user_id' => $lockedUser->id,
                     'scheme_id' => $item['scheme_id'],
                     'amount' => $item['amount'],
                     'reference' => $reference,
@@ -184,12 +191,12 @@ class WalletController extends Controller
                 ]);
             }
 
-            // Deduct wallet
-            $user->decrement('balance', $total);
+            // Deduct wallet safely
+            $lockedUser->decrement('balance', $total);
 
             // Record debit transaction
             WalletTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $total,
                 'reference' => $reference,
@@ -199,6 +206,10 @@ class WalletController extends Controller
                 ],
             ]);
         });
+
+        if ($insufficient) {
+            return response()->json(['message' => 'Insufficient wallet balance'], 422);
+        }
 
         // Return updated balance and summary
         $schemes = Scheme::whereIn('id', $items->pluck('scheme_id'))->pluck('name', 'id');

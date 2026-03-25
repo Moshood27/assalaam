@@ -303,9 +303,21 @@ class UtilityController extends Controller
             }
         }
 
-        DB::transaction(function () use ($user, $amount, $reference, $tx, $body) {
-            // Deduct wallet balance
-            $user->decrement('balance', $amount);
+        $insufficient = false;
+        DB::transaction(function () use ($user, $amount, $reference, $tx, $body, &$insufficient) {
+            $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+            if ((float)$lockedUser->balance < (float)$amount) {
+                // Not enough funds at debit time; leave pending and save provider response
+                $tx->update([
+                    'status' => 'pending',
+                    'provider_response' => $body,
+                ]);
+                $insufficient = true;
+                return;
+            }
+
+            // Deduct wallet balance safely
+            $lockedUser->decrement('balance', $amount);
 
             // Profit = amount - cost_price (pre-set)
             $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
@@ -319,7 +331,7 @@ class UtilityController extends Controller
 
             // Record wallet debit transaction
             WalletTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $amount,
                 'reference' => $reference,
@@ -331,6 +343,17 @@ class UtilityController extends Controller
                 ],
             ]);
         });
+
+        if ($insufficient) {
+            $user->refresh();
+            return response()->json([
+                'message' => 'Airtime is processing. Wallet will be debited when funds are available.',
+                'status' => 'pending',
+                'reference' => $reference,
+                'balance' => (float)$user->balance,
+                'transaction' => $tx->fresh(),
+            ], 202);
+        }
 
         $user->refresh();
 
@@ -504,9 +527,20 @@ class UtilityController extends Controller
             }
         }
 
-        DB::transaction(function () use ($user, $amount, $reference, $tx, $body, $convenience, $bundleCode) {
+        $insufficient2 = false;
+        DB::transaction(function () use ($user, $amount, $reference, $tx, $body, $convenience, $bundleCode, &$insufficient2) {
+            $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
             $debit = round($amount + $convenience, 2);
-            $user->decrement('balance', $debit);
+            if ((float)$lockedUser->balance < (float)$debit) {
+                $tx->update([
+                    'status' => 'pending',
+                    'provider_response' => $body,
+                ]);
+                $insufficient2 = true;
+                return;
+            }
+
+            $lockedUser->decrement('balance', $debit);
 
             $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
 
@@ -517,7 +551,7 @@ class UtilityController extends Controller
             ]);
 
             WalletTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $debit,
                 'reference' => $reference,
@@ -531,6 +565,17 @@ class UtilityController extends Controller
                 ],
             ]);
         });
+
+        if ($insufficient2) {
+            $user->refresh();
+            return response()->json([
+                'message' => 'Data purchase is processing. Wallet will be debited when funds are available.',
+                'status' => 'pending',
+                'reference' => $reference,
+                'balance' => (float)$user->balance,
+                'transaction' => $tx->fresh(),
+            ], 202);
+        }
 
         $user->refresh();
 
@@ -876,8 +921,19 @@ class UtilityController extends Controller
             }
         }
 
-        DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $body, $convenience, $serviceId, $meter, $meterType) {
-            $user->decrement('balance', $totalDebit);
+        $insufficient3 = false;
+        DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $body, $convenience, $serviceId, $meter, $meterType, &$insufficient3) {
+            $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+            if ((float)$lockedUser->balance < (float)$totalDebit) {
+                $tx->update([
+                    'status' => 'pending',
+                    'provider_response' => $body,
+                ]);
+                $insufficient3 = true;
+                return;
+            }
+
+            $lockedUser->decrement('balance', $totalDebit);
             $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
             $tx->update([
                 'status' => 'success',
@@ -885,7 +941,7 @@ class UtilityController extends Controller
                 'provider_response' => $body,
             ]);
             WalletTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $totalDebit,
                 'reference' => $reference,
@@ -899,6 +955,17 @@ class UtilityController extends Controller
                 ],
             ]);
         });
+
+        if ($insufficient3) {
+            $user->refresh();
+            return response()->json([
+                'message' => 'Electricity vend is processing. Wallet will be debited when funds are available.',
+                'status' => 'pending',
+                'reference' => $reference,
+                'balance' => (float)$user->balance,
+                'transaction' => $tx->fresh(),
+            ], 202);
+        }
 
         $user->refresh();
         try {
