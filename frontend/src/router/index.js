@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 
 // Views (lazy-loaded)
 const Login = () => import('../views/Login.vue')
@@ -72,8 +72,11 @@ const routes = [
   { path: '/admin/products', name: 'admin.products', component: AdminProducts, meta: { requiresAdmin: true } },
 ]
 
+const isNative = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
+const history = isNative ? createWebHashHistory() : createWebHistory(import.meta.env.BASE_URL)
+
 const router = createRouter({
-  history: createWebHistory('/app/'),
+  history,
   routes,
   scrollBehavior() {
     return { top: 0 }

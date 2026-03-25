@@ -154,8 +154,15 @@ try {
 setTimeout(async () => {
   try {
     window.dispatchEvent(new Event('app:ready'))
-    const cap = typeof window !== 'undefined' ? window.Capacitor : undefined
-    const hide = cap?.Plugins?.SplashScreen?.hide
+    let hide
+    try {
+      const mod = await import('@capacitor/splash-screen')
+      hide = mod?.SplashScreen?.hide
+    } catch (_) {}
+    if (!hide) {
+      const cap = typeof window !== 'undefined' ? window.Capacitor : undefined
+      hide = cap?.Plugins?.SplashScreen?.hide
+    }
     if (typeof hide === 'function') {
       await hide({ fadeOutDuration: 200 })
     }
