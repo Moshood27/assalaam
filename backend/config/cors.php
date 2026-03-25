@@ -3,11 +3,15 @@
 $origins = env('CORS_ALLOWED_ORIGINS');
 $allowedOrigins = $origins
     ? array_values(array_filter(array_map('trim', explode(',', $origins))))
-    : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'];
+    : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174',
+        'http://127.0.0.1:5174',
+        'https://localhost',       // Added for Android Capacitor
+        'capacitor://localhost'
+        ];
 
 return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
 
     'allowed_methods' => ['*'],
 
