@@ -1,3 +1,4 @@
 node_modules/
 .env
 google-services.json*
+backend/storage/app/firebase-auth.json
