@@ -94,16 +94,24 @@ const form = ref({
 })
 
 onMounted(async () => {
+
+
+  console.log('Checking biometrics...')
+  try {
+    biometricSupported.value = await isBiometricAvailable()
+    canBiometricQuickLogin.value = await canQuickLoginSvc()
+    console.log('Biometric Result:', { isAvailable: biometricSupported.value, canQuickLogin: canBiometricQuickLogin.value })
+  } catch (err) {
+    console.error('Biometric Error:', err)
+  }
+
   try {
     const { data } = await axios.get('/api/branches')
     branches.value = data
   } catch (e) {
     console.error(e)
   }
-  try {
-    biometricSupported.value = await isBiometricAvailable()
-    canBiometricQuickLogin.value = await canQuickLoginSvc()
-  } catch (_) {}
+
 })
 
 const afterLogin = (token) => {

@@ -212,7 +212,7 @@ const copy = async (text) => {
     await modal.alert('Copied to clipboard')
   } catch (_) {}
 }
-const openWebPortal = () => window.open('https://portal.example.com', '_blank')
+const openWebPortal = () => window.open('https://islamcoop.com', '_blank')
 const dismissBanner = () => { bannerDismissed.value = true; localStorage.setItem('web_portal_banner_dismissed', 'true') }
 
 const kpis = computed(() => {
