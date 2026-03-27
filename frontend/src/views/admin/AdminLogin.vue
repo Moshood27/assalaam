@@ -4,9 +4,9 @@
       <div class="card card-elevated p-6 sm:p-8">
         <div class="flex flex-col items-center text-center mb-6">
           <div class="mb-2">
-            <img src="/images/assalam-logo.svg" alt="ASSALAM CO-OPERATIVE" class="h-16 sm:h-20 w-auto" />
+            <img :src="brand.logo" :alt="brand.name" class="h-16 sm:h-20 w-auto" />
           </div>
-          <p class="text-[11px] mt-1 font-semibold tracking-widest text-amber-700 uppercase">ASSALAM CO-OPERATIVE</p>
+          <p class="text-[11px] mt-1 font-semibold tracking-widest text-amber-700 uppercase">{{ brand.name }}</p>
           <h1 class="mt-1 text-2xl sm:text-3xl font-extrabold text-slate-900">Admin Login</h1>
           <p class="text-slate-500 text-sm mt-1">Sign in to manage the cooperative</p>
         </div>
@@ -49,6 +49,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import brand from '../../brand'
 
 const loading = ref(false)
 const showPassword = ref(false)

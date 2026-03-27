@@ -119,22 +119,17 @@ class MigrateLoanRepaymentsSeeder extends Seeder
             return null;
         }
 
-        // Build base query: loans for this member by either memberid or memberno
+        // Build base query: loans for this member by memberid (memberno column does not exist in legacy loan table)
         $base = DB::table('loan')
-            ->where(function ($q) use ($legacyMember) {
-                $q->where('memberid', (int)($legacyMember->id ?? 0));
-                if (!empty($legacyMember->memberno)) {
-                    $q->orWhere('memberno', (string)$legacyMember->memberno);
-                }
-            });
+            ->where('memberid', (int)($legacyMember->id ?? 0));
 
-        // Prefer the latest (closest) loan released on/before the repayment date and not cancelled/rejected
+        // Prefer the latest (closest) loan created on/before the repayment date and not cancelled/rejected
         $preferred = (clone $base)
             ->whereNotIn('status', ['Cancelled','Rejected','cancelled','rejected'])
             ->where(function ($q) use ($paidAt) {
-                $q->whereNull('releasedate')->orWhere('releasedate', '<=', $paidAt);
+                $q->whereNull('created_at')->orWhere('created_at', '<=', $paidAt);
             })
-            ->orderBy('releasedate', 'desc')
+            ->orderBy('created_at', 'desc')
             ->first();
 
         $legacyLoan = $preferred;
@@ -143,13 +138,13 @@ class MigrateLoanRepaymentsSeeder extends Seeder
             // Any non-cancelled loan regardless of date (oldest first)
             $legacyLoan = (clone $base)
                 ->whereNotIn('status', ['Cancelled','Rejected','cancelled','rejected'])
-                ->orderBy('releasedate', 'asc')
+                ->orderBy('created_at', 'asc')
                 ->first();
         }
         if (!$legacyLoan) {
             // As last resort, any loan row
             $legacyLoan = (clone $base)
-                ->orderBy('releasedate', 'asc')
+                ->orderBy('created_at', 'asc')
                 ->first();
         }
         if (!$legacyLoan) {
@@ -160,10 +155,25 @@ class MigrateLoanRepaymentsSeeder extends Seeder
         $loan = QardHasan::where('qard_id_string', $qid)->first();
         if ($loan) return $loan;
 
-        // Map fields similar to LoansFromOldSeeder
-        $principal = (float)($legacyLoan->appliedamount ?? 0);
-        $totalInstallments = (int)($legacyLoan->repaymentmonths ?? 0);
-        $perInstallment = (float)($legacyLoan->amount_to_repay_monthly ?? 0);
+        // Map fields similar to LoansFromOldSeeder with safe fallbacks to match legacy dump
+        $principal = (float)($this->firstProp($legacyLoan, [
+            'appliedamount', // some dumps
+            'loan_amount',   // actual in included dump
+            'amount', 'principal', 'approved_amount'
+        ]) ?? 0);
+
+        $totalInstallments = (int)($this->firstProp($legacyLoan, [
+            'repaymentmonths', // some dumps
+            'loan_term',       // actual in included dump
+            'repayment_months', 'tenure_months', 'months'
+        ]) ?? 0);
+
+        $perInstallment = (float)($this->firstProp($legacyLoan, [
+            'amount_to_repay_monthly', // some dumps
+            'monthly_payment',         // actual in included dump
+            'per_installment', 'monthly_amount'
+        ]) ?? 0);
+
         if ($totalInstallments <= 0 && $perInstallment > 0 && $principal > 0) {
             $totalInstallments = max(1, (int) round($principal / $perInstallment));
         }
@@ -180,7 +190,8 @@ class MigrateLoanRepaymentsSeeder extends Seeder
             default => 'active',
         };
 
-        $ts = $this->normalizeLegacyDate($legacyLoan->releasedate ?? null);
+        $releaseDate = $this->firstProp($legacyLoan, ['releasedate', 'release_date', 'disbursed_at', 'created_at']);
+        $ts = $this->normalizeLegacyDate($releaseDate ?? null);
 
         // Create the missing loan idempotently
         $loan = QardHasan::updateOrCreate(
@@ -201,6 +212,17 @@ class MigrateLoanRepaymentsSeeder extends Seeder
         );
 
         return $loan;
+    }
+
+    private function firstProp($row, array $keys)
+    {
+        foreach ($keys as $k) {
+            if (is_object($row) && property_exists($row, $k)) {
+                $val = $row->$k;
+                if ($val !== null && $val !== '') return $val;
+            }
+        }
+        return null;
     }
 
     private function normalizeLegacyDate($date): string

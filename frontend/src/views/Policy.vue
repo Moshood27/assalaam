@@ -10,7 +10,7 @@
 
       <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 space-y-3">
         <p class="text-slate-700">
-          These Terms govern your use of the Assalam Co‑operative member portal and mobile app. By accessing or using
+          These Terms govern your use of the {{ brand.name }} member portal and mobile app. By accessing or using
           these services, you agree to be bound by the Terms below.
         </p>
       </section>

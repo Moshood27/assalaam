@@ -30,9 +30,25 @@ class LoansFromOldSeeder extends Seeder
                     continue; // skip if no matching user
                 }
 
-                $principal = (float)$row->appliedamount;
-                $totalInstallments = (int)($row->repaymentmonths ?? 0);
-                $perInstallment = (float)($row->amount_to_repay_monthly ?? 0);
+                // Safely map legacy columns with fallbacks to avoid undefined property notices
+                $principal = (float)($this->firstProp($row, [
+                    'appliedamount', // some dumps
+                    'loan_amount',   // actual in included dump
+                    'amount', 'principal', 'approved_amount'
+                ]) ?? 0);
+
+                $totalInstallments = (int)($this->firstProp($row, [
+                    'repaymentmonths', // some dumps
+                    'loan_term',       // actual in included dump
+                    'repayment_months', 'tenure_months', 'months'
+                ]) ?? 0);
+
+                $perInstallment = (float)($this->firstProp($row, [
+                    'amount_to_repay_monthly', // some dumps
+                    'monthly_payment',         // actual in included dump
+                    'per_installment', 'monthly_amount'
+                ]) ?? 0);
+
                 if ($totalInstallments <= 0 && $perInstallment > 0 && $principal > 0) {
                     $totalInstallments = max(1, (int) round($principal / $perInstallment));
                 }
@@ -40,7 +56,8 @@ class LoansFromOldSeeder extends Seeder
                     $perInstallment = round($principal / $totalInstallments, 2);
                 }
 
-                $status = strtolower((string)$row->status);
+                $rawStatus = (string)($this->firstProp($row, ['status']) ?? '');
+                $status = strtolower($rawStatus);
                 $status = match ($status) {
                     'approved' => 'active',
                     'pending' => 'pending',
@@ -51,7 +68,8 @@ class LoansFromOldSeeder extends Seeder
 
                 $qid = 'OLD-' . str_pad((string)$row->id, 6, '0', STR_PAD_LEFT);
 
-                $ts = $this->normalizeLegacyDate($row->releasedate ?? null);
+                $releaseDate = $this->firstProp($row, ['releasedate', 'release_date', 'disbursed_at', 'created_at']);
+                $ts = $this->normalizeLegacyDate($releaseDate ?? null);
 
                 QardHasan::updateOrCreate(
                     ['qard_id_string' => $qid],
@@ -111,6 +129,17 @@ class LoansFromOldSeeder extends Seeder
             }
         }
 
+        return null;
+    }
+
+    private function firstProp($row, array $keys)
+    {
+        foreach ($keys as $k) {
+            if (is_object($row) && property_exists($row, $k)) {
+                $val = $row->$k;
+                if ($val !== null && $val !== '') return $val;
+            }
+        }
         return null;
     }
 

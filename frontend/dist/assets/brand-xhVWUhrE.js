@@ -1,0 +1,1 @@
+var e=`attaqwa`,t={slug:e,name:`ATTAQWA CO-OPERATIVE`,logo:`/images/${e}-logo.svg`,darkLogo:`/images/${e}-logo-dark.svg`,favicon:`/images/${e}-favicon.svg`};export{t};

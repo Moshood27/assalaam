@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name', 'ASSALAM') }} Admin</title>
+        <title>{{ config('brand.name', config('app.name', 'ASSALAM CO-OPERATIVE')) }} Admin</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -53,7 +53,7 @@
             <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
                 <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
                     <h1 class="mb-1 font-medium">Welcome to the Admin Portal</h1>
-                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">Manage members, finances, reports, and system settings for ASSALAM CO-OPERATIVE. Start with the links below.</p>
+                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">Manage members, finances, reports, and system settings for {{ config('brand.name', 'ASSALAM CO-OPERATIVE') }}. Start with the links below.</p>
                     <ul class="flex gap-3 text-sm leading-normal">
                         <li>
                             <a href="{{ url('/admin') }}" class="inline-block dark:bg-[#eeeeec] dark:border-[#eeeeec] dark:text-[#1C1C1A] dark:hover:bg-white dark:hover:border-white hover:bg-black hover:border-black px-5 py-1.5 bg-[#1b1b18] rounded-sm border border-black text-white text-sm leading-normal">
@@ -69,8 +69,8 @@
                 </div>
                 <div class="relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-[#081a14] dark:to-[#0b251d]">
                     {{-- Project Logo --}}
-                    <img src="{{ asset('images/assalam-logo.svg') }}" alt="ASSALAM CO-OPERATIVE Logo" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain dark:hidden" style="height: 104px;" />
-                    <img src="{{ asset('images/assalam-logo-dark.svg') }}" alt="ASSALAM CO-OPERATIVE Logo (Dark)" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain hidden dark:block" style="height: 104px;" />
+                    <img src="{{ asset('images/' . config('brand.slug', 'assalam') . '-logo.svg') }}" alt="{{ config('brand.name', 'ASSALAM CO-OPERATIVE') }} Logo" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain dark:hidden" style="height: 104px;" />
+                    <img src="{{ asset('images/' . config('brand.slug', 'assalam') . '-logo-dark.svg') }}" alt="{{ config('brand.name', 'ASSALAM CO-OPERATIVE') }} Logo (Dark)" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain hidden dark:block" style="height: 104px;" />
 
                     <!-- Islamic themed geometric background -->
                     <div class="absolute inset-0 opacity-60 mix-blend-multiply pointer-events-none" style="background-image: radial-gradient(ellipse at 10% 0%, rgba(16,185,129,.25) 0, transparent 40%), radial-gradient(ellipse at 90% 0%, rgba(16,185,129,.2) 0, transparent 45%), radial-gradient(circle at 50% 100%, rgba(5,150,105,.25) 0, transparent 50%);"></div>

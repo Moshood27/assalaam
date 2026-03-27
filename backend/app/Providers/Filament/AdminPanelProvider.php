@@ -29,11 +29,11 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->registration()
             ->passwordReset()
-            ->brandName('ASSALAM CO-OPERATIVE')
-            ->brandLogo(asset('images/assalam-logo.svg'))
+            ->brandName(config('brand.name'))
+            ->brandLogo(asset('images/' . config('brand.slug', 'assalam') . '-logo.svg'))
             ->brandLogoHeight('3rem')
-            ->darkModeBrandLogo(asset('images/assalam-logo-dark.svg'))
-            ->favicon(asset('images/assalam-favicon.svg'))
+            ->darkModeBrandLogo(asset('images/' . config('brand.slug', 'assalam') . '-logo-dark.svg'))
+            ->favicon(asset('images/' . config('brand.slug', 'assalam') . '-favicon.svg'))
             ->colors([
                 'primary' => Color::Amber,
             ])
