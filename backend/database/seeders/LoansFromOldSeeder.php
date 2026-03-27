@@ -154,6 +154,11 @@ class LoansFromOldSeeder extends Seeder
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $str)) {
                 $c = $c->startOfDay();
             }
+            // Guard lower bound for MySQL TIMESTAMP (00:00:00 can be invalid)
+            $minTs = Carbon::create(1970, 1, 1, 0, 0, 1);
+            if ($c->lessThan($minTs)) {
+                $c = $minTs;
+            }
             return $c->format('Y-m-d H:i:s');
         } catch (\Throwable $e) {
             return now()->format('Y-m-d H:i:s');
