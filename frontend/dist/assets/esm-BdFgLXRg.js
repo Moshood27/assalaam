@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-DWYG-GLL.js","assets/index-DmJrFEFM.js","assets/axios-CmLK9w8B.js","assets/runtime-core.esm-bundler-C_CAKtTw.js","assets/index-CVjDqGwj.css"])))=>i.map(i=>d[i]);
-import{l as e,t}from"./index-DmJrFEFM.js";var n=e(`SplashScreen`,{web:()=>t(()=>import(`./web-DWYG-GLL.js`).then(e=>new e.SplashScreenWeb),__vite__mapDeps([0,1,2,3,4]))});export{n as SplashScreen};

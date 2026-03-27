@@ -52,6 +52,28 @@ export async function isBiometricAvailable() {
   }
 }
 
+// Return detailed availability info from the native plugin
+// Useful to diagnose why Samsung devices may report unavailable
+export async function getBiometricAvailabilityDetails() {
+  if (!(await isNative())) {
+    return { isAvailable: false, errorCode: -1, platform: 'web' }
+  }
+  const plugin = await loadPlugin()
+  if (!plugin?.isAvailable) {
+    return { isAvailable: false, errorCode: -2, reason: 'plugin_missing' }
+  }
+  try {
+    const result = await plugin.isAvailable()
+    // Ensure we always have a boolean isAvailable and optional errorCode
+    if (typeof result === 'boolean') {
+      return { isAvailable: !!result }
+    }
+    return result || { isAvailable: false }
+  } catch (e) {
+    return { isAvailable: false, errorCode: e?.code ?? -3, reason: e?.message || 'unknown' }
+  }
+}
+
 export async function canQuickLogin() {
   if (!(await isBiometricAvailable())) return false
   const plugin = await loadPlugin()

@@ -1,0 +1,1 @@
+var e=``+new URL(`../images/assalam-logo.svg`,import.meta.url).href;export{e as t};

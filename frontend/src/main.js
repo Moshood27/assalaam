@@ -79,55 +79,7 @@ try {
 router.isReady().then(async () => {
   setupIdleLogout(router, 120000) // 2 minutes
 
-  // Set up push notifications and save the real FCM token when running under Capacitor (mobile)
-  try {
-    const isCapacitor = !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
-    const isLoggedIn = !!localStorage.getItem('token')
-    if (isCapacitor && isLoggedIn) {
-      let PushNotifications
-      try {
-        const core = await import('@capacitor/core')
-        PushNotifications = core?.registerPlugin ? core.registerPlugin('PushNotifications') : (window?.Capacitor?.Plugins?.PushNotifications)
-      } catch (_) {
-        PushNotifications = window?.Capacitor?.Plugins?.PushNotifications
-      }
-      if (PushNotifications?.checkPermissions && PushNotifications?.requestPermissions && PushNotifications?.register) {
-        // Add listeners early to avoid race conditions
-        await PushNotifications.addListener('registration', async (token) => {
-          try {
-            const value = token?.value || ''
-            if (value) {
-              console.log('Token:', value)
-              await axios.post('/api/user/fcm-token', { token: value })
-            }
-          } catch (e) {
-            console.warn('Failed to send FCM token to backend', e)
-          }
-        })
-
-        await PushNotifications.addListener('registrationError', (error) => {
-          console.error('Push registration error: ', error)
-        })
-
-        // 1) Check current status
-        let permStatus = await PushNotifications.checkPermissions()
-        // 2) If not granted, request it
-        if (permStatus?.receive === 'prompt') {
-          permStatus = await PushNotifications.requestPermissions()
-        }
-        // 3) ONLY if granted, register the device
-        if (permStatus?.receive === 'granted') {
-          await PushNotifications.register()
-        } else {
-          console.warn('User denied push permissions')
-          return
-        }
-      }
-    }
-  } catch (e) {
-    // Show an alert to avoid native crash and surface the error to user
-    try { alert('Push Setup Error: ' + (e?.message || e)) } catch (_) {}
-  }
+  // Push notification startup is handled sequentially in App.vue to avoid overlapping system dialogs and race conditions.
 })
 
 app.mount('#app')

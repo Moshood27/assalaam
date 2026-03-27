@@ -73,7 +73,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import SearchableSelect from '../components/SearchableSelect.vue'
-import { isBiometricAvailable, canQuickLogin as canQuickLoginSvc, quickLoginViaBiometric, storeBiometricCredentials } from '../services/biometric'
+import { getBiometricAvailabilityDetails, canQuickLogin as canQuickLoginSvc, quickLoginViaBiometric, storeBiometricCredentials } from '../services/biometric'
 
 const router = useRouter()
 const route = useRoute()
@@ -94,24 +94,36 @@ const form = ref({
 })
 
 onMounted(async () => {
+  console.log('LOGIN PAGE MOUNTED')
 
-
-  console.log('Checking biometrics...')
-  try {
-    biometricSupported.value = await isBiometricAvailable()
-    canBiometricQuickLogin.value = await canQuickLoginSvc()
-    console.log('Biometric Result:', { isAvailable: biometricSupported.value, canQuickLogin: canBiometricQuickLogin.value })
-  } catch (err) {
-    console.error('Biometric Error:', err)
-  }
-
+  // 1. Load branches first
   try {
     const { data } = await axios.get('/api/branches')
     branches.value = data
-  } catch (e) {
-    console.error(e)
-  }
+  } catch (e) { console.error(e) }
 
+  // 2. WAIT for the system to be clear before checking Biometrics
+  // We use a longer delay (2.5s) to ensure the Notification popup is gone
+  setTimeout(async () => {
+    console.log('Checking biometrics now that system dialogs are likely gone...')
+    try {
+      const result = await getBiometricAvailabilityDetails()
+      console.log('Biometric Result:', result)
+
+      if (result?.isAvailable) {
+        biometricSupported.value = true
+        canBiometricQuickLogin.value = await canQuickLoginSvc()
+      } else {
+        biometricSupported.value = false
+        // If Error Code is -2, it might still be a timing issue.
+        if (result?.errorCode === -2) {
+          console.warn('Hardware reported unavailable (Error -2).')
+        }
+      }
+    } catch (err) {
+      console.error('Biometric check crashed:', err)
+    }
+  }, 2500)
 })
 
 const afterLogin = (token) => {

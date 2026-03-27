@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name', 'Laravel') }} Admin</title>
+        <title>{{ config('app.name', 'ASSALAM') }} Admin</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -67,10 +67,33 @@
                         </li>
                     </ul>
                 </div>
-                <div class="bg-[#fff2f2] dark:bg-[#1D0002] relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden">
+                <div class="relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-[#081a14] dark:to-[#0b251d]">
                     {{-- Project Logo --}}
                     <img src="{{ asset('images/assalam-logo.svg') }}" alt="ASSALAM CO-OPERATIVE Logo" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain dark:hidden" style="height: 104px;" />
                     <img src="{{ asset('images/assalam-logo-dark.svg') }}" alt="ASSALAM CO-OPERATIVE Logo (Dark)" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain hidden dark:block" style="height: 104px;" />
+
+                    <!-- Islamic themed geometric background -->
+                    <div class="absolute inset-0 opacity-60 mix-blend-multiply pointer-events-none" style="background-image: radial-gradient(ellipse at 10% 0%, rgba(16,185,129,.25) 0, transparent 40%), radial-gradient(ellipse at 90% 0%, rgba(16,185,129,.2) 0, transparent 45%), radial-gradient(circle at 50% 100%, rgba(5,150,105,.25) 0, transparent 50%);"></div>
+                    <!-- Subtle pattern -->
+                    <svg class="absolute inset-0 w-full h-full opacity-[.18] text-emerald-700 dark:text-emerald-300 pointer-events-none" aria-hidden="true">
+                        <defs>
+                            <pattern id="islamicPattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M20 0 L30 10 L20 20 L10 10 Z" fill="none" stroke="currentColor" stroke-width="0.8"/>
+                                <circle cx="20" cy="20" r="2" fill="currentColor"/>
+                                <circle cx="0" cy="0" r="2" fill="currentColor"/>
+                                <circle cx="40" cy="40" r="2" fill="currentColor"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#islamicPattern)" />
+                    </svg>
+                    <!-- Crescent and mosque silhouette -->
+                    <svg class="absolute bottom-6 left-1/2 -translate-x-1/2 w-56 h-40 text-emerald-700 dark:text-emerald-300" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Islamic motif">
+                        <g fill="currentColor">
+                            <path d="M110 40c0-27 22-49 49-49 9 0 18 2 25 7-23 1-41 20-41 43s18 42 41 43c-7 5-16 7-25 7-27 0-49-22-49-51z"/>
+                            <path d="M30 150h196c-10-18-28-32-50-37v-12c0-6-5-11-11-11h-4v-6c0-4-3-7-7-7h-2v-9l-10-8-10 8v9h-2c-4 0-7 3-7 7v6h-4c-6 0-11 5-11 11v12c-22 5-40 19-50 37z"/>
+                            <rect x="120" y="110" width="16" height="24" rx="2"/>
+                        </g>
+                    </svg>
 
                     {{-- Light Mode 12 SVG --}}
                     <svg class="w-[448px] max-w-none relative -mt-[4.9rem] -ml-8 lg:ml-0 lg:-mt-[6.6rem] dark:hidden" viewBox="0 0 440 376" fill="none" xmlns="http://www.w3.org/2000/svg">

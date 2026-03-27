@@ -1,55 +1,53 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Capacitor } from '@capacitor/core'
+import { onMounted } from 'vue'
 import { PushNotifications } from '@capacitor/push-notifications'
+import { SplashScreen } from '@capacitor/splash-screen'
 import BaseModal from './components/BaseModal.vue'
-import MobileSplash from './components/MobileSplash.vue'
+import axios from 'axios'
 
-const showSplash = ref(true)
-
-function onAppReady() {
-  // Small delay to allow first paint to settle
-  setTimeout(() => (showSplash.value = false), 100)
+async function saveTokenToBackend(token) {
+  try {
+    await axios.post('/api/push/token', { token })
+  } catch (e) {
+    console.warn('Failed to save push token:', e?.message || e)
+  }
 }
 
-onMounted(() => {
-  window.addEventListener('app:ready', onAppReady)
-  // Fallback: auto-hide after 5s in case ready event never fires
-  const fallback = setTimeout(() => (showSplash.value = false), 5000)
-  onBeforeUnmount(() => clearTimeout(fallback))
-})
-
-// Request push notification permission and register as early as possible
 onMounted(async () => {
+  // 1. Wait for the app to be visually ready
   try {
-    const platform = Capacitor?.getPlatform?.() || 'web'
-    if (platform === 'web') return
+    await SplashScreen.hide()
+  } catch (_) {
+    // ignore if plugin not available
+  }
+  
+  // 2. Small delay to let the OS settle
+  await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // 1. Check status immediately on startup
+  // 3. Setup Push Notifications
+  try {
     let permStatus = await PushNotifications.checkPermissions()
-    console.log('Initial Push Status:', permStatus.receive)
-
-    // 2. If it's the first time (prompt) or denied, ask again
     if (permStatus.receive !== 'granted') {
       permStatus = await PushNotifications.requestPermissions()
     }
 
-    // 3. Register if granted (This is what gets the token)
     if (permStatus.receive === 'granted') {
+      // SET UP LISTENER FIRST
+      PushNotifications.addListener('registration', (token) => {
+        console.log('FCM Token received:', token.value)
+        saveTokenToBackend(token.value)
+      })
+
+      // THEN REGISTER
       await PushNotifications.register()
     }
   } catch (e) {
-    console.warn('Push permission flow error:', e?.message || e)
+    console.error('Push sequence failed', e)
   }
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('app:ready', onAppReady)
 })
 </script>
 
 <template>
-  <MobileSplash :visible="showSplash" />
   <router-view />
   <BaseModal />
 </template>
