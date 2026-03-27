@@ -130,7 +130,8 @@ class WebhookController extends Controller
                             $push = app(\App\Services\PushService::class);
                             $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'. Ref: '.($loanRep->reference);
                             $sms->send($loan->user->phone ?? null, $msg);
-                            $push->send($loan->user->device_token ?? null, 'Repayment Received', $msg, [
+                            $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
+                            $push->send($token, 'Repayment Received', $msg, [
                                 'type' => 'loan_repayment',
                                 'loan_id' => $loan->id,
                                 'qard_id_string' => $loan->qard_id_string,
@@ -268,7 +269,8 @@ class WebhookController extends Controller
                     $push = app(\App\Services\PushService::class);
                     $fresh = $topupUser->fresh();
                     $newBal = (float) ($fresh->balance ?? 0);
-                    $push->send($fresh->device_token ?? null, 'Wallet Top-up Successful', 'Your wallet has been credited successfully.', [
+                    $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
+                    $push->send($token, 'Wallet Top-up Successful', 'Your wallet has been credited successfully.', [
                         'type' => 'wallet_topup',
                         'amount' => (float) $amountNgn,
                         'reference' => (string) $reference,
@@ -330,7 +332,8 @@ class WebhookController extends Controller
 
                     // Fire push notification to device
                     $push = app(\App\Services\PushService::class);
-                    $push->send($user->device_token ?? null, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
+                    $token = $user->fcm_token ?: ($user->device_token ?? null);
+                    $push->send($token, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
                         'reference' => (string) $reference,
@@ -487,7 +490,8 @@ class WebhookController extends Controller
                     $push = app(\App\Services\PushService::class);
                     $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'. Ref: '.($loanRep->reference);
                     $sms->send($loan->user->phone ?? null, $msg);
-                    $push->send($loan->user->device_token ?? null, 'Repayment Received', $msg, [
+                    $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
+                    $push->send($token, 'Repayment Received', $msg, [
                         'type' => 'loan_repayment',
                         'loan_id' => $loan->id,
                         'qard_id_string' => $loan->qard_id_string,
@@ -539,7 +543,8 @@ class WebhookController extends Controller
 
                     // Fire push notification to device
                     $push = app(\App\Services\PushService::class);
-                    $push->send($user->device_token ?? null, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
+                    $token = $user->fcm_token ?: ($user->device_token ?? null);
+                    $push->send($token, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
                         'reference' => (string) $reference,

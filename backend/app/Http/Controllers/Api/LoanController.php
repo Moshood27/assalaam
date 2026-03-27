@@ -217,7 +217,8 @@ class LoanController extends Controller
                     $push = app(\App\Services\PushService::class);
                     $msg = 'Loan approved instantly: ₦'.number_format($credit, 2).' credited. Loan ID: '.($q->qard_id_string).'. Bal: ₦'.number_format((float) ($fresh->balance ?? 0), 2);
                     $sms->send($fresh->phone ?? null, $msg);
-                    $push->send($fresh->device_token ?? null, 'Loan Approved', $msg, [
+                    $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
+                    $push->send($token, 'Loan Approved', $msg, [
                         'type' => 'loan_disbursed',
                         'loan_id' => $q->id,
                         'qard_id_string' => $q->qard_id_string,
@@ -263,7 +264,8 @@ class LoanController extends Controller
                     $msg = 'Guarantor request: Member '.($user->name).' requested a loan (ID: '.($q->qard_id_string).', ₦'.number_format((float)$q->principal_amount, 2).'). Please open your Coop app > Loans to Accept or Decline.';
                     $sms->send($g->phone ?? null, $msg);
                     // Push notification to guarantor device if available
-                    $push->send($g->device_token ?? null, 'Guarantor Request', $msg, [
+                    $token = $g->fcm_token ?: ($g->device_token ?? null);
+                    $push->send($token, 'Guarantor Request', $msg, [
                         'type' => 'guarantor_request',
                         'loan_id' => $q->id,
                         'qard_id_string' => $q->qard_id_string,

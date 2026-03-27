@@ -32,6 +32,7 @@ const AdminProducts = () => import('../views/admin/AdminProducts.vue')
 
 const routes = [
   { path: '/', redirect: '/dashboard' },
+  { path: '/onboarding', name: 'onboarding', component: () => import('../views/Onboarding.vue'), meta: { guest: true, skipOnboarding: true } },
   { path: '/login', name: 'login', component: Login, meta: { guest: true } },
   { path: '/dashboard', name: 'dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/wallet', name: 'wallet', component: Wallet, meta: { requiresAuth: true } },
@@ -55,13 +56,13 @@ const routes = [
   { path: '/qard', name: 'qard', component: QardHasan },
 
   // Public info pages
-  { path: '/privacy', name: 'privacy', component: Privacy },
-  { path: '/policy', name: 'policy', component: Policy },
-  { path: '/support', name: 'support', component: Support },
+  { path: '/privacy', name: 'privacy', component: Privacy, meta: { skipOnboarding: true } },
+  { path: '/policy', name: 'policy', component: Policy, meta: { skipOnboarding: true } },
+  { path: '/support', name: 'support', component: Support, meta: { skipOnboarding: true } },
 
   // Paystack callbacks
-  { path: '/wallet-callback', name: 'wallet.callback', component: WalletCallback },
-  { path: '/payment-callback', name: 'payment.callback', component: PaymentCallback },
+  { path: '/wallet-callback', name: 'wallet.callback', component: WalletCallback, meta: { skipOnboarding: true } },
+  { path: '/payment-callback', name: 'payment.callback', component: PaymentCallback, meta: { skipOnboarding: true } },
 
   // Admin auth (Vue-based)
   { path: '/admin/login', name: 'admin.login', component: AdminLogin, meta: { guest: true } },
@@ -86,6 +87,19 @@ const router = createRouter({
 router.beforeEach((to) => {
   const token = localStorage.getItem('token')
   const adminToken = localStorage.getItem('admin_token')
+
+  // 0. Onboarding gate for first-time users (skip for admin and explicit skips)
+  try {
+    const hasSeen = localStorage.getItem('has_seen_onboarding') === 'true'
+    const isAdminRoute = to.path?.startsWith('/admin')
+    const isOnboarding = to.name === 'onboarding'
+    const skip = !!to.meta?.skipOnboarding
+    const isAuthed = !!localStorage.getItem('token')
+    if (!hasSeen && !isAdminRoute && !isOnboarding && !skip && !isAuthed) {
+      return { name: 'onboarding', query: { redirect: to.fullPath } }
+    }
+  } catch (_) {}
+
   if (to.meta.requiresAuth && !token) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }

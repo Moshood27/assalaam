@@ -237,7 +237,8 @@ class QardHasanResource extends Resource
                                 $push = app(\App\Services\PushService::class);
                                 $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet. Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($fresh->balance ?? 0), 2);
                                 $sms->send($fresh->phone ?? null, $msg);
-                                $push->send($fresh->device_token ?? null, 'Loan Disbursed', $msg, [
+                                $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
+                                $push->send($token, 'Loan Disbursed', $msg, [
                                     'type' => 'loan_disbursed',
                                     'loan_id' => $record->id,
                                     'qard_id_string' => $record->qard_id_string,
