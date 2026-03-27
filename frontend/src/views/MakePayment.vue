@@ -103,8 +103,9 @@ import axios from 'axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const base = import.meta?.env?.BASE_URL || '/'
-const basePath = (base && base.endsWith('/')) ? base : `${base}/`
+const baseRaw = import.meta?.env?.BASE_URL || '/'
+const basePath = (baseRaw && baseRaw.startsWith('./')) ? '/' : (baseRaw.endsWith('/') ? baseRaw : `${baseRaw}/`)
+const isNative = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
 
 const schemes = ref([])
 const paymentList = ref([])

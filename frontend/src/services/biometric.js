@@ -4,6 +4,7 @@
 
 import { Capacitor } from '@capacitor/core'
 import axios from 'axios'
+import brand from '../brand'
 
 let NativeBiometric
 
@@ -19,9 +20,19 @@ async function loadPlugin() {
     }
   } catch (_) {}
 
+  // Prefer the runtime-registered Capacitor plugin first
   try {
-    // Tell Vite to ignore resolving this import in web context. Use the correct package id.
-    const mod = await import(/* @vite-ignore */ '@capgo/capacitor-native-biometric')
+    const cap = (typeof window !== 'undefined' ? window.Capacitor : null) || Capacitor
+    const viaPlugins = cap?.Plugins?.NativeBiometric
+    if (viaPlugins && typeof viaPlugins === 'object') {
+      NativeBiometric = viaPlugins
+      return NativeBiometric
+    }
+  } catch (_) {}
+
+  try {
+    // Try a direct dynamic import of the Capgo plugin
+    const mod = await import('@capgo/capacitor-native-biometric')
     NativeBiometric = mod?.NativeBiometric || mod?.default?.NativeBiometric || mod?.default || mod
   } catch (e) {
     // Plugin not available (web or not installed)
@@ -30,7 +41,7 @@ async function loadPlugin() {
   return NativeBiometric
 }
 
-const SERVICE = 'assalam-cooperative-app'
+const SERVICE = `${(brand?.slug || 'assalam')}-cooperative-app`
 
 export async function isNative() {
   try {

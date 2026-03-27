@@ -64,24 +64,26 @@
 
       <!-- Recent Wallet Transactions -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-3">
+        <div class="flex justify-between items-center mb-3 gap-2 flex-wrap">
           <h3 class="font-bold text-slate-800">Recent Wallet Activity</h3>
-          <button @click="loadMore" class="text-emerald-700 text-xs font-bold">Load more</button>
+          <button @click="loadMore" class="text-emerald-700 text-xs font-bold px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 sm:ml-auto">Load more</button>
         </div>
         <div v-if="transactions.length" class="space-y-3">
-          <div v-for="tx in transactions" :key="tx.id" class="border border-slate-100 rounded-xl p-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div :class="tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'" class="w-10 h-10 rounded-full flex items-center justify-center text-lg">
-                {{ tx.type === 'credit' ? '+' : '−' }}
+          <div v-for="tx in transactions" :key="tx.id" class="border border-slate-100 rounded-xl p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div :class="tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
+                  {{ tx.type === 'credit' ? '+' : '−' }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-slate-800 truncate">{{ titleFor(tx) }}</p>
+                </div>
               </div>
-              <div>
-                <p class="text-sm font-bold text-slate-800">{{ titleFor(tx) }}</p>
-                <p class="text-[10px] uppercase text-slate-400">Ref: {{ tx.reference }}</p>
-              </div>
+              <p class="font-bold shrink-0" :class="tx.type === 'credit' ? 'text-emerald-700' : 'text-rose-700'">₦ {{ formatMoney(tx.amount) }}</p>
             </div>
-            <div class="text-right">
-              <p class="font-bold" :class="tx.type === 'credit' ? 'text-emerald-700' : 'text-rose-700'">₦ {{ formatMoney(tx.amount) }}</p>
-              <p class="text-[10px] text-slate-400">{{ new Date(tx.created_at).toLocaleString() }}</p>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-[10px] uppercase text-slate-400 truncate">Ref: {{ tx.reference }}</p>
+              <p class="text-[10px] text-slate-400 shrink-0">{{ new Date(tx.created_at).toLocaleString() }}</p>
             </div>
           </div>
         </div>
@@ -112,8 +114,9 @@ import axios from 'axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const base = import.meta?.env?.BASE_URL || '/'
-const basePath = (base && base.endsWith('/')) ? base : `${base}/`
+const baseRaw = import.meta?.env?.BASE_URL || '/'
+const basePath = (baseRaw && baseRaw.startsWith('./')) ? '/' : (baseRaw.endsWith('/') ? baseRaw : `${baseRaw}/`)
+const isNative = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
 
 const wallet = ref({ balance: 0, virtual_account: {} })
 const transactions = ref([])
@@ -151,8 +154,11 @@ const loadMore = async () => {
 const initTopup = async () => {
   try {
     loading.value = true
-    const callback_url = `${window.location.origin}${basePath}wallet-callback`
-    const { data } = await axios.post('/api/wallet/topup/initiate', { amount: Number(topupAmount.value), callback_url })
+        // Build callback URL only for web; on native apps, omit to avoid invalid localhost redirects
+    const cb = !isNative ? (new URL(router.resolve({ name: 'wallet.callback' }).href, window.location.origin).toString()) : null
+    const payload = { amount: Number(topupAmount.value) }
+    if (cb) payload.callback_url = cb
+    const { data } = await axios.post('/api/wallet/topup/initiate', payload)
     window.location.href = data.checkout_url
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to start top-up')

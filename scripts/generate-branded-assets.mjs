@@ -10,6 +10,32 @@ const SPLASH_PATH = path.join(ASSETS_DIR, 'splash.png');
 const BRAND_GREEN = '#065f46';
 const WHITE = '#ffffff';
 
+// Determine brand slug for wordmark (fallback to assalam)
+function detectBrandSlug() {
+  const envSlug = process.env.BRAND_SLUG || process.env.VITE_BRAND_SLUG;
+  if (envSlug) return String(envSlug).toLowerCase();
+  try {
+    const tryFiles = [
+      path.resolve(process.cwd(), 'backend/.env'),
+      path.resolve(process.cwd(), 'frontend/.env'),
+      path.resolve(process.cwd(), 'backend/.env.example'),
+      path.resolve(process.cwd(), 'frontend/.env.example'),
+    ];
+    for (const f of tryFiles) {
+      if (fs.existsSync(f)) {
+        const txt = fs.readFileSync(f, 'utf8');
+        const m1 = txt.match(/^\s*BRAND_SLUG\s*=\s*([^\r\n#]+)/m);
+        if (m1) return String(m1[1]).trim().replace(/['\"]/g, '').toLowerCase();
+        const m2 = txt.match(/^\s*VITE_BRAND_SLUG\s*=\s*([^\r\n#]+)/m);
+        if (m2) return String(m2[1]).trim().replace(/['\"]/g, '').toLowerCase();
+      }
+    }
+  } catch (_) {}
+  return 'assalam';
+}
+const BRAND_SLUG = detectBrandSlug();
+const WORDMARK = BRAND_SLUG === 'attaqwa' ? 'ATTAQWA' : 'ASSALAM';
+
 function hexToRgb(hex) {
   const n = parseInt(hex.replace('#', ''), 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
@@ -141,6 +167,33 @@ const FONT_5x7 = {
     1,0,0,0,1,
     1,0,0,0,1,
   ],
+  T: [
+    1,1,1,1,1,
+    0,0,1,0,0,
+    0,0,1,0,0,
+    0,0,1,0,0,
+    0,0,1,0,0,
+    0,0,1,0,0,
+    0,0,1,0,0,
+  ],
+  W: [
+    1,0,0,0,1,
+    1,0,0,0,1,
+    1,0,1,0,1,
+    1,0,1,0,1,
+    1,0,1,0,1,
+    1,1,0,1,1,
+    1,0,0,0,1,
+  ],
+  Q: [
+    0,1,1,1,0,
+    1,0,0,0,1,
+    1,0,0,0,1,
+    1,0,0,0,1,
+    1,0,1,0,1,
+    1,0,0,1,0,
+    0,1,1,0,1,
+  ],
 };
 
 function drawGlyph5x7(buf, width, height, gx, gy, scale, color, glyph) {
@@ -195,7 +248,7 @@ function createBrandedIcon() {
   drawFilledCircleRgb(pixels, size, size, Math.floor(size / 2), Math.floor(size / 2), radius, white);
 
   // Wordmark inside circle (green on white)
-  const text = 'ASSALAM';
+  const text = WORDMARK;
   const safeW = Math.floor(radius * 2 * 0.82);
   const safeH = Math.floor(radius * 2 * 0.38);
   // Compute scale
@@ -220,7 +273,7 @@ function createBrandedSplash() {
   const pixels = makeSolidRgbBuffer(w, h, bg);
   const white = hexToRgb(WHITE);
 
-  const text = 'ASSALAM';
+  const text = WORDMARK;
   const gw = 5; const gh = 7; const spacing = 1;
   const unitsW = text.length * gw + (text.length - 1) * spacing;
   const safeW = Math.floor(w * 0.72);

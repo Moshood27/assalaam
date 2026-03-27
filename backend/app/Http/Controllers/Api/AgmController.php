@@ -97,6 +97,24 @@ class AgmController extends Controller
             'position' => $position,
         ]);
 
+        // Best-effort push confirmation to the voter
+        try {
+            $push = app(\App\Services\PushService::class);
+            $token = $user->fcm_token ?: ($user->device_token ?? null);
+            $title = 'Vote Cast: ' . $position;
+            $body = 'Your vote for ' . $candidate->name . ' has been recorded.';
+            $push->send($token, $title, $body, [
+                'type' => 'vote_cast',
+                'session_id' => $session->id,
+                'session_name' => $session->name,
+                'position' => $position,
+                'candidate_id' => $candidate->id,
+                'candidate_name' => $candidate->name,
+            ]);
+        } catch (\Throwable $e) {
+            // ignore push errors
+        }
+
         return response()->json(['message' => 'Vote recorded', 'vote' => $vote]);
     }
 

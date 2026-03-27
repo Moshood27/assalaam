@@ -122,6 +122,21 @@ class LoanMonitoring extends Page
         }
 
         Mail::to($user->email)->send(new DefaultLoanReminder($user, $loansData, $totalOutstanding));
+
+        // Best-effort push notification to the member
+        try {
+            $push = app(\App\Services\PushService::class);
+            $token = $user->fcm_token ?: ($user->device_token ?? null);
+            $title = 'Loan Repayment Reminder';
+            $body = 'You have outstanding loan balance of ₦' . number_format($totalOutstanding, 2) . '. Please make a repayment.';
+            $push->send($token, $title, $body, [
+                'type' => 'loan_reminder',
+                'total_outstanding' => (float) $totalOutstanding,
+            ]);
+        } catch (\Throwable $e) {
+            // ignore push errors
+        }
+
         Notification::make()->success()->title('Reminder sent')->body('Email reminder has been sent to ' . $user->name)->send();
     }
 

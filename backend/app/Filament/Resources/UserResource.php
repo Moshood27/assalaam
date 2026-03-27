@@ -240,6 +240,19 @@ class UserResource extends Resource
                                 } catch (\Throwable $e) {
                                     // ignore SMS errors
                                 }
+
+                                // Best-effort Push notification to the member's device
+                                try {
+                                    $push = app(\App\Services\PushService::class);
+                                    $token = $record->fcm_token ?: ($record->device_token ?? null);
+                                    $push->send($token, 'Wallet Credited', 'Your wallet has been credited successfully.', [
+                                        'type' => 'wallet_credit',
+                                        'amount' => (float) $amount,
+                                        'balance' => (float) $newBalance,
+                                    ]);
+                                } catch (\Throwable $e) {
+                                    // ignore push errors
+                                }
                             });
                         });
                     })

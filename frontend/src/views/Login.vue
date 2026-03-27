@@ -127,8 +127,20 @@ onMounted(async () => {
   }, 2500)
 })
 
-const afterLogin = (token) => {
+const afterLogin = async (token) => {
   localStorage.setItem('token', token)
+
+  // If we have a pending push token captured earlier, flush it now that we're authenticated
+  try {
+    const pending = localStorage.getItem('pending_push_token')
+    if (pending) {
+      await axios.post('/api/push/token', { token: pending }, { timeout: Math.max(30000, Number(axios.defaults.timeout) || 0) })
+      localStorage.removeItem('pending_push_token')
+    }
+  } catch (e) {
+    console.warn('Failed to flush pending push token after login:', e?.message || e)
+  }
+
   const redirect = route.query.redirect || '/dashboard'
   router.push(redirect)
 }
