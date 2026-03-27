@@ -8,9 +8,16 @@ server {
     index index.php index.html;
 
     # Serve the built Vue app from /public/app for web version
+    # Redirect bare /app to /app/ to ensure SPA base path
+    location = /app {
+        return 301 /app/;
+    }
+
+    # Serve Vue SPA under /app with index.html fallback
     location /app/ {
-        alias /var/www/html/public/app/;
-        try_files $uri $uri/ =404;
+        root /var/www/html/public;
+        index index.html;
+        try_files $uri $uri/ /app/index.html;
     }
 
     # Allow well-known ACME challenges for Let's Encrypt
