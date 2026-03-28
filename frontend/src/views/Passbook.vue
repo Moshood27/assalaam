@@ -96,7 +96,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import axios from '../http.js'
 
 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1]
@@ -143,14 +143,16 @@ const downloadPdf = async () => {
   const token = localStorage.getItem('token')
   try {
     const res = await axios.get('/api/download-passbook', {
+      // Authorization header is added by axios interceptor; keep explicit header as a safeguard
       headers: { Authorization: `Bearer ${token}` },
+      params: { year: selectedYear.value },
       responseType: 'blob'
     })
     const blob = new Blob([res.data], { type: 'application/pdf' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `Coop_Statement_${new Date().getFullYear()}.pdf`
+    a.download = `Coop_Statement_${selectedYear.value}.pdf`
     document.body.appendChild(a)
     a.click()
     a.remove()

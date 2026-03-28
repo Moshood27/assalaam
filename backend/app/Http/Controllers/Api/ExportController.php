@@ -15,14 +15,30 @@ class ExportController extends Controller
 {
     public function downloadPassbook(Request $request)
     {
+        // Ensure user is authenticated (Sanctum)
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated. Please login again.'], 401);
+        }
+
         try {
-            $user = $request->user();
+            // Allow optional year filter to reduce payload size (defaults to current year)
+            $year = (int) $request->integer('year', now()->year);
+
+            $contributions = $user->contributions()
+                ->with('scheme')
+                ->where('status', 'success')
+                ->when($year > 0, function ($q) use ($year) {
+                    $q->whereYear('created_at', $year);
+                })
+                ->orderBy('created_at')
+                ->get();
 
             $data = [
                 'user' => $user,
                 'branch' => optional($user->branch)->name,
-                'year' => (int) now()->year,
-                'contributions' => $user->contributions()->with('scheme')->where('status', 'success')->orderBy('created_at')->get(),
+                'year' => $year,
+                'contributions' => $contributions,
             ];
 
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.passbook', $data);

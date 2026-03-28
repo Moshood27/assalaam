@@ -6,12 +6,17 @@
   "scripts": {
     "cap:add:android": "npx cap add android",
     "cap:add:ios": "npx cap add ios",
+    "precap:sync": "npm run cap:assets",
     "cap:sync": "npx cap sync",
     "cap:open:android": "npx cap open android",
     "cap:open:ios": "npx cap open ios",
+    "precap:assets": "node scripts/generate-branded-assets.mjs --force",
     "cap:assets": "npx @capacitor/assets generate --androidProject frontend/android --iosProject frontend/ios/App --pwaManifestPath frontend/public/manifest.webmanifest",
+    "precap:assets:android": "node scripts/generate-branded-assets.mjs --force",
     "cap:assets:android": "npx @capacitor/assets generate --android --androidProject frontend/android",
+    "precap:assets:ios": "node scripts/generate-branded-assets.mjs --force",
     "cap:assets:ios": "npx @capacitor/assets generate --ios --iosProject frontend/ios/App",
+    "precap:assets:pwa": "node scripts/generate-branded-assets.mjs --force",
     "cap:assets:pwa": "npx @capacitor/assets generate --pwa --pwaManifestPath frontend/public/manifest.webmanifest",
     "assets:placeholders": "node scripts/generate-placeholder-assets.mjs",
     "assets:brand": "node scripts/generate-branded-assets.mjs --force"
