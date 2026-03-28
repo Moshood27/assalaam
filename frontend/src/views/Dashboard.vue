@@ -11,7 +11,7 @@
           <h2 class="text-sm font-bold text-slate-800 uppercase truncate">{{ dashboardData.full_name }}</h2>
         </div>
       </button>
-      <button class="bg-slate-100 p-2 rounded-full text-xl" title="Support" @click="$router.push('/settings')">⚙️</button>
+      <button id="nav-profile" class="bg-slate-100 p-2 rounded-full text-xl" title="Settings" @click="$router.push('/settings')">⚙️</button>
     </header>
 
     <div class="p-4">
@@ -22,7 +22,7 @@
         </div>
         <button @click="dismissBanner" class="text-emerald-900/70 absolute right-3 top-3 sm:static sm:mt-0">✕</button>
       </div>
-      <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
+      <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
         <div class="flex items-center gap-2 mb-2 relative z-10">
           <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
@@ -70,7 +70,7 @@
         <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📶</div>
         <span class="text-sm font-bold text-slate-700">Airtime/Data</span>
       </button>
-      <button @click="$router.push('/loans')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+      <button id="loan-btn" @click="$router.push('/loans')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">📊</div>
         <span class="text-sm font-bold text-slate-700">Loan Records</span>
       </button>
@@ -94,6 +94,17 @@
         <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">🕋</div>
         <span class="text-sm font-bold text-slate-700">Hajj & Umrah</span>
       </button>
+    </div>
+
+    <!-- Quick guide links -->
+    <div class="px-4 mt-3 text-[12px] text-slate-600">
+      <p>
+        New here? Learn about
+        <button class="text-emerald-700 font-semibold underline" @click="showPassbookInfo">Passbook</button>,
+        <button class="text-emerald-700 font-semibold underline" @click="showZakatInfo">Zakat</button>,
+        and
+        <button class="text-emerald-700 font-semibold underline" @click="showHajjInfo">Hajj & Umrah</button>.
+      </p>
     </div>
 
     <div class="px-4 mt-8">
@@ -195,6 +206,7 @@ import { useNotice } from '../composables/useNotice'
 import FinCard from '../components/FinCard.vue'
 import StatPill from '../components/StatPill.vue'
 import TrendChart from '../components/TrendChart.vue'
+import { startDashboardTour } from '../utils/tour'
 
 const modal = useModal()
 const { notice, showNotice, closeNotice } = useNotice()
@@ -306,5 +318,46 @@ const checkZakat = async () => {
   }
 }
 
-onMounted(load)
+// Quick guide: inline explanations for key features
+const showPassbookInfo = () => {
+  const msg = [
+    'Your digital ledger with the cooperative.',
+    '• See every contribution, withdrawal, loan disbursement/repayment, fines, and adjustments.',
+    '• Tap a row to view full details and reference.',
+    '• Use filters (date range, scheme/type) to find entries fast.',
+    'Pro tip: For printing/exporting, use the Web Passbook from the banner link.'
+  ].join('\n')
+  showNotice('Passbook', msg, 'info')
+}
+
+const showZakatInfo = () => {
+  const msg = [
+    'We help you check if Zakat is due and estimate the amount.',
+    '• Eligibility: compares your eligible wealth with the Nisab and timing (haul).',
+    '• Rate: typically 2.5% on eligible holdings once due.',
+    '• Data source: based on balances and assets recorded with the cooperative.',
+    'You can run an estimate now and, if due, pay securely in-app.'
+  ].join('\n')
+  showNotice('Zakat', msg, 'info')
+}
+
+const showHajjInfo = () => {
+  const msg = [
+    'Plan and save towards your Hajj or Umrah journey.',
+    '• Set a goal amount and target date on the Goals page.',
+    '• Track progress with each deposit and stay on schedule.',
+    '• Withdrawals are protected to keep your pilgrimage savings intact.'
+  ].join('\n')
+  showNotice('Hajj & Umrah', msg, 'info')
+}
+
+onMounted(async () => {
+  try {
+    await load()
+  } catch (_) {}
+  // Ensure DOM is fully painted and elements are visible before starting tour
+  setTimeout(() => {
+    try { startDashboardTour() } catch (_) {}
+  }, 500)
+})
 </script>

@@ -8,7 +8,8 @@ import VueApexCharts from 'vue3-apexcharts'
 // Simple global idle timer: logs out after 2 minutes of no activity
 function setupIdleLogout(router, timeoutMs = 120000) {
   let timerId = null
-  const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'visibilitychange']
+  const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'visibilitychange', 'focus']
+  const LAST_ACTIVITY_KEY = 'last_activity_ts'
 
   const clearTokensAndRedirect = () => {
     const hadAdmin = !!localStorage.getItem('admin_token')
@@ -29,12 +30,22 @@ function setupIdleLogout(router, timeoutMs = 120000) {
     }
   }
 
-  const reset = () => {
+  const isExpired = () => {
+    const ts = Number(localStorage.getItem(LAST_ACTIVITY_KEY) || 0)
+    return ts > 0 && (Date.now() - ts >= timeoutMs)
+  }
+
+  const arm = () => {
     if (timerId) clearTimeout(timerId)
-    // Only arm timer if authenticated (member or admin)
     if (localStorage.getItem('token') || localStorage.getItem('admin_token')) {
       timerId = setTimeout(clearTokensAndRedirect, timeoutMs)
     }
+  }
+
+  const reset = () => {
+    // Update last activity timestamp and arm timer
+    localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()))
+    arm()
   }
 
   // Hook into common user activity to reset timer
@@ -44,13 +55,43 @@ function setupIdleLogout(router, timeoutMs = 120000) {
   // Reset on route navigation as well
   router.afterEach(() => reset())
 
-  // Initialize
-  reset()
+  // Integrate with Capacitor App lifecycle to make this truly global on mobile
+  try {
+    // Lazy import to avoid errors on web
+    import('@capacitor/core').then(({ Capacitor }) => {
+      const hasApp = Capacitor?.isPluginAvailable?.('App')
+      if (!hasApp) return
+      import('@capacitor/app').then(({ App }) => {
+        App.addListener('appStateChange', ({ isActive }) => {
+          // When app becomes active, if we've exceeded the timeout, logout immediately
+          if (isActive) {
+            if (isExpired()) return clearTokensAndRedirect()
+            // If not expired, refresh timer and timestamp
+            reset()
+          }
+        })
+      }).catch(() => {})
+    }).catch(() => {})
+  } catch (_) {}
+
+  // Initialize: only set timestamp if authenticated
+  if (localStorage.getItem('token') || localStorage.getItem('admin_token')) {
+    if (!localStorage.getItem(LAST_ACTIVITY_KEY)) {
+      localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()))
+    }
+  }
+  arm()
 
   // Return a disposer if needed later
   return () => {
     if (timerId) clearTimeout(timerId)
     events.forEach(evt => window.removeEventListener(evt, onActivity))
+    try {
+      import('@capacitor/app').then(({ App }) => {
+        // Capacitor doesn't yet expose removeAllListeners per event in all versions; best-effort cleanup.
+        App.removeAllListeners?.()
+      }).catch(() => {})
+    } catch (_) {}
   }
 }
 

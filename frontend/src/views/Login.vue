@@ -1,7 +1,14 @@
 <template>
-  <div class="min-h-screen auth-bg flex items-center justify-center p-4">
+  <div class="min-h-screen auth-bg relative flex items-center justify-center p-4 overflow-hidden">
+    <!-- Decorative fintech gradient blobs -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+      <div class="absolute -top-24 -right-20 w-72 h-72 bg-gradient-to-br from-emerald-400/25 to-sky-400/25 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-28 -left-16 w-80 h-80 bg-gradient-to-tr from-emerald-300/20 to-indigo-300/20 rounded-full blur-3xl"></div>
+    </div>
     <div class="w-full max-w-md">
-      <div class="card card-elevated p-6 sm:p-8">
+      <div class="card card-elevated relative overflow-hidden p-6 sm:p-8 bg-white/80 backdrop-blur-xl border border-white/60 shadow-xl">
+        <!-- Accent glow line -->
+        <div aria-hidden="true" class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
         <div class="flex flex-col items-center text-center mb-6">
           <div class="mb-2">
             <img :src="brand.logo" :alt="brand.name" class="h-16 sm:h-20 w-auto" />
@@ -22,14 +29,16 @@
             />
           </div>
 
-          <div>
+          <div class="relative">
             <label class="form-label">Membership Number</label>
-            <input v-model="form.membership_number" type="text" placeholder="e.g. 052286" class="input" />
+            <span class="absolute left-3 top-9 text-slate-400">#</span>
+            <input v-model="form.membership_number" type="text" placeholder="e.g. 052286" class="input pl-8" />
           </div>
 
           <div class="relative">
             <label class="form-label">Password</label>
-            <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="Enter your password" class="input pr-12" />
+            <span class="absolute left-3 top-9 text-slate-400">🔑</span>
+            <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="Enter your password" class="input pl-8 pr-12" />
             <button @click="showPassword = !showPassword" type="button" class="absolute right-3 top-9 text-gray-400 hover:text-slate-600" aria-label="Toggle password visibility">
               <span v-if="showPassword">🙈</span>
               <span v-else>👁️</span>
@@ -41,12 +50,12 @@
             <label for="rememberBio" class="select-none">Remember me with biometrics on this device</label>
           </div>
 
-          <button v-if="biometricSupported && canBiometricQuickLogin" @click="handleQuickLogin" :disabled="quickLoading" class="w-full h-12 text-base bg-white border border-emerald-200 text-emerald-800 rounded-xl font-bold flex items-center justify-center gap-2">
+          <button v-if="biometricSupported && canBiometricQuickLogin" @click="handleQuickLogin" :disabled="quickLoading" class="w-full h-12 text-base bg-white/90 backdrop-blur border border-emerald-200/80 hover:bg-emerald-50/50 text-emerald-800 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm">
             <span v-if="quickLoading" class="inline-block animate-spin border-2 border-emerald-600 border-t-transparent rounded-full w-5 h-5"></span>
             <span v-else>🔒 Quick Login with Biometrics</span>
           </button>
 
-          <button @click="handleLogin" :disabled="loading" class="btn-primary w-full h-12 text-base">
+          <button @click="handleLogin" :disabled="loading" class="w-full h-12 text-base rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-700 to-teal-600 hover:from-emerald-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
             <span v-if="loading" class="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
             <span>{{ loading ? 'Signing in…' : 'Sign in' }}</span>
           </button>

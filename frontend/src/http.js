@@ -22,19 +22,22 @@ axios.interceptors.request.use((config) => {
   return config
 })
 
-// Global response interceptor to auto-logout on 401 (expired/invalid token)
+// Global response interceptor to auto-logout on auth/permission errors
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status
-    if (status === 401) {
+    // 401 = Unauthorized (expired/invalid token)
+    // 403 = Forbidden (e.g., user inactive/suspended)
+    // 423 = Locked (account locked)
+    if (status === 401 || status === 403 || status === 423) {
       // Clear both member and admin tokens to be safe
       const hadMember = !!localStorage.getItem('token')
       const hadAdmin = !!localStorage.getItem('admin_token')
       localStorage.removeItem('token')
       localStorage.removeItem('admin_token')
 
-      // Try to redirect if router is available (SPA context)
+      // Try to redirect to the appropriate login screen
       try {
         const current = window?.location?.pathname || '/'
         const basePath = (base && base.endsWith('/')) ? base : `${base}/`

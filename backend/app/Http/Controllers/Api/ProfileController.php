@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -180,19 +181,45 @@ class ProfileController extends Controller
         $user = $request->user();
         $data = $request->validate([
             'token' => ['required', 'string', 'min:10', 'max:255'],
+            'platform' => ['nullable', 'string', 'max:32'],
         ]);
 
         // Store in both fields for backward compatibility
         $user->device_token = $data['token'];
-        if (property_exists($user, 'fcm_token') || \Schema::hasColumn('users', 'fcm_token')) {
+        if (Schema::hasColumn('users', 'fcm_token')) {
             $user->fcm_token = $data['token'];
         }
         $user->save();
+
+        // Also link this token to the user in fcm_tokens table (multi-device support)
+        try {
+            if (Schema::hasTable('fcm_tokens')) {
+                $existing = DB::table('fcm_tokens')->where('token', $data['token'])->first();
+                $now = now();
+                $payload = [
+                    'user_id' => $user->id,
+                    'platform' => $data['platform'] ?? null,
+                    'last_seen_at' => $now,
+                    'updated_at' => $now,
+                ];
+                if ($existing) {
+                    DB::table('fcm_tokens')->where('id', $existing->id)->update($payload);
+                } else {
+                    DB::table('fcm_tokens')->insert(array_merge($payload, [
+                        'token' => $data['token'],
+                        'created_at' => $now,
+                    ]));
+                }
+            }
+        } catch (\Throwable $e) {
+            // Do not fail the request if optional table is missing or write fails
+        }
 
         return response()->json([
             'message' => 'Push token saved',
             'device_token' => $user->device_token,
             'fcm_token' => $user->fcm_token ?? null,
+            'platform' => $data['platform'] ?? null,
         ]);
     }
 }

@@ -80,3 +80,27 @@ html, body, #app { height: 100%; }
   /* Empty state */
   .empty-state { @apply text-center text-slate-500 text-sm; }
 }
+
+/* Customizing the Driver.js popover for mobile */
+.driver-popover {
+  background-color: #ffffff;
+  color: #333;
+  border-radius: 12px;
+  max-width: 280px !important; /* Keep it narrow for small screens */
+  padding: 15px;
+}
+
+.driver-popover-title {
+  font-weight: bold;
+  font-size: 18px;
+  color: #2c3e50; /* Your primary color */
+}
+
+.driver-popover-description {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.driver-popover-arrow {
+  border-color: #ffffff;
+}
