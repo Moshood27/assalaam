@@ -133,3 +133,34 @@ Use these steps when you want to clean Gradle caches, re-sync Capacitor, and bui
 Notes
 - If you get a “Permission denied” on ./gradlew, run: chmod +x gradlew
 - Ensure Java 17 and Android SDK are installed and available to Gradle (Android Studio handles this).
+
+
+## ATTAQWA splash and app icon (quick steps)
+The project now generates and uses ATTAQWA-branded splash and icons by default.
+
+- To regenerate the ATTAQWA splash/logo and sync them into Android and iOS projects in one step:
+
+  npm run mobile:assets:sync
+
+  This runs the following under the hood:
+  - Pre-step: node scripts/generate-branded-assets.mjs --force (creates assets/icon.png and assets/splash.png with ATTAQWA wordmark and brand color)
+  - Generate sizes: npx @capacitor/assets generate (writes platform-specific resources under frontend/android and frontend/ios)
+  - Sync: npx cap sync (copies web and refreshed assets into native projects)
+
+- To generate ASSALAM-branded splash/logo and sync them into Android and iOS in one step:
+
+  npm run mobile:assets:sync:assalam
+
+  You can also only generate the images without syncing:
+
+  npm run assets:brand:assalam
+
+Notes
+- The brand is controlled by BRAND_SLUG/VITE_BRAND_SLUG env vars. The default in frontend/.env is attaqwa, so you don’t need to set anything for ATTAQWA.
+- Alternatively, you can override via CLI: node scripts/generate-branded-assets.mjs --force --brand assalam
+- The mobile app hides the splash screen on startup (see frontend/src/App.vue using SplashScreen.hide()), so the splash is connected to the app lifecycle.
+- If you only target one platform:
+  - Android: npm run mobile:assets:android
+  - Android (ASSALAM): npm run mobile:assets:android:assalam
+  - iOS (macOS): npm run mobile:assets:ios
+  - iOS (ASSALAM, macOS): npm run mobile:assets:ios:assalam

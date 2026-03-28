@@ -14,6 +14,9 @@ class Kernel extends ConsoleKernel
     {
         // Send reminders to defaulters every day at 08:00 server time
         $schedule->command('loans:send-default-reminders')->dailyAt('08:00');
+
+        // Check every minute for AGM sessions that just opened and notify members once
+        $schedule->command('agm:notify-voting-open')->everyMinute();
     }
 
     /**

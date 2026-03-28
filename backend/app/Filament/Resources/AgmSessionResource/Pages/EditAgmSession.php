@@ -26,10 +26,11 @@ class EditAgmSession extends EditRecord
                 $push = app(\App\Services\PushService::class);
                 $title = 'AGM Voting Open';
                 $body = 'Voting is now open for \'' . ($this->record->name ?? 'AGM Session') . '\'.';
+                $route = '/agm/sessions/' . $this->record->id;
                 User::query()
                     ->whereNotNull('device_token')
                     ->orWhereNotNull('fcm_token')
-                    ->chunk(500, function ($users) use ($push, $title, $body) {
+                    ->chunk(500, function ($users) use ($push, $title, $body, $route) {
                         foreach ($users as $u) {
                             $token = $u->fcm_token ?: ($u->device_token ?? null);
                             if (!$token) continue;
@@ -39,9 +40,15 @@ class EditAgmSession extends EditRecord
                                 'session_name' => (string) $this->record->name,
                                 'start_at' => optional($this->record->start_at)->toIso8601String(),
                                 'end_at' => optional($this->record->end_at)->toIso8601String(),
+                                'route' => $route,
                             ]);
                         }
                     });
+                // mark as notified to avoid duplicate notices from scheduler
+                try {
+                    $this->record->voting_open_notified_at = now();
+                    $this->record->save();
+                } catch (\Throwable $e) {}
             }
         } catch (\Throwable $e) {
             // ignore push errors

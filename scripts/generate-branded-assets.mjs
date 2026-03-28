@@ -10,31 +10,49 @@ const SPLASH_PATH = path.join(ASSETS_DIR, 'splash.png');
 const BRAND_GREEN = '#065f46';
 const WHITE = '#ffffff';
 
-// Determine brand slug for wordmark (fallback to assalam)
+// Determine brand slug for wordmark (fallback to attaqwa)
 function detectBrandSlug() {
   const envSlug = process.env.BRAND_SLUG || process.env.VITE_BRAND_SLUG;
   if (envSlug) return String(envSlug).toLowerCase();
   try {
+    // Prefer frontend configs over backend; prefer example files last
     const tryFiles = [
-      path.resolve(process.cwd(), 'backend/.env'),
       path.resolve(process.cwd(), 'frontend/.env'),
-      path.resolve(process.cwd(), 'backend/.env.example'),
       path.resolve(process.cwd(), 'frontend/.env.example'),
+      path.resolve(process.cwd(), 'backend/.env'),
+      path.resolve(process.cwd(), 'backend/.env.example'),
     ];
     for (const f of tryFiles) {
       if (fs.existsSync(f)) {
         const txt = fs.readFileSync(f, 'utf8');
-        const m1 = txt.match(/^\s*BRAND_SLUG\s*=\s*([^\r\n#]+)/m);
-        if (m1) return String(m1[1]).trim().replace(/['\"]/g, '').toLowerCase();
-        const m2 = txt.match(/^\s*VITE_BRAND_SLUG\s*=\s*([^\r\n#]+)/m);
-        if (m2) return String(m2[1]).trim().replace(/['\"]/g, '').toLowerCase();
+        // Prefer VITE_BRAND_SLUG if both are present in the same file
+        const mVite = txt.match(/^\s*VITE_BRAND_SLUG\s*=\s*([^\r\n#]+)/m);
+        if (mVite) return String(mVite[1]).trim().replace(/['\"]/g, '').toLowerCase();
+        const mBackend = txt.match(/^\s*BRAND_SLUG\s*=\s*([^\r\n#]+)/m);
+        if (mBackend) return String(mBackend[1]).trim().replace(/['\"]/g, '').toLowerCase();
       }
     }
   } catch (_) {}
-  return 'assalam';
+  return 'attaqwa';
 }
-const BRAND_SLUG = detectBrandSlug();
-const WORDMARK = BRAND_SLUG === 'attaqwa' ? 'ATTAQWA' : 'ASSALAM';
+
+function cliBrandOverride() {
+  const args = process.argv.slice(2);
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a.startsWith('--brand=')) return a.split('=')[1].trim().toLowerCase();
+    if ((a === '--brand' || a === '-b') && args[i + 1]) return String(args[i + 1]).trim().toLowerCase();
+  }
+  return null;
+}
+
+function getBrandSlug() {
+  const cli = cliBrandOverride();
+  if (cli) return cli;
+  return detectBrandSlug();
+}
+const BRAND_SLUG = getBrandSlug();
+const WORDMARK = BRAND_SLUG === 'assalam' ? 'ASSALAM' : 'ATTAQWA';
 
 function hexToRgb(hex) {
   const n = parseInt(hex.replace('#', ''), 16);

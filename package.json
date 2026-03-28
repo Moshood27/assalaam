@@ -19,7 +19,15 @@
     "precap:assets:pwa": "node scripts/generate-branded-assets.mjs --force",
     "cap:assets:pwa": "npx @capacitor/assets generate --pwa --pwaManifestPath frontend/public/manifest.webmanifest",
     "assets:placeholders": "node scripts/generate-placeholder-assets.mjs",
-    "assets:brand": "node scripts/generate-branded-assets.mjs --force"
+    "assets:brand": "node scripts/generate-branded-assets.mjs --force",
+    "assets:brand:assalam": "node scripts/generate-branded-assets.mjs --force --brand assalam",
+    "assets:brand:attaqwa": "node scripts/generate-branded-assets.mjs --force --brand attaqwa",
+    "mobile:assets:sync": "npm run cap:assets && npm run cap:sync",
+    "mobile:assets:sync:assalam": "node scripts/generate-branded-assets.mjs --force --brand assalam && npm run cap:assets && npm run cap:sync",
+    "mobile:assets:android": "npm run cap:assets:android && npx cap sync android",
+    "mobile:assets:android:assalam": "node scripts/generate-branded-assets.mjs --force --brand assalam && npm run cap:assets:android && npx cap sync android",
+    "mobile:assets:ios": "npm run cap:assets:ios && npx cap sync ios",
+    "mobile:assets:ios:assalam": "node scripts/generate-branded-assets.mjs --force --brand assalam && npm run cap:assets:ios && npx cap sync ios"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.1",

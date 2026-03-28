@@ -10,10 +10,11 @@ No design yet? Generate compliant placeholders
 - This will create opaque PNGs with the correct sizes (no rounded corners, no transparency) in assets/.
 - If files already exist, the generator will skip them.
 
-Branded 'ASSALAM' design placeholders
-- From the project root, run: npm run assets:brand
-- This will overwrite assets/icon.png and assets/splash.png with branded versions: the icon has a white badge with ASSALAM wordmark; the splash has centered ASSALAM text on green.
-- Then proceed to generate platform assets.
+Branded ATTAQWA design assets (auto‑generated)
+- From the project root, run: npm run cap:assets
+- This runs a pre-step that overwrites assets/icon.png and assets/splash.png with branded versions based on BRAND_SLUG/VITE_BRAND_SLUG.
+- With the default configuration (frontend/.env sets VITE_BRAND_SLUG=attaqwa), the icon has a white badge with the ATTAQWA wordmark and the splash shows centered ATTAQWA text on green.
+- Then proceed to sync platforms.
 
 How to generate platform assets (after placing the images or generating placeholders):
 
