@@ -178,6 +178,19 @@ curl -H "Authorization: Bearer <TOKEN>" \
   - Confirm the Paystack customer_code is stored on the correct user and that the DVA account number matches. The webhook resolver checks customer_code → account_number → metadata.user_id.
 
 
+## BVN and Verification Details
+- When assigning a virtual account, the backend can accept and persist a member’s BVN.
+- New fields on users table: bvn (string), bvn_verified_at (timestamp nullable), dva_verification_meta (json nullable).
+- API responses:
+  - GET /api/profile → includes bvn_assigned (boolean) and verification_details (e.g., "Wema Bank - 0123456789 (John Doe)").
+  - GET /api/virtual-account → includes bvn_assigned and verification_details alongside the account details.
+  - GET /api/wallet → virtual_account includes bvn_assigned and verification_details.
+  - GET /api/dashboard → virtual_account includes bvn_assigned and verification_details.
+- Controller behavior:
+  - POST /api/virtual-account/assign now accepts optional: bvn, first_name, last_name, phone, preferred_bank.
+  - BVN is stored if provided; verification meta is recorded for audit. If provider later returns verified status, bvn_verified_at can be populated by a separate process.
+- Frontend: Profile.vue already reads and displays bvn_assigned and verification_details in the Verification section.
+
 ## Notes on Providers (Paystack vs Monnify)
 - Cooperatives often choose Monnify due to flatter fees and multi‑bank DVAs, but Paystack is fully supported here.
 - To switch providers in the future:

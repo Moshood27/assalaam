@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RepaymentReceiptUser;
+use App\Mail\PaymentStatusMail;
 use App\Services\SmsService;
 
 class WebhookController extends Controller
@@ -31,6 +32,54 @@ class WebhookController extends Controller
 
         $event = $request->input('event');
         $data = $request->input('data');
+
+        // Handle immediate failure notifications
+        if ($event === 'charge.failed') {
+            $reference = $data['reference'] ?? null;
+            $amountNgn = isset($data['amount']) ? round(((int) $data['amount']) / 100, 2) : null;
+            $channel = $data['channel'] ?? null;
+            $reason = $data['gateway_response'] ?? ($data['message'] ?? 'Payment failed');
+            $meta = $data['metadata'] ?? [];
+            if (is_string($meta)) { $decoded = json_decode($meta, true); if (json_last_error() === JSON_ERROR_NONE) { $meta = $decoded; } }
+            if (is_object($meta)) { $meta = (array) $meta; }
+            $user = null;
+            if ($reference) {
+                $contrib = \App\Models\Contribution::where('reference', $reference)->first();
+                if ($contrib) { $user = \App\Models\User::find($contrib->user_id); }
+            }
+            if (!$user) {
+                $customerCode = $data['customer']['customer_code'] ?? null;
+                if ($customerCode) { $user = \App\Models\User::where('paystack_customer_code', $customerCode)->first(); }
+                if (!$user && isset($meta['user_id'])) { $uid = is_numeric($meta['user_id']) ? (int)$meta['user_id'] : null; if ($uid) { $user = \App\Models\User::find($uid); } }
+            }
+            if ($user) {
+                try {
+                    if (!empty($user->email)) {
+                        Mail::to($user->email)->send(new PaymentStatusMail(
+                            status: 'failed',
+                            title: 'Payment Failed',
+                            message: 'Your payment attempt was not successful. ' . $reason,
+                            amount: $amountNgn,
+                            reference: $reference,
+                            channel: $channel,
+                            route: $reference && \App\Models\Contribution::where('reference', $reference)->exists() ? '/pay' : '/wallet',
+                            meta: ['provider' => 'paystack']
+                        ));
+                    }
+                    $push = app(\App\Services\PushService::class);
+                    $token = $user->fcm_token ?: ($user->device_token ?? null);
+                    $push->send($token, 'Payment Failed', 'Your payment attempt was not successful. ' . $reason, [
+                        'type' => 'payment_failed',
+                        'amount' => $amountNgn,
+                        'reference' => (string) ($reference ?? ''),
+                        'route' => $reference && \App\Models\Contribution::where('reference', $reference)->exists() ? '/pay' : '/wallet',
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to send Paystack failure notification', ['reference' => $reference, 'error' => $e->getMessage()]);
+                }
+            }
+            return response()->json(['status' => 'ok']);
+        }
 
         if ($event === 'charge.success') {
             $reference = $data['reference'] ?? null;
@@ -265,6 +314,22 @@ class WebhookController extends Controller
                         source: 'wallet_topup'
                     ));
 
+                    // Email receipt (best-effort)
+                    try {
+                        if (!empty($topupUser->email)) {
+                            Mail::to($topupUser->email)->send(new PaymentStatusMail(
+                                status: 'success',
+                                title: 'Wallet Top-up Successful',
+                                message: 'Your wallet has been credited successfully.',
+                                amount: $amountNgn,
+                                reference: $reference,
+                                channel: $vdChannel,
+                                route: '/wallet',
+                                meta: ['provider' => 'paystack']
+                            ));
+                        }
+                    } catch (\Throwable $e) {}
+
                     // Fire push notification to device
                     $push = app(\App\Services\PushService::class);
                     $fresh = $topupUser->fresh();
@@ -275,6 +340,7 @@ class WebhookController extends Controller
                         'amount' => (float) $amountNgn,
                         'reference' => (string) $reference,
                         'balance' => $newBal,
+                        'route' => '/wallet',
                     ]);
                 } catch (\Throwable $e) {
                     Log::warning('Failed to send wallet top-up notification', [
@@ -330,6 +396,22 @@ class WebhookController extends Controller
                         source: 'scheme_payment'
                     ));
 
+                    // Email receipt (best-effort)
+                    try {
+                        if (!empty($user->email)) {
+                            Mail::to($user->email)->send(new PaymentStatusMail(
+                                status: 'success',
+                                title: 'Payment Successful',
+                                message: 'Your payment has been received and allocated to your schemes.',
+                                amount: $expectedTotal,
+                                reference: $reference,
+                                channel: $vd['channel'] ?? null,
+                                route: '/passbook',
+                                meta: ['provider' => 'paystack']
+                            ));
+                        }
+                    } catch (\Throwable $e) {}
+
                     // Fire push notification to device
                     $push = app(\App\Services\PushService::class);
                     $token = $user->fcm_token ?: ($user->device_token ?? null);
@@ -337,7 +419,7 @@ class WebhookController extends Controller
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
                         'reference' => (string) $reference,
-                        'route' => '/dashboard',
+                        'route' => '/passbook',
                     ]);
                 }
             } catch (\Throwable $e) {
@@ -419,7 +501,48 @@ class WebhookController extends Controller
 
         $vd = $verify->json('data');
         if (!$vd || strtolower((string)($vd['status'] ?? '')) !== 'successful') {
+            $flwStatus = strtolower((string)($vd['status'] ?? ''));
             Log::info('Flutterwave verify not successful', ['reference' => $reference, 'status' => $vd['status'] ?? null]);
+
+            // Notify member on explicit failure/cancellation
+            if (in_array($flwStatus, ['failed', 'cancelled', 'canceled', 'error'], true)) {
+                try {
+                    $meta = $vd['meta'] ?? ($data['meta'] ?? []);
+                    if (is_string($meta)) { $decoded = json_decode($meta, true); if (json_last_error() === JSON_ERROR_NONE) { $meta = $decoded; } }
+                    if (is_object($meta)) { $meta = (array) $meta; }
+                    $user = null;
+                    $contrib = \App\Models\Contribution::where('reference', $reference)->first();
+                    if ($contrib) { $user = \App\Models\User::find($contrib->user_id); }
+                    if (!$user && isset($meta['user_id']) && is_numeric($meta['user_id'])) {
+                        $user = \App\Models\User::find((int)$meta['user_id']);
+                    }
+                    if ($user) {
+                        $reason = $vd['processor_response'] ?? ($vd['status'] ?? 'Payment failed');
+                        if (!empty($user->email)) {
+                            Mail::to($user->email)->send(new PaymentStatusMail(
+                                status: 'failed',
+                                title: 'Payment Failed',
+                                message: 'Your payment attempt was not successful. ' . $reason,
+                                amount: (float) ($vd['charged_amount'] ?? $vd['amount'] ?? 0),
+                                reference: $reference,
+                                channel: $vd['payment_type'] ?? null,
+                                route: $contrib ? '/pay' : '/wallet',
+                                meta: ['provider' => 'flutterwave']
+                            ));
+                        }
+                        $push = app(\App\Services\PushService::class);
+                        $token = $user->fcm_token ?: ($user->device_token ?? null);
+                        $push->send($token, 'Payment Failed', 'Your payment attempt was not successful. ' . ($reason ?? ''), [
+                            'type' => 'payment_failed',
+                            'amount' => (float) ($vd['charged_amount'] ?? $vd['amount'] ?? 0),
+                            'reference' => (string) $reference,
+                            'route' => $contrib ? '/pay' : '/wallet',
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to send Flutterwave failure notification', ['reference' => $reference, 'error' => $e->getMessage()]);
+                }
+            }
             return response()->json(['message' => 'Not successful'], 200);
         }
 
@@ -541,6 +664,22 @@ class WebhookController extends Controller
                         source: 'scheme_payment'
                     ));
 
+                    // Email receipt (best-effort)
+                    try {
+                        if (!empty($user->email)) {
+                            Mail::to($user->email)->send(new PaymentStatusMail(
+                                status: 'success',
+                                title: 'Payment Successful',
+                                message: 'Your payment has been received and allocated to your schemes.',
+                                amount: $expectedTotal,
+                                reference: $reference,
+                                channel: $vd['payment_type'] ?? null,
+                                route: '/passbook',
+                                meta: ['provider' => 'flutterwave']
+                            ));
+                        }
+                    } catch (\Throwable $e) {}
+
                     // Fire push notification to device
                     $push = app(\App\Services\PushService::class);
                     $token = $user->fcm_token ?: ($user->device_token ?? null);
@@ -548,7 +687,7 @@ class WebhookController extends Controller
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
                         'reference' => (string) $reference,
-                        'route' => '/dashboard',
+                        'route' => '/passbook',
                     ]);
                 }
             } catch (\Throwable $e) {

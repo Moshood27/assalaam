@@ -21,7 +21,7 @@
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-bold text-slate-800">Virtual Account (Bank Transfer)</h3>
-          <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning"
+          <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (bvn && !bvnValid)"
                   class="text-xs bg-emerald-700 text-white px-3 py-2 rounded-xl">
             {{ assigning ? 'Creating…' : 'Generate Account' }}
           </button>
@@ -44,7 +44,17 @@
           </div>
           <p class="text-xs text-slate-500">Transfer NGN to this account to top up your wallet automatically.</p>
         </div>
-        <div v-else class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</div>
+        <div v-else class="space-y-3">
+          <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
+          <div class="grid grid-cols-1 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">BVN (optional)</label>
+              <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" />
+              <p v-if="bvn && !bvnValid" class="text-rose-600 text-xs mt-1">Please enter a valid 11-digit BVN.</p>
+              <p class="text-[10px] text-slate-400 mt-1">Providing your BVN helps us verify your dedicated account faster.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Card Top-up Form -->
@@ -109,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
@@ -126,6 +136,11 @@ const topupAmount = ref('')
 const loading = ref(false)
 const assigning = ref(false)
 const showFund = ref(true)
+
+// Optional BVN input before generating a virtual account
+const bvn = ref('')
+const bvnDigits = computed(() => String(bvn.value || '').replace(/\D/g, ''))
+const bvnValid = computed(() => bvnDigits.value.length === 11)
 
 const formatMoney = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const titleFor = (tx) => {
@@ -170,11 +185,16 @@ const initTopup = async () => {
 const assignVirtualAccount = async () => {
   try {
     assigning.value = true
-    await axios.post('/api/virtual-account/assign', {})
+    const payload = {}
+    if (bvnDigits.value.length === 11) payload.bvn = bvnDigits.value
+    const { data } = await axios.post('/api/virtual-account/assign', payload)
+    const assigned = Boolean(data?.bvn_assigned ?? true)
+    try { localStorage.setItem('bvn_assigned', JSON.stringify(assigned)) } catch (_) {}
     await loadWallet()
+    bvn.value = ''
     alert('Virtual account generated!')
   } catch (e) {
-    alert('Failed to generate virtual account')
+    alert(e?.response?.data?.message || 'Failed to generate virtual account')
   } finally {
     assigning.value = false
   }

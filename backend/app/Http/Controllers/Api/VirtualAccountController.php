@@ -13,11 +13,20 @@ class VirtualAccountController extends Controller
     public function show(Request $request)
     {
         $user = $request->user();
+        $verificationDetails = null;
+        if ($user->dva_bank_name && $user->dva_account_number) {
+            $verificationDetails = $user->dva_bank_name . ' - ' . $user->dva_account_number;
+            if (!empty($user->dva_account_name)) {
+                $verificationDetails .= ' (' . $user->dva_account_name . ')';
+            }
+        }
         return response()->json([
             'paystack_customer_code' => $user->paystack_customer_code,
             'account_number' => $user->dva_account_number,
             'account_name' => $user->dva_account_name,
             'bank_name' => $user->dva_bank_name,
+            'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
+            'verification_details' => $verificationDetails,
         ]);
     }
 
@@ -28,6 +37,9 @@ class VirtualAccountController extends Controller
         $validated = $request->validate([
             'preferred_bank' => 'nullable|string', // e.g., wema-bank, titan-paystack
             'phone' => 'nullable|string',
+            'bvn' => 'nullable|string|digits:11',
+            'first_name' => 'nullable|string',
+            'last_name' => 'nullable|string',
         ]);
 
         $secret = config('services.paystack.secret_key');
@@ -52,8 +64,16 @@ class VirtualAccountController extends Controller
             if (! $user->paystack_customer_code) {
                 $payload = [
                     'email' => $user->email,
-                    'first_name' => $user->name,
                 ];
+                // Use provided first/last name if available; otherwise attempt to split user's name
+                if (!empty($validated['first_name']) || !empty($validated['last_name'])) {
+                    if (!empty($validated['first_name'])) { $payload['first_name'] = $validated['first_name']; }
+                    if (!empty($validated['last_name'])) { $payload['last_name'] = $validated['last_name']; }
+                } else {
+                    $parts = preg_split('/\s+/', trim((string)$user->name));
+                    $payload['first_name'] = $parts[0] ?? ($user->name ?: '');
+                    if (count($parts) > 1) { $payload['last_name'] = implode(' ', array_slice($parts, 1)); }
+                }
                 if (! empty($validated['phone'])) {
                     $payload['phone'] = $validated['phone'];
                 }
@@ -109,10 +129,25 @@ class VirtualAccountController extends Controller
                 }
             }
 
-            // Persist account details
+            // Persist account details and optional BVN
             $user->dva_account_number = $acc['account_number'] ?? null;
             $user->dva_account_name = $acc['account_name'] ?? null;
             $user->dva_bank_name = ($acc['bank']['name'] ?? ($acc['bank_name'] ?? null));
+            if (!empty($validated['bvn']) && empty($user->bvn)) {
+                $user->bvn = $validated['bvn'];
+            }
+            // Store minimal verification meta for audit/visibility
+            $user->dva_verification_meta = [
+                'provider' => 'paystack',
+                'customer_code' => $user->paystack_customer_code,
+                'account_number' => $acc['account_number'] ?? null,
+                'account_name' => $acc['account_name'] ?? null,
+                'bank' => [
+                    'id' => $acc['bank']['id'] ?? ($acc['bank_id'] ?? null),
+                    'name' => $acc['bank']['name'] ?? ($acc['bank_name'] ?? null),
+                ],
+                'assigned_at' => now()->toISOString(),
+            ];
             $user->save();
 
             return $this->show($request);

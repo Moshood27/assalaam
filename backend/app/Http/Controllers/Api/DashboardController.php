@@ -57,6 +57,12 @@ class DashboardController extends Controller
                 'account_number' => $user->dva_account_number,
                 'bank_name' => $user->dva_bank_name,
                 'account_name' => $user->dva_account_name,
+                'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
+                'verification_details' => ($user->dva_bank_name && $user->dva_account_number)
+                    ? ($user->dva_bank_name . ' - ' . $user->dva_account_number . (
+                        $user->dva_account_name ? (' (' . $user->dva_account_name . ')') : ''
+                    ))
+                    : null,
             ],
             'transactions' => $transactions,
             'utility_transactions' => $utility,

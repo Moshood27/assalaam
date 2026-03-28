@@ -79,7 +79,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../http.js'
+import { Capacitor } from '@capacitor/core'
 import { useRouter, useRoute } from 'vue-router'
 import SearchableSelect from '../components/SearchableSelect.vue'
 import brand from '../brand'
@@ -143,7 +144,7 @@ const afterLogin = async (token) => {
   try {
     const pending = localStorage.getItem('pending_push_token')
     if (pending) {
-      await axios.post('/api/push/token', { token: pending }, { timeout: Math.max(30000, Number(axios.defaults.timeout) || 0) })
+      await axios.post('/api/push/token', { token: pending, platform: (Capacitor?.getPlatform?.() || 'web').toString() }, { timeout: Math.max(30000, Number(axios.defaults.timeout) || 0) })
       localStorage.removeItem('pending_push_token')
     }
   } catch (e) {

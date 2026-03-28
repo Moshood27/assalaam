@@ -44,7 +44,7 @@
 
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Help</p>
-        <button @click="openWebPortal" class="btn-primary w-full h-12">Open Web Passbook</button>
+        <button v-if="false" @click="openWebPortal" class="btn-primary w-full h-12">Open Web Passbook</button>
       </div>
     </div>
 

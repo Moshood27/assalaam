@@ -307,7 +307,9 @@ onMounted(async () => {
     const { data } = await axios.get('/api/profile')
     profile.value = data
     emailForm.value.email = data?.email || ''
-    bvnAssigned.value = Boolean(data?.bvn_assigned ?? JSON.parse(localStorage.getItem('bvn_assigned') || 'false'))
+    const assigned = Boolean(data?.bvn_assigned ?? JSON.parse(localStorage.getItem('bvn_assigned') || 'false'))
+    bvnAssigned.value = assigned
+    try { localStorage.setItem('bvn_assigned', JSON.stringify(assigned)) } catch (_) {}
   } catch (_) {
     // Fallback mock values
     profile.value = {

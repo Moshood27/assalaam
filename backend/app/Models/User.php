@@ -42,6 +42,9 @@ class User extends Authenticatable implements FilamentUser
         'dva_bank_name',
         'dva_account_name',
         'passport_path',
+        'bvn',
+        'bvn_verified_at',
+        'dva_verification_meta',
     ];
 
     /**
@@ -67,6 +70,8 @@ class User extends Authenticatable implements FilamentUser
             'is_admin' => 'boolean',
             'is_defaulter' => 'boolean',
             'balance' => 'decimal:2',
+            'bvn_verified_at' => 'datetime',
+            'dva_verification_meta' => 'array',
         ];
     }
 

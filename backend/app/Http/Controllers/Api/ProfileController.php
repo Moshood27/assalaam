@@ -57,10 +57,12 @@ class ProfileController extends Controller
             'virtual_account' => $virtualAccount,
             // Provide human-readable verification details if a DVA exists
             'verification_details' => ($user->dva_bank_name && $user->dva_account_number)
-                ? ($user->dva_bank_name . ' - ' . $user->dva_account_number)
+                ? ($user->dva_bank_name . ' - ' . $user->dva_account_number . (
+                    $user->dva_account_name ? (' (' . $user->dva_account_name . ')') : ''
+                ))
                 : null,
-            // BVN flag not tracked yet; default to false for now
-            'bvn_assigned' => false,
+            // BVN considered assigned if present, verified timestamp exists, or a DVA has been assigned
+            'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
             'passport_url' => $passportUrl,
         ]);
     }

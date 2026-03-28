@@ -4,7 +4,8 @@ import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 import { SplashScreen } from '@capacitor/splash-screen'
 import BaseModal from './components/BaseModal.vue'
-import axios from 'axios'
+import router from './router/index.js'
+import axios from './http.js'
 
 const PENDING_PUSH_TOKEN_KEY = 'pending_push_token'
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -18,11 +19,13 @@ async function saveTokenToBackend(token) {
     const hasAuth = !!localStorage.getItem('token')
     if (!hasAuth) return false
 
+    const platform = (Capacitor?.getPlatform?.() || 'web').toString()
+
     // Retry a few times with backoff to survive startup/network hiccups
     const attempts = 3
     for (let i = 0; i < attempts; i++) {
       try {
-        await axios.post('/api/push/token', { token }, { timeout: Math.max(30000, Number(axios.defaults.timeout) || 0) })
+        await axios.post('/api/push/token', { token, platform }, { timeout: Math.max(30000, Number(axios.defaults.timeout) || 0) })
         localStorage.removeItem(PENDING_PUSH_TOKEN_KEY)
         return true
       } catch (e) {
@@ -69,10 +72,54 @@ onMounted(async () => {
       }
 
       if (permStatus.receive === 'granted') {
-        // SET UP LISTENER FIRST
+        // SET UP LISTENERS FIRST
         PushNotifications.addListener('registration', (token) => {
-          console.log('FCM Token received:', token.value)
-          saveTokenToBackend(token.value)
+          try {
+            console.log('FCM Token received:', token.value)
+            saveTokenToBackend(token.value)
+          } catch (_) {}
+        })
+
+        // Foreground receive handler (optional UI hook)
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          try {
+            const data = notification?.data || {}
+            const title = notification?.title || notification?.notification?.title || 'Notification'
+            const body = notification?.body || notification?.notification?.body || ''
+            console.log('[push] received (fg):', { title, body, data })
+          } catch (e) {
+            console.warn('Error handling received notification', e)
+          }
+        })
+
+        // Tap action handler to route user
+        PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
+          try {
+            const data = event?.notification?.data || {}
+            const route = (data?.route || data?.screen || '').toString()
+            if (route) {
+              router.push(route)
+              return
+            }
+            // Fallbacks for known types
+            const type = (data?.type || '').toString()
+            if (type === 'voting_open' && data?.session_id) {
+              const sid = String(data.session_id)
+              router.push(`/agm/sessions/${sid}`)
+              return
+            }
+            if (type === 'wallet_topup') {
+              router.push('/wallet')
+              return
+            }
+            if (type === 'scheme_payment') {
+              router.push('/passbook')
+              return
+            }
+            router.push('/dashboard')
+          } catch (e) {
+            console.warn('Error handling notification action', e)
+          }
         })
 
         // THEN REGISTER

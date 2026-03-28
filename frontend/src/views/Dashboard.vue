@@ -18,7 +18,7 @@
       <div v-if="!bannerDismissed" class="mb-3 bg-emerald-100 text-emerald-900 p-3 rounded-xl border border-emerald-200 flex items-start justify-between gap-3 flex-wrap relative">
         <div class="text-sm">
           <p class="font-medium">Please copy your email address and use the same password to login when accessing your web passbook.</p>
-          <button @click="openWebPortal" class="mt-2 text-emerald-800 font-bold underline">Login to Web Passbook</button>
+          <button v-if="false" @click="openWebPortal" class="mt-2 text-emerald-800 font-bold underline">Login to Web Passbook</button>
         </div>
         <button @click="dismissBanner" class="text-emerald-900/70 absolute right-3 top-3 sm:static sm:mt-0">✕</button>
       </div>
@@ -324,8 +324,7 @@ const showPassbookInfo = () => {
     'Your digital ledger with the cooperative.',
     '• See every contribution, withdrawal, loan disbursement/repayment, fines, and adjustments.',
     '• Tap a row to view full details and reference.',
-    '• Use filters (date range, scheme/type) to find entries fast.',
-    'Pro tip: For printing/exporting, use the Web Passbook from the banner link.'
+    '• Use filters (date range, scheme/type) to find entries fast.'
   ].join('\n')
   showNotice('Passbook', msg, 'info')
 }
