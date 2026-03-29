@@ -35,10 +35,20 @@ return [
         ],
     ],
 
-    'paystack' => [
-        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
-        'secret_key' => env('PAYSTACK_SECRET_KEY'),
-    ],
+    'paystack' => (function () {
+        $mode = env('PAYSTACK_ENV', app()->environment('production') ? 'live' : 'test');
+        $public = $mode === 'live'
+            ? env('PAYSTACK_LIVE_PUBLIC_KEY', env('PAYSTACK_PUBLIC_KEY'))
+            : env('PAYSTACK_TEST_PUBLIC_KEY', env('PAYSTACK_PUBLIC_KEY'));
+        $secret = $mode === 'live'
+            ? env('PAYSTACK_LIVE_SECRET_KEY', env('PAYSTACK_SECRET_KEY'))
+            : env('PAYSTACK_TEST_SECRET_KEY', env('PAYSTACK_SECRET_KEY'));
+        return [
+            'public_key' => $public,
+            'secret_key' => $secret,
+            'mode' => $mode,
+        ];
+    })(),
 
     'flutterwave' => [
         'public_key' => env('FLW_PUBLIC_KEY'),
