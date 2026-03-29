@@ -48,7 +48,7 @@ class VirtualAccountController extends Controller
 
         $phone = $validated['phone'] ?? $user->phone;
         if (empty($phone)) {
-            return response()->json(['message' => 'Phone number is required for Virtual Accounts.'], 422);
+            return response()->json(['message' => 'Phone number is required. Please update your profile.'], 422);
         }
 
         // 2. Prepare Name Data (Paystack requires First and Last name)
@@ -57,27 +57,44 @@ class VirtualAccountController extends Controller
         $lastName = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : 'Coop';
 
         try {
-            // 3. Ensure Customer Exists on Paystack
-            // Even if we have a customer_code, we "upsert" (create or update) to be safe
-            $customerResp = Http::withToken($secret)->post('https://api.paystack.co/customer', [
-                'email'      => $user->email,
+            // 3. Sync/Upsert Customer on Paystack using PUT with email identifier to always sync phone
+            $identifier = $user->email; // Paystack accepts email or customer code as identifier
+            $customerPayload = [
                 'first_name' => $firstName,
                 'last_name'  => $lastName,
                 'phone'      => $phone,
-            ]);
+            ];
 
+            $customerResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$identifier}", $customerPayload);
+
+            $customerCode = null;
             if (!$customerResp->successful()) {
-                Log::error('Paystack Customer sync failed', ['body' => $customerResp->body()]);
-                return response()->json(['message' => 'Identity verification failed on provider side'], 502);
+                // If not found, create the customer instead
+                if ($customerResp->status() === 404) {
+                    $createResp = Http::withToken($secret)->post('https://api.paystack.co/customer', array_merge($customerPayload, [
+                        'email' => $user->email,
+                    ]));
+                    if (!$createResp->successful()) {
+                        Log::error('Paystack Customer sync failed', ['put_body' => $customerResp->body(), 'post_body' => $createResp->body()]);
+                        return response()->json(['message' => 'Identity sync failed'], 502);
+                    }
+                    $customerCode = $createResp->json('data.customer_code');
+                } else {
+                    Log::error('Paystack Customer sync failed', ['body' => $customerResp->body()]);
+                    return response()->json(['message' => 'Identity sync failed'], 502);
+                }
+            } else {
+                $customerCode = $customerResp->json('data.customer_code') ?? $user->paystack_customer_code;
             }
 
-            $customerCode = $customerResp->json('data.customer_code');
-            $user->update(['paystack_customer_code' => $customerCode]);
+            if (!empty($customerCode)) {
+                $user->update(['paystack_customer_code' => $customerCode]);
+            }
 
             // 4. Assign the Dedicated Virtual Account
             $assignPayload = [
                 'customer'       => $customerCode,
-                'preferred_bank' => $validated['preferred_bank'] ?? 'wema-bank',
+                'preferred_bank' => $validated['preferred_bank'] ?? 'titan-paystack',
             ];
 
             if (!empty($validated['bvn'])) {
