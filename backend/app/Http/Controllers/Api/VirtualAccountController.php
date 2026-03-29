@@ -61,6 +61,11 @@ class VirtualAccountController extends Controller
             ->retry(3, 300);
 
         try {
+            // Ensure we have a phone number (Paystack requires it on the Customer for DVA)
+            $effectivePhone = $validated['phone'] ?? ($user->phone ?? null);
+            if (empty($effectivePhone)) {
+                return response()->json(['message' => 'Phone number is required to assign a virtual account. Please add your phone number to your profile or provide it in this request.'], 422);
+            }
             // Ensure a Paystack customer exists
             if (! $user->paystack_customer_code) {
                 $payload = [
@@ -75,9 +80,8 @@ class VirtualAccountController extends Controller
                     $payload['first_name'] = $parts[0] ?? ($user->name ?: '');
                     if (count($parts) > 1) { $payload['last_name'] = implode(' ', array_slice($parts, 1)); }
                 }
-                if (! empty($validated['phone'])) {
-                    $payload['phone'] = $validated['phone'];
-                }
+                // Always include a phone number for the customer record
+                $payload['phone'] = $effectivePhone;
 
                 $resp = $client->post('https://api.paystack.co/customer', $payload);
                 if (! $resp->ok() || $resp->json('status') !== true) {
@@ -87,6 +91,39 @@ class VirtualAccountController extends Controller
 
                 $user->paystack_customer_code = $resp->json('data.customer_code');
                 $user->save();
+            }
+
+            // Update Paystack customer to ensure phone/email are set (required for DVA)
+            try {
+                $updatePayload = [
+                    'phone' => $effectivePhone,
+                ];
+                // Include email if available
+                if (!empty($validated['email']) || !empty($user->email)) {
+                    $updatePayload['email'] = $validated['email'] ?? $user->email;
+                }
+                // Optionally include names
+                if (!empty($validated['first_name']) || !empty($validated['last_name'])) {
+                    if (!empty($validated['first_name'])) { $updatePayload['first_name'] = $validated['first_name']; }
+                    if (!empty($validated['last_name'])) { $updatePayload['last_name'] = $validated['last_name']; }
+                } else {
+                    $parts = preg_split('/\s+/', trim((string)$user->name));
+                    if (!empty($parts[0])) { $updatePayload['first_name'] = $parts[0]; }
+                    if (count($parts) > 1) { $updatePayload['last_name'] = implode(' ', array_slice($parts, 1)); }
+                }
+
+                $updateResp = $client->put('https://api.paystack.co/customer/' . $user->paystack_customer_code, $updatePayload);
+                if (! $updateResp->ok() || $updateResp->json('status') !== true) {
+                    Log::warning('Failed to update Paystack customer with phone/email before DVA assign', [
+                        'code' => $user->paystack_customer_code,
+                        'body' => $updateResp->json(),
+                    ]);
+                }
+            } catch (ConnectionException $e) {
+                Log::warning('Network error while updating Paystack customer before DVA assign', [
+                    'code' => $user->paystack_customer_code,
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             // Assign a Dedicated Virtual Account to this customer
