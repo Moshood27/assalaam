@@ -46,7 +46,8 @@
               <p class="text-[10px] text-slate-400 font-bold uppercase">Virtual Account</p>
               <p class="font-bold text-slate-800">{{ profile.virtual_account || '—' }}</p>
             </div>
-            <button @click="copy(profile.virtual_account || '')" class="text-sm text-emerald-700">Copy</button>
+            <button v-if="profile.virtual_account" @click="copy(profile.virtual_account || '')" class="text-sm text-emerald-700">Copy</button>
+            <button v-else @click="goToWallet" class="text-sm text-white bg-emerald-700 px-3 py-1.5 rounded-lg font-bold">Generate</button>
           </div>
           <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
             <div>
@@ -226,8 +227,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from '../http'
 import getImageUrl from '../utils/image'
+
+const router = useRouter()
 
 const profile = ref({})
 const bvnAssigned = ref(false)
@@ -264,6 +268,8 @@ const copy = async (text) => {
     // noop
   }
 }
+
+const goToWallet = () => router.push('/wallet')
 
 const openWebPortal = () => window.open('https://portal.example.com', '_blank')
 
