@@ -27,7 +27,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
-  items: { type: [Array, Object], default: () => [] },
+  items: { type: Array, default: () => [] },
   modelValue: [String, Number],
   placeholder: { type: String, default: 'Select an option' },
   searchPlaceholder: { type: String, default: 'Search…' },
@@ -41,26 +41,16 @@ const open = ref(false)
 const query = ref('')
 const root = ref(null)
 
-const itemsArray = computed(() => {
-  const it = props.items
-  if (Array.isArray(it)) return it
-  if (!it) return []
-  if (Array.isArray(it.items)) return it.items
-  if (Array.isArray(it.data)) return it.data
-  if (typeof it === 'object') return Object.values(it)
-  return []
-})
+const labelOf = (it) => it?.[props.labelField]
+const valueOf = (it) => it?.[props.valueField]
 
-const labelOf = (it) => (it && typeof it === 'object') ? it[props.labelField] : String(it ?? '')
-const valueOf = (it) => (it && typeof it === 'object') ? it[props.valueField] : it
-
-const selected = computed(() => itemsArray.value.find(i => valueOf(i) === props.modelValue))
+const selected = computed(() => props.items.find(i => valueOf(i) === props.modelValue))
 const selectedLabel = computed(() => selected.value ? labelOf(selected.value) : '')
 
 const filtered = computed(() => {
-  if (!query.value) return itemsArray.value
+  if (!query.value) return props.items
   const q = query.value.toLowerCase()
-  return itemsArray.value.filter(i => String(labelOf(i) || '').toLowerCase().includes(q))
+  return props.items.filter(i => String(labelOf(i) || '').toLowerCase().includes(q))
 })
 
 const toggle = () => {

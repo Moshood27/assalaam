@@ -36,7 +36,10 @@ return [
     ],
 
     'paystack' => (function () {
-        $mode = env('PAYSTACK_ENV', app()->environment('production') ? 'live' : 'test');
+        // Do NOT call app()->environment() here; config files load before the container binds 'env'.
+        $appEnv = env('APP_ENV', 'production');
+        $defaultMode = ($appEnv === 'production') ? 'live' : 'test';
+        $mode = env('PAYSTACK_ENV', $defaultMode);
         $public = $mode === 'live'
             ? env('PAYSTACK_LIVE_PUBLIC_KEY', env('PAYSTACK_PUBLIC_KEY'))
             : env('PAYSTACK_TEST_PUBLIC_KEY', env('PAYSTACK_PUBLIC_KEY'));
