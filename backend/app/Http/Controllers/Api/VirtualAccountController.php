@@ -92,6 +92,34 @@ class VirtualAccountController extends Controller
             $assignPayload = [
                 'customer' => $user->paystack_customer_code,
             ];
+
+            // Determine identity fields required by Paystack for DVA assignment
+            $firstName = null;
+            $lastName = null;
+            if (!empty($validated['first_name']) || !empty($validated['last_name'])) {
+                $firstName = $validated['first_name'] ?? null;
+                $lastName = $validated['last_name'] ?? null;
+            } else {
+                $parts = preg_split('/\s+/', trim((string) $user->name));
+                $firstName = $parts[0] ?? ($user->name ?: 'Member');
+                if (count($parts) > 1) {
+                    $lastName = implode(' ', array_slice($parts, 1));
+                }
+            }
+            if (!empty($firstName)) { $assignPayload['first_name'] = $firstName; }
+            if (!empty($lastName)) { $assignPayload['last_name'] = $lastName; }
+
+            // Phone number (Paystack expects `phone_number`)
+            $phoneNumber = $validated['phone'] ?? ($user->phone ?? null);
+            if (!empty($phoneNumber)) {
+                $assignPayload['phone_number'] = $phoneNumber;
+            }
+
+            // Optional BVN if provided
+            if (!empty($validated['bvn'])) {
+                $assignPayload['bvn'] = $validated['bvn'];
+            }
+
             if (! empty($validated['preferred_bank'])) {
                 $assignPayload['preferred_bank'] = $validated['preferred_bank'];
             }
