@@ -40,6 +40,7 @@ class VirtualAccountController extends Controller
             'bvn' => 'nullable|string|digits:11',
             'first_name' => 'nullable|string',
             'last_name' => 'nullable|string',
+            'email' => 'nullable|email',
         ]);
 
         $secret = config('services.paystack.secret_key');
@@ -113,6 +114,12 @@ class VirtualAccountController extends Controller
             $phoneNumber = $validated['phone'] ?? ($user->phone ?? null);
             if (!empty($phoneNumber)) {
                 $assignPayload['phone_number'] = $phoneNumber;
+            }
+
+            // Email (required by Paystack for DVA assignment)
+            $email = $validated['email'] ?? ($user->email ?? null);
+            if (!empty($email)) {
+                $assignPayload['email'] = $email;
             }
 
             // Optional BVN if provided
