@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -55,6 +56,7 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+        'transaction_pin_hash',
     ];
 
     /**
@@ -108,6 +110,19 @@ class User extends Authenticatable implements FilamentUser
     public function goalBookings()
     {
         return $this->hasMany(\App\Models\GoalBooking::class);
+    }
+
+    public function hasTransactionPin(): bool
+    {
+        return !empty($this->transaction_pin_hash);
+    }
+
+    public function verifyTransactionPin(?string $pin): bool
+    {
+        if (!$pin || empty($this->transaction_pin_hash)) {
+            return false;
+        }
+        return Hash::check($pin, $this->transaction_pin_hash);
     }
 
     /**

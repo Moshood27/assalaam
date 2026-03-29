@@ -43,9 +43,21 @@ class StoreOrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|integer|distinct',
             'items.*.quantity' => 'required|integer|min:1|max:1000',
+            'note' => 'nullable|string|max:500',
+            'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
         $user = $request->user();
+
+        // Enforce Transaction PIN for wallet debit
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
+
+        $note = trim((string) ($validated['note'] ?? ''));
 
         // Load products and compute totals
         $productIds = collect($validated['items'])->pluck('product_id')->all();
@@ -96,9 +108,14 @@ class StoreOrderController extends Controller
 
         $reference = 'STORE_' . now()->format('YmdHis') . '_' . $user->id . '_' . Str::upper(Str::random(5));
 
-        $order = DB::transaction(function () use ($user, $lineItems, $grandTotal, $grandCost, $grandProfit, $reference) {
+        $order = DB::transaction(function () use ($user, $lineItems, $grandTotal, $grandCost, $grandProfit, $reference, $note) {
             // Deduct wallet first to avoid race conditions
             $user->decrement('balance', $grandTotal);
+
+            $meta = [];
+            if (!empty($note)) {
+                $meta['note'] = $note;
+            }
 
             $order = StoreOrder::create([
                 'user_id' => $user->id,
@@ -107,6 +124,7 @@ class StoreOrderController extends Controller
                 'total_cost' => $grandCost,
                 'total_profit' => $grandProfit,
                 'status' => 'paid',
+                'meta' => $meta,
             ]);
 
             foreach ($lineItems as $li) {
@@ -116,21 +134,24 @@ class StoreOrderController extends Controller
             }
 
             // Record wallet debit transaction
+            $wtMeta = [
+                'store_order_id' => $order->id,
+                'items' => collect($lineItems)->map(fn ($li) => [
+                    'product_id' => $li['product_id'],
+                    'name' => $li['product_name'],
+                    'qty' => $li['quantity'],
+                    'unit_price' => $li['unit_price'],
+                ])->values()->all(),
+            ];
+            if (!empty($note)) { $wtMeta['note'] = $note; }
+
             WalletTransaction::create([
                 'user_id' => $user->id,
                 'type' => 'debit',
                 'amount' => $grandTotal,
                 'reference' => $reference,
                 'source' => 'store',
-                'meta' => [
-                    'store_order_id' => $order->id,
-                    'items' => collect($lineItems)->map(fn ($li) => [
-                        'product_id' => $li['product_id'],
-                        'name' => $li['product_name'],
-                        'qty' => $li['quantity'],
-                        'unit_price' => $li['unit_price'],
-                    ])->values()->all(),
-                ],
+                'meta' => $wtMeta,
             ]);
 
             return $order;

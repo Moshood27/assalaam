@@ -30,6 +30,11 @@
           </li>
         </ul>
 
+        <div v-if="order.meta && order.meta.note" class="pt-2 text-xs text-slate-500">
+          <span class="uppercase font-bold mr-1">Note:</span>
+          <span class="text-slate-700">{{ order.meta.note }}</span>
+        </div>
+
         <div class="pt-2 text-xs text-slate-500">Status: <span class="font-bold text-slate-800 uppercase">{{ order.status }}</span></div>
         <div class="text-xs text-slate-500">Date: {{ new Date(order.created_at).toLocaleString() }}</div>
 

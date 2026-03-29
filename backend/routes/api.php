@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\AgmController;
 use App\Http\Controllers\Api\GuarantorController;
 use App\Http\Controllers\Api\ZakatController;
 use App\Http\Controllers\Api\AdminProductController;
+use App\Http\Controllers\Api\SecurityController;
 
 Route::get('/health', function () {
     return response()
@@ -64,6 +65,10 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/profile/email', [ProfileController::class, 'updateEmail']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
 
+    // Security - Transaction PIN
+    Route::post('/security/pin/set', [SecurityController::class, 'setPin'])->middleware('throttle:api');
+    Route::post('/security/pin/verify', [SecurityController::class, 'verifyPin'])->middleware('throttle:api');
+
     // Push token registration
     Route::post('/push/token', [ProfileController::class, 'savePushToken']);
     // Alias for mobile apps saving FCM token
@@ -72,6 +77,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // Payments
     Route::get('/schemes', [PaymentController::class, 'getSchemes']);
     Route::post('/initiate-payment', [PaymentController::class, 'initiate']);
+    Route::post('/verify-payment', [PaymentController::class, 'verify']);
 
     // Passbook
     Route::get('/passbook/{year}', [PassbookController::class, 'getMatrix']);

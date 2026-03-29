@@ -162,9 +162,17 @@ class UtilityController extends Controller
             'phone_number' => 'required|string|min:10|max:15',
             'amount' => 'required|numeric|min:50',
             'reference' => 'nullable|string|max:100',
+            'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
         $user = $request->user();
+        // Enforce Transaction PIN
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
         $amount = (float)$validated['amount'];
         if ((float)$user->balance < $amount) {
             return response()->json(['message' => 'Insufficient Coop Balance'], 422);
@@ -383,9 +391,17 @@ class UtilityController extends Controller
             'bundle_code' => 'required|string', // Provider variation code
             'amount' => 'required|numeric|min:50',
             'reference' => 'nullable|string|max:100',
+            'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
         $user = $request->user();
+        // Enforce Transaction PIN
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
         $amount = (float)$validated['amount'];
         $convenience = (float) (config('services.vtu.convenience_fee', 0));
         if ((float)$user->balance < ($amount + $convenience)) {
@@ -787,9 +803,17 @@ class UtilityController extends Controller
             'amount' => 'required|numeric|min:100',
             'phone_number' => 'nullable|string|min:10|max:15',
             'reference' => 'nullable|string|max:100',
+            'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
         $user = $request->user();
+        // Enforce Transaction PIN
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
         $amount = (float)$validated['amount'];
         $convenience = (float) (config('services.vtu.convenience_fee', 0));
         $totalDebit = round($amount + $convenience, 2);
@@ -992,9 +1016,17 @@ class UtilityController extends Controller
             'amount' => 'required|numeric|min:100',
             'phone_number' => 'nullable|string|min:10|max:15',
             'reference' => 'nullable|string|max:100',
+            'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
         $user = $request->user();
+        // Enforce Transaction PIN
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
         $amount = (float)$validated['amount'];
         $convenience = (float) (config('services.vtu.convenience_fee', 0));
         $totalDebit = round($amount + $convenience, 2);

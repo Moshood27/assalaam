@@ -161,9 +161,19 @@ class WalletController extends Controller
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
             'items.*.amount' => 'required|numeric|min:1',
+            'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
         $user = $request->user();
+
+        // Enforce Transaction PIN
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
+
         $items = collect($validated['items'])
             ->map(fn($i) => ['scheme_id' => (int)$i['scheme_id'], 'amount' => (float)$i['amount']])
             ->filter(fn($i) => $i['amount'] > 0);

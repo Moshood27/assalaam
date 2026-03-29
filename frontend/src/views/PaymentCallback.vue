@@ -12,6 +12,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import axios from '../http'
 
 const router = useRouter()
 const route = useRoute()
@@ -19,14 +20,32 @@ const route = useRoute()
 const reference = route.query.reference || route.query.trxref || ''
 const status = (route.query.status || '').toString().toLowerCase()
 
-onMounted(() => {
-  if (status === 'cancelled' || status === 'failed') {
-    alert('Payment was cancelled. You can try again.')
-  } else if (reference) {
-    alert('Payment successful! Your contributions will reflect shortly.')
-  } else {
-    alert('Returning from payment.')
+onMounted(async () => {
+  try {
+    if (!reference) {
+      alert('Returning from payment.')
+      return
+    }
+
+    if (status === 'cancelled' || status === 'failed') {
+      alert('Payment was cancelled. You can try again.')
+      return
+    }
+
+    // Server-side verification: prevents spoofing
+    const { data } = await axios.post('/api/verify-payment', { reference })
+    if (data?.status === 'success') {
+      alert('Payment verified! Your contributions have been allocated.')
+    } else if (data?.status === 'pending') {
+      alert('Payment is pending confirmation. It will reflect shortly if successful.')
+    } else {
+      alert('Payment not successful yet. Please check your Passbook later or contact support with Ref: ' + reference)
+    }
+  } catch (e) {
+    // Even if verify fails (e.g., network), webhook will finalize; avoid exposing details
+    alert('We are verifying your payment in the background. If successful, it will reflect shortly. Ref: ' + reference)
+  } finally {
+    setTimeout(() => router.replace({ name: 'dashboard' }), 800)
   }
-  setTimeout(() => router.replace({ name: 'dashboard' }), 600)
 })
 </script>

@@ -6,6 +6,7 @@
         <span class="hidden sm:inline text-xs font-bold text-slate-600">Balance: <span class="text-slate-800">₦ {{ money(walletBalance) }}</span></span>
         <button class="relative text-sm font-bold text-emerald-700 flex items-center gap-2" @click="toggleCart()">
           <span>Cart</span>
+          <span v-if="subtotal" class="hidden sm:inline text-[11px] px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">₦ {{ money(subtotal) }}</span>
           <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-[10px] font-black">{{ totalQty }}</span>
         </button>
         <button class="text-sm font-bold text-emerald-700" @click="$router.push('/store/orders')">Orders</button>
@@ -19,9 +20,21 @@
           <h2 class="section-title">Available Products</h2>
           <span class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Buy & Checkout</span>
         </div>
-        <div class="flex items-center gap-2 mb-4">
-          <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search products…" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm w-full" />
-          <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold" @click="load(1)">Search</button>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+          <div class="flex-1 flex items-center gap-2">
+            <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search products…" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm w-full" />
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold" @click="load(1)">Search</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Sort</label>
+            <select v-model="sortBy" @change="load(1)" class="bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="name_asc">Name: A–Z</option>
+              <option value="name_desc">Name: Z–A</option>
+            </select>
+          </div>
         </div>
 
         <div v-if="loading" class="text-slate-500 text-sm">Loading…</div>
@@ -33,7 +46,10 @@
               <img v-if="p.image_url" :src="getImageUrl(p.image_url)" alt="image" class="w-16 h-16 rounded object-cover" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-3 mb-1">
-                  <div class="font-bold text-slate-800 truncate">{{ p.name }}</div>
+                  <div class="font-bold text-slate-800 truncate flex items-center gap-2">
+                    <span class="truncate cursor-pointer hover:underline" @click="openQuick(p)">{{ p.name }}</span>
+                    <span v-if="isNew(p.created_at)" class="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 px-2 py-0.5 rounded">New</span>
+                  </div>
                   <div class="text-emerald-700 font-black text-sm whitespace-nowrap">₦ {{ money(p.selling_price) }}</div>
                 </div>
                 <p class="text-[12px] text-slate-600 line-clamp-2 mb-2">{{ p.description || '—' }}</p>
@@ -44,6 +60,7 @@
                     <button class="px-2 py-1 rounded-lg bg-emerald-600 text-white" @click="incQty(p.id)">+</button>
                   </template>
                   <button v-else class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold" @click="addToCart(p)">Add to Cart</button>
+                  <button class="px-3 py-2 rounded-lg border border-slate-200 text-xs" @click="openQuick(p)">Quick View</button>
                 </div>
               </div>
             </li>
@@ -80,16 +97,56 @@
             <div class="text-slate-500 text-sm">Subtotal</div>
             <div class="text-lg font-extrabold text-slate-800">₦ {{ money(subtotal) }}</div>
           </div>
-          <div class="flex items-center justify-end">
-            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-bold disabled:opacity-50" :disabled="placing || !totalQty" @click="checkout()">
+
+          <div class="mt-2">
+            <label class="block text-[12px] font-bold text-slate-600 mb-1">Order Note (optional)</label>
+            <textarea v-model="orderNote" rows="2" placeholder="Notes to the coop store…" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"></textarea>
+          </div>
+
+          <div v-if="hasInsufficient" class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded">
+            Insufficient Coop Balance. Short by ₦ {{ money(shortfall) }}.
+            <button class="underline ml-2" @click="$router.push('/wallet')">Top up</button>
+          </div>
+
+          <div class="flex items-center justify-end mt-2">
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-bold disabled:opacity-50" :disabled="placing || !totalQty || hasInsufficient" @click="checkout()">
               <span v-if="placing" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Processing…</span>
+              <span v-else-if="hasInsufficient">Insufficient Balance</span>
               <span v-else>Checkout</span>
             </button>
           </div>
+
           <div v-if="placeError" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ placeError }}</div>
           <div v-if="placeSuccess" class="text-emerald-700 bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-sm">{{ placeSuccess }}</div>
         </div>
       </section>
+    </div>
+
+    <!-- Quick View Modal -->
+    <div v-if="selectedProduct" class="fixed inset-0 z-20 flex items-end sm:items-center justify-center">
+      <div class="absolute inset-0 bg-black/40" @click="closeQuick()"></div>
+      <div class="relative bg-white w-full sm:max-w-md sm:rounded-2xl sm:shadow-xl p-4 border-t sm:border rounded-t-2xl z-30">
+        <div class="flex items-start gap-3">
+          <img v-if="selectedProduct.image_url" :src="getImageUrl(selectedProduct.image_url)" alt="image" class="w-20 h-20 rounded object-cover" />
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-slate-800 truncate">{{ selectedProduct.name }}</div>
+            <div class="text-emerald-700 font-black text-sm">₦ {{ money(selectedProduct.selling_price) }}</div>
+            <p class="text-[12px] text-slate-600 mt-1">{{ selectedProduct.description || '—' }}</p>
+          </div>
+          <button class="text-slate-400 hover:text-slate-600" @click="closeQuick()">✕</button>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg border border-slate-200" @click="quickQty = Math.max(1, (Number(quickQty)||1)-1)">-</button>
+            <input v-model.number="quickQty" type="number" min="1" class="w-16 text-center bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm" />
+            <button class="px-3 py-2 rounded-lg border border-slate-200" @click="quickQty = (Number(quickQty)||1)+1">+</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="px-4 py-2 rounded-lg border border-slate-200 bg-white" @click="closeQuick()">Cancel</button>
+            <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold" @click="addQuickToCart()">Add to Cart</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
@@ -121,6 +178,7 @@ const error = ref('')
 const page = ref(1)
 const lastPage = ref(1)
 const q = ref('')
+const sortBy = ref('newest')
 
 const walletBalance = ref(0)
 
@@ -130,7 +188,21 @@ const placing = ref(false)
 const placeError = ref('')
 const placeSuccess = ref('')
 
+// Quick view modal state
+const selectedProduct = ref(null)
+const quickQty = ref(1)
+
+// Optional order note
+const orderNote = ref('')
+
 const money = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const isNew = (dt) => {
+  if (!dt) return false
+  const d = new Date(dt)
+  if (isNaN(d)) return false
+  const now = Date.now()
+  return (now - d.getTime()) <= (14 * 24 * 60 * 60 * 1000) // 14 days
+}
 
 const load = async (p = 1) => {
   loading.value = true
@@ -138,7 +210,7 @@ const load = async (p = 1) => {
   try {
     page.value = p
     const { data } = await axios.get('/api/products', {
-      params: { page: p, q: q.value || '' }
+      params: { page: p, q: q.value || '', sort: sortBy.value }
     })
     const list = Array.isArray(data) ? data : (data?.data || [])
     items.value = list
@@ -193,15 +265,43 @@ watch(cart, persistCart, { deep: true })
 const cartList = computed(() => Object.values(cart.value))
 const totalQty = computed(() => cartList.value.reduce((s, it) => s + (it.qty || 0), 0))
 const subtotal = computed(() => cartList.value.reduce((s, it) => s + (Number(it.selling_price || 0) * (it.qty || 0)), 0))
+const shortfall = computed(() => Math.max(0, Number(subtotal.value) - Number(walletBalance.value)))
+const hasInsufficient = computed(() => shortfall.value > 0)
+
+const openQuick = (p) => {
+  selectedProduct.value = p
+  quickQty.value = 1
+}
+const closeQuick = () => { selectedProduct.value = null }
+const addQuickToCart = () => {
+  const p = selectedProduct.value
+  if (!p) return
+  const qty = Math.max(1, Number(quickQty.value) || 1)
+  const existing = cart.value[p.id]
+  if (existing) existing.qty += qty
+  else cart.value[p.id] = { id: p.id, name: p.name, selling_price: Number(p.selling_price), qty }
+  closeQuick()
+  showCart.value = true
+}
 
 const checkout = async () => {
   placeError.value = ''
   placeSuccess.value = ''
   if (!totalQty.value) return
+  // Prompt for 4-digit Transaction PIN
+  let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm purchase:')
+  if (pin === null) return // cancelled
+  pin = String(pin || '').trim()
+  if (!/^\d{4}$/.test(pin)) {
+    alert('Please enter a valid 4-digit PIN')
+    return
+  }
   placing.value = true
   try {
     const payload = {
-      items: cartList.value.map(it => ({ product_id: it.id, quantity: it.qty }))
+      items: cartList.value.map(it => ({ product_id: it.id, quantity: it.qty })),
+      note: (orderNote.value || '').trim() || undefined,
+      pin,
     }
     const { data } = await axios.post('/api/store/orders', payload)
     placeSuccess.value = data?.message || 'Order placed successfully'
@@ -218,7 +318,15 @@ const checkout = async () => {
       }, 300)
     }
   } catch (e) {
-    placeError.value = e?.response?.data?.message || e.message
+    const status = e?.response?.status
+    const msg = e?.response?.data?.message || e.message
+    if (status === 409) {
+      placeError.value = 'You need to set your Transaction PIN before making purchases. Go to Profile > Transaction PIN.'
+    } else if (status === 403) {
+      placeError.value = 'Invalid Transaction PIN. Please try again.'
+    } else {
+      placeError.value = msg
+    }
   } finally {
     placing.value = false
   }

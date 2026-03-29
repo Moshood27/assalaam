@@ -287,6 +287,16 @@ const buyAirtime = async () => {
       phone_number: airtime.value.phone,
       amount: Number(airtime.value.amount)
     }
+    // Prompt for 4-digit Transaction PIN
+    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm purchase:')
+    if (pin === null) { loadingAirtime.value = false; return }
+    pin = String(pin || '').trim()
+    if (!/^\d{4}$/.test(pin)) {
+      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+      loadingAirtime.value = false
+      return
+    }
+    payload.pin = pin
     const { data } = await axios.post('/api/vtu/airtime', payload)
 
     if (data.status === 'success' || data.status === 'pending') {
@@ -303,8 +313,15 @@ const buyAirtime = async () => {
       airtime.value.amount = ''
       await loadWallet()
     } else {
-      const msg = e.response?.data?.message || 'Transaction could not be completed at this time.'
-      showCustomNotice('Failed', msg, 'error')
+      const status = e?.response?.status
+      const msg = e?.response?.data?.message || 'Transaction could not be completed at this time.'
+      if (status === 409) {
+        showCustomNotice('Set PIN', 'You need to set your Transaction PIN first. Go to Profile > Transaction PIN.', 'warning')
+      } else if (status === 403) {
+        showCustomNotice('Invalid PIN', 'Invalid Transaction PIN. Please try again.', 'error')
+      } else {
+        showCustomNotice('Failed', msg, 'error')
+      }
     }
   } finally {
     loadingAirtime.value = false
@@ -324,6 +341,16 @@ const buyData = async () => {
       bundle_code: dataForm.value.bundleCode,
       amount: Number(selectedBundle.value?.amount ?? 0)
     }
+    // Prompt for 4-digit Transaction PIN
+    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm data purchase:')
+    if (pin === null) { loadingData.value = false; return }
+    pin = String(pin || '').trim()
+    if (!/^\d{4}$/.test(pin)) {
+      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+      loadingData.value = false
+      return
+    }
+    payload.pin = pin
     const { data } = await axios.post('/api/vtu/data', payload)
 
     if (data.status === 'success' || data.status === 'pending') {
@@ -337,8 +364,15 @@ const buyData = async () => {
       dataForm.value.bundleCode = ''
       await loadWallet()
     } else {
-      const msg = e.response?.data?.message || 'Data purchase failed'
-      showCustomNotice('Error', msg, 'error')
+      const status = e?.response?.status
+      const msg = e?.response?.data?.message || 'Data purchase failed'
+      if (status === 409) {
+        showCustomNotice('Set PIN', 'You need to set your Transaction PIN first. Go to Profile > Transaction PIN.', 'warning')
+      } else if (status === 403) {
+        showCustomNotice('Invalid PIN', 'Invalid Transaction PIN. Please try again.', 'error')
+      } else {
+        showCustomNotice('Error', msg, 'error')
+      }
     }
   } finally {
     loadingData.value = false
@@ -357,6 +391,16 @@ const buyElectricity = async () => {
       amount: Number(electricity.value.amount),
     }
     if (electricity.value.phone) payload.phone_number = electricity.value.phone
+    // Prompt for 4-digit Transaction PIN
+    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm electricity vend:')
+    if (pin === null) { loadingElectricity.value = false; return }
+    pin = String(pin || '').trim()
+    if (!/^\d{4}$/.test(pin)) {
+      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+      loadingElectricity.value = false
+      return
+    }
+    payload.pin = pin
     const { data } = await axios.post('/api/vtu/electricity', payload)
     if (data.status === 'success' || data.status === 'pending') {
       showCustomNotice('Success', data.message || 'Electricity vend processing...', 'success')
@@ -367,8 +411,15 @@ const buyElectricity = async () => {
       showCustomNotice('Success', 'Electricity token vended successfully!', 'success')
       await loadWallet()
     } else {
-      const msg = e.response?.data?.message || 'Electricity vend failed'
-      showCustomNotice('Error', msg, 'error')
+      const status = e?.response?.status
+      const msg = e?.response?.data?.message || 'Electricity vend failed'
+      if (status === 409) {
+        showCustomNotice('Set PIN', 'You need to set your Transaction PIN first. Go to Profile > Transaction PIN.', 'warning')
+      } else if (status === 403) {
+        showCustomNotice('Invalid PIN', 'Invalid Transaction PIN. Please try again.', 'error')
+      } else {
+        showCustomNotice('Error', msg, 'error')
+      }
     }
   } finally {
     loadingElectricity.value = false
@@ -387,6 +438,16 @@ const buyCable = async () => {
       amount: Number(selectedTvBundle.value?.amount ?? 0),
     }
     if (cable.value.phone) payload.phone_number = cable.value.phone
+    // Prompt for 4-digit Transaction PIN
+    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm cable subscription:')
+    if (pin === null) { loadingCable.value = false; return }
+    pin = String(pin || '').trim()
+    if (!/^\d{4}$/.test(pin)) {
+      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+      loadingCable.value = false
+      return
+    }
+    payload.pin = pin
     const { data } = await axios.post('/api/vtu/cable', payload)
     if (data.status === 'success' || data.status === 'pending') {
       showCustomNotice('Success', data.message || 'Cable subscription processing...', 'success')
@@ -397,8 +458,15 @@ const buyCable = async () => {
       showCustomNotice('Success', 'Cable subscription successful!', 'success')
       await loadWallet()
     } else {
-      const msg = e.response?.data?.message || 'Cable subscription failed'
-      showCustomNotice('Error', msg, 'error')
+      const status = e?.response?.status
+      const msg = e?.response?.data?.message || 'Cable subscription failed'
+      if (status === 409) {
+        showCustomNotice('Set PIN', 'You need to set your Transaction PIN first. Go to Profile > Transaction PIN.', 'warning')
+      } else if (status === 403) {
+        showCustomNotice('Invalid PIN', 'Invalid Transaction PIN. Please try again.', 'error')
+      } else {
+        showCustomNotice('Error', msg, 'error')
+      }
     }
   } finally {
     loadingCable.value = false

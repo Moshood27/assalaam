@@ -154,8 +154,16 @@ const initiatePayment = async () => {
   try {
     loading.value = true
     if (payFromWallet.value) {
-      // Allocate from wallet
-      await axios.post('/api/wallet/allocate', { items: paymentList.value })
+      // Allocate from wallet with Transaction PIN
+      let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm transfer:')
+      if (pin === null) { loading.value = false; return }
+      pin = String(pin || '').trim()
+      if (!/^\d{4}$/.test(pin)) {
+        alert('Please enter a valid 4-digit PIN')
+        loading.value = false
+        return
+      }
+      await axios.post('/api/wallet/allocate', { items: paymentList.value, pin })
       alert('Allocation successful!')
       router.replace({ name: 'dashboard' })
       return
@@ -165,7 +173,15 @@ const initiatePayment = async () => {
     const { data } = await axios.post('/api/initiate-payment', { items: paymentList.value, callback_url })
     window.location.href = data.checkout_url
   } catch (e) {
-    alert(e?.response?.data?.message || 'Payment failed')
+    const status = e?.response?.status
+    const msg = e?.response?.data?.message || 'Payment failed'
+    if (status === 409) {
+      alert('You need to set your Transaction PIN first. Go to Profile > Transaction PIN.')
+    } else if (status === 403) {
+      alert('Invalid Transaction PIN. Please try again.')
+    } else {
+      alert(msg)
+    }
   } finally {
     loading.value = false
   }

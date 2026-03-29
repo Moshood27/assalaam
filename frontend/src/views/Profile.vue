@@ -148,6 +148,34 @@
           </button>
         </div>
       </div>
+
+      <!-- Transaction PIN -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Transaction PIN</p>
+        <p class="text-xs text-slate-500 mb-3">Set a 4-digit PIN required for transfers and store purchases.</p>
+        <div class="space-y-3">
+          <div>
+            <label class="text-[10px] text-slate-400 font-bold uppercase">Current Password</label>
+            <input v-model="pinForm.current_password" type="password" class="mt-1 w-full border rounded-xl p-3" placeholder="Account password" />
+            <p v-if="pinErrors.current_password" class="text-red-600 text-xs mt-1">{{ pinErrors.current_password }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold uppercase">New PIN (4 digits)</label>
+              <input v-model="pinForm.new_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3" placeholder="••••" />
+              <p v-if="pinErrors.new_pin" class="text-red-600 text-xs mt-1">{{ pinErrors.new_pin }}</p>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold uppercase">Confirm PIN</label>
+              <input v-model="pinForm.confirm_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3" placeholder="••••" />
+              <p v-if="pinErrors.confirm_pin" class="text-red-600 text-xs mt-1">{{ pinErrors.confirm_pin }}</p>
+            </div>
+          </div>
+          <button @click="setPin" :disabled="pinSaving" class="w-full h-12 rounded-xl font-bold text-white" :class="pinSaving ? 'bg-slate-400' : 'bg-emerald-700 hover:bg-emerald-800'">
+            {{ pinSaving ? 'Saving…' : 'Save PIN' }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
@@ -186,6 +214,11 @@ const emailErrors = ref({})
 const passForm = ref({ current_password: '', new_password: '', confirm_password: '' })
 const passSaving = ref(false)
 const passErrors = ref({})
+
+// Transaction PIN form state
+const pinForm = ref({ current_password: '', new_pin: '', confirm_pin: '' })
+const pinSaving = ref(false)
+const pinErrors = ref({})
 
 const copy = async (text) => {
   try {
@@ -299,6 +332,48 @@ const updatePassword = async () => {
     }
   } finally {
     passSaving.value = false
+  }
+}
+
+const setPin = async () => {
+  pinErrors.value = {}
+  // client-side validation
+  if (!pinForm.value.current_password) {
+    pinErrors.value.current_password = 'Current password is required.'
+    return
+  }
+  if (!pinForm.value.new_pin) {
+    pinErrors.value.new_pin = 'PIN is required.'
+    return
+  }
+  if (!/^\d{4}$/.test(String(pinForm.value.new_pin))) {
+    pinErrors.value.new_pin = 'PIN must be exactly 4 digits.'
+    return
+  }
+  if (String(pinForm.value.confirm_pin) !== String(pinForm.value.new_pin)) {
+    pinErrors.value.confirm_pin = 'PIN confirmation does not match.'
+    return
+  }
+  pinSaving.value = true
+  try {
+    await axios.post('/api/security/pin/set', {
+      current_password: pinForm.value.current_password,
+      new_pin: String(pinForm.value.new_pin),
+      confirm_pin: String(pinForm.value.confirm_pin),
+    })
+    alert('Transaction PIN saved successfully.')
+    pinForm.value = { current_password: '', new_pin: '', confirm_pin: '' }
+  } catch (err) {
+    const e = err?.response?.data
+    if (e?.errors) {
+      pinErrors.value = Object.fromEntries(Object.entries(e.errors).map(([k, v]) => [k, Array.isArray(v) ? v[0] : String(v)]))
+    } else if (e?.message) {
+      alert(e.message)
+    } else {
+      alert('Failed to save PIN. Please try again.')
+    }
+  } finally {
+    pinSaving.value = false
   }
 }
 

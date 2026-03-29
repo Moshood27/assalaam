@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Scheme;
+use App\Models\Contribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -26,8 +28,33 @@ class PaymentController extends Controller
 
         $user = $request->user();
 
-        // Sum intended distribution to schemes
-        $totalAmount = collect($validated['items'])->sum(fn ($i) => (float) $i['amount']);
+        // Server-side sanitize/validate each item amount against Scheme rules (never trust frontend amount)
+        $schemeIds = collect($validated['items'])->pluck('scheme_id')->unique()->values();
+        $schemes = Scheme::whereIn('id', $schemeIds)->get()->keyBy('id');
+
+        $sanitized = [];
+        foreach ($validated['items'] as $item) {
+            $scheme = $schemes[$item['scheme_id']] ?? null;
+            if (! $scheme) continue; // safe-guard; validator already ensures exists
+            $amount = round((float) ($item['amount'] ?? 0), 2);
+            // Enforce per-scheme minimums
+            $min = round((float) ($scheme->min_amount ?? 0), 2);
+            if ($amount < max(1, $min)) {
+                return response()->json([
+                    'message' => 'Amount below minimum for scheme: ' . ($scheme->name ?? ('#'.$scheme->id)),
+                ], 422);
+            }
+            $sanitized[] = [
+                'scheme_id' => (int) $scheme->id,
+                'amount' => $amount,
+            ];
+        }
+
+        if (empty($sanitized)) {
+            return response()->json(['message' => 'No valid items to pay for'], 422);
+        }
+
+        $totalAmount = collect($sanitized)->sum(fn ($i) => (float) $i['amount']);
         if ($totalAmount <= 0) {
             return response()->json(['message' => 'Amount must be greater than zero'], 422);
         }
@@ -35,8 +62,8 @@ class PaymentController extends Controller
         // Generate unique reference for this payment
         $reference = 'COOP_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
 
-        // Pre-create pending contributions for each scheme for idempotency & distribution record
-        foreach ($validated['items'] as $item) {
+        // Pre-create pending contributions for each scheme (idempotent distribution record)
+        foreach ($sanitized as $item) {
             $user->contributions()->create([
                 'scheme_id' => $item['scheme_id'],
                 'amount' => $item['amount'],
@@ -67,7 +94,8 @@ class PaymentController extends Controller
                 ],
                 'meta' => [
                     'user_id' => $user->id,
-                    'distribution' => $validated['items'],
+                    // Include only scheme ids and server-sanctioned amounts
+                    'distribution' => $sanitized,
                 ],
             ];
             if (empty($validated['callback_url'])) {
@@ -109,7 +137,8 @@ class PaymentController extends Controller
             'currency' => 'NGN',
             'metadata' => [
                 'user_id' => $user->id,
-                'distribution' => $validated['items'],
+                // Include only scheme ids and server-sanctioned amounts
+                'distribution' => $sanitized,
             ],
         ];
         if (!empty($validated['callback_url'])) {
@@ -136,6 +165,91 @@ class PaymentController extends Controller
             'access_code' => $data['access_code'] ?? null,
             'reference' => $data['reference'] ?? $reference,
             'total' => $totalAmount,
+        ]);
+    }
+
+    // Server-side verification endpoint for redirect callbacks (prevents spoofing "success" URLs)
+    public function verify(Request $request)
+    {
+        $validated = $request->validate([
+            'reference' => 'required|string',
+            'gateway' => 'nullable|in:paystack,flutterwave',
+        ]);
+
+        $user = $request->user();
+        $reference = trim($validated['reference']);
+        $gateway = strtolower($validated['gateway'] ?? 'paystack');
+
+        // Find any contributions for this reference belonging to the authenticated user
+        $contributions = Contribution::where('reference', $reference)->get();
+        if ($contributions->isNotEmpty()) {
+            $ownerId = (int) $contributions->first()->user_id;
+            if ($ownerId !== (int) $user->id) {
+                // Do not leak info about other users' payments
+                return response()->json(['message' => 'Not found'], 404);
+            }
+        }
+
+        if ($gateway === 'flutterwave') {
+            // For now, rely on webhook for Flutterwave (already implemented). Return pending status.
+            return response()->json(['status' => 'pending', 'message' => 'Awaiting confirmation'], 202);
+        }
+
+        // Default: Paystack verify
+        $secret = config('services.paystack.secret_key');
+        if (! $secret) {
+            return response()->json(['message' => 'Payment provider not configured'], 500);
+        }
+
+        $resp = Http::withToken($secret)
+            ->acceptJson()
+            ->timeout(15)
+            ->connectTimeout(5)
+            ->retry(2, 200)
+            ->get('https://api.paystack.co/transaction/verify/' . urlencode($reference));
+
+        if (! $resp->ok() || ($resp->json('status') !== true)) {
+            Log::warning('Paystack verify call failed (callback)', ['reference' => $reference, 'body' => $resp->json()]);
+            return response()->json(['message' => 'Verification failed'], 400);
+        }
+
+        $data = $resp->json('data');
+        if (! $data || ($data['status'] ?? null) !== 'success') {
+            return response()->json(['status' => $data['status'] ?? 'failed'], 200);
+        }
+
+        $paidKobo = (int) ($data['amount'] ?? 0);
+        $currency = $data['currency'] ?? 'NGN';
+
+        // Expected total is from pending or already-success contributions for the reference (belongs to this user)
+        $userContribs = Contribution::where('reference', $reference)
+            ->where('user_id', $user->id)
+            ->get();
+
+        $expectedKobo = (int) round(((float) $userContribs->sum('amount')) * 100);
+
+        if ($currency !== 'NGN' || $paidKobo < $expectedKobo) {
+            Log::warning('Paystack verify amount/currency mismatch (callback)', [
+                'reference' => $reference,
+                'paid_kobo' => $paidKobo,
+                'expected_kobo' => $expectedKobo,
+                'currency' => $currency,
+            ]);
+            return response()->json(['message' => 'Amount mismatch'], 400);
+        }
+
+        // Mark contributions as success (idempotent)
+        foreach ($userContribs as $contribution) {
+            if ($contribution->status !== 'success') {
+                $contribution->status = 'success';
+                $contribution->save();
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'reference' => $reference,
+            'amount' => round($expectedKobo / 100, 2),
         ]);
     }
 }
