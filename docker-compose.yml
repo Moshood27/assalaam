@@ -1,5 +1,4 @@
 services:
-  # 1. Internal Nginx
   proxy:
     image: nginx:1.25-alpine
     container_name: attaqwa-nginx
@@ -14,7 +13,6 @@ services:
     depends_on:
       - app
 
-  # 2. PHP Application
   app:
     build:
       context: ./backend
@@ -26,14 +24,11 @@ services:
       - ./backend:/var/www/html
     networks:
       - attaqwa-network
-      # REMOVED gateway-network for security (only proxy needs it)
+      - gateway-network
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_started
 
-  # 3. Database (MySQL)
   db:
     image: mysql:8.4
     container_name: attaqwa-db
@@ -50,7 +45,6 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
       interval: 10s
       retries: 5
-
   # 4. ADDED: Private Redis for this project
   redis:
     image: redis:alpine
