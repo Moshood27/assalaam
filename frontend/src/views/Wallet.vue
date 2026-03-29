@@ -21,7 +21,7 @@
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-bold text-slate-800">Virtual Account (Bank Transfer)</h3>
-          <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (bvn && !bvnValid)"
+          <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (!!bvn && !bvnValid)"
                   class="text-xs bg-emerald-700 text-white px-3 py-2 rounded-xl">
             {{ assigning ? 'Creating…' : 'Generate Account' }}
           </button>

@@ -15,13 +15,6 @@
     </header>
 
     <div class="p-4">
-      <div v-if="!bannerDismissed" class="mb-3 bg-emerald-100 text-emerald-900 p-3 rounded-xl border border-emerald-200 flex items-start justify-between gap-3 flex-wrap relative">
-        <div class="text-sm">
-          <p class="font-medium">Please copy your email address and use the same password to login when accessing your web passbook.</p>
-          <button v-if="false" @click="openWebPortal" class="mt-2 text-emerald-800 font-bold underline">Login to Web Passbook</button>
-        </div>
-        <button @click="dismissBanner" class="text-emerald-900/70 absolute right-3 top-3 sm:static sm:mt-0">✕</button>
-      </div>
       <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
         <div class="flex items-center gap-2 mb-2 relative z-10">
@@ -214,7 +207,6 @@ const { notice, showNotice, closeNotice } = useNotice()
 const currency = '₦'
 const dashboardData = ref({})
 const hideBalance = ref(false)
-const bannerDismissed = ref(JSON.parse(localStorage.getItem('web_portal_banner_dismissed') || 'false'))
 
 const formatMoney = (val) => Number(val ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -224,8 +216,6 @@ const copy = async (text) => {
     await modal.alert('Copied to clipboard')
   } catch (_) {}
 }
-const openWebPortal = () => window.open('https://islamcoop.com', '_blank')
-const dismissBanner = () => { bannerDismissed.value = true; localStorage.setItem('web_portal_banner_dismissed', 'true') }
 
 const kpis = computed(() => {
   const d = dashboardData.value || {}

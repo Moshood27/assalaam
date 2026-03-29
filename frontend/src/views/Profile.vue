@@ -98,12 +98,6 @@
         <div class="mt-3 text-xs text-gray-500">KYC status is used to prevent fraud and verify identity.</div>
       </div>
 
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
-        <p class="text-sm text-emerald-900 font-medium">
-          Please copy your email address and use the same password to login to the app when accessing your web passbook.
-        </p>
-        <button @click="openWebPortal" class="mt-3 bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold">Login to Web Passbook</button>
-      </div>
 
       <!-- Change Email -->
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
@@ -271,7 +265,6 @@ const copy = async (text) => {
 
 const goToWallet = () => router.push('/wallet')
 
-const openWebPortal = () => window.open('https://portal.example.com', '_blank')
 
 const chooseFile = () => fileInput.value && fileInput.value.click()
 
