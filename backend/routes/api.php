@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\AdminReportsController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\AdminUtilityController;
+use App\Http\Controllers\Api\AdminProfileController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\AgmController;
 use App\Http\Controllers\Api\GuarantorController;
@@ -42,8 +43,14 @@ Route::prefix('admin')->group(function () {
     Route::post('/forgot-password', [AdminAuthController::class, 'forgotPassword'])->middleware('throttle:login');
 });
 
-// Admin: save push token endpoints (protected)
+// Admin: profile & push token endpoints (protected)
 Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin')->group(function () {
+    // Admin profile (separated from member profile)
+    Route::get('/profile', [AdminProfileController::class, 'show']);
+    Route::post('/profile/email', [AdminProfileController::class, 'updateEmail']);
+    Route::post('/profile/password', [AdminProfileController::class, 'updatePassword']);
+
+    // Push tokens (admins may also register their device tokens)
     Route::post('/push/token', [ProfileController::class, 'savePushToken']);
     Route::post('/fcm-token', [ProfileController::class, 'savePushToken']);
 });
@@ -68,6 +75,8 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // Security - Transaction PIN
     Route::post('/security/pin/set', [SecurityController::class, 'setPin'])->middleware('throttle:api');
     Route::post('/security/pin/verify', [SecurityController::class, 'verifyPin'])->middleware('throttle:api');
+    Route::post('/security/pin/reset/request', [SecurityController::class, 'requestPinReset'])->middleware('throttle:api');
+    Route::post('/security/pin/reset/confirm', [SecurityController::class, 'confirmPinReset'])->middleware('throttle:api');
 
     // Push token registration
     Route::post('/push/token', [ProfileController::class, 'savePushToken']);

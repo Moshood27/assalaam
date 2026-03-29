@@ -19,6 +19,11 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Restrict this endpoint to non-admin members only
+        if (method_exists($user, 'getAttribute') && (bool) ($user->is_admin ?? false)) {
+            return response()->json(['message' => 'Admins must use /api/admin/profile endpoints.'], 403);
+        }
+
         // Build a human-friendly virtual account string if assigned
         $virtualAccount = null;
         if (!empty($user->dva_account_number) && !empty($user->dva_bank_name)) {
@@ -74,6 +79,11 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Restrict this endpoint to non-admin members only
+        if (method_exists($user, 'getAttribute') && (bool) ($user->is_admin ?? false)) {
+            return response()->json(['message' => 'Admins must use /api/admin/profile endpoints.'], 403);
+        }
+
         $data = $request->validate([
             'passport' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'], // 5MB
         ]);
@@ -119,6 +129,11 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Restrict this endpoint to non-admin members only
+        if (method_exists($user, 'getAttribute') && (bool) ($user->is_admin ?? false)) {
+            return response()->json(['message' => 'Admins must use /api/admin/profile endpoints.'], 403);
+        }
+
         $data = $request->validate([
             'email' => ['required', 'email:rfc,dns', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['required'],
@@ -148,6 +163,11 @@ class ProfileController extends Controller
     public function updatePassword(Request $request)
     {
         $user = $request->user();
+
+        // Restrict this endpoint to non-admin members only
+        if (method_exists($user, 'getAttribute') && (bool) ($user->is_admin ?? false)) {
+            return response()->json(['message' => 'Admins must use /api/admin/profile endpoints.'], 403);
+        }
 
         $data = $request->validate([
             'current_password' => ['required'],

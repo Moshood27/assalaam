@@ -149,6 +149,21 @@
       </div>
     </div>
 
+    <!-- PIN Prompt Modal -->
+    <CustomNotice
+      v-model="pinPrompt.visible"
+      :type="'info'"
+      :title="'Confirm Purchase'"
+      :message="'Enter your 4-digit Transaction PIN to confirm checkout.'"
+      :prompt="true"
+      inputLabel="Transaction PIN (4 digits)"
+      confirmText="Confirm"
+      cancelText="Cancel"
+      :busy="placing"
+      @confirm="handlePinConfirm"
+      @cancel="handlePinCancel"
+    />
+
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
       <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
         <span class="text-xl">🏠</span>
@@ -171,6 +186,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import axios from '../http'
 import getImageUrl from '../utils/image'
 import { useRouter } from 'vue-router'
+import CustomNotice from '../components/CustomNotice.vue'
 
 const items = ref([])
 const loading = ref(false)
@@ -187,6 +203,8 @@ const cart = ref({}) // { [id]: { id, name, selling_price, qty } }
 const placing = ref(false)
 const placeError = ref('')
 const placeSuccess = ref('')
+// PIN prompt modal state
+const pinPrompt = ref({ visible: false })
 
 // Quick view modal state
 const selectedProduct = ref(null)
@@ -284,14 +302,16 @@ const addQuickToCart = () => {
   showCart.value = true
 }
 
-const checkout = async () => {
+const checkout = () => {
   placeError.value = ''
   placeSuccess.value = ''
   if (!totalQty.value) return
-  // Prompt for 4-digit Transaction PIN
-  let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm purchase:')
-  if (pin === null) return // cancelled
-  pin = String(pin || '').trim()
+  // Open custom PIN prompt modal
+  pinPrompt.value.visible = true
+}
+
+const handlePinConfirm = async (val) => {
+  let pin = String(val || '').trim()
   if (!/^\d{4}$/.test(pin)) {
     alert('Please enter a valid 4-digit PIN')
     return
@@ -309,6 +329,7 @@ const checkout = async () => {
     clearCart()
     // Refresh wallet balance after debit
     try { await loadWallet() } catch (_) {}
+    pinPrompt.value.visible = false
     if (orderId) {
       // slight delay for UX
       setTimeout(() => {
@@ -318,6 +339,7 @@ const checkout = async () => {
       }, 300)
     }
   } catch (e) {
+    pinPrompt.value.visible = false
     const status = e?.response?.status
     const msg = e?.response?.data?.message || e.message
     if (status === 409) {
@@ -330,6 +352,10 @@ const checkout = async () => {
   } finally {
     placing.value = false
   }
+}
+
+const handlePinCancel = () => {
+  pinPrompt.value.visible = false
 }
 
 // Small helper to navigate without importing router explicitly in SFC setup

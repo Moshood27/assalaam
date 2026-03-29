@@ -151,7 +151,7 @@
 
       <!-- Transaction PIN -->
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Transaction PIN</p>
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Transaction PIN</p>
         <p class="text-xs text-slate-500 mb-3">Set a 4-digit PIN required for transfers and store purchases.</p>
         <div class="space-y-3">
           <div>
@@ -174,6 +174,35 @@
           <button @click="setPin" :disabled="pinSaving" class="w-full h-12 rounded-xl font-bold text-white" :class="pinSaving ? 'bg-slate-400' : 'bg-emerald-700 hover:bg-emerald-800'">
             {{ pinSaving ? 'Saving…' : 'Save PIN' }}
           </button>
+
+          <!-- Forgot PIN flow -->
+          <div class="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+            <div class="flex items-center justify-between">
+              <p class="text-[11px] text-amber-800 font-bold uppercase tracking-widest">Forgot PIN?</p>
+              <button @click="requestPinReset" :disabled="resetBusy" class="text-[11px] font-bold text-emerald-700 underline">
+                {{ resetBusy ? 'Sending…' : 'Send Reset Code' }}
+              </button>
+            </div>
+            <p v-if="resetSentTo" class="text-[11px] text-amber-700 mt-1">Code sent to: {{ resetSentTo }} (expires in ~10 minutes)</p>
+            <div class="grid grid-cols-3 gap-2 mt-3">
+              <div>
+                <label class="text-[10px] text-slate-500 font-bold uppercase">6‑digit Code</label>
+                <input v-model="resetForm.code" type="text" inputmode="numeric" pattern="\\d*" maxlength="6" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="123456" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500 font-bold uppercase">New PIN</label>
+                <input v-model="resetForm.new_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="••••" />
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-500 font-bold uppercase">Confirm</label>
+                <input v-model="resetForm.confirm_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="••••" />
+              </div>
+            </div>
+            <div class="mt-2 flex items-center gap-2">
+              <button @click="confirmPinReset" :disabled="resetBusy" class="px-4 py-2 rounded-xl text-white font-bold" :class="resetBusy ? 'bg-slate-400' : 'bg-emerald-700 hover:bg-emerald-800'">{{ resetBusy ? 'Resetting…' : 'Reset PIN' }}</button>
+              <span v-if="resetMessage" class="text-[12px]" :class="resetError ? 'text-rose-700' : 'text-emerald-700'">{{ resetMessage }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -219,6 +248,13 @@ const passErrors = ref({})
 const pinForm = ref({ current_password: '', new_pin: '', confirm_pin: '' })
 const pinSaving = ref(false)
 const pinErrors = ref({})
+
+// PIN reset (forgot) state
+const resetBusy = ref(false)
+const resetSentTo = ref('')
+const resetMessage = ref('')
+const resetError = ref(false)
+const resetForm = ref({ code: '', new_pin: '', confirm_pin: '' })
 
 const copy = async (text) => {
   try {
@@ -374,6 +410,66 @@ const setPin = async () => {
     }
   } finally {
     pinSaving.value = false
+  }
+}
+
+const requestPinReset = async () => {
+  resetMessage.value = ''
+  resetError.value = false
+  resetSentTo.value = ''
+  resetBusy.value = true
+  try {
+    const { data } = await axios.post('/api/security/pin/reset/request')
+    resetSentTo.value = data?.sent_to || ''
+    resetMessage.value = data?.message || 'Code sent if contact exists.'
+  } catch (err) {
+    resetError.value = true
+    resetMessage.value = err?.response?.data?.message || 'Failed to send reset code.'
+  } finally {
+    resetBusy.value = false
+  }
+}
+
+const confirmPinReset = async () => {
+  resetMessage.value = ''
+  resetError.value = false
+  // Basic validation
+  if (!/^\d{6}$/.test(String(resetForm.value.code || ''))) {
+    resetError.value = true
+    resetMessage.value = 'Enter the 6-digit code sent to you.'
+    return
+  }
+  if (!/^\d{4}$/.test(String(resetForm.value.new_pin || ''))) {
+    resetError.value = true
+    resetMessage.value = 'New PIN must be exactly 4 digits.'
+    return
+  }
+  if (String(resetForm.value.confirm_pin) !== String(resetForm.value.new_pin)) {
+    resetError.value = true
+    resetMessage.value = 'PIN confirmation does not match.'
+    return
+  }
+  resetBusy.value = true
+  try {
+    const { data } = await axios.post('/api/security/pin/reset/confirm', {
+      code: String(resetForm.value.code),
+      new_pin: String(resetForm.value.new_pin),
+      confirm_pin: String(resetForm.value.confirm_pin),
+    })
+    resetMessage.value = data?.message || 'PIN reset successfully.'
+    resetError.value = false
+    // Clear inputs
+    resetForm.value = { code: '', new_pin: '', confirm_pin: '' }
+  } catch (err) {
+    const status = err?.response?.status
+    const msg = err?.response?.data?.message || 'Failed to reset PIN.'
+    resetMessage.value = msg
+    resetError.value = true
+    if (status === 429) {
+      alert('Too many invalid attempts. Please request a new code.')
+    }
+  } finally {
+    resetBusy.value = false
   }
 }
 

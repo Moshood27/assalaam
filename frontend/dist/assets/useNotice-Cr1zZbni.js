@@ -1,0 +1,1 @@
+import{P as e}from"./runtime-core.esm-bundler-CfXCJZHz.js";var t=e({visible:!1,type:`info`,title:``,message:``});function n(e,n,r=`info`){t.value={visible:!0,type:r,title:e,message:n}}function r(){t.value.visible=!1}function i(){return{notice:t,showNotice:n,closeNotice:r}}export{i as t};
