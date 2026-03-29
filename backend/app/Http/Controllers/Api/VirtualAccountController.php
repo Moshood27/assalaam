@@ -66,10 +66,15 @@ class VirtualAccountController extends Controller
             if (empty($effectivePhone)) {
                 return response()->json(['message' => 'Phone number is required to assign a virtual account. Please add your phone number to your profile or provide it in this request.'], 422);
             }
+            // Ensure we have an email (required by Paystack for DVA and customer)
+            $effectiveEmail = $validated['email'] ?? ($user->email ?? null);
+            if (empty($effectiveEmail)) {
+                return response()->json(['message' => 'Email is required to assign a virtual account. Please add your email to your profile or provide it in this request.'], 422);
+            }
             // Ensure a Paystack customer exists
             if (! $user->paystack_customer_code) {
                 $payload = [
-                    'email' => $user->email,
+                    'email' => $effectiveEmail,
                 ];
                 // Use provided first/last name if available; otherwise attempt to split user's name
                 if (!empty($validated['first_name']) || !empty($validated['last_name'])) {
@@ -126,49 +131,24 @@ class VirtualAccountController extends Controller
                 ]);
             }
 
-            // Assign a Dedicated Virtual Account to this customer
+            // Assign a Dedicated Virtual Account to this customer (use email per Paystack guidance)
             $assignPayload = [
-                'customer' => $user->paystack_customer_code,
+                'customer' => $effectiveEmail,
             ];
-
-            // Determine identity fields required by Paystack for DVA assignment
-            $firstName = null;
-            $lastName = null;
-            if (!empty($validated['first_name']) || !empty($validated['last_name'])) {
-                $firstName = $validated['first_name'] ?? null;
-                $lastName = $validated['last_name'] ?? null;
-            } else {
-                $parts = preg_split('/\s+/', trim((string) $user->name));
-                $firstName = $parts[0] ?? ($user->name ?: 'Member');
-                if (count($parts) > 1) {
-                    $lastName = implode(' ', array_slice($parts, 1));
-                }
-            }
-            if (!empty($firstName)) { $assignPayload['first_name'] = $firstName; }
-            if (!empty($lastName)) { $assignPayload['last_name'] = $lastName; }
-
-            // Phone number (Paystack expects `phone_number`)
-            $phoneNumber = $validated['phone'] ?? ($user->phone ?? null);
-            if (!empty($phoneNumber)) {
-                $assignPayload['phone_number'] = $phoneNumber;
-            }
-
-            // Email (required by Paystack for DVA assignment)
-            $email = $validated['email'] ?? ($user->email ?? null);
-            if (!empty($email)) {
-                $assignPayload['email'] = $email;
-            }
-
-            // Optional BVN if provided
-            if (!empty($validated['bvn'])) {
-                $assignPayload['bvn'] = $validated['bvn'];
-            }
-
             if (! empty($validated['preferred_bank'])) {
                 $assignPayload['preferred_bank'] = $validated['preferred_bank'];
             }
 
-            $assignResp = $client->post('https://api.paystack.co/dedicated_account/assign', $assignPayload);
+            $assignResp = $client->post('https://api.paystack.co/dedicated_account', $assignPayload);
+            // If customer not found using email, retry using customer_code
+            if (! $assignResp->ok() || $assignResp->json('status') !== true) {
+                $message = strtolower((string) ($assignResp->json('message') ?? ''));
+                if ($assignResp->status() === 404 || str_contains($message, 'customer not found')) {
+                    $retryPayload = $assignPayload;
+                    $retryPayload['customer'] = $user->paystack_customer_code;
+                    $assignResp = $client->post('https://api.paystack.co/dedicated_account', $retryPayload);
+                }
+            }
 
             if (! $assignResp->ok() || $assignResp->json('status') !== true) {
                 // Fallback: fetch existing assigned DVAs for this customer (may already be assigned)
