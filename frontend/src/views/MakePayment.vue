@@ -80,6 +80,30 @@
       </div>
     </div>
 
+    <!-- Custom Notice Modal -->
+    <CustomNotice
+      v-model="notice.visible"
+      :type="notice.type"
+      :title="notice.title"
+      :message="notice.message"
+      @close="closeNotice"
+    />
+
+    <!-- PIN Prompt Modal -->
+    <CustomNotice
+      v-model="pinPrompt.visible"
+      :type="'info'"
+      :title="'Confirm Transfer'"
+      :message="'Enter your 4-digit Transaction PIN to confirm transfer.'"
+      :prompt="true"
+      inputLabel="Transaction PIN (4 digits)"
+      confirmText="Confirm"
+      cancelText="Cancel"
+      :busy="loading"
+      @confirm="handlePinConfirm"
+      @cancel="handlePinCancel"
+    />
+
     <nav class="bottom-nav">
       <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
         <span class="text-xl">🏠</span>
@@ -101,6 +125,8 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import CustomNotice from '../components/CustomNotice.vue'
+import { useNotice } from '../composables/useNotice'
 
 const router = useRouter()
 const baseRaw = import.meta?.env?.BASE_URL || '/'
@@ -118,6 +144,12 @@ const walletBalance = ref(0)
 const summaryEnd = ref(null)
 
 const totalAmount = computed(() => paymentList.value.reduce((sum, i) => sum + Number(i.amount || 0), 0))
+
+// Custom notice (shared)
+const { notice, showNotice, closeNotice } = useNotice()
+
+// PIN prompt modal state
+const pinPrompt = ref({ visible: false })
 
 const addToList = () => {
   if (!selectedSchemeId.value || !inputAmount.value || Number(inputAmount.value) <= 0) return
@@ -151,24 +183,15 @@ const loadWallet = async () => {
 }
 
 const initiatePayment = async () => {
+  // If paying from wallet, show custom PIN prompt modal
+  if (payFromWallet.value) {
+    pinPrompt.value.visible = true
+    return
+  }
+
+  // Otherwise, go through Paystack checkout
   try {
     loading.value = true
-    if (payFromWallet.value) {
-      // Allocate from wallet with Transaction PIN
-      let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm transfer:')
-      if (pin === null) { loading.value = false; return }
-      pin = String(pin || '').trim()
-      if (!/^\d{4}$/.test(pin)) {
-        alert('Please enter a valid 4-digit PIN')
-        loading.value = false
-        return
-      }
-      await axios.post('/api/wallet/allocate', { items: paymentList.value, pin })
-      alert('Allocation successful!')
-      router.replace({ name: 'dashboard' })
-      return
-    }
-    // Otherwise, go through Paystack checkout
     const callback_url = `${window.location.origin}${basePath}payment-callback`
     const { data } = await axios.post('/api/initiate-payment', { items: paymentList.value, callback_url })
     window.location.href = data.checkout_url
@@ -185,6 +208,38 @@ const initiatePayment = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handlePinConfirm = async (val) => {
+  const pin = String(val || '').trim()
+  if (!/^\d{4}$/.test(pin)) {
+    showNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+    return
+  }
+  loading.value = true
+  try {
+    await axios.post('/api/wallet/allocate', { items: paymentList.value, pin })
+    pinPrompt.value.visible = false
+    // Navigate on success (same behavior as before)
+    router.replace({ name: 'dashboard' })
+  } catch (e) {
+    pinPrompt.value.visible = false
+    const status = e?.response?.status
+    const msg = e?.response?.data?.message || 'Payment failed'
+    if (status === 409) {
+      showNotice('Set PIN', 'You need to set your Transaction PIN first. Go to Profile > Transaction PIN.', 'warning')
+    } else if (status === 403) {
+      showNotice('Invalid PIN', 'Invalid Transaction PIN. Please try again.', 'error')
+    } else {
+      showNotice('Failed', msg, 'error')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const handlePinCancel = () => {
+  pinPrompt.value.visible = false
 }
 
 onMounted(async () => {

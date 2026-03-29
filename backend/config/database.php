@@ -144,7 +144,9 @@ return [
 
     'redis' => [
 
-        'client' => env('REDIS_CLIENT', 'phpredis'),
+        // Prefer phpredis if the PHP Redis extension is loaded; otherwise force Predis.
+        // Even if REDIS_CLIENT=phpredis is set in the environment, we'll fall back to Predis when the extension isn't available.
+        'client' => extension_loaded('redis') ? env('REDIS_CLIENT', 'phpredis') : 'predis',
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
