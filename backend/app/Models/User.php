@@ -74,6 +74,7 @@ class User extends Authenticatable implements FilamentUser
             'balance' => 'decimal:2',
             'bvn_verified_at' => 'datetime',
             'dva_verification_meta' => 'array',
+            'pin_set_at' => 'datetime',
         ];
     }
 

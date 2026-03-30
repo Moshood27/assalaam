@@ -19,13 +19,13 @@
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
         <div class="flex items-center gap-2 mb-2 relative z-10">
           <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
-          <button @click="hideBalance = !hideBalance" class="text-lg opacity-80" title="Toggle visibility">
-            <span v-if="hideBalance">👁️</span>
+          <button @click="toggleBalances()" class="text-lg opacity-80" title="Toggle visibility">
+            <span v-if="hideBalances">👁️</span>
             <span v-else>🙈</span>
           </button>
         </div>
         <h1 class="text-3xl sm:text-4xl leading-tight font-bold relative z-10 tracking-tight">
-          ₦ {{ hideBalance ? '***,***.**' : formatMoney(dashboardData.balance) }}
+          ₦ {{ hideBalances ? '***,***.**' : formatMoney(dashboardData.balance) }}
         </h1>
         <div class="mt-8 flex items-center justify-between flex-wrap gap-2 relative z-10">
           <div class="flex items-center gap-2">
@@ -40,9 +40,9 @@
 
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
-        <StatPill label="Contributions" :value="currency + ' ' + formatMoney(kpis.contributions)" hint="Total" intent="success" icon="💰" />
-        <StatPill label="Loans" :value="currency + ' ' + formatMoney(kpis.loans)" hint="Outstanding" intent="warning" icon="📊" />
-        <StatPill label="Utilities" :value="currency + ' ' + formatMoney(kpis.utilities)" hint="Spent" intent="default" icon="📶" />
+        <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
+        <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="warning" icon="📊" />
+        <StatPill label="Utilities" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.utilities))" hint="Spent" intent="default" icon="📶" />
       </div>
 
       <!-- Trend chart -->
@@ -125,7 +125,7 @@
             </div>
           </div>
           <div class="text-right">
-            <p class="font-bold text-slate-800">₦ {{ formatMoney(tx.amount) }}</p>
+            <p class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(tx.amount) }}</p>
           </div>
         </div>
       </div>
@@ -200,13 +200,14 @@ import FinCard from '../components/FinCard.vue'
 import StatPill from '../components/StatPill.vue'
 import TrendChart from '../components/TrendChart.vue'
 import { startDashboardTour } from '../utils/tour'
+import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 
 const modal = useModal()
 const { notice, showNotice, closeNotice } = useNotice()
 
 const currency = '₦'
 const dashboardData = ref({})
-const hideBalance = ref(false)
+const { hideBalances, toggleBalances } = useBalanceVisibility()
 
 const formatMoney = (val) => Number(val ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })

@@ -1,0 +1,1 @@
+import{A as e,P as t}from"./runtime-core.esm-bundler-CfXCJZHz.js";var n=`hide_balances`,r=t((()=>{try{return localStorage.getItem(n)===`1`}catch{return!1}})());e(r,e=>{try{localStorage.setItem(n,e?`1`:`0`)}catch{}},{immediate:!0});function i(){r.value=!r.value}function a(){return{hideBalances:r,toggleBalances:i}}export{a as t};

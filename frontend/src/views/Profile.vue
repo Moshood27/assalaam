@@ -147,7 +147,15 @@
       <!-- Transaction PIN -->
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Transaction PIN</p>
-        <p class="text-xs text-slate-500 mb-3">Set a 4-digit PIN required for transfers and store purchases.</p>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span :class="profile.pin_set ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase">
+              {{ profile.pin_set ? 'Set' : 'Not Set' }}
+            </span>
+            <span v-if="profile.pin_set_at" class="text-[10px] text-slate-500">since {{ profile.pin_set_at }}</span>
+          </div>
+          <span class="text-[11px] text-slate-500">4-digit PIN used for payments</span>
+        </div>
         <div class="space-y-3">
           <div>
             <label class="text-[10px] text-slate-400 font-bold uppercase">Current Password</label>

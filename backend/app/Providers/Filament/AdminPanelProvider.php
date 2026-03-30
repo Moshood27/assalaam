@@ -29,6 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->registration()
             ->passwordReset()
+            ->profile()
             ->brandName(config('brand.name'))
             ->brandLogo(asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg'))
             ->brandLogoHeight('3rem')

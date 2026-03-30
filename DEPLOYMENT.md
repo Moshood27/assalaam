@@ -279,3 +279,42 @@ Before going live, review and apply the following:
 - Backups and migrations
   - Automate database backups and verify restore procedures. Ensure migrations run automatically (CI/CD) or during deploys.
 
+
+
+
+8) Transaction PIN and OTP delivery (production readiness)
+Members can set a 4-digit Transaction PIN (Profile > Transaction PIN) used to authorize sensitive operations (wallet allocation, VTU purchases, store orders). If a member forgets the PIN, they can request a one-time 6-digit reset code delivered via SMS (preferred when a phone is on file) or email. To enable real delivery in production, configure the following:
+
+Backend .env (SMS)
+- SMS_ENABLED=true
+- SMS_DRIVER=termii            # supported: termii, log, generic
+- SMS_API_KEY=your-termii-key
+- SMS_SENDER=Coop              # sender name/ID (per provider rules)
+- SMS_BASE_URL=https://api.ng.termii.com
+- SMS_CHANNEL=generic          # or dnd/whatsapp/etc as supported
+# If you use a different provider with a generic JSON endpoint:
+- SMS_DRIVER=generic
+- SMS_URL=https://sms.example.com/send
+
+Backend .env (Mail)
+- MAIL_MAILER=smtp
+- MAIL_HOST=mailpit            # or your SMTP host
+- MAIL_PORT=1025
+- MAIL_USERNAME=null
+- MAIL_PASSWORD=null
+- MAIL_ENCRYPTION=null         # or tls
+- MAIL_FROM_ADDRESS=noreply@yourcoop.org
+- MAIL_FROM_NAME="Your Coop"
+
+Notes
+- When SMS is disabled (SMS_ENABLED=false), the system logs outgoing messages but does not attempt delivery. Email is used as a fallback if available.
+- The reset code expires in 10 minutes and is limited to 5 invalid attempts for security.
+- API endpoints (all require Bearer token):
+  - POST /api/security/pin/set            { current_password, new_pin, confirm_pin }
+  - POST /api/security/pin/verify         { pin }
+  - POST /api/security/pin/reset/request  { channel?: 'sms'|'email' }
+  - POST /api/security/pin/reset/confirm  { code, new_pin, confirm_pin }
+
+Frontend/mobile
+- The Profile screen shows PIN status (Set/Not Set) and when it was set, and provides UI for both setting and resetting the PIN.
+- For mobile builds, ensure VITE_API_URL points to your backend origin (see section 7 for details).

@@ -10,7 +10,7 @@
       <!-- Balance Card -->
       <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl">
         <p class="text-emerald-100 text-sm">Available Balance</p>
-        <h2 class="text-4xl font-bold mt-1">₦ {{ formatMoney(wallet.balance) }}</h2>
+        <h2 class="text-4xl font-bold mt-1">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.balance) }}</h2>
         <div class="mt-5 flex gap-2">
           <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">Allocate to Schemes</button>
           <button @click="showFund = !showFund" class="bg-white text-emerald-800 px-4 py-2 rounded-xl text-xs font-bold">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
@@ -122,6 +122,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 
 const router = useRouter()
 const baseRaw = import.meta?.env?.BASE_URL || '/'

@@ -69,6 +69,9 @@ class ProfileController extends Controller
             // BVN considered assigned if present, verified timestamp exists, or a DVA has been assigned
             'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
             'passport_url' => $passportUrl,
+            // Transaction PIN status for improved UX on the client
+            'pin_set' => method_exists($user, 'hasTransactionPin') ? $user->hasTransactionPin() : (!empty($user->transaction_pin_hash)),
+            'pin_set_at' => $user->pin_set_at ? $user->pin_set_at->toDateTimeString() : null,
         ]);
     }
 

@@ -8,7 +8,7 @@ import VueApexCharts from 'vue3-apexcharts'
 // Simple global idle timer: logs out after 2 minutes of no activity
 function setupIdleLogout(router, timeoutMs = 120000) {
   let timerId = null
-  const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'visibilitychange', 'focus']
+  const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll']
   const LAST_ACTIVITY_KEY = 'last_activity_ts'
 
   const clearTokensAndRedirect = () => {
@@ -52,6 +52,23 @@ function setupIdleLogout(router, timeoutMs = 120000) {
   const onActivity = () => reset()
   events.forEach(evt => window.addEventListener(evt, onActivity, { passive: true }))
 
+  // Handle tab/app visibility and focus to avoid premature resets
+  const onVisibility = () => {
+    try {
+      if (document.visibilityState === 'visible') {
+        if (isExpired()) return clearTokensAndRedirect()
+        reset()
+      }
+    } catch (_) {}
+  }
+  const onFocusLike = () => {
+    if (isExpired()) return clearTokensAndRedirect()
+    reset()
+  }
+  document.addEventListener('visibilitychange', onVisibility)
+  window.addEventListener('focus', onFocusLike)
+  window.addEventListener('pageshow', onFocusLike)
+
   // Reset on route navigation as well
   router.afterEach(() => reset())
 
@@ -86,6 +103,9 @@ function setupIdleLogout(router, timeoutMs = 120000) {
   return () => {
     if (timerId) clearTimeout(timerId)
     events.forEach(evt => window.removeEventListener(evt, onActivity))
+    document.removeEventListener('visibilitychange', onVisibility)
+    window.removeEventListener('focus', onFocusLike)
+    window.removeEventListener('pageshow', onFocusLike)
     try {
       import('@capacitor/app').then(({ App }) => {
         // Capacitor doesn't yet expose removeAllListeners per event in all versions; best-effort cleanup.
