@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\Scheme;
+use App\Models\Project;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -160,6 +161,7 @@ class WalletController extends Controller
         $validated = $request->validate([
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
+            'items.*.project_id' => 'nullable|integer|exists:projects,id',
             'items.*.amount' => 'required|numeric|min:1',
             'pin' => ['required','regex:/^\d{4}$/'],
         ]);
@@ -175,8 +177,29 @@ class WalletController extends Controller
         }
 
         $items = collect($validated['items'])
-            ->map(fn($i) => ['scheme_id' => (int)$i['scheme_id'], 'amount' => (float)$i['amount']])
+            ->map(function($i){
+                $row = [
+                    'scheme_id' => (int)$i['scheme_id'],
+                    'amount' => (float)($i['amount'] ?? 0),
+                ];
+                if (!empty($i['project_id'])) {
+                    $row['project_id'] = (int) $i['project_id'];
+                }
+                return $row;
+            })
             ->filter(fn($i) => $i['amount'] > 0);
+
+        // Validate any provided project_ids are active
+        $projectIds = $items->pluck('project_id')->filter()->unique()->values();
+        if ($projectIds->isNotEmpty()) {
+            $projects = Project::whereIn('id', $projectIds)->get()->keyBy('id');
+            foreach ($projectIds as $pid) {
+                $p = $projects[$pid] ?? null;
+                if (!$p || !($p->active)) {
+                    return response()->json(['message' => 'Selected project is not available'], 422);
+                }
+            }
+        }
 
         $total = $items->sum('amount');
         if ($total <= 0) {
@@ -198,13 +221,17 @@ class WalletController extends Controller
             }
 
             foreach ($items as $item) {
-                Contribution::create([
+                $row = [
                     'user_id' => $lockedUser->id,
                     'scheme_id' => $item['scheme_id'],
                     'amount' => $item['amount'],
                     'reference' => $reference,
                     'status' => 'success',
-                ]);
+                ];
+                if (!empty($item['project_id'])) {
+                    $row['project_id'] = (int) $item['project_id'];
+                }
+                Contribution::create($row);
             }
 
             // Deduct wallet safely

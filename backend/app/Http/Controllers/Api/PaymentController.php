@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Scheme;
+use App\Models\Project;
 use App\Models\Contribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -22,6 +23,7 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
+            'items.*.project_id' => 'nullable|integer|exists:projects,id',
             'items.*.amount' => 'required|numeric|min:1',
             'callback_url' => 'nullable|url',
         ]);
@@ -31,6 +33,9 @@ class PaymentController extends Controller
         // Server-side sanitize/validate each item amount against Scheme rules (never trust frontend amount)
         $schemeIds = collect($validated['items'])->pluck('scheme_id')->unique()->values();
         $schemes = Scheme::whereIn('id', $schemeIds)->get()->keyBy('id');
+        // Optional project validation: ensure provided project_id exists and is active
+        $projectIds = collect($validated['items'])->pluck('project_id')->filter()->unique()->values();
+        $projects = $projectIds->isNotEmpty() ? Project::whereIn('id', $projectIds)->get()->keyBy('id') : collect();
 
         $sanitized = [];
         foreach ($validated['items'] as $item) {
@@ -44,10 +49,23 @@ class PaymentController extends Controller
                     'message' => 'Amount below minimum for scheme: ' . ($scheme->name ?? ('#'.$scheme->id)),
                 ], 422);
             }
-            $sanitized[] = [
+            $projectId = $item['project_id'] ?? null;
+            if (!empty($projectId)) {
+                $p = $projects[$projectId] ?? null;
+                if (! $p || !($p->active)) {
+                    return response()->json([
+                        'message' => 'Selected project is not available',
+                    ], 422);
+                }
+            }
+            $row = [
                 'scheme_id' => (int) $scheme->id,
                 'amount' => $amount,
             ];
+            if (!empty($projectId)) {
+                $row['project_id'] = (int) $projectId;
+            }
+            $sanitized[] = $row;
         }
 
         if (empty($sanitized)) {
@@ -64,12 +82,16 @@ class PaymentController extends Controller
 
         // Pre-create pending contributions for each scheme (idempotent distribution record)
         foreach ($sanitized as $item) {
-            $user->contributions()->create([
+            $payloadData = [
                 'scheme_id' => $item['scheme_id'],
                 'amount' => $item['amount'],
                 'reference' => $reference,
                 'status' => 'pending',
-            ]);
+            ];
+            if (!empty($item['project_id'])) {
+                $payloadData['project_id'] = (int) $item['project_id'];
+            }
+            $user->contributions()->create($payloadData);
         }
 
         // Choose payment gateway: paystack (default) or flutterwave

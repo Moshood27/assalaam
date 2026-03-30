@@ -28,6 +28,13 @@
               <option v-for="s in schemes" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
+          <div class="flex-grow">
+            <label class="lbl">Project (optional)</label>
+            <select v-model="selectedProjectId" class="inp">
+              <option value="">No Project</option>
+              <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+          </div>
           <div class="w-1/3">
             <label class="lbl">Amount</label>
             <input v-model.number="inputAmount" type="number" placeholder="0.00" class="inp" />
@@ -45,8 +52,9 @@
       <div v-if="paymentList.length > 0" class="space-y-3">
         <div v-for="(item, index) in paymentList" :key="index" class="card p-4 flex items-center justify-between border-l-4 border-emerald-700">
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center flex-wrap gap-2">
               <p class="font-bold text-slate-800 text-sm">{{ item.scheme_name }}</p>
+              <span v-if="item.project_name" class="badge bg-emerald-100 text-emerald-700">Project: {{ item.project_name }}</span>
               <span v-if="item.category === 'fine'" class="badge badge-muted bg-rose-100 text-rose-700">Fine</span>
             </div>
             <p class="text-xs text-slate-500">Scheduled Payment</p>
@@ -134,8 +142,10 @@ const basePath = (baseRaw && baseRaw.startsWith('./')) ? '/' : (baseRaw.endsWith
 const isNative = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
 
 const schemes = ref([])
+const projects = ref([])
 const paymentList = ref([])
 const selectedSchemeId = ref('')
+const selectedProjectId = ref('')
 const inputAmount = ref('')
 const loading = ref(false)
 const isFine = ref(false)
@@ -156,7 +166,14 @@ const addToList = () => {
   // robust id compare (string/number)
   const s = schemes.value.find(x => String(x.id) == String(selectedSchemeId.value))
   if (!s) return
-  paymentList.value.push({ scheme_id: s.id, scheme_name: s.name, amount: Number(inputAmount.value), category: isFine.value ? 'fine' : 'deposit' })
+  const pid = selectedProjectId.value ? String(selectedProjectId.value) : ''
+  const p = pid ? projects.value.find(x => String(x.id) == pid) : null
+  const item = { scheme_id: s.id, scheme_name: s.name, amount: Number(inputAmount.value), category: isFine.value ? 'fine' : 'deposit' }
+  if (p) {
+    item.project_id = p.id
+    item.project_name = p.name
+  }
+  paymentList.value.push(item)
   // Smooth scroll to the end of the payment summary after DOM updates
   nextTick(() => {
     try {
@@ -164,6 +181,7 @@ const addToList = () => {
     } catch (_) {}
   })
   selectedSchemeId.value = ''
+  selectedProjectId.value = ''
   inputAmount.value = ''
   isFine.value = false
 }

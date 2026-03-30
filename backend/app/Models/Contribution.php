@@ -26,6 +26,26 @@ class Contribution extends Model
                 $model->reference = self::generateReference();
             }
         });
+
+        static::updated(function (self $model) {
+            // When a contribution tied to a project is marked successful, create a ProjectInvestment once
+            try {
+                if ($model->project_id && $model->status === 'success' && $model->wasChanged('status')) {
+                    // Avoid duplicates if re-updated
+                    if (!\App\Models\ProjectInvestment::where('contribution_id', $model->id)->exists()) {
+                        \App\Models\ProjectInvestment::create([
+                            'user_id' => $model->user_id,
+                            'project_id' => $model->project_id,
+                            'contribution_id' => $model->id,
+                            'amount' => $model->amount,
+                            'reference' => $model->reference,
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Swallow to prevent blocking payment finalization; logs can be added if needed
+            }
+        });
     }
 
     public static function generateReference(): string
@@ -41,5 +61,10 @@ class Contribution extends Model
     public function scheme()
     {
         return $this->belongsTo(Scheme::class);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 }

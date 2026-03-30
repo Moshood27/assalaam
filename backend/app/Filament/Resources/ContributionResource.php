@@ -6,6 +6,7 @@ use App\Filament\Resources\ContributionResource\Pages;
 use App\Models\Contribution;
 use App\Models\Scheme;
 use App\Models\User;
+use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -35,7 +36,7 @@ class ContributionResource extends Resource
                     ->visibleOn('create')
                     ->required()
                     ->minItems(1)
-                    ->columns(2)
+                    ->columns(3)
                     ->schema([
                         Forms\Components\Select::make('scheme_id')
                             ->label('Scheme')
@@ -43,6 +44,13 @@ class ContributionResource extends Resource
                             ->searchable()
                             ->required()
                             ->rule('distinct'),
+                        Forms\Components\Select::make('project_id')
+                            ->label('Project (optional)')
+                            ->options(\App\Models\Project::query()->where('active', true)->pluck('name', 'id'))
+                            ->searchable()
+                            ->native(false)
+                            ->helperText('Link this payment to a pooled project (Mudarabah)')
+                            ->columnSpan(1),
                         Forms\Components\TextInput::make('amount')
                             ->label('Amount')
                             ->numeric()
@@ -57,6 +65,12 @@ class ContributionResource extends Resource
                     ->options(Scheme::query()->pluck('name', 'id'))
                     ->searchable()
                     ->required()
+                    ->hiddenOn('create'),
+                Forms\Components\Select::make('project_id')
+                    ->label('Project (optional)')
+                    ->options(Project::query()->where('active', true)->pluck('name', 'id'))
+                    ->searchable()
+                    ->native(false)
                     ->hiddenOn('create'),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
@@ -85,6 +99,7 @@ class ContributionResource extends Resource
                 TextColumn::make('created_at')->label('Time')->since()->sortable(),
                 TextColumn::make('user.name')->label('Member')->searchable(),
                 TextColumn::make('scheme.name')->label('Scheme')->searchable(),
+                TextColumn::make('project.name')->label('Project')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
                 TextColumn::make('status')->badge()->colors([
                     'success' => ['success', 'paid', 'completed'],

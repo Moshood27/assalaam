@@ -37,6 +37,7 @@ class CreateContribution extends CreateRecord
         foreach ($items as $index => $item) {
             $scheme = $item['scheme_id'] ?? null;
             $amount = isset($item['amount']) ? (float) $item['amount'] : null;
+            $projectId = $item['project_id'] ?? null;
 
             if (!$scheme) {
                 throw ValidationException::withMessages([
@@ -54,10 +55,14 @@ class CreateContribution extends CreateRecord
                 ]);
             }
             $schemeIds[] = $scheme;
-            $normalizedItems[] = [
+            $row = [
                 'scheme_id' => $scheme,
                 'amount' => $amount,
             ];
+            if (!empty($projectId)) {
+                $row['project_id'] = (int) $projectId;
+            }
+            $normalizedItems[] = $row;
         }
 
         $firstRecord = null;
@@ -71,6 +76,9 @@ class CreateContribution extends CreateRecord
                     'status' => $status,
                     // Intentionally skip 'reference' to let the model auto-generate unique references
                 ];
+                if (!empty($item['project_id'])) {
+                    $row['project_id'] = (int) $item['project_id'];
+                }
 
                 $created = Contribution::create($row);
 

@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\GuarantorController;
 use App\Http\Controllers\Api\ZakatController;
 use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\SecurityController;
+use App\Http\Controllers\Api\ProjectController;
 
 Route::get('/health', function () {
     return response()
@@ -87,6 +88,11 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/schemes', [PaymentController::class, 'getSchemes']);
     Route::post('/initiate-payment', [PaymentController::class, 'initiate']);
     Route::post('/verify-payment', [PaymentController::class, 'verify']);
+
+    // Projects (Pooled Investments)
+    Route::get('/projects', [ProjectController::class, 'index']);
+    Route::get('/projects/{id}', [ProjectController::class, 'show']);
+    Route::get('/projects/{id}/investments', [ProjectController::class, 'myInvestments']);
 
     // Passbook
     Route::get('/passbook/{year}', [PassbookController::class, 'getMatrix']);
