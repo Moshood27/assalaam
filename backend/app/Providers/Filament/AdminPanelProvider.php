@@ -39,6 +39,12 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            // Explicitly register key resources to ensure they appear in navigation
+            ->resources([
+                \App\Filament\Resources\ProjectResource::class,
+                \App\Filament\Resources\ProjectInvestmentResource::class,
+                \App\Filament\Resources\ProjectProfitResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,

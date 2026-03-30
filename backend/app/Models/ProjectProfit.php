@@ -25,6 +25,25 @@ class ProjectProfit extends Model
         'net_distributable' => 'decimal:2',
     ];
 
+    protected static function booted()
+    {
+        static::saving(function (self $model) {
+            $gross = (float) ($model->gross_profit ?? 0);
+            // Use provided percent or default from project if not set
+            $percent = $model->management_fee_percent;
+            if ($percent === null && $model->project_id) {
+                $percent = (float) optional(Project::find($model->project_id))->management_fee_percent;
+            }
+            $percent = (float) ($percent ?? 0);
+            $fee = round($gross * $percent / 100, 2);
+            $net = round($gross - $fee, 2);
+
+            $model->management_fee_percent = $percent;
+            $model->management_fee_amount = $fee;
+            $model->net_distributable = $net;
+        });
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class);

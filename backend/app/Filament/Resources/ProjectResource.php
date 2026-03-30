@@ -20,6 +20,11 @@ class ProjectResource extends Resource
     protected static ?string $navigationGroup = 'Investments';
     protected static ?int $navigationSort = 10;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true;
+    }
+
     public static function form(Form $form): Form
     {
         return $form

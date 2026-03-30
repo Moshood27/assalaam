@@ -18,6 +18,11 @@ class ProjectInvestmentResource extends Resource
     protected static ?string $navigationGroup = 'Investments';
     protected static ?int $navigationSort = 20;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true;
+    }
+
     public static function form(Form $form): Form
     {
         // No manual creation/editing; investments are created from payments.
