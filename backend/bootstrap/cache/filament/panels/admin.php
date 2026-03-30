@@ -1,5 +1,5 @@
 <?php return array (
-  'livewireComponents' => 
+  'livewireComponents' =>
   array (
     'app.filament.resources.agm-candidate-resource.pages.create-agm-candidate' => 'App\\Filament\\Resources\\AgmCandidateResource\\Pages\\CreateAgmCandidate',
     'app.filament.resources.agm-candidate-resource.pages.edit-agm-candidate' => 'App\\Filament\\Resources\\AgmCandidateResource\\Pages\\EditAgmCandidate',
@@ -64,19 +64,19 @@
     'filament.pages.auth.password-reset.reset-password' => 'Filament\\Pages\\Auth\\PasswordReset\\ResetPassword',
     'filament.pages.auth.register' => 'Filament\\Pages\\Auth\\Register',
   ),
-  'clusters' => 
+  'clusters' =>
   array (
   ),
-  'clusteredComponents' => 
+  'clusteredComponents' =>
   array (
   ),
-  'clusterDirectories' => 
+  'clusterDirectories' =>
   array (
   ),
-  'clusterNamespaces' => 
+  'clusterNamespaces' =>
   array (
   ),
-  'pages' => 
+  'pages' =>
   array (
     '/var/www/html/app/Filament/Pages/AppropriationAccount.php' => 'App\\Filament\\Pages\\AppropriationAccount',
     '/var/www/html/app/Filament/Pages/BalanceSheet.php' => 'App\\Filament\\Pages\\BalanceSheet',
@@ -86,15 +86,15 @@
     '/var/www/html/app/Filament/Pages/TrialBalance.php' => 'App\\Filament\\Pages\\TrialBalance',
     0 => 'Filament\\Pages\\Dashboard',
   ),
-  'pageDirectories' => 
+  'pageDirectories' =>
   array (
     0 => '/var/www/html/app/Filament/Pages',
   ),
-  'pageNamespaces' => 
+  'pageNamespaces' =>
   array (
     0 => 'App\\Filament\\Pages',
   ),
-  'resources' => 
+  'resources' =>
   array (
     '/var/www/html/app/Filament/Resources/AgmCandidateResource.php' => 'App\\Filament\\Resources\\AgmCandidateResource',
     '/var/www/html/app/Filament/Resources/AgmSessionResource.php' => 'App\\Filament\\Resources\\AgmSessionResource',
@@ -109,15 +109,15 @@
     '/var/www/html/app/Filament/Resources/SchemeResource.php' => 'App\\Filament\\Resources\\SchemeResource',
     '/var/www/html/app/Filament/Resources/UserResource.php' => 'App\\Filament\\Resources\\UserResource',
   ),
-  'resourceDirectories' => 
+  'resourceDirectories' =>
   array (
     0 => '/var/www/html/app/Filament/Resources',
   ),
-  'resourceNamespaces' => 
+  'resourceNamespaces' =>
   array (
     0 => 'App\\Filament\\Resources',
   ),
-  'widgets' => 
+  'widgets' =>
   array (
     '/var/www/html/app/Filament/Widgets/FinanceSnapshot.php' => 'App\\Filament\\Widgets\\FinanceSnapshot',
     '/var/www/html/app/Filament/Widgets/MemberGrowthChart.php' => 'App\\Filament\\Widgets\\MemberGrowthChart',
@@ -134,11 +134,11 @@
     6 => 'Filament\\Widgets\\AccountWidget',
     7 => 'Filament\\Widgets\\FilamentInfoWidget',
   ),
-  'widgetDirectories' => 
+  'widgetDirectories' =>
   array (
     0 => '/var/www/html/app/Filament/Widgets',
   ),
-  'widgetNamespaces' => 
+  'widgetNamespaces' =>
   array (
     0 => 'App\\Filament\\Widgets',
   ),

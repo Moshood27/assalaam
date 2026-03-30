@@ -70,7 +70,6 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\UserGrowthChart::class,
                 \App\Filament\Widgets\MemberGrowthChart::class,
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
             ])
             ->renderHook('panels::head.end', fn () => view('filament.print-styles'))
             ->renderHook('panels::body.start', fn () => view('filament.print-header'))
