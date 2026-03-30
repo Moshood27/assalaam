@@ -27,6 +27,25 @@ class Contribution extends Model
             }
         });
 
+        static::created(function (self $model) {
+            // If created already successful and linked to a project (e.g., wallet allocation), create investment
+            try {
+                if ($model->project_id && $model->status === 'success') {
+                    if (!\App\Models\ProjectInvestment::where('contribution_id', $model->id)->exists()) {
+                        \App\Models\ProjectInvestment::create([
+                            'user_id' => $model->user_id,
+                            'project_id' => $model->project_id,
+                            'contribution_id' => $model->id,
+                            'amount' => $model->amount,
+                            'reference' => $model->reference,
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Don’t block creation on investment linkage failures
+            }
+        });
+
         static::updated(function (self $model) {
             // When a contribution tied to a project is marked successful, create a ProjectInvestment once
             try {

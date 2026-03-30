@@ -193,6 +193,13 @@ const loadSchemes = async () => {
   schemes.value = data
 }
 
+const loadProjects = async () => {
+  try {
+    const { data } = await axios.get('/api/projects')
+    projects.value = Array.isArray(data) ? data : []
+  } catch (_) {}
+}
+
 const loadWallet = async () => {
   try {
     const { data } = await axios.get('/api/wallet')
@@ -261,6 +268,6 @@ const handlePinCancel = () => {
 }
 
 onMounted(async () => {
-  await Promise.all([loadSchemes(), loadWallet()])
+  await Promise.all([loadSchemes(), loadProjects(), loadWallet()])
 })
 </script>
