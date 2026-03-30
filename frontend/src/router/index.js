@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router
 
 // Views (lazy-loaded)
 const Login = () => import('../views/Login.vue')
-const Dashboard = () => import('../views/Dashboard.vue')
+import Dashboard from '../views/Dashboard.vue'
 const MakePayment = () => import('../views/MakePayment.vue')
 const Wallet = () => import('../views/Wallet.vue')
 const Passbook = () => import('../views/Passbook.vue')

@@ -13,6 +13,7 @@ class Contribution extends Model
     protected $fillable = [
         'user_id',
         'scheme_id',
+        'project_id',
         'amount',
         'reference',
         'status',

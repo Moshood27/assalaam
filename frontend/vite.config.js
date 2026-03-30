@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [vue()],
     base: isMobile ? './' : '/app/',
+    build: { cssCodeSplit: false },
     server: {
       host: '0.0.0.0',
       port: 5174,

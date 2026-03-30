@@ -5,7 +5,7 @@ import App from './App.vue'
 import router from './router/index.js'
 import VueApexCharts from 'vue3-apexcharts'
 
-// Simple global idle timer: logs out after 2 minutes of no activity
+// Simple global idle timer: logs out after X ms of no activity (configurable via VITE_IDLE_TIMEOUT_MS)
 function setupIdleLogout(router, timeoutMs = 120000) {
   let timerId = null
   const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll']
@@ -138,7 +138,9 @@ try {
 
 // Start idle logout after router is ready
 router.isReady().then(async () => {
-  setupIdleLogout(router, 120000) // 2 minutes
+  const envMs = Number(import.meta?.env?.VITE_IDLE_TIMEOUT_MS ?? 120000)
+  const idleMs = isNaN(envMs) ? 120000 : envMs
+  setupIdleLogout(router, idleMs)
 
   // Push notification startup is handled sequentially in App.vue to avoid overlapping system dialogs and race conditions.
 })
