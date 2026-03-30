@@ -41,9 +41,21 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             // Explicitly register key resources to ensure they appear in navigation
             ->resources([
+                \App\Filament\Resources\AgmCandidateResource::class,
+                \App\Filament\Resources\AgmSessionResource::class,
+                \App\Filament\Resources\BranchResource::class,
+                \App\Filament\Resources\ContributionResource::class,
+                \App\Filament\Resources\ExpenseEntryResource::class,
+                \App\Filament\Resources\GoalBookingResource::class,
+                \App\Filament\Resources\IncomeEntryResource::class,
+                \App\Filament\Resources\ProductResource::class,
                 \App\Filament\Resources\ProjectResource::class,
                 \App\Filament\Resources\ProjectInvestmentResource::class,
                 \App\Filament\Resources\ProjectProfitResource::class,
+                \App\Filament\Resources\QardHasanResource::class,
+                \App\Filament\Resources\SavingsGoalResource::class,
+                \App\Filament\Resources\SchemeResource::class,
+                \App\Filament\Resources\UserResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
