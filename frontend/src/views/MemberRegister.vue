@@ -350,6 +350,7 @@ async function handleFinalize() {
 </script>
 
 <style scoped>
+@reference "../style.css";
 .input { @apply w-full p-3 rounded-xl border border-slate-200 bg-white/90 focus:outline-none focus:ring-2 focus:ring-emerald-600; }
 .form-label { @apply block text-sm font-semibold text-slate-700 mb-1; }
 .btn-primary { @apply rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-700 to-teal-600 hover:from-emerald-800 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 shadow-md disabled:opacity-50 disabled:cursor-not-allowed; }
