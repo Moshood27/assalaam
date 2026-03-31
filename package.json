@@ -30,10 +30,14 @@
     "mobile:assets:ios:assalam": "node scripts/generate-branded-assets.mjs --force --brand assalam && npm run cap:assets:ios && npx cap sync ios"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.2.1",
     "@capacitor/android": "^6.2.1",
-    "@capacitor/ios": "^6.2.1",
     "@capacitor/assets": "^3.0.0",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/ios": "^6.2.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "laravel-echo": "^2.3.3",
+    "pusher-js": "^8.4.3"
   }
 }
