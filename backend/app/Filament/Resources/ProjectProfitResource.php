@@ -99,6 +99,7 @@ class ProjectProfitResource extends Resource
                 TextColumn::make('management_fee_percent')->label('Mgmt %')->sortable(),
                 TextColumn::make('management_fee_amount')->label('Mgmt Fee')->money('ngn', true)->sortable(),
                 TextColumn::make('net_distributable')->label('Net')->money('ngn', true)->sortable(),
+                TextColumn::make('payouts_count')->label('Payouts')->counts('payouts')->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('project_id')
@@ -106,6 +107,14 @@ class ProjectProfitResource extends Resource
                     ->relationship('project', 'name'),
             ])
             ->actions([
+                Tables\Actions\Action::make('distribute')
+                    ->label('Distribute')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->requiresConfirmation()
+                    ->visible(fn (ProjectProfit $record) => $record->payouts()->count() === 0)
+                    ->action(function (ProjectProfit $record) {
+                        \App\Jobs\DistributeProjectProfit::dispatch($record->id);
+                    }),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

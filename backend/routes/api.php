@@ -93,6 +93,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::get('/projects/{id}', [ProjectController::class, 'show']);
     Route::get('/projects/{id}/investments', [ProjectController::class, 'myInvestments']);
+    Route::get('/projects/{id}/profits', [ProjectController::class, 'profits']);
 
     // Passbook
     Route::get('/passbook/{year}', [PassbookController::class, 'getMatrix']);

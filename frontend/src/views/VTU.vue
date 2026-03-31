@@ -178,6 +178,25 @@
       @close="closeNotice"
     />
 
+    <!-- PIN Confirmation Modal -->
+    <CustomNotice
+      v-model="pinModal.visible"
+      type="info"
+      :title="pinModal.title"
+      :message="pinModal.message"
+      :prompt="true"
+      inputLabel="Transaction PIN (4 digits)"
+      confirmText="Confirm"
+      cancelText="Cancel"
+      inputType="password"
+      inputPattern="\\d*"
+      :inputMaxlength="4"
+      :busy="pinModal.busy"
+      @confirm="handlePinConfirm"
+      @cancel="handlePinCancel"
+      @close="handlePinCancel"
+    />
+
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
       <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
@@ -221,6 +240,48 @@ const cable = ref({ service: 'dstv', smartcard: '', bundleCode: '', phone: '' })
 const { notice, showNotice, closeNotice } = useNotice()
 // Keep backward-compatible naming inside this file
 const showCustomNotice = (title, message, type = 'info') => showNotice(title, message, type)
+
+// PIN Modal state and helpers
+const pinModal = ref({
+  visible: false,
+  title: 'Confirm Purchase',
+  message: 'Enter your 4-digit Transaction PIN to proceed.',
+  busy: false,
+  resolver: null,
+  rejecter: null,
+})
+
+function promptForPin(message) {
+  return new Promise((resolve, reject) => {
+    pinModal.value.title = 'Confirm Purchase'
+    pinModal.value.message = message || 'Enter your 4-digit Transaction PIN to proceed.'
+    pinModal.value.busy = false
+    pinModal.value.visible = true
+    pinModal.value.resolver = resolve
+    pinModal.value.rejecter = reject
+  })
+}
+
+function handlePinConfirm(value) {
+  const pin = String(value || '').trim()
+  if (!/^\d{4}$/.test(pin)) {
+    showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+    return
+  }
+  const resolver = pinModal.value.resolver
+  pinModal.value.visible = false
+  pinModal.value.resolver = null
+  pinModal.value.rejecter = null
+  if (resolver) resolver(pin)
+}
+
+function handlePinCancel() {
+  const rejecter = pinModal.value.rejecter
+  pinModal.value.visible = false
+  pinModal.value.resolver = null
+  pinModal.value.rejecter = null
+  if (rejecter) rejecter(new Error('cancelled'))
+}
 
 // Helpers
 const formatMoney = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
@@ -287,16 +348,15 @@ const buyAirtime = async () => {
       phone_number: airtime.value.phone,
       amount: Number(airtime.value.amount)
     }
-    // Prompt for 4-digit Transaction PIN
-    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm purchase:')
-    if (pin === null) { loadingAirtime.value = false; return }
-    pin = String(pin || '').trim()
-    if (!/^\d{4}$/.test(pin)) {
-      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+    // Prompt for 4-digit Transaction PIN (custom modal)
+    try {
+      const pin = await promptForPin('Enter your 4-digit Transaction PIN to confirm purchase.')
+      payload.pin = pin
+    } catch (e) {
+      // User cancelled PIN entry
       loadingAirtime.value = false
       return
     }
-    payload.pin = pin
     const { data } = await axios.post('/api/vtu/airtime', payload)
 
     if (data.status === 'success' || data.status === 'pending') {
@@ -341,16 +401,14 @@ const buyData = async () => {
       bundle_code: dataForm.value.bundleCode,
       amount: Number(selectedBundle.value?.amount ?? 0)
     }
-    // Prompt for 4-digit Transaction PIN
-    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm data purchase:')
-    if (pin === null) { loadingData.value = false; return }
-    pin = String(pin || '').trim()
-    if (!/^\d{4}$/.test(pin)) {
-      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+    // Prompt for 4-digit Transaction PIN (custom modal)
+    try {
+      const pin = await promptForPin('Enter your 4-digit Transaction PIN to confirm data purchase.')
+      payload.pin = pin
+    } catch (e) {
       loadingData.value = false
       return
     }
-    payload.pin = pin
     const { data } = await axios.post('/api/vtu/data', payload)
 
     if (data.status === 'success' || data.status === 'pending') {
@@ -391,16 +449,14 @@ const buyElectricity = async () => {
       amount: Number(electricity.value.amount),
     }
     if (electricity.value.phone) payload.phone_number = electricity.value.phone
-    // Prompt for 4-digit Transaction PIN
-    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm electricity vend:')
-    if (pin === null) { loadingElectricity.value = false; return }
-    pin = String(pin || '').trim()
-    if (!/^\d{4}$/.test(pin)) {
-      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+    // Prompt for 4-digit Transaction PIN (custom modal)
+    try {
+      const pin = await promptForPin('Enter your 4-digit Transaction PIN to confirm electricity vend.')
+      payload.pin = pin
+    } catch (e) {
       loadingElectricity.value = false
       return
     }
-    payload.pin = pin
     const { data } = await axios.post('/api/vtu/electricity', payload)
     if (data.status === 'success' || data.status === 'pending') {
       showCustomNotice('Success', data.message || 'Electricity vend processing...', 'success')
@@ -438,16 +494,14 @@ const buyCable = async () => {
       amount: Number(selectedTvBundle.value?.amount ?? 0),
     }
     if (cable.value.phone) payload.phone_number = cable.value.phone
-    // Prompt for 4-digit Transaction PIN
-    let pin = window.prompt('Enter your 4-digit Transaction PIN to confirm cable subscription:')
-    if (pin === null) { loadingCable.value = false; return }
-    pin = String(pin || '').trim()
-    if (!/^\d{4}$/.test(pin)) {
-      showCustomNotice('Invalid PIN', 'Please enter a valid 4-digit PIN.', 'error')
+    // Prompt for 4-digit Transaction PIN (custom modal)
+    try {
+      const pin = await promptForPin('Enter your 4-digit Transaction PIN to confirm cable subscription.')
+      payload.pin = pin
+    } catch (e) {
       loadingCable.value = false
       return
     }
-    payload.pin = pin
     const { data } = await axios.post('/api/vtu/cable', payload)
     if (data.status === 'success' || data.status === 'pending') {
       showCustomNotice('Success', data.message || 'Cable subscription processing...', 'success')

@@ -48,4 +48,9 @@ class ProjectProfit extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function payouts()
+    {
+        return $this->hasMany(\App\Models\ProjectProfitPayout::class, 'project_profit_id');
+    }
 }
