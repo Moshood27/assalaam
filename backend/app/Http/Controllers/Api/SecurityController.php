@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Notifications\OtpNotification;
 
 class SecurityController extends Controller
 {
@@ -88,6 +89,20 @@ class SecurityController extends Controller
                 $sms = app(\App\Services\SmsService::class);
                 $sms->send($phone, $message);
                 $sentTo = self::maskPhone($phone);
+                // Log to Inbox (database notifications)
+                try {
+                    $user->notify(new OtpNotification(
+                        title: 'PIN Reset Code Sent',
+                        message: $message,
+                        channel: 'sms',
+                        context: [
+                            'sent_to' => $sentTo,
+                            'expires_in' => 600,
+                        ]
+                    ));
+                } catch (\Throwable $e) {
+                    // swallow
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('PIN reset SMS send failed', ['error' => $e->getMessage()]);
@@ -99,6 +114,20 @@ class SecurityController extends Controller
                     $m->to($user->email)->subject('Transaction PIN Reset Code');
                 });
                 $sentTo = self::maskEmail($user->email);
+                // Log to Inbox (database notifications)
+                try {
+                    $user->notify(new OtpNotification(
+                        title: 'PIN Reset Code Sent',
+                        message: $message,
+                        channel: 'email',
+                        context: [
+                            'sent_to' => $sentTo,
+                            'expires_in' => 600,
+                        ]
+                    ));
+                } catch (\Throwable $e) {
+                    // swallow
+                }
             } catch (\Throwable $e) {
                 Log::warning('PIN reset email send failed', ['error' => $e->getMessage()]);
             }

@@ -14,6 +14,7 @@
         <div class="mt-5 flex gap-2">
           <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">Allocate to Schemes</button>
           <button @click="showFund = !showFund" class="bg-white text-emerald-800 px-4 py-2 rounded-xl text-xs font-bold">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
+          <button @click="showTransfer = !showTransfer" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">{{ showTransfer ? 'Hide' : 'Transfer' }}</button>
         </div>
       </div>
 
@@ -72,6 +73,59 @@
         <p class="mt-2 text-xs text-slate-500">You will be redirected to Paystack to complete payment.</p>
       </div>
 
+      <!-- P2P Transfer Form -->
+      <div v-if="showTransfer" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <h3 class="font-bold text-slate-800 mb-3">Transfer to Member</h3>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Send To</label>
+            <select v-model="toType" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none">
+              <option value="phone">Phone Number</option>
+              <option value="membership">Member ID</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">{{ toType === 'phone' ? 'Phone' : 'Membership Number' }}</label>
+            <div class="flex gap-2">
+              <input v-model="toValue" type="text" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="e.g., 0803..., or MEM123" />
+              <button @click="checkRecipient" type="button" class="shrink-0 bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold">Verify</button>
+            </div>
+          </div>
+        </div>
+        <div v-if="toType === 'membership'" class="mt-3 space-y-2">
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Branch ID (optional)</label>
+            <input v-model.number="branchId" type="number" min="1" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="Branch ID (if known)" />
+          </div>
+          <!-- Recipient preview / disambiguation -->
+          <div v-if="recipient" class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm">
+            Recipient: <span class="font-bold">{{ recipient.name }}</span>
+            <span v-if="recipient.membership_number" class="text-emerald-700">({{ recipient.membership_number }})</span>
+            <span v-if="recipient.branch_name" class="ml-1">— {{ recipient.branch_name }}</span>
+          </div>
+          <div v-else-if="recipientError" class="p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-sm space-y-2">
+            <div>{{ recipientError }}</div>
+            <div v-if="branchesOptions.length" class="flex flex-wrap gap-2">
+              <button v-for="b in branchesOptions" :key="b.id" type="button" @click="chooseBranch(b)" class="px-3 py-1 rounded-lg bg-white border border-amber-300 text-amber-700 text-xs hover:bg-amber-100">
+                {{ b.name }} (ID: {{ b.id }})
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
+          <input v-model.number="transferAmount" type="number" min="1" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="0.00" />
+        </div>
+        <div class="mt-3">
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Note (optional)</label>
+          <input v-model="note" type="text" maxlength="120" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="e.g., Lunch refund" />
+        </div>
+        <button @click="startTransfer" :disabled="loading || !canSend" class="bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold mt-4">
+          {{ loading ? 'Transferring…' : 'Send' }}
+        </button>
+        <p class="text-[10px] text-slate-500 mt-2">You will confirm with your Transaction PIN.</p>
+      </div>
+
       <!-- Recent Wallet Transactions -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-3 gap-2 flex-wrap">
@@ -91,14 +145,41 @@
               </div>
               <p class="font-bold shrink-0" :class="tx.type === 'credit' ? 'text-emerald-700' : 'text-rose-700'">₦ {{ formatMoney(tx.amount) }}</p>
             </div>
-            <div class="flex items-center justify-between mt-1">
+            <div class="flex items-center justify-between mt-1 gap-3 flex-wrap">
               <p class="text-[10px] uppercase text-slate-400 truncate">Ref: {{ tx.reference }}</p>
-              <p class="text-[10px] text-slate-400 shrink-0">{{ new Date(tx.created_at).toLocaleString() }}</p>
+              <div class="flex items-center gap-2 ml-auto">
+                <button @click="downloadReceipt(tx)" class="text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100">Receipt</button>
+                <p class="text-[10px] text-slate-400 shrink-0">{{ new Date(tx.created_at).toLocaleString() }}</p>
+              </div>
             </div>
           </div>
         </div>
         <div v-else class="text-sm text-slate-500">No wallet activity yet.</div>
       </div>
+
+      <!-- Reusable Notice Modal -->
+      <CustomNotice
+        v-model="notice.visible"
+        :type="notice.type"
+        :title="notice.title"
+        :message="notice.message"
+        @close="closeNotice"
+      />
+
+      <!-- PIN Prompt Modal for Transfers -->
+      <CustomNotice
+        v-model="pinPrompt.visible"
+        :type="'info'"
+        :title="'Confirm Transfer'"
+        :message="'Enter your 4-digit Transaction PIN to authorize this transfer.'"
+        :prompt="true"
+        inputLabel="Transaction PIN (4 digits)"
+        confirmText="Send"
+        cancelText="Cancel"
+        :busy="loading"
+        @confirm="handlePinConfirm"
+        @cancel="handlePinCancel"
+      />
     </div>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
@@ -119,15 +200,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import { ref, onMounted, computed, watch } from 'vue'
+import axios from '../http.js'
 import { useRouter } from 'vue-router'
 import { useBalanceVisibility } from '../composables/useBalanceVisibility'
+import CustomNotice from '../components/CustomNotice.vue'
+import { useNotice } from '../composables/useNotice'
+import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
 
 const router = useRouter()
 const baseRaw = import.meta?.env?.BASE_URL || '/'
 const basePath = (baseRaw && baseRaw.startsWith('./')) ? '/' : (baseRaw.endsWith('/') ? baseRaw : `${baseRaw}/`)
 const isNative = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
+
+// Notices
+const { notice, showNotice, closeNotice } = useNotice()
+
+// Balance visibility
+const { hideBalances } = useBalanceVisibility()
 
 const wallet = ref({ balance: 0, virtual_account: {} })
 const transactions = ref([])
@@ -137,6 +227,24 @@ const topupAmount = ref('')
 const loading = ref(false)
 const assigning = ref(false)
 const showFund = ref(true)
+const showTransfer = ref(false)
+
+// P2P transfer form state
+const toType = ref('phone') // 'phone' | 'membership'
+const toValue = ref('')
+const branchId = ref('')
+const transferAmount = ref('')
+const note = ref('')
+
+// Recipient resolution state
+const recipient = ref(null)
+const recipientError = ref('')
+const branchesOptions = ref([])
+
+// Notice modal (shared)
+
+// PIN prompt modal state
+const pinPrompt = ref({ visible: false })
 
 // Optional BVN input before generating a virtual account
 const bvn = ref('')
@@ -144,11 +252,34 @@ const bvnDigits = computed(() => String(bvn.value || '').replace(/\D/g, ''))
 const bvnValid = computed(() => bvnDigits.value.length === 11)
 
 const formatMoney = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
+const canSend = computed(() => {
+  const amtOk = Number(transferAmount.value || 0) > 0
+  const hasTo = String(toValue.value || '').trim().length > 0
+  if (!amtOk || !hasTo) return false
+  if (toType.value === 'membership') {
+    if (branchesOptions.value.length) return false // force disambiguation
+    if (recipient.value) return true
+    if (Number(branchId.value)) return true
+    // allow if backend won’t detect ambiguity; safer to require Verify
+    return false
+  }
+  return true
+})
 const titleFor = (tx) => {
-  if (tx.source === 'wallet_allocation') return 'Allocation to Schemes'
-  if (tx.source === 'paystack_dva') return 'Bank Transfer (DVA)'
-  if (tx.source === 'vtu_airtime') return 'Airtime Purchase'
-  if (tx.source === 'vtu_data') return 'Data Purchase'
+  const src = tx?.source
+  if (src === 'wallet_allocation') return 'Allocation to Schemes'
+  if (src === 'paystack_dva') return 'Bank Transfer (DVA)'
+  if (src === 'vtu_airtime') return 'Airtime Purchase'
+  if (src === 'vtu_data') return 'Data Purchase'
+  if (src === 'p2p_transfer') {
+    if (tx.type === 'debit') {
+      const name = tx?.meta?.to_name || tx?.meta?.to_membership
+      return name ? `Transfer to ${name}` : 'Transfer Sent'
+    } else {
+      const name = tx?.meta?.from_name || tx?.meta?.from_membership
+      return name ? `Transfer from ${name}` : 'Transfer Received'
+    }
+  }
   return 'Wallet Top-up'
 }
 
@@ -209,6 +340,120 @@ const goAllocate = () => {
   // Send user to make payment page; they can toggle wallet allocation there
   router.push({ name: 'pay' })
 }
+
+// Start P2P transfer: biometric check then prompt for PIN
+const startTransfer = async () => {
+  if (!toValue.value || !transferAmount.value || Number(transferAmount.value) <= 0) {
+    showNotice('Incomplete', 'Please enter a valid recipient and amount.', 'warning')
+    return
+  }
+  if (toType.value === 'membership') {
+    if (branchesOptions.value.length) {
+      showNotice('Select Branch', 'Multiple members found. Please select the correct branch.', 'warning')
+      return
+    }
+    if (!recipient.value && !Number(branchId.value)) {
+      showNotice('Verify Recipient', 'Please tap Verify to confirm the recipient or provide a Branch ID.', 'warning')
+      return
+    }
+  }
+  try {
+    const bioAvailable = await isBiometricAvailable()
+    if (bioAvailable) {
+      const ok = await verifyBiometricIdentity({
+        reason: 'Authorize transfer',
+        description: `Send ₦ ${Number(transferAmount.value).toLocaleString()} to ${toType.value === 'phone' ? 'phone' : 'member'} ${toValue.value}`,
+      })
+      if (!ok) {
+        showNotice('Authentication required', 'Biometric verification was cancelled or failed. Unable to send transfer.', 'warning')
+        return
+      }
+    }
+  } catch (e) {
+    // If biometric check throws, allow fallback to PIN only
+  }
+  pinPrompt.value.visible = true
+}
+
+const handlePinConfirm = async (val) => {
+  const pin = String(val || '').trim()
+  if (!/^\d{4}$/.test(pin)) {
+    showNotice('Invalid PIN', 'Please enter a valid 4-digit Transaction PIN.', 'error')
+    return
+  }
+  loading.value = true
+  try {
+    const payload = {
+      to_type: toType.value,
+      to: String(toValue.value || '').trim(),
+      amount: Number(transferAmount.value),
+      pin,
+    }
+    const n = String(note.value || '').trim()
+    if (n) payload.note = n
+    if (toType.value === 'membership' && Number(branchId.value)) payload.branch_id = Number(branchId.value)
+
+    await axios.post('/api/wallet/transfer', payload)
+
+    pinPrompt.value.visible = false
+    // Reset form
+    toValue.value = ''
+    branchId.value = ''
+    transferAmount.value = ''
+    note.value = ''
+    // Refresh wallet & transactions
+    await loadWallet()
+    showNotice('Success', 'Transfer sent successfully.', 'success')
+  } catch (e) {
+    pinPrompt.value.visible = false
+    const status = e?.response?.status
+    const msg = e?.response?.data?.message || 'Transfer failed'
+    if (status === 409) {
+      showNotice('Set PIN', 'You need to set your Transaction PIN first. Go to Profile > Transaction PIN.', 'warning')
+    } else if (status === 403) {
+      showNotice('Invalid PIN', 'Your Transaction PIN is incorrect. Please try again.', 'error')
+    } else if (status === 404) {
+      showNotice('Recipient not found', 'We could not find a member matching those details.', 'error')
+    } else {
+      showNotice('Failed', msg, 'error')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const handlePinCancel = () => {
+  pinPrompt.value.visible = false
+}
+
+// Resolve recipient preview
+const checkRecipient = async () => {
+  recipient.value = null
+  recipientError.value = ''
+  branchesOptions.value = []
+  const v = String(toValue.value || '').trim()
+  if (!v) return
+  try {
+    const params = { to_type: toType.value, to: v }
+    if (toType.value === 'membership' && Number(branchId.value)) params.branch_id = Number(branchId.value)
+    const { data } = await axios.get('/api/wallet/transfer/resolve', { params })
+    recipient.value = data
+  } catch (e) {
+    const status = e?.response?.status
+    if (status === 422 && e?.response?.data?.multiple) {
+      recipientError.value = e?.response?.data?.message || 'Multiple members found. Please select a branch.'
+      branchesOptions.value = Array.isArray(e?.response?.data?.branches) ? e.response.data.branches : []
+    } else {
+      recipientError.value = e?.response?.data?.message || 'Recipient not found'
+    }
+  }
+}
+
+watch([toType, toValue, branchId], () => {
+  recipient.value = null
+  recipientError.value = ''
+  branchesOptions.value = []
+})
 
 onMounted(loadWallet)
 </script>

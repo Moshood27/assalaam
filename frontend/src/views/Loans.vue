@@ -31,8 +31,8 @@
                     <p class="money">₦ {{ n(eligibility.base) }}</p>
                   </div>
                   <div>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">Eligible (policy)</p>
-                    <p class="font-black text-emerald-700 text-lg">₦ {{ n(eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">Eligible (policy + score)</p>
+                    <p class="font-black text-emerald-700 text-lg">₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
                   </div>
                 </div>
                 <div class="px-5 pb-5 pt-0">
@@ -49,10 +49,13 @@
                       <span v-else class="badge badge-warning">Guarantors: {{ eligibility.required_guarantors || 2 }}</span>
                     </div>
                   </div>
+                  <p v-if="Number(eligibility.limit_boost_pct || 0) > 0" class="text-[10px] text-emerald-700 font-semibold mb-2">
+                    Trust boost applied: +{{ eligibility.limit_boost_pct }}% to your loan limit.
+                  </p>
                   <p class="text-[11px] text-slate-500 mb-2">
                     <span v-if="eligibility.is_first_loan">First loan is capped at 5% of your base (Savings + Shares).</span>
                     <span v-else>Eligible up to 2 × your base.</span>
-                    <span class="font-semibold"> Eligible now: ₦ {{ n(eligibility.eligibility_adjusted || eligibility.eligibility) }}.</span>
+                    <span class="font-semibold"> Eligible now: ₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}.</span>
                   </p>
                   <div class="grid grid-cols-2 gap-3">
                     <label class="text-[11px] text-slate-500 font-bold">Total Installments
@@ -123,6 +126,8 @@
                         <p class="font-bold text-slate-800">{{ req.member?.name || 'Member #' + req.member?.id }}</p>
                         <p class="text-[10px] text-slate-500 uppercase">{{ req.member?.branch || '—' }} • {{ req.qard_id_string }}</p>
                         <p class="text-[12px] text-slate-600 mt-1">Amount: ₦ {{ n(req.principal_amount) }} • Installments: {{ req.total_installments }} × ₦ {{ n(req.per_installment) }}</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Accepted: {{ req.accepted_count || 0 }} • Pending: {{ req.pending_count || 0 }} • Declined: {{ req.declined_count || 0 }}</p>
+                        <p v-if="req.all_accepted" class="text-[11px] text-emerald-700 mt-1">All guarantors have accepted. Awaiting admin disbursement.</p>
                       </div>
                       <div class="text-right min-w-[9rem]">
                         <span class="badge" :class="req.guarantor_status === 'accepted' ? 'badge-success' : (req.guarantor_status === 'declined' ? 'badge-muted' : 'badge-warning')">{{ req.guarantor_status }}</span>
@@ -279,6 +284,7 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
+import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
 
 const loans = ref([])
 const loading = ref(false)
@@ -528,6 +534,32 @@ const fetchGuarantorRequests = async () => {
 const acceptGuarantor = async (req) => {
   if (!req?.id) return
   grMsg.value[req.id] = ''
+
+  // 1) Require biometric confirmation when available
+  try {
+    const bioAvailable = await isBiometricAvailable()
+    if (bioAvailable) {
+      const ok = await verifyBiometricIdentity({
+        reason: 'Sign as Guarantor',
+        title: 'Guarantor Approval',
+        subtitle: req?.qard_id_string ? `Loan ${req.qard_id_string}` : 'Confirm approval',
+        description: `Approve loan of ₦ ${n(req?.principal_amount)} by ${req?.member?.name || 'member'}?`,
+      })
+      if (!ok) {
+        showNotice('Authentication required', 'Biometric verification was cancelled or failed. Unable to sign as guarantor.', 'error')
+        return
+      }
+    } else {
+      // Fallback: explicit confirm prompt
+      const proceed = window.confirm('Confirm you agree to be a guarantor for this loan?')
+      if (!proceed) return
+    }
+  } catch (_) {
+    // If biometric check throws, abort silently and let user try again
+    showNotice('Authentication error', 'Could not verify biometrics at this time. Please try again.', 'error')
+    return
+  }
+
   grAction.value[req.id] = true
   try {
     const token = localStorage.getItem('token')
@@ -535,6 +567,9 @@ const acceptGuarantor = async (req) => {
       headers: { Authorization: `Bearer ${token}` }
     })
     grMsg.value[req.id] = data?.message || 'Accepted'
+    if (data?.all_accepted) {
+      showNotice('All approvals complete', 'All guarantors have accepted. Awaiting admin disbursement.', 'success')
+    }
     await fetchGuarantorRequests()
   } catch (e) {
     grMsg.value[req.id] = e?.response?.data?.message || e.message || 'Failed to accept'
@@ -546,6 +581,11 @@ const acceptGuarantor = async (req) => {
 const declineGuarantor = async (req) => {
   if (!req?.id) return
   grMsg.value[req.id] = ''
+
+  // Confirm before declining
+  const proceed = window.confirm('Are you sure you want to decline this guarantor request?')
+  if (!proceed) return
+
   grAction.value[req.id] = true
   try {
     const token = localStorage.getItem('token')

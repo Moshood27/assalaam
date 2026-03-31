@@ -103,14 +103,43 @@
             <textarea v-model="orderNote" rows="2" placeholder="Notes to the coop store…" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm"></textarea>
           </div>
 
-          <div v-if="hasInsufficient" class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded">
-            Insufficient Coop Balance. Short by ₦ {{ money(shortfall) }}.
-            <button class="underline ml-2" @click="$router.push('/wallet')">Top up</button>
+          <div v-if="hasInsufficient" class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded space-y-2">
+            <div>
+              Insufficient Coop Balance. Short by ₦ {{ money(shortfall) }}.
+              <button class="underline ml-2" @click="$router.push('/wallet')">Top up</button>
+            </div>
+            <div class="p-2 bg-white border border-amber-200 rounded text-slate-700">
+              <div class="text-[11px] font-black uppercase tracking-widest text-amber-700 mb-2">Buy on Credit (Murabaha)</div>
+              <div class="grid grid-cols-2 gap-2 items-end">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Tenor (months)</label>
+                  <select v-model.number="creditMonths" class="w-full bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
+                    <option v-for="m in [6,7,8,9,10,11,12]" :key="m" :value="m">{{ m }} months</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Profit Rate</label>
+                  <select v-model.number="creditProfit" class="w-full bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
+                    <option :value="0.10">10%</option>
+                    <option :value="0.12">12%</option>
+                    <option :value="0.15">15%</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-2 text-[11px] text-slate-500">
+                Est. total on credit: ₦ {{ money(creditEstimateTotal) }} • Est. monthly: ₦ {{ money(creditMonthly) }}
+              </div>
+              <div class="mt-2">
+                <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="placing || !totalQty || !creditValid" @click="creditCheckout()">
+                  Apply & Buy on Credit
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="flex items-center justify-end mt-2">
             <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-bold disabled:opacity-50" :disabled="placing || !totalQty || hasInsufficient" @click="checkout()">
-              <span v-if="placing" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Processing…</span>
+              <span v-if="placing && purchaseMode === 'cash'" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Processing…</span>
               <span v-else-if="hasInsufficient">Insufficient Balance</span>
               <span v-else>Checkout</span>
             </button>
@@ -203,6 +232,8 @@ const cart = ref({}) // { [id]: { id, name, selling_price, qty } }
 const placing = ref(false)
 const placeError = ref('')
 const placeSuccess = ref('')
+// Purchase mode: 'cash' or 'credit'
+const purchaseMode = ref('cash')
 // PIN prompt modal state
 const pinPrompt = ref({ visible: false })
 
@@ -286,6 +317,24 @@ const subtotal = computed(() => cartList.value.reduce((s, it) => s + (Number(it.
 const shortfall = computed(() => Math.max(0, Number(subtotal.value) - Number(walletBalance.value)))
 const hasInsufficient = computed(() => shortfall.value > 0)
 
+// Murabaha (credit) controls
+const creditMonths = ref(12)
+const creditProfit = ref(0.12) // 12% default within 10–15%
+const creditEstimateTotal = computed(() => {
+  const rate = Number(creditProfit.value || 0)
+  const base = Number(subtotal.value || 0)
+  return Math.max(0, Math.round(base * (1 + rate) * 100) / 100)
+})
+const creditMonthly = computed(() => {
+  const months = Math.max(1, Number(creditMonths.value || 1))
+  return Math.round((Number(creditEstimateTotal.value || 0) / months) * 100) / 100
+})
+const creditValid = computed(() => {
+  const m = Number(creditMonths.value)
+  const r = Number(creditProfit.value)
+  return m >= 6 && m <= 12 && r >= 0.10 && r <= 0.15
+})
+
 const openQuick = (p) => {
   selectedProduct.value = p
   quickQty.value = 1
@@ -305,8 +354,17 @@ const addQuickToCart = () => {
 const checkout = () => {
   placeError.value = ''
   placeSuccess.value = ''
+  purchaseMode.value = 'cash'
   if (!totalQty.value) return
   // Open custom PIN prompt modal
+  pinPrompt.value.visible = true
+}
+
+const creditCheckout = () => {
+  placeError.value = ''
+  placeSuccess.value = ''
+  purchaseMode.value = 'credit'
+  if (!totalQty.value || !creditValid.value) return
   pinPrompt.value.visible = true
 }
 
@@ -323,11 +381,18 @@ const handlePinConfirm = async (val) => {
       note: (orderNote.value || '').trim() || undefined,
       pin,
     }
+    if (purchaseMode.value === 'credit') {
+      payload.financing = {
+        enabled: true,
+        months: Number(creditMonths.value),
+        profit_rate: Number(creditProfit.value),
+      }
+    }
     const { data } = await axios.post('/api/store/orders', payload)
-    placeSuccess.value = data?.message || 'Order placed successfully'
+    placeSuccess.value = data?.message || (purchaseMode.value === 'credit' ? 'Application submitted successfully' : 'Order placed successfully')
     const orderId = data?.order?.id
     clearCart()
-    // Refresh wallet balance after debit
+    // Refresh wallet balance (may be unchanged for credit orders)
     try { await loadWallet() } catch (_) {}
     pinPrompt.value.visible = false
     if (orderId) {
@@ -351,6 +416,8 @@ const handlePinConfirm = async (val) => {
     }
   } finally {
     placing.value = false
+    // reset mode back to cash for next action
+    purchaseMode.value = 'cash'
   }
 }
 

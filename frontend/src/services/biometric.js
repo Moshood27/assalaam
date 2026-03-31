@@ -174,3 +174,24 @@ export async function quickLoginViaBiometric() {
     return { ok: false, error: msg }
   }
 }
+
+// Prompt biometric identity verification without logging in
+// Returns true if user successfully verified biometrics, else false.
+export async function verifyBiometricIdentity(options = {}) {
+  const {
+    reason = 'Approve request',
+    title = 'Authenticate',
+    subtitle = 'Confirm identity',
+    description = 'Use your fingerprint or face to continue',
+  } = options || {}
+
+  if (!(await isBiometricAvailable())) return false
+  const plugin = await loadPlugin()
+  if (!plugin?.verifyIdentity) return false
+  try {
+    await plugin.verifyIdentity({ reason, title, subtitle, description })
+    return true
+  } catch (_) {
+    return false
+  }
+}

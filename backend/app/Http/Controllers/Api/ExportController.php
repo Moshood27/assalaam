@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
+use App\Models\WalletTransaction;
 use App\Services\AccountingReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -187,5 +188,32 @@ class ExportController extends Controller
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.financials', $data);
         $filename = 'Financial_Statements_' . $year . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function downloadWalletReceipt(Request $request, int $id)
+    {
+        $user = $request->user();
+        // Only allow member to download their own receipts
+        $tx = WalletTransaction::where('id', $id)->where('user_id', $user->id)->first();
+        if (!$tx) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+
+        // Build data for receipt
+        $branch = optional($user->branch)->name;
+        $data = [
+            'user' => $user,
+            'branch' => $branch,
+            'tx' => $tx,
+        ];
+
+        try {
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.wallet_receipt', $data);
+            $filename = 'Wallet_Receipt_' . ($tx->reference ?: ('TX'.$tx->id)) . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadWalletReceipt error', ['exception' => $e->getMessage(), 'tx_id' => $id]);
+            return response()->json(['message' => 'Unable to generate receipt at the moment. Please try again later.'], 422);
+        }
     }
 }

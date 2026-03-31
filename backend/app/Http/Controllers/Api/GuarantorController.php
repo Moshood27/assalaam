@@ -26,6 +26,10 @@ class GuarantorController extends Controller
             ->map(function (QardHasan $loan) use ($user) {
                 // Extract the pivot for the current guarantor only
                 $pivot = $loan->guarantors->firstWhere('id', $user->id)?->pivot;
+                $acceptedCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'accepted')->count() ?? 0);
+                $declinedCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'declined')->count() ?? 0);
+                $pendingCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'pending')->count() ?? 0);
+                $allAccepted = ($pendingCount === 0 && $declinedCount === 0 && $acceptedCount > 0);
                 return [
                     'id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,
@@ -40,6 +44,10 @@ class GuarantorController extends Controller
                     'status' => $loan->status,
                     'guarantor_status' => $pivot?->status ?? 'pending',
                     'responded_at' => $pivot?->responded_at,
+                    'accepted_count' => $acceptedCount,
+                    'declined_count' => $declinedCount,
+                    'pending_count' => $pendingCount,
+                    'all_accepted' => $allAccepted,
                 ];
             });
 
@@ -80,9 +88,16 @@ class GuarantorController extends Controller
                 'responded_at' => now(),
             ]);
 
+        // Recalculate guarantor decision counts (ensure fresh relations after pivot update)
+        $loan->refresh();
+        $loan->loadMissing('guarantors', 'user');
+        $acceptedCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'accepted')->count() ?? 0);
+        $declinedCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'declined')->count() ?? 0);
+        $pendingCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'pending')->count() ?? 0);
+        $allAccepted = method_exists($loan, 'allGuarantorsAccepted') ? $loan->allGuarantorsAccepted() : ($pendingCount === 0 && $declinedCount === 0 && $acceptedCount > 0);
+
         // Notify borrower via push (best-effort)
         try {
-            $loan->loadMissing('user');
             if ($loan->user) {
                 $push = app(\App\Services\PushService::class);
                 $title = 'Guarantor Accepted';
@@ -94,13 +109,33 @@ class GuarantorController extends Controller
                     'loan_id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,
                     'guarantor_id' => $user->id,
+                    'accepted_count' => $acceptedCount,
+                    'declined_count' => $declinedCount,
+                    'pending_count' => $pendingCount,
+                    'all_accepted' => $allAccepted,
                 ]);
+
+                // If all guarantors have accepted, send a follow-up notification to borrower
+                if ($allAccepted) {
+                    $push->send($token, 'All Guarantors Accepted', 'All selected guarantors have approved your loan '.$loan->qard_id_string.'. Awaiting admin disbursement.', [
+                        'type' => 'guarantors_complete',
+                        'loan_id' => $loan->id,
+                        'qard_id_string' => $loan->qard_id_string,
+                        'accepted_count' => $acceptedCount,
+                    ]);
+                }
             }
         } catch (\Throwable $e) {
             // ignore
         }
 
-        return response()->json(['message' => 'Guarantor request accepted']);
+        return response()->json([
+            'message' => 'Guarantor request accepted',
+            'accepted_count' => $acceptedCount,
+            'declined_count' => $declinedCount,
+            'pending_count' => $pendingCount,
+            'all_accepted' => $allAccepted,
+        ]);
     }
 
     /**
@@ -131,9 +166,15 @@ class GuarantorController extends Controller
                 'responded_at' => now(),
             ]);
 
+        // Recalculate decision counts
+        $loan->loadMissing('guarantors', 'user');
+        $acceptedCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'accepted')->count() ?? 0);
+        $declinedCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'declined')->count() ?? 0);
+        $pendingCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'pending')->count() ?? 0);
+        $allAccepted = method_exists($loan, 'allGuarantorsAccepted') ? $loan->allGuarantorsAccepted() : ($pendingCount === 0 && $declinedCount === 0 && $acceptedCount > 0);
+
         // Notify borrower via push (best-effort)
         try {
-            $loan->loadMissing('user');
             if ($loan->user) {
                 $push = app(\App\Services\PushService::class);
                 $title = 'Guarantor Declined';
@@ -145,12 +186,22 @@ class GuarantorController extends Controller
                     'loan_id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,
                     'guarantor_id' => $user->id,
+                    'accepted_count' => $acceptedCount,
+                    'declined_count' => $declinedCount,
+                    'pending_count' => $pendingCount,
+                    'all_accepted' => $allAccepted,
                 ]);
             }
         } catch (\Throwable $e) {
             // ignore
         }
 
-        return response()->json(['message' => 'Guarantor request declined']);
+        return response()->json([
+            'message' => 'Guarantor request declined',
+            'accepted_count' => $acceptedCount,
+            'declined_count' => $declinedCount,
+            'pending_count' => $pendingCount,
+            'all_accepted' => $allAccepted,
+        ]);
     }
 }

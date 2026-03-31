@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\SecurityController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\MemberRegistrationController;
+use App\Http\Controllers\Api\NotificationsController;
 
 Route::get('/health', function () {
     return response()
@@ -63,6 +64,9 @@ Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin')->group(functi
     // Push tokens (admins may also register their device tokens)
     Route::post('/push/token', [ProfileController::class, 'savePushToken']);
     Route::post('/fcm-token', [ProfileController::class, 'savePushToken']);
+
+    // In-App Support Chat (admin -> member)
+    Route::post('/support/{user}/message', [\App\Http\Controllers\Api\SupportChatAdminController::class, 'sendToUser']);
 });
 
 // Webhook (public, signature-verified inside controller)
@@ -114,8 +118,11 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // Wallet
     Route::get('/wallet', [\App\Http\Controllers\Api\WalletController::class, 'getWallet']);
     Route::get('/wallet/transactions', [\App\Http\Controllers\Api\WalletController::class, 'transactions']);
+    Route::get('/wallet/transactions/{id}/receipt', [ExportController::class, 'downloadWalletReceipt']);
     Route::post('/wallet/topup/initiate', [\App\Http\Controllers\Api\WalletController::class, 'initiateTopup']);
     Route::post('/wallet/allocate', [\App\Http\Controllers\Api\WalletController::class, 'allocateToSchemes']);
+    Route::get('/wallet/transfer/resolve', [\App\Http\Controllers\Api\WalletController::class, 'resolveRecipient']);
+    Route::post('/wallet/transfer', [\App\Http\Controllers\Api\WalletController::class, 'transfer']);
 
     // VTU (Airtime, Data, Electricity, Cable TV)
     Route::get('/vtu/transactions', [\App\Http\Controllers\Api\UtilityController::class, 'transactions']);
@@ -131,6 +138,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/store/orders', [\App\Http\Controllers\Api\StoreOrderController::class, 'index']);
     Route::get('/store/orders/{id}', [\App\Http\Controllers\Api\StoreOrderController::class, 'show']);
     Route::post('/store/orders', [\App\Http\Controllers\Api\StoreOrderController::class, 'store']);
+    Route::post('/store/orders/{id}/installments/pay', [\App\Http\Controllers\Api\StoreOrderController::class, 'payInstallment']);
 
     // Goal-based Savings (Hajj & Umrah)
     Route::get('/goals', [\App\Http\Controllers\Api\SavingsGoalController::class, 'index']);
@@ -172,6 +180,16 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // Zakat
     Route::get('/zakat/estimate', [ZakatController::class, 'estimate']);
     Route::post('/zakat/pay', [ZakatController::class, 'pay']);
+
+    // In-App Notifications (Inbox)
+    Route::get('/notifications', [NotificationsController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationsController::class, 'readOne']);
+    Route::post('/notifications/read-all', [NotificationsController::class, 'readAll']);
+
+    // In-App Support Chat (member)
+    Route::get('/support/messages', [\App\Http\Controllers\Api\SupportChatController::class, 'index']);
+    Route::post('/support/messages', [\App\Http\Controllers\Api\SupportChatController::class, 'store']);
+    Route::post('/support/read', [\App\Http\Controllers\Api\SupportChatController::class, 'markRead']);
 });
 
 // Existing Qard Hasan prototype endpoints (kept)

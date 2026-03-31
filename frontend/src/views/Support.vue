@@ -6,6 +6,11 @@
     </header>
 
     <div class="p-4 space-y-4 max-w-3xl mx-auto">
+      <!-- In-App Chat Widget -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-4">
+        <ChatWidget />
+      </div>
+
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">WhatsApp Contacts</p>
         <div class="space-y-3">
@@ -62,5 +67,6 @@
 </template>
 
 <script setup>
+import ChatWidget from '../components/ChatWidget.vue'
 const wa = (phone) => `https://wa.me/${phone}`
 </script>

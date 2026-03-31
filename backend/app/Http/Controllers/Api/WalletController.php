@@ -7,6 +7,8 @@ use App\Models\Contribution;
 use App\Models\Scheme;
 use App\Models\Project;
 use App\Models\WalletTransaction;
+use App\Models\User;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +16,78 @@ use Illuminate\Support\Facades\Log;
 
 class WalletController extends Controller
 {
+    public function resolveRecipient(Request $request)
+    {
+        $validated = $request->validate([
+            'to_type' => 'required|in:phone,membership',
+            'to' => 'required|string',
+            'branch_id' => 'nullable|integer|exists:branches,id',
+        ]);
+
+        $recipient = null;
+        $multiple = false;
+        $branches = [];
+
+        if ($validated['to_type'] === 'membership') {
+            $mn = trim($validated['to']);
+            $branchId = $validated['branch_id'] ?? null;
+            if ($branchId) {
+                $recipient = User::where('membership_number', $mn)->where('branch_id', $branchId)->first();
+            } else {
+                $matches = User::where('membership_number', $mn)->get();
+                if ($matches->count() === 1) {
+                    $recipient = $matches->first();
+                } elseif ($matches->count() > 1) {
+                    $multiple = true;
+                    // Provide list of branches to help client disambiguate
+                    $branchIds = $matches->pluck('branch_id')->filter()->unique()->values();
+                    if ($branchIds->isNotEmpty()) {
+                        $branches = Branch::whereIn('id', $branchIds)->get(['id','name'])->toArray();
+                    }
+                }
+            }
+        } else {
+            $raw = trim($validated['to']);
+            $digits = preg_replace('/[^0-9]/', '', $raw);
+            $variants = array_values(array_filter(array_unique([
+                $raw,
+                $digits,
+                (strlen($digits) === 11 && str_starts_with($digits, '0')) ? ('234'.substr($digits, 1)) : null,
+                (strlen($digits) === 13 && str_starts_with($digits, '234')) ? ('0'.substr($digits, 3)) : null,
+                $digits ? ('+'.$digits) : null,
+            ])));
+            if (!empty($variants)) {
+                $recipient = User::whereIn('phone', $variants)->first();
+            }
+        }
+
+        if ($multiple) {
+            return response()->json([
+                'message' => 'Multiple members found. Please select a branch.',
+                'multiple' => true,
+                'branches' => $branches,
+            ], 422);
+        }
+
+        if (!$recipient) {
+            return response()->json(['message' => 'Recipient not found'], 404);
+        }
+
+        $branchName = null;
+        if (!empty($recipient->branch_id)) {
+            $branch = Branch::find($recipient->branch_id);
+            $branchName = $branch?->name;
+        }
+
+        return response()->json([
+            'id' => $recipient->id,
+            'name' => $recipient->name,
+            'membership_number' => $recipient->membership_number,
+            'branch_id' => $recipient->branch_id,
+            'branch_name' => $branchName,
+        ]);
+    }
+
     public function getWallet(Request $request)
     {
         $user = $request->user();
@@ -280,6 +354,155 @@ class WalletController extends Controller
             'debited' => $total,
             'balance' => (float)$user->balance,
             'distribution' => $summary,
+        ]);
+    }
+    public function transfer(Request $request)
+    {
+        $validated = $request->validate([
+            'to_type' => 'required|in:phone,membership',
+            'to' => 'required|string',
+            'branch_id' => 'nullable|integer|exists:branches,id',
+            'amount' => 'required|numeric|min:1',
+            'pin' => ['required','regex:/^\\d{4}$/'],
+            'note' => 'nullable|string|max:120',
+        ]);
+
+        $sender = $request->user();
+
+        if (empty($sender->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$sender->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
+
+        $amount = (float) $validated['amount'];
+        if ($amount <= 0) {
+            return response()->json(['message' => 'Amount must be greater than zero'], 422);
+        }
+
+        // Resolve recipient
+        $recipient = null;
+        if ($validated['to_type'] === 'membership') {
+            $mn = trim($validated['to']);
+            $branchId = $validated['branch_id'] ?? null;
+            if ($branchId) {
+                $recipient = User::where('membership_number', $mn)->where('branch_id', $branchId)->first();
+            } else {
+                $matches = User::where('membership_number', $mn)->get();
+                if ($matches->count() === 1) {
+                    $recipient = $matches->first();
+                } elseif ($matches->count() > 1) {
+                    return response()->json(['message' => 'Multiple members found for this ID. Please select a branch.'], 422);
+                }
+            }
+        } else {
+            $raw = trim($validated['to']);
+            $digits = preg_replace('/[^0-9]/', '', $raw);
+            $variants = array_values(array_filter(array_unique([
+                $raw,
+                $digits,
+                (strlen($digits) === 11 && str_starts_with($digits, '0')) ? ('234'.substr($digits, 1)) : null,
+                (strlen($digits) === 13 && str_starts_with($digits, '234')) ? ('0'.substr($digits, 3)) : null,
+                $digits ? ('+'.$digits) : null,
+            ])));
+            if (!empty($variants)) {
+                $recipient = User::whereIn('phone', $variants)->first();
+            }
+        }
+
+        if (!$recipient) {
+            return response()->json(['message' => 'Recipient not found'], 404);
+        }
+        if ($recipient->id === $sender->id) {
+            return response()->json(['message' => 'You cannot transfer to yourself'], 422);
+        }
+
+        if ((float)$sender->balance < $amount) {
+            return response()->json(['message' => 'Insufficient wallet balance'], 422);
+        }
+
+        $reference = 'P2P_'.now()->format('YmdHis').'_FROM_'.$sender->id.'_'.bin2hex(random_bytes(3));
+        $insufficient = false;
+        $finalSenderBal = null;
+
+        DB::transaction(function () use ($sender, $recipient, $amount, $reference, $validated, &$insufficient, &$finalSenderBal) {
+            // Lock rows in ascending order to reduce deadlocks
+            $ids = [$sender->id, $recipient->id];
+            sort($ids);
+            $locked = User::whereIn('id', $ids)->lockForUpdate()->get()->keyBy('id');
+            $lockedSender = $locked[$sender->id];
+            $lockedRecipient = $locked[$recipient->id];
+
+            if ((float)$lockedSender->balance < (float)$amount) {
+                $insufficient = true;
+                return;
+            }
+
+            // Perform transfer
+            $lockedSender->decrement('balance', $amount);
+            $lockedRecipient->increment('balance', $amount);
+
+            $metaDebit = [
+                'to_user_id' => $lockedRecipient->id,
+                'to_name' => $lockedRecipient->name,
+                'to_membership' => $lockedRecipient->membership_number,
+            ];
+            if (!empty($validated['note'])) $metaDebit['note'] = $validated['note'];
+
+            $metaCredit = [
+                'from_user_id' => $lockedSender->id,
+                'from_name' => $lockedSender->name,
+                'from_membership' => $lockedSender->membership_number,
+            ];
+            if (!empty($validated['note'])) $metaCredit['note'] = $validated['note'];
+
+            WalletTransaction::create([
+                'user_id' => $lockedSender->id,
+                'type' => 'debit',
+                'amount' => $amount,
+                'reference' => $reference,
+                'source' => 'p2p_transfer',
+                'meta' => $metaDebit,
+            ]);
+
+            WalletTransaction::create([
+                'user_id' => $lockedRecipient->id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'reference' => $reference,
+                'source' => 'p2p_transfer',
+                'meta' => $metaCredit,
+            ]);
+
+            $finalSenderBal = (float) $lockedSender->fresh()->balance;
+        });
+
+        if ($insufficient) {
+            return response()->json(['message' => 'Insufficient wallet balance'], 422);
+        }
+
+        // Best-effort SMS notifications
+        try {
+            $sms = app(\App\Services\SmsService::class);
+            $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->name.' ('.$recipient->membership_number.'). Ref: '.$reference.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
+            $sms->send($sender->phone ?? null, $msgFrom);
+            $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->name.' ('.$sender->membership_number.'). Ref: '.$reference.'.';
+            $sms->send($recipient->phone ?? null, $msgTo);
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return response()->json([
+            'reference' => $reference,
+            'debited' => $amount,
+            'balance' => (float) $finalSenderBal,
+            'recipient' => [
+                'id' => $recipient->id,
+                'name' => $recipient->name,
+                'membership_number' => $recipient->membership_number,
+                'branch_id' => $recipient->branch_id,
+            ],
         ]);
     }
 }

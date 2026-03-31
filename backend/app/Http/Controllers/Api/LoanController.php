@@ -18,6 +18,7 @@ use App\Mail\RepaymentReceiptUser;
 use App\Mail\LoanDisbursedUser;
 use App\Mail\LoanDisbursedAdminNotification;
 use App\Services\CoopScoreService;
+use App\Notifications\LoanApprovedNotification;
 
 class LoanController extends Controller
 {
@@ -47,12 +48,33 @@ class LoanController extends Controller
         $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? CoopScoreService::INSTANT_THRESHOLD);
         $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? CoopScoreService::LOW_THRESHOLD);
 
+        // Score-based limit boost (applies only after first loan is completed)
+        $boostPct = 0.0;
+        $scoreVal = (float) ($score['score'] ?? 0);
+        if ($scoreVal >= 90) {
+            $boostPct = 15.0;
+        } elseif ($scoreVal >= 80) {
+            $boostPct = 10.0;
+        } elseif ($scoreVal >= 70) {
+            $boostPct = 5.0;
+        }
+        $eligWithScore = (float) ($adj['eligibility_adjusted'] ?? 0);
+        $hasCompleted = !$adj['is_first_loan'];
+        if ($hasCompleted && $eligWithScore > 0 && $boostPct > 0) {
+            $eligWithScore = round($eligWithScore * (1 + ($boostPct / 100.0)), 2);
+        } else {
+            // No boost on first loan (keeps 5% cap) or when score is low
+            $boostPct = 0.0;
+        }
+
         $resp = array_merge($adj, [
             'can_request' => $canRequest,
             'reason' => $months < 6 ? 'Member must be in the system for at least 6 months before requesting a loan.' : null,
             'coop_score' => $score,
             'instant_approval' => $instant,
             'required_guarantors' => $instant ? 0 : ($low ? 3 : 2),
+            'limit_boost_pct' => $boostPct,
+            'eligibility_with_score' => $eligWithScore,
         ]);
         return response()->json($resp);
     }
@@ -89,6 +111,20 @@ class LoanController extends Controller
         $principal = $user->hasCompletedLoan()
             ? round($base * 2, 2)               // After completing first loan: full eligibility (2x)
             : round($base * 0.05, 2);           // First loan: 5% of (Savings + Shares)
+
+        // Apply score-based limit boost (only after first loan is completed)
+        $boostPct = 0.0;
+        $scoreVal = (float) ($score['score'] ?? 0);
+        if ($scoreVal >= 90) {
+            $boostPct = 15.0;
+        } elseif ($scoreVal >= 80) {
+            $boostPct = 10.0;
+        } elseif ($scoreVal >= 70) {
+            $boostPct = 5.0;
+        }
+        if ($user->hasCompletedLoan() && $principal > 0 && $boostPct > 0) {
+            $principal = round($principal * (1 + ($boostPct / 100.0)), 2);
+        }
 
         if ($principal <= 0) {
             return response()->json(['message' => 'You are not eligible for a loan at this time.'], 422);
@@ -225,6 +261,19 @@ class LoanController extends Controller
                         'credited_amount' => $credit,
                         'balance' => (float) ($fresh->balance ?? 0),
                     ]);
+                    // Log to Inbox (database notifications)
+                    try {
+                        $fresh->notify(new LoanApprovedNotification(
+                            title: 'Loan Approved',
+                            message: $msg,
+                            loanId: $q->id,
+                            qardIdString: $q->qard_id_string,
+                            creditedAmount: (float) $credit,
+                            balance: (float) ($fresh->balance ?? 0),
+                        ));
+                    } catch (\Throwable $e) {
+                        // swallow
+                    }
                 }
             } catch (\Throwable $e) {
                 // ignore notification errors

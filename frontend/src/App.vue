@@ -1,14 +1,28 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 import { SplashScreen } from '@capacitor/splash-screen'
 import BaseModal from './components/BaseModal.vue'
+import InboxDrawer from './components/InboxDrawer.vue'
 import router from './router/index.js'
 import axios from './http.js'
 
 const PENDING_PUSH_TOKEN_KEY = 'pending_push_token'
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+
+const showInbox = ref(false)
+const unreadCount = ref(0)
+const isLoggedIn = computed(() => !!localStorage.getItem('token'))
+let unreadTimer = null
+
+async function refreshUnreadCount() {
+  try {
+    if (!isLoggedIn.value) return
+    const { data } = await axios.get('/api/notifications', { params: { per_page: 1 } })
+    unreadCount.value = Number(data?.unread_count || 0)
+  } catch (_) {}
+}
 
 async function saveTokenToBackend(token) {
   try {
@@ -134,12 +148,30 @@ onMounted(async () => {
 
   // 4. If user is already authenticated and we have a cached push token, try to flush it now
   await flushPendingPushToken()
+
+  // 5. Start polling unread count while logged in
+  if (isLoggedIn.value) {
+    await refreshUnreadCount()
+    if (unreadTimer) clearInterval(unreadTimer)
+    unreadTimer = setInterval(refreshUnreadCount, 30000)
+  }
 })
 </script>
 
 <template>
-  <router-view />
-  <BaseModal />
+  <div>
+    <router-view />
+
+    <!-- Floating Bell Icon (visible when logged in) -->
+    <button v-if="isLoggedIn" @click="showInbox = true" class="fixed bottom-6 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 flex items-center justify-center">
+      <span class="i-mdi-bell-outline text-2xl"></span>
+      <span v-if="unreadCount>0" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">{{ unreadCount }}</span>
+    </button>
+
+    <InboxDrawer v-model="showInbox" @unread="(n)=> unreadCount = n" />
+
+    <BaseModal />
+  </div>
 </template>
 
 <style scoped>
