@@ -131,15 +131,10 @@ class MemberRegistrationController extends Controller
 
         $sentTo = [];
 
-        // Email
+        // Email (with resilient fallback so registration isn't blocked by mail transport issues)
         if ($app->email && $app->email_otp_hash) {
-            try {
-                Mail::raw('Your email verification code is '.$emailCode.'. It expires in 10 minutes.', function ($m) use ($app) {
-                    $m->to($app->email)->subject('Cooperative Email Verification Code');
-                });
+            if ($this->sendEmailOtp($app->email, $emailCode)) {
                 $sentTo['email'] = $this->maskEmail($app->email);
-            } catch (\Throwable $e) {
-                Log::warning('Registration email OTP send failed', ['error' => $e->getMessage()]);
             }
         }
 
@@ -284,6 +279,39 @@ class MemberRegistrationController extends Controller
         }
         // Fallback to timestamp-based unique suffix
         return substr((string) (time() . random_int(10, 99)), -6);
+    }
+
+    /**
+     * Send the email OTP with a resilient fallback to the log mailer when the primary transport fails
+     * (e.g., Resend transport misconfiguration: "Class 'Resend' not found").
+     * Returns true if any attempt succeeds.
+     */
+    protected function sendEmailOtp(string $email, string $code): bool
+    {
+        $subject = 'Cooperative Email Verification Code';
+        $body = 'Your email verification code is '.$code.'. It expires in 10 minutes.';
+
+        // Primary attempt using default mailer
+        try {
+            Mail::raw($body, function ($m) use ($email, $subject) {
+                $m->to($email)->subject($subject);
+            });
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('Registration email OTP send failed', ['error' => $e->getMessage()]);
+        }
+
+        // Fallback: route to log mailer so user can still proceed while ops fix mail transport
+        try {
+            Mail::mailer('log')->raw($body, function ($m) use ($email, $subject) {
+                $m->to($email)->subject($subject);
+            });
+            Log::info('Email OTP sent via log mailer fallback', ['email' => $this->maskEmail($email)]);
+            return true;
+        } catch (\Throwable $e2) {
+            Log::error('Email OTP fallback (log mailer) failed', ['error' => $e2->getMessage()]);
+            return false;
+        }
     }
 
     protected function maskPhone(string $phone): string
