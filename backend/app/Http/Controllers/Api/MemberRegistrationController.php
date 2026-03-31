@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -39,7 +40,7 @@ class MemberRegistrationController extends Controller
             'phone' => $data['phone'],
             'address' => $data['address'],
             'branch_id' => $data['branch_id'],
-            'password_hash' => Hash::make($data['password']),
+            'password_hash' => Crypt::encryptString($data['password']), // store encrypted; will hash once on User model
             'submitted_at' => now(),
         ]);
 
@@ -253,7 +254,13 @@ class MemberRegistrationController extends Controller
         $user->address = $app->address;
         $user->branch_id = $app->branch_id;
         $user->membership_number = $membership;
-        $user->password = $app->password_hash; // already hashed
+        // Decrypt the stored application password and let the User model hash it once
+        try {
+            $plain = Crypt::decryptString($app->password_hash);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Could not finalize: invalid stored password. Please restart registration.'], 500);
+        }
+        $user->password = $plain;
         $user->passport_path = $app->passport_path; // keep uploaded path
         $user->save();
 
