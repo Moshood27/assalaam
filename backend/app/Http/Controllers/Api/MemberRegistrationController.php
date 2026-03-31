@@ -1,0 +1,299 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\MemberApplication;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+
+class MemberRegistrationController extends Controller
+{
+    /**
+     * Start a new member application and return a token to continue the process.
+     */
+    public function start(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email:rfc,dns', 'max:255', Rule::unique('users', 'email')],
+            'phone' => ['required', 'string', 'max:30'],
+            'address' => ['required', 'string', 'max:1000'],
+            'branch_id' => ['required', 'exists:branches,id'],
+            'password' => ['required', 'string', 'min:6'],
+            'confirm_password' => ['required', 'same:password'],
+        ]);
+
+        // Create a short token the frontend will keep to continue the process
+        $token = Str::uuid()->toString();
+
+        $app = MemberApplication::create([
+            'token' => $token,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'address' => $data['address'],
+            'branch_id' => $data['branch_id'],
+            'password_hash' => Hash::make($data['password']),
+            'submitted_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Application started. Please upload required documents and complete verification.',
+            'token' => $app->token,
+        ]);
+    }
+
+    /**
+     * Upload required documents for an application.
+     */
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
+            'passport' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'id_card' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:7168'],
+            'proof_of_address' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:7168'],
+        ]);
+
+        $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
+
+        $baseDir = public_path('upload/apps/'.$app->token);
+        if (!is_dir($baseDir)) @mkdir($baseDir, 0755, true);
+
+        $updated = [];
+
+        if ($file = $request->file('passport')) {
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            $name = 'passport-'.time().'.'.$ext;
+            $file->move($baseDir, $name);
+            $app->passport_path = 'upload/apps/'.$app->token.'/'.$name;
+            $updated['passport_path'] = $app->passport_path;
+        }
+        if ($file = $request->file('id_card')) {
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'pdf');
+            $name = 'idcard-'.time().'.'.$ext;
+            $file->move($baseDir, $name);
+            $app->id_card_path = 'upload/apps/'.$app->token.'/'.$name;
+            $updated['id_card_path'] = $app->id_card_path;
+        }
+        if ($file = $request->file('proof_of_address')) {
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'pdf');
+            $name = 'poa-'.time().'.'.$ext;
+            $file->move($baseDir, $name);
+            $app->proof_of_address_path = 'upload/apps/'.$app->token.'/'.$name;
+            $updated['proof_of_address_path'] = $app->proof_of_address_path;
+        }
+
+        $app->save();
+
+        return response()->json([
+            'message' => 'Documents uploaded.',
+            'application' => [
+                'passport_path' => $app->passport_path,
+                'id_card_path' => $app->id_card_path,
+                'proof_of_address_path' => $app->proof_of_address_path,
+            ],
+        ]);
+    }
+
+    /**
+     * Send OTPs to email and SMS for verification.
+     */
+    public function sendOtps(Request $request)
+    {
+        $request->validate([
+            'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
+        ]);
+        $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
+
+        // Basic backoff: allow at most once per 60 seconds
+        if ($app->last_otp_sent_at && $app->last_otp_sent_at->diffInSeconds(now()) < 60) {
+            return response()->json(['message' => 'Please wait before requesting codes again.'], 429);
+        }
+
+        $emailCode = (string) random_int(100000, 999999);
+        $smsCode = (string) random_int(100000, 999999);
+
+        $app->email_otp_hash = $app->email ? Hash::make($emailCode) : null;
+        $app->sms_otp_hash = $app->phone ? Hash::make($smsCode) : null;
+        $app->otp_expires_at = now()->addMinutes(10);
+        $app->email_otp_attempts = 0;
+        $app->sms_otp_attempts = 0;
+        $app->last_otp_sent_at = now();
+        $app->save();
+
+        $sentTo = [];
+
+        // Email
+        if ($app->email && $app->email_otp_hash) {
+            try {
+                Mail::raw('Your email verification code is '.$emailCode.'. It expires in 10 minutes.', function ($m) use ($app) {
+                    $m->to($app->email)->subject('Cooperative Email Verification Code');
+                });
+                $sentTo['email'] = $this->maskEmail($app->email);
+            } catch (\Throwable $e) {
+                Log::warning('Registration email OTP send failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // SMS
+        if ($app->phone && $app->sms_otp_hash) {
+            try {
+                $sms = app(\App\Services\SmsService::class);
+                $sms->send($app->phone, 'Your phone verification code is '.$smsCode.'. It expires in 10 minutes.');
+                $sentTo['phone'] = $this->maskPhone($app->phone);
+            } catch (\Throwable $e) {
+                Log::warning('Registration SMS OTP send failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Verification codes sent if contact information is valid.',
+            'sent_to' => $sentTo,
+            'expires_in' => 600,
+        ]);
+    }
+
+    /** Verify email code */
+    public function verifyEmail(Request $request)
+    {
+        $data = $request->validate([
+            'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
+            'code' => ['required', 'regex:/^\\d{6}$/'],
+        ]);
+        $app = MemberApplication::where('token', $data['token'])->firstOrFail();
+
+        if (!$app->email_otp_hash || !$app->otp_expires_at || now()->greaterThan($app->otp_expires_at)) {
+            return response()->json(['message' => 'Code expired or not requested.'], 422);
+        }
+        $attempts = (int) $app->email_otp_attempts;
+        if ($attempts >= 5) {
+            return response()->json(['message' => 'Too many invalid attempts. Please resend a new code.'], 429);
+        }
+        if (!Hash::check($data['code'], $app->email_otp_hash)) {
+            $app->email_otp_attempts = $attempts + 1;
+            $app->save();
+            return response()->json(['message' => 'Invalid code.'], 403);
+        }
+
+        $app->email_verified_at = now();
+        $app->email_otp_hash = null;
+        $app->save();
+
+        return response()->json(['message' => 'Email verified.']);
+    }
+
+    /** Verify SMS code */
+    public function verifySms(Request $request)
+    {
+        $data = $request->validate([
+            'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
+            'code' => ['required', 'regex:/^\\d{6}$/'],
+        ]);
+        $app = MemberApplication::where('token', $data['token'])->firstOrFail();
+
+        if (!$app->sms_otp_hash || !$app->otp_expires_at || now()->greaterThan($app->otp_expires_at)) {
+            return response()->json(['message' => 'Code expired or not requested.'], 422);
+        }
+        $attempts = (int) $app->sms_otp_attempts;
+        if ($attempts >= 5) {
+            return response()->json(['message' => 'Too many invalid attempts. Please resend a new code.'], 429);
+        }
+        if (!Hash::check($data['code'], $app->sms_otp_hash)) {
+            $app->sms_otp_attempts = $attempts + 1;
+            $app->save();
+            return response()->json(['message' => 'Invalid code.'], 403);
+        }
+
+        $app->phone_verified_at = now();
+        $app->sms_otp_hash = null;
+        $app->save();
+
+        return response()->json(['message' => 'Phone verified.']);
+    }
+
+    /** Finalize the application, create a User and assign a membership number */
+    public function finalize(Request $request)
+    {
+        $data = $request->validate([
+            'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
+        ]);
+        $app = MemberApplication::where('token', $data['token'])->firstOrFail();
+
+        // Validate required documents and verifications
+        $missing = [];
+        foreach ([
+            'passport_path' => 'Passport photo',
+            'id_card_path' => 'Valid ID card',
+            'proof_of_address_path' => 'Proof of address',
+        ] as $field => $label) {
+            if (empty($app->{$field})) $missing[] = $label;
+        }
+        if (!empty($missing)) {
+            return response()->json(['message' => 'Missing required documents: '.implode(', ', $missing)], 422);
+        }
+        if (empty($app->email_verified_at) || empty($app->phone_verified_at)) {
+            return response()->json(['message' => 'Both email and phone must be verified before joining.'], 422);
+        }
+
+        // Generate a unique membership number within the branch (6 digits)
+        $membership = $this->generateMembershipNumber((int) $app->branch_id);
+
+        // Create the user
+        $user = new User();
+        $user->name = $app->name;
+        $user->email = $app->email;
+        $user->phone = $app->phone;
+        $user->address = $app->address;
+        $user->branch_id = $app->branch_id;
+        $user->membership_number = $membership;
+        $user->password = $app->password_hash; // already hashed
+        $user->passport_path = $app->passport_path; // keep uploaded path
+        $user->save();
+
+        $app->finalized_at = now();
+        $app->save();
+
+        return response()->json([
+            'message' => 'Registration complete. Welcome to the Cooperative!',
+            'membership_number' => $user->membership_number,
+            'branch_id' => $user->branch_id,
+        ]);
+    }
+
+    protected function generateMembershipNumber(int $branchId): string
+    {
+        // Try up to 20 attempts to avoid rare collisions
+        for ($i = 0; $i < 20; $i++) {
+            $num = (string) random_int(100000, 999999);
+            $exists = User::where('branch_id', $branchId)->where('membership_number', $num)->exists();
+            if (!$exists) return $num;
+        }
+        // Fallback to timestamp-based unique suffix
+        return substr((string) (time() . random_int(10, 99)), -6);
+    }
+
+    protected function maskPhone(string $phone): string
+    {
+        $digits = preg_replace('/[^0-9]/', '', $phone);
+        $len = strlen($digits);
+        if ($len <= 4) return str_repeat('*', max(0, $len - 2)).substr($digits, -2);
+        return str_repeat('*', max(0, $len - 4)).substr($digits, -4);
+    }
+
+    protected function maskEmail(string $email): string
+    {
+        $parts = explode('@', $email, 2);
+        if (count($parts) !== 2) return '***';
+        $name = $parts[0];
+        $domain = $parts[1];
+        $show = max(1, (int) floor(strlen($name) * 0.3));
+        return substr($name, 0, $show).str_repeat('*', max(0, strlen($name) - $show)).'@'.$domain;
+    }
+}

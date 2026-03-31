@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\ZakatController;
 use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\SecurityController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\MemberRegistrationController;
 
 Route::get('/health', function () {
     return response()
@@ -33,6 +34,14 @@ Route::get('/health', function () {
 // Public endpoints (rate limited)
 Route::middleware('throttle:api')->group(function () {
     Route::get('/branches', [AuthController::class, 'branches']);
+
+    // Member self-registration (multi-step) endpoints
+    Route::post('/register/start', [MemberRegistrationController::class, 'start']);
+    Route::post('/register/upload', [MemberRegistrationController::class, 'upload']);
+    Route::post('/register/send-otps', [MemberRegistrationController::class, 'sendOtps']);
+    Route::post('/register/verify-email', [MemberRegistrationController::class, 'verifyEmail']);
+    Route::post('/register/verify-sms', [MemberRegistrationController::class, 'verifySms']);
+    Route::post('/register/finalize', [MemberRegistrationController::class, 'finalize']);
 });
 // Login endpoints with stricter throttle
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
