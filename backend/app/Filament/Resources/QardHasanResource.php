@@ -19,6 +19,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
+use App\Mail\LoanRejectedUser;
 
 class QardHasanResource extends Resource
 {
@@ -163,6 +164,67 @@ class QardHasanResource extends Resource
                         && ! $record->repayments()->exists())
                     ->requiresConfirmation()
                     ->successNotificationTitle('Loan deleted successfully'),
+                Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('primary')
+                    ->visible(fn (QardHasan $record) => $record->status === 'pending' && empty($record->approved_at))
+                    ->requiresConfirmation()
+                    ->action(function (QardHasan $record) {
+                        $record->update([
+                            'approved_by' => auth()->id(),
+                            'approved_at' => now(),
+                        ]);
+                        Notification::make()
+                            ->title('Loan approved')
+                            ->body('Loan has been approved. You may proceed to disburse once guarantors have accepted.')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('reject')
+                    ->label('Reject')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (QardHasan $record) => $record->status === 'pending')
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Reason for rejection')
+                            ->rows(3)
+                            ->required()
+                            ->maxLength(1000),
+                    ])
+                    ->action(function (QardHasan $record, array $data) {
+                        $reason = trim((string) ($data['reason'] ?? ''));
+                        $record->update([
+                            'status' => 'cancelled',
+                            'rejection_reason' => $reason,
+                        ]);
+                        // Notify member by email (best-effort)
+                        try {
+                            $record->loadMissing('user');
+                            if (!empty($record->user?->email)) {
+                                Mail::to($record->user->email)->send(new LoanRejectedUser($record, $reason));
+                            }
+                            // Optional: Push notification
+                            try {
+                                $push = app(\App\Services\PushService::class);
+                                $token = $record->user?->fcm_token ?: ($record->user?->device_token ?? null);
+                                $push->send($token, 'Loan Rejected', 'Your loan request '.($record->qard_id_string).' was rejected. Reason: '.$reason, [
+                                    'type' => 'loan_rejected',
+                                    'loan_id' => $record->id,
+                                    'qard_id_string' => $record->qard_id_string,
+                                ]);
+                            } catch (\Throwable $e) { /* ignore push errors */ }
+                        } catch (\Throwable $e) {
+                            // ignore mail errors
+                        }
+
+                        Notification::make()
+                            ->title('Loan rejected')
+                            ->body('The loan has been rejected and the member has been notified by email (if available).')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('disburse')
                     ->label('Disburse')
                     ->icon('heroicon-o-paper-airplane')

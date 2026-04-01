@@ -8,6 +8,8 @@ use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\LoanRequestedAdminNotification;
 
 class CreateQardHasan extends CreateRecord
 {
@@ -122,6 +124,30 @@ class CreateQardHasan extends CreateRecord
             } catch (\Throwable $e) {
                 // ignore
             }
+        }
+
+        // Email admins about new loan request (best-effort)
+        try {
+            $loan = $this->record->loadMissing('user');
+            $adminEmails = User::query()
+                ->where('is_admin', true)
+                ->whereNotNull('email')
+                ->pluck('email')
+                ->all();
+            $fallback = trim((string) env('ADMIN_NOTIFICATION_EMAILS', ''));
+            if (!empty($fallback)) {
+                foreach (preg_split('/[,;]/', $fallback) as $em) {
+                    $em = trim($em);
+                    if ($em !== '' && !in_array($em, $adminEmails, true)) {
+                        $adminEmails[] = $em;
+                    }
+                }
+            }
+            if (!empty($adminEmails)) {
+                Mail::to($adminEmails)->send(new LoanRequestedAdminNotification($loan));
+            }
+        } catch (\Throwable $e) {
+            // ignore
         }
     }
 }

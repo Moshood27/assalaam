@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\RepaymentReceiptUser;
 use App\Mail\LoanDisbursedUser;
 use App\Mail\LoanDisbursedAdminNotification;
+use App\Mail\LoanRequestedAdminNotification;
 use App\Services\CoopScoreService;
 use App\Notifications\LoanApprovedNotification;
 
@@ -329,7 +330,7 @@ class LoanController extends Controller
                 ];
             }
             $q->guarantors()->attach($attach);
-            $q->loadMissing(['guarantors.branch']);
+            $q->loadMissing(['guarantors.branch', 'user']);
 
             // Notify guarantors via SMS and Push (best-effort)
             try {
@@ -348,6 +349,29 @@ class LoanController extends Controller
                 }
             } catch (\Throwable $e) {
                 // ignore notification errors
+            }
+
+            // Email admins about new loan request (best-effort)
+            try {
+                $adminEmails = \App\Models\User::query()
+                    ->where('is_admin', true)
+                    ->whereNotNull('email')
+                    ->pluck('email')
+                    ->all();
+                $fallback = trim((string) env('ADMIN_NOTIFICATION_EMAILS', ''));
+                if (!empty($fallback)) {
+                    foreach (preg_split('/[,;]/', $fallback) as $em) {
+                        $em = trim($em);
+                        if ($em !== '' && !in_array($em, $adminEmails, true)) {
+                            $adminEmails[] = $em;
+                        }
+                    }
+                }
+                if (!empty($adminEmails)) {
+                    Mail::to($adminEmails)->send(new LoanRequestedAdminNotification($q));
+                }
+            } catch (\Throwable $e) {
+                // ignore email errors
             }
 
             ShariahAudit::log($user, 'create_qard_hasan_auto', [

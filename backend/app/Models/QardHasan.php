@@ -31,6 +31,9 @@ class QardHasan extends Model
         'admin_fee_pct',
         'paid_amount',
         'status',
+        'rejection_reason',
+        'approved_by',
+        'approved_at',
     ];
 
     protected $casts = [
