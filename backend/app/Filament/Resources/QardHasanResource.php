@@ -228,6 +228,29 @@ class QardHasanResource extends Resource
                             ->success()
                             ->send();
                     }),
+                Action::make('accept_guarantors')
+                    ->label('Accept Guarantors')
+                    ->icon('heroicon-o-user-plus')
+                    ->color('warning')
+                    ->visible(fn (QardHasan $record) => $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->action(function (QardHasan $record) {
+                        // Admin override: mark all existing guarantor pivots as accepted
+                        $record->loadMissing('guarantors');
+                        if ($record->guarantors && $record->guarantors->isNotEmpty()) {
+                            foreach ($record->guarantors as $g) {
+                                $record->guarantors()->updateExistingPivot($g->id, [
+                                    'status' => 'accepted',
+                                    'responded_at' => now(),
+                                ]);
+                            }
+                        }
+                        Notification::make()
+                            ->title('Guarantors accepted')
+                            ->body('All guarantors have been marked as accepted. You may now disburse the loan.')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('disburse')
                     ->label('Disburse')
                     ->icon('heroicon-o-paper-airplane')

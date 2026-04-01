@@ -408,6 +408,13 @@ class LoanController extends Controller
                 return response()->json(['message' => 'This loan is not eligible for repayment.'], 422);
             }
 
+            // Block repayments until the loan is disbursed and active
+            if ($q->status !== 'active') {
+                return response()->json([
+                    'message' => 'You cannot repay this loan until it has been disbursed and activated. Please wait for all guarantors to accept or contact the admin.'
+                ], 422);
+            }
+
             $before = [
                 'paid_amount' => (float) $q->paid_amount,
                 'remaining_principal' => max(0, (float) $q->principal_amount - (float) $q->paid_amount),
