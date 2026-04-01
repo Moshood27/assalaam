@@ -449,6 +449,40 @@ const checkRecipient = async () => {
   }
 }
 
+const downloadReceipt = async (tx) => {
+  try {
+    const id = tx?.id ?? tx
+    if (!id) {
+      showNotice('Unavailable', 'Missing transaction ID for this receipt.', 'warning')
+      return
+    }
+    const res = await axios.get(`/api/wallet/transactions/${id}/receipt`, { responseType: 'blob' })
+    const contentType = res?.headers?.['content-type'] || 'application/pdf'
+    const blob = new Blob([res.data], { type: contentType })
+    let filename = `Wallet_Receipt_${tx?.reference || id}.pdf`
+    const cd = res?.headers?.['content-disposition'] || res?.headers?.['Content-Disposition']
+    if (cd) {
+      const m = /filename\*?=(?:UTF-8''|\")?([^\";\n]+)\"?/i.exec(cd) || /filename="?([^\";\n]+)"?/i.exec(cd)
+      if (m && m[1]) filename = m[1]
+    }
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    const status = e?.response?.status
+    if (status === 404) {
+      showNotice('Not found', 'Receipt not found for this transaction.', 'error')
+    } else {
+      showNotice('Download failed', e?.response?.data?.message || 'Unable to download receipt. Please try again later.', 'error')
+    }
+  }
+}
+
 watch([toType, toValue, branchId], () => {
   recipient.value = null
   recipientError.value = ''
