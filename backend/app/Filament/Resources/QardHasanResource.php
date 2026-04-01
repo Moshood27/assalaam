@@ -135,7 +135,19 @@ class QardHasanResource extends Resource
                     ->getStateUsing(fn (QardHasan $record) => $record->guarantors?->pluck('name')->filter()->implode(', ') ?: '-'),
                 TextColumn::make('qard_id_string')->label('Loan ID')->searchable(),
                 TextColumn::make('principal_amount')->money('ngn', true)->label('Principal')->sortable(),
-                TextColumn::make('credited_amount')->money('ngn', true)->label('Credited')->sortable(),
+                TextColumn::make('credited_amount')
+                    ->money('ngn', true)
+                    ->label('Credited')
+                    ->sortable(
+                        query: function (Builder $query, string $direction): Builder {
+                            $dir = strtolower($direction) === 'asc' ? 'asc' : 'desc';
+                            // credited_amount = principal_amount - (admin_fee_flat + principal_amount * admin_fee_pct/100)
+                            return $query->orderByRaw('(' .
+                                'COALESCE(principal_amount,0) - (' .
+                                'COALESCE(admin_fee_flat,0) + COALESCE(principal_amount,0) * (COALESCE(admin_fee_pct,0) / 100)' .
+                                ')) ' . $dir);
+                        }
+                    ),
                 TextColumn::make('paid_amount')->money('ngn', true)->label('Paid')->sortable(),
                 TextColumn::make('approvedBy.name')->label('Approved By')->formatStateUsing(fn($state) => $state ?: '-')->toggleable(),
                 TextColumn::make('approved_at')->label('Approved At')->dateTime()->sortable()->toggleable(),
