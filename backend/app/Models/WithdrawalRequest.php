@@ -5,23 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WalletTransaction extends Model
+class WithdrawalRequest extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'type',
         'amount',
         'reference',
-        'source',
-        'withdrawable',
+        'status',
+        'bank_code',
+        'bank_name',
+        'account_number',
+        'account_name',
+        'reason',
+        'processed_at',
         'meta',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'withdrawable' => 'boolean',
+        'processed_at' => 'datetime',
         'meta' => 'array',
     ];
 

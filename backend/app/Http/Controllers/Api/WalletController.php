@@ -7,12 +7,14 @@ use App\Models\Contribution;
 use App\Models\Scheme;
 use App\Models\Project;
 use App\Models\WalletTransaction;
+use App\Models\WithdrawalRequest;
 use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
@@ -92,8 +94,16 @@ class WalletController extends Controller
     {
         $user = $request->user();
         $recent = $user->walletTransactions()->latest()->limit(10)->get();
+
+        // Reuse helper for tiered withdrawal logic
+        $breakdown = method_exists($user, 'withdrawableBreakdown') ? $user->withdrawableBreakdown() : [
+            'available_for_withdrawal' => (float) $user->balance,
+        ];
+
         return response()->json([
             'balance' => (float) $user->balance,
+            'available_for_withdrawal' => (float) ($breakdown['available_for_withdrawal'] ?? 0),
+            'breakdown' => $breakdown,
             'virtual_account' => [
                 'paystack_customer_code' => $user->paystack_customer_code,
                 'account_number' => $user->dva_account_number,
@@ -461,6 +471,14 @@ class WalletController extends Controller
             ];
             if (!empty($validated['note'])) $metaCredit['note'] = $validated['note'];
 
+            // Determine how much of this transfer came from withdrawable vs restricted funds
+            $senderAvail = method_exists($lockedSender, 'availableForWithdrawal') ? (float) $lockedSender->availableForWithdrawal() : (float) $lockedSender->balance;
+            $withdrawablePortion = max(0.0, min((float) $amount, $senderAvail));
+            $restrictedPortion = max(0.0, (float) $amount - $withdrawablePortion);
+
+            // Record sender debit with breakdown
+            $metaDebit['withdrawable_portion'] = round($withdrawablePortion, 2);
+            $metaDebit['restricted_portion'] = round($restrictedPortion, 2);
             WalletTransaction::create([
                 'user_id' => $lockedSender->id,
                 'type' => 'debit',
@@ -470,14 +488,35 @@ class WalletController extends Controller
                 'meta' => $metaDebit,
             ]);
 
-            WalletTransaction::create([
-                'user_id' => $lockedRecipient->id,
-                'type' => 'credit',
-                'amount' => $amount,
-                'reference' => $referenceCredit,
-                'source' => 'p2p_transfer',
-                'meta' => $metaCredit,
-            ]);
+            // Record recipient credits, splitting to preserve restrictions
+            if ($withdrawablePortion > 0) {
+                $metaCreditW = $metaCredit;
+                $metaCreditW['portion'] = 'withdrawable';
+                $metaCreditW['portion_amount'] = round($withdrawablePortion, 2);
+                WalletTransaction::create([
+                    'user_id' => $lockedRecipient->id,
+                    'type' => 'credit',
+                    'amount' => $withdrawablePortion,
+                    'reference' => $referenceCredit . '-W',
+                    'source' => 'p2p_transfer',
+                    'withdrawable' => true,
+                    'meta' => $metaCreditW,
+                ]);
+            }
+            if ($restrictedPortion > 0) {
+                $metaCreditR = $metaCredit;
+                $metaCreditR['portion'] = 'restricted';
+                $metaCreditR['portion_amount'] = round($restrictedPortion, 2);
+                WalletTransaction::create([
+                    'user_id' => $lockedRecipient->id,
+                    'type' => 'credit',
+                    'amount' => $restrictedPortion,
+                    'reference' => $referenceCredit . '-R',
+                    'source' => 'p2p_transfer',
+                    'withdrawable' => false,
+                    'meta' => $metaCreditR,
+                ]);
+            }
 
             $finalSenderBal = (float) $lockedSender->fresh()->balance;
         });
@@ -508,5 +547,122 @@ class WalletController extends Controller
                 'branch_id' => $recipient->branch_id,
             ],
         ]);
+    }
+
+    public function withdraw(Request $request)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'pin' => ['required','regex:/^\\d{4}$/'],
+            'note' => 'nullable|string|max:200',
+        ]);
+
+        $user = $request->user();
+
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
+
+        // Ensure verified bank details exist
+        $hasBank = !empty($user->bank_code) && !empty($user->account_number) && !empty($user->account_name);
+        if (!$hasBank) {
+            return response()->json(['message' => 'Add and verify your bank details first in Profile > Bank Settings.'], 422);
+        }
+
+        $amount = round((float) $validated['amount'], 2);
+        if ($amount <= 0) {
+            return response()->json(['message' => 'Amount must be greater than zero'], 422);
+        }
+
+        $available = method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance;
+        if ($amount > $available) {
+            return response()->json([
+                'message' => 'Amount exceeds your available-for-withdrawal balance.',
+                'available_for_withdrawal' => $available,
+            ], 422);
+        }
+
+        if ((float)$user->balance < $amount) {
+            return response()->json(['message' => 'Insufficient wallet balance'], 422);
+        }
+
+        $reference = 'WD-'.now()->format('YmdHis').'-'.$user->id.'-'.Str::upper(Str::random(6));
+
+        $req = WithdrawalRequest::create([
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'reference' => $reference,
+            'status' => 'pending',
+            'bank_code' => $user->bank_code,
+            'bank_name' => $user->bank_name,
+            'account_number' => $user->account_number,
+            'account_name' => $user->account_name,
+            'reason' => $validated['note'] ?? null,
+            'meta' => [
+                'ip' => $request->ip(),
+                'user_agent' => substr((string)$request->userAgent(), 0, 255),
+            ],
+        ]);
+
+        // Best-effort alert to admins (optional)
+        try {
+            $admins = User::query()->where('is_admin', true)->get(['id','email','device_token','fcm_token']);
+            if ($admins->isNotEmpty()) {
+                $push = app(\App\Services\PushService::class);
+                $title = 'Withdrawal Request';
+                $body = $user->name.' requested ₦'.number_format($amount, 2).' (Ref: '.$reference.').';
+                foreach ($admins as $a) {
+                    $token = $a->fcm_token ?: $a->device_token;
+                    if (!empty($token)) {
+                        $push->send($token, $title, $body, [
+                            'type' => 'withdrawal_request',
+                            'request_id' => $req->id,
+                            'member_id' => $user->id,
+                            'amount' => (float) $amount,
+                        ]);
+                    }
+                }
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+
+        // Best-effort SMS to member
+        try {
+            $sms = app(\App\Services\SmsService::class);
+            $sms->send($user->phone ?? null, 'Withdrawal request received: ₦'.number_format($amount, 2).'. Ref: '.$reference.'.');
+        } catch (\Throwable $e) { /* ignore */ }
+
+        return response()->json([
+            'id' => $req->id,
+            'reference' => $req->reference,
+            'status' => $req->status,
+            'amount' => (float)$req->amount,
+            'bank' => [
+                'bank_code' => $req->bank_code,
+                'bank_name' => $req->bank_name,
+                'account_number' => $req->account_number,
+                'account_name' => $req->account_name,
+            ],
+        ], 201);
+    }
+
+    public function withdrawals(Request $request)
+    {
+        $validated = $request->validate([
+            'status' => 'nullable|in:pending,paid,declined',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+        $user = $request->user();
+        $query = WithdrawalRequest::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at');
+        if (!empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+        $perPage = $validated['per_page'] ?? 15;
+        return response()->json($query->paginate($perPage));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\QardHasan;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -202,6 +203,115 @@ class GuarantorController extends Controller
             'declined_count' => $declinedCount,
             'pending_count' => $pendingCount,
             'all_accepted' => $allAccepted,
+        ]);
+    }
+
+    /**
+     * Borrower: Nudge all pending guarantors for a given loan.
+     */
+    public function nudge(Request $request, int $loanId)
+    {
+        $user = $request->user();
+        $loan = QardHasan::with(['guarantors', 'user'])
+            ->where('id', $loanId)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $pending = $loan->guarantors->filter(fn($g) => ($g->pivot?->status) === 'pending');
+        if ($pending->isEmpty()) {
+            return response()->json(['message' => 'No pending guarantors to nudge on this loan.'], 422);
+        }
+
+        $nudgedIds = [];
+        foreach ($pending as $g) {
+            try {
+                \Illuminate\Support\Facades\DB::table('qard_hasan_guarantors')
+                    ->where('qard_hasan_id', $loan->id)
+                    ->where('guarantor_id', $g->id)
+                    ->update([
+                        'nudge_count' => \Illuminate\Support\Facades\DB::raw('COALESCE(nudge_count,0)+1'),
+                        'last_nudged_at' => now(),
+                    ]);
+
+                $push = app(\App\Services\PushService::class);
+                $token = $g->fcm_token ?: ($g->device_token ?? null);
+                $push->send($token, 'Guarantor Reminder', sprintf('Please review and respond to loan %s for %s.', $loan->qard_id_string, $loan->user?->name ?? 'member'), [
+                    'type' => 'guarantor_reminder_manual',
+                    'loan_id' => $loan->id,
+                    'qard_id_string' => $loan->qard_id_string,
+                ]);
+
+                $nudgedIds[] = $g->id;
+            } catch (\Throwable $e) {
+                // ignore push failures to avoid blocking
+            }
+        }
+
+        // Audit
+        ShariahAudit::log($user, 'nudge_guarantors', [
+            'loan_id' => $loan->id,
+            'qard_id_string' => $loan->qard_id_string,
+            'count' => count($nudgedIds),
+            'guarantor_ids' => $nudgedIds,
+        ]);
+
+        return response()->json([
+            'message' => 'Nudges sent to pending guarantors',
+            'nudged_count' => count($nudgedIds),
+            'guarantor_ids' => $nudgedIds,
+        ]);
+    }
+
+    /**
+     * Borrower: Escalate stalled guarantor approvals to admins.
+     */
+    public function escalate(Request $request, int $loanId)
+    {
+        $user = $request->user();
+        $loan = QardHasan::with(['guarantors', 'user'])
+            ->where('id', $loanId)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $pending = $loan->guarantors->filter(fn($g) => ($g->pivot?->status) === 'pending');
+        if ($pending->isEmpty()) {
+            return response()->json(['message' => 'No pending guarantors to escalate.'], 422);
+        }
+
+        // Mark escalation timestamp on all pending pivots
+        $affected = \Illuminate\Support\Facades\DB::table('qard_hasan_guarantors')
+            ->where('qard_hasan_id', $loan->id)
+            ->where('status', 'pending')
+            ->whereNull('escalated_at')
+            ->update(['escalated_at' => now()]);
+
+        // Notify admins (best-effort)
+        try {
+            $admins = \App\Models\User::query()->where('is_admin', true)->get();
+            $push = app(\App\Services\PushService::class);
+            foreach ($admins as $a) {
+                $token = $a->fcm_token ?: ($a->device_token ?? null);
+                $push->send($token, 'Guarantor Escalation', sprintf('Loan %s for %s requires attention. Pending guarantors: %d', $loan->qard_id_string, $loan->user?->name ?? 'member', $pending->count()), [
+                    'type' => 'guarantor_escalation',
+                    'loan_id' => $loan->id,
+                    'qard_id_string' => $loan->qard_id_string,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        // Audit
+        ShariahAudit::log($user, 'escalate_guarantors', [
+            'loan_id' => $loan->id,
+            'qard_id_string' => $loan->qard_id_string,
+            'pending_count' => $pending->count(),
+            'affected_rows' => (int) $affected,
+        ]);
+
+        return response()->json([
+            'message' => 'Escalation sent to admins',
+            'pending_count' => $pending->count(),
         ]);
     }
 }

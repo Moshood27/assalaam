@@ -136,6 +136,26 @@ class UserResource extends Resource
                             ->prefix('₦')
                             ->default(0),
                     ])->columns(3),
+                Forms\Components\Section::make('Bank Details')
+                    ->schema([
+                        Forms\Components\TextInput::make('bank_name')
+                            ->label('Bank Name')
+                            ->maxLength(120)
+                            ->disabled()
+                            ->helperText('Set by member via mobile app after verification'),
+                        Forms\Components\TextInput::make('bank_code')
+                            ->label('Bank Code')
+                            ->maxLength(20)
+                            ->disabled(),
+                        Forms\Components\TextInput::make('account_number')
+                            ->label('Account Number')
+                            ->maxLength(20)
+                            ->disabled(),
+                        Forms\Components\TextInput::make('account_name')
+                            ->label('Account Name (Verified)')
+                            ->maxLength(255)
+                            ->disabled(),
+                    ])->columns(2),
             ]);
     }
 
@@ -189,6 +209,8 @@ class UserResource extends Resource
                 TextColumn::make('membership_number')->label('Member #')->searchable(),
                 TextColumn::make('balance')->money('ngn', true)->sortable(),
                 TextColumn::make('created_at')->label('Date Joined')->date(),
+                TextColumn::make('account_number')->label('Bank Acct #')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('account_name')->label('Bank Acct Name')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([])
             ->headerActions([

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class ProfileController extends Controller
 {
@@ -73,6 +74,14 @@ class ProfileController extends Controller
             // Transaction PIN status for improved UX on the client
             'pin_set' => method_exists($user, 'hasTransactionPin') ? $user->hasTransactionPin() : (!empty($user->transaction_pin_hash)),
             'pin_set_at' => $user->pin_set_at ? $user->pin_set_at->toDateTimeString() : null,
+            // Member's verified cash-out bank details (if saved)
+            'bank_details' => [
+                'bank_code' => $user->bank_code,
+                'bank_name' => $user->bank_name,
+                'account_number' => $user->account_number,
+                'account_name' => $user->account_name,
+                'has_verified' => (bool) ($user->bank_code && $user->account_number && $user->account_name),
+            ],
         ]);
     }
 
@@ -246,6 +255,114 @@ class ProfileController extends Controller
             'device_token' => $user->device_token,
             'fcm_token' => $user->fcm_token ?? null,
             'platform' => $data['platform'] ?? null,
+        ]);
+    }
+
+    /**
+     * Resolve and (optionally) save verified bank details for the authenticated user.
+     * Workflow:
+     *  - Client posts bank_code, account_number, optional bank_name and gateway.
+     *  - We call provider's Resolve Account API to fetch the registered account name.
+     *  - If confirm=false/missing: return the resolved name for user confirmation (do not save).
+     *  - If confirm=true: persist bank_name, bank_code, account_number, account_name on the user.
+     */
+    public function saveBankDetails(Request $request)
+    {
+        $user = $request->user();
+
+        // Restrict this endpoint to non-admin members only
+        if (method_exists($user, 'getAttribute') && (bool) ($user->is_admin ?? false)) {
+            return response()->json(['message' => 'Admins must use /api/admin/profile endpoints.'], 403);
+        }
+
+        $data = $request->validate([
+            'bank_code' => ['required', 'string', 'max:20'],
+            'bank_name' => ['nullable', 'string', 'max:120'],
+            'account_number' => ['required', 'regex:/^\d{10}$/'],
+            'gateway' => ['nullable', 'in:paystack,flutterwave'],
+            'confirm' => ['nullable', 'boolean'],
+        ]);
+
+        $gateway = strtolower($data['gateway'] ?? 'paystack');
+        $bankCode = trim($data['bank_code']);
+        $bankNameInput = trim((string) ($data['bank_name'] ?? '')) ?: null;
+        $accountNumber = preg_replace('/[^0-9]/', '', $data['account_number']);
+
+        $resolvedName = null;
+        $provider = null;
+
+        if ($gateway === 'flutterwave') {
+            $secret = config('services.flutterwave.secret_key');
+            if (!$secret) {
+                return response()->json(['message' => 'Payment provider not configured'], 500);
+            }
+            $provider = 'flutterwave';
+            $resp = Http::withToken($secret)
+                ->acceptJson()
+                ->get('https://api.flutterwave.com/v3/accounts/resolve', [
+                    'account_number' => $accountNumber,
+                    'account_bank' => $bankCode,
+                ]);
+            if (!$resp->ok() || (strtolower((string) $resp->json('status')) !== 'success')) {
+                return response()->json([
+                    'message' => 'Failed to resolve bank account',
+                    'errors' => $resp->json('message') ?? 'Unknown error',
+                ], 422);
+            }
+            $resolvedName = trim((string) ($resp->json('data.account_name') ?? '')) ?: null;
+        } else { // paystack (default)
+            $secret = config('services.paystack.secret_key');
+            if (!$secret) {
+                return response()->json(['message' => 'Payment provider not configured'], 500);
+            }
+            $provider = 'paystack';
+            $resp = Http::withToken($secret)
+                ->acceptJson()
+                ->get('https://api.paystack.co/bank/resolve', [
+                    'account_number' => $accountNumber,
+                    'bank_code' => $bankCode,
+                ]);
+            if (!$resp->ok() || !($resp->json('status') === true)) {
+                return response()->json([
+                    'message' => 'Failed to resolve bank account',
+                    'errors' => $resp->json('message') ?? 'Unknown error',
+                ], 422);
+            }
+            $resolvedName = trim((string) ($resp->json('data.account_name') ?? '')) ?: null;
+        }
+
+        if (!$resolvedName) {
+            return response()->json([
+                'message' => 'Could not determine account name from provider response.'], 422);
+        }
+
+        $confirm = (bool) ($data['confirm'] ?? false);
+        if (!$confirm) {
+            return response()->json([
+                'resolved_name' => $resolvedName,
+                'bank_code' => $bankCode,
+                'bank_name' => $bankNameInput,
+                'account_number' => $accountNumber,
+                'provider' => $provider,
+                'message' => 'Confirm to save these bank details.',
+            ]);
+        }
+
+        // Save verified details on user
+        $user->bank_code = $bankCode;
+        $user->bank_name = $bankNameInput; // may be null; UI can show just code if name unknown
+        $user->account_number = $accountNumber;
+        $user->account_name = $resolvedName;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Bank details saved successfully.',
+            'bank_details' => [
+                'bank_code' => $user->bank_code,
+                'bank_name' => $user->bank_name,
+                'account_number' => $user->account_number,
+                'account_name' => $user->account_name,
+            ],
         ]);
     }
 }

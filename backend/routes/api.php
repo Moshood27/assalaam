@@ -85,6 +85,8 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/profile/passport', [ProfileController::class, 'uploadPassport']);
     Route::post('/profile/email', [ProfileController::class, 'updateEmail']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
+    // Bank details: resolve and save (2-step with confirm flag)
+    Route::post('/profile/bank-details', [ProfileController::class, 'saveBankDetails']);
 
     // Security - Transaction PIN
     Route::post('/security/pin/set', [SecurityController::class, 'setPin'])->middleware('throttle:api');
@@ -101,6 +103,17 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/schemes', [PaymentController::class, 'getSchemes']);
     Route::post('/initiate-payment', [PaymentController::class, 'initiate']);
     Route::post('/verify-payment', [PaymentController::class, 'verify']);
+
+    // Wallet
+    Route::get('/wallet', [\App\Http\Controllers\Api\WalletController::class, 'getWallet']);
+    Route::get('/wallet/transactions', [\App\Http\Controllers\Api\WalletController::class, 'transactions']);
+    Route::get('/wallet/transactions/{id}/receipt', [ExportController::class, 'downloadWalletReceipt']);
+    Route::post('/wallet/topup/initiate', [\App\Http\Controllers\Api\WalletController::class, 'initiateTopup']);
+    Route::post('/wallet/allocate', [\App\Http\Controllers\Api\WalletController::class, 'allocateToSchemes']);
+    Route::get('/wallet/transfer/resolve', [\App\Http\Controllers\Api\WalletController::class, 'resolveRecipient']);
+    Route::post('/wallet/transfer', [\App\Http\Controllers\Api\WalletController::class, 'transfer']);
+    Route::post('/wallet/withdraw', [\App\Http\Controllers\Api\WalletController::class, 'withdraw']);
+    Route::get('/wallet/withdrawals', [\App\Http\Controllers\Api\WalletController::class, 'withdrawals']);
 
     // Projects (Pooled Investments)
     Route::get('/projects', [ProjectController::class, 'index']);
@@ -164,6 +177,9 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/guarantor/requests', [GuarantorController::class, 'listRequests']);
     Route::post('/guarantor/requests/{id}/accept', [GuarantorController::class, 'accept']);
     Route::post('/guarantor/requests/{id}/decline', [GuarantorController::class, 'decline']);
+    // Borrower actions
+    Route::post('/guarantor/loans/{id}/nudge', [GuarantorController::class, 'nudge']);
+    Route::post('/guarantor/loans/{id}/escalate', [GuarantorController::class, 'escalate']);
 
     // Member reports
     Route::get('/reports/contribution-mix', [ReportsController::class, 'contributionMix']);

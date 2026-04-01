@@ -101,12 +101,29 @@ class ReportsController extends Controller
         }
         unset($item);
 
+        // Determine next due installment helper
+        $nextDue = null;
+        foreach ($schedule as $it) {
+            if (($it['status'] ?? 'pending') !== 'paid') {
+                $dueAmt = (float) $it['installment_amount'] - (float) ($it['paid_amount'] ?? 0.0);
+                if ($dueAmt > 0.0) {
+                    $nextDue = [
+                        'sequence' => $it['sequence'],
+                        'due_date' => $it['due_date'],
+                        'amount_due' => round($dueAmt, 2),
+                    ];
+                    break;
+                }
+            }
+        }
+
         return response()->json([
             'loan' => $loan,
             'repayments' => $repayments,
             'schedule' => $schedule,
             'paid_total' => $paidTotal,
             'remaining_principal' => round($remaining, 2),
+            'next_due' => $nextDue,
         ]);
     }
 

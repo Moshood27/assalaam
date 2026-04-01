@@ -71,7 +71,7 @@ class QardHasan extends Model
     {
         return $this->belongsToMany(User::class, 'qard_hasan_guarantors', 'qard_hasan_id', 'guarantor_id')
             ->withTimestamps()
-            ->withPivot(['status', 'token', 'responded_at']);
+            ->withPivot(['status', 'token', 'responded_at', 'nudge_count', 'last_nudged_at', 'escalated_at']);
     }
 
     public function allGuarantorsAccepted(): bool

@@ -46,6 +46,10 @@ class User extends Authenticatable implements FilamentUser
         'bvn',
         'bvn_verified_at',
         'dva_verification_meta',
+        'bank_name',
+        'bank_code',
+        'account_number',
+        'account_name',
     ];
 
     /**
@@ -214,5 +218,67 @@ class User extends Authenticatable implements FilamentUser
         return true;
 
         // Later change to: return $this->is_admin === true;
+    }
+
+    /**
+     * Compute withdrawable breakdown for the wallet using tiered logic.
+     * Debits consume restricted credits first, so available_for_withdrawal reflects
+     * what can be cashed out to bank right now.
+     */
+    public function withdrawableBreakdown(): array
+    {
+        // Sum credits that are withdrawable (or older rows without the flag)
+        $creditsWithdrawable = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'credit')
+            ->where(function ($q) {
+                $q->where('withdrawable', true)->orWhereNull('withdrawable');
+            })
+            ->sum('amount');
+
+        // Sum credits explicitly restricted (withdrawable=false)
+        $creditsRestricted = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'credit')
+            ->where('withdrawable', false)
+            ->sum('amount');
+
+        // Sum all debits
+        $totalDebits = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'debit')
+            ->sum('amount');
+
+        // Identify cash-out debits (bank withdrawals) that must reduce withdrawable immediately
+        $cashoutDebits = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'debit')
+            ->whereIn('source', ['bank_withdrawal'])
+            ->sum('amount');
+
+        $otherDebits = max(0.0, $totalDebits - $cashoutDebits);
+
+        // For non-cashout spending, consume restricted first, then withdrawable
+        $debitedFromWithdrawableOther = max(0.0, $otherDebits - $creditsRestricted);
+
+        // Total debited from withdrawable = cash-out debits (always from withdrawable) + spillover from other debits
+        $debitedFromWithdrawable = $cashoutDebits + $debitedFromWithdrawableOther;
+        $remainingWithdrawable = max(0.0, $creditsWithdrawable - $debitedFromWithdrawable);
+
+        $available = min((float) $this->balance, $remainingWithdrawable);
+
+        return [
+            'credits_withdrawable' => round($creditsWithdrawable, 2),
+            'credits_restricted' => round($creditsRestricted, 2),
+            'total_debits' => round($totalDebits, 2),
+            'cashout_debits' => round($cashoutDebits, 2),
+            'remaining_withdrawable' => round($remainingWithdrawable, 2),
+            'available_for_withdrawal' => round($available, 2),
+        ];
+    }
+
+    /**
+     * Convenience helper: numeric available-for-withdrawal.
+     */
+    public function availableForWithdrawal(): float
+    {
+        $b = $this->withdrawableBreakdown();
+        return (float) ($b['available_for_withdrawal'] ?? 0.0);
     }
 }

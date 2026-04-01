@@ -98,6 +98,55 @@
         <div class="mt-3 text-xs text-gray-500">KYC status is used to prevent fraud and verify identity.</div>
       </div>
 
+      <!-- Bank Settings -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Bank Settings</p>
+        <div v-if="profile.bank_details?.has_verified" class="space-y-2">
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <p class="text-[10px] text-slate-400 font-bold uppercase">Bank</p>
+              <p class="font-bold text-slate-800">{{ profile.bank_details.bank_name || profile.bank_details.bank_code }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400 font-bold uppercase">Account Number</p>
+              <p class="font-bold text-slate-800">{{ profile.bank_details.account_number }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400 font-bold uppercase">Account Name (Verified)</p>
+              <p class="font-bold text-slate-800">{{ profile.bank_details.account_name }}</p>
+            </div>
+          </div>
+          <p class="text-[10px] text-slate-500 mt-2">Your bank details are verified. For security, changes may require OTP verification in a future update.</p>
+        </div>
+        <div v-else class="space-y-3">
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold uppercase">Bank</label>
+              <select v-model="bankForm.bank_code" class="mt-1 w-full border rounded-xl p-3 bg-slate-50 text-sm">
+                <option disabled value="">Select Bank</option>
+                <option v-for="b in bankOptions" :key="b.code" :value="b.code">{{ b.name }} ({{ b.code }})</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold uppercase">Account Number</label>
+              <input v-model="bankForm.account_number" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit account number" class="mt-1 w-full border rounded-xl p-3 bg-slate-50 text-sm" />
+              <p v-if="bankErrors.account_number" class="text-red-600 text-xs mt-1">{{ bankErrors.account_number }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button @click="resolveBank" :disabled="bankBusy || !bankForm.bank_code || bankDigits.length!==10" class="px-4 py-2 rounded-xl text-white font-bold" :class="bankBusy ? 'bg-slate-400' : 'bg-emerald-700 hover:bg-emerald-800'">{{ bankBusy ? 'Resolving…' : 'Resolve Account Name' }}</button>
+            <span v-if="bankMessage" :class="bankError ? 'text-rose-700' : 'text-emerald-700'" class="text-[12px]">{{ bankMessage }}</span>
+          </div>
+          <div v-if="resolvedName" class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800">
+            Resolved Name: <span class="font-bold">{{ resolvedName }}</span>
+          </div>
+          <div v-if="resolvedName" class="flex items-center gap-2">
+            <button @click="saveBank" :disabled="bankBusy" class="px-4 py-2 rounded-xl text-white font-bold" :class="bankBusy ? 'bg-slate-400' : 'bg-emerald-700 hover:bg-emerald-800'">{{ bankBusy ? 'Saving…' : 'Save Bank Details' }}</button>
+            <button @click="clearResolved" :disabled="bankBusy" class="px-4 py-2 rounded-xl text-emerald-700 font-bold bg-emerald-50 hover:bg-emerald-100">Change</button>
+          </div>
+          <p class="text-[10px] text-slate-500">We verify your bank account via Paystack/Flutterwave to prevent errors. You’ll see the registered account name before saving.</p>
+        </div>
+      </div>
 
       <!-- Change Email -->
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
@@ -228,7 +277,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '../http'
 import getImageUrl from '../utils/image'
@@ -239,6 +288,30 @@ const profile = ref({})
 const bvnAssigned = ref(false)
 const uploading = ref(false)
 const fileInput = ref(null)
+
+// Bank details (verification & save)
+const bankForm = ref({ bank_code: '', account_number: '', gateway: 'paystack' })
+const bankErrors = ref({})
+const bankBusy = ref(false)
+const bankMessage = ref('')
+const bankError = ref(false)
+const resolvedName = ref('')
+const bankOptions = ref([
+  { code: '011', name: 'First Bank of Nigeria' },
+  { code: '058', name: 'Guaranty Trust Bank (GTBank)' },
+  { code: '044', name: 'Access Bank' },
+  { code: '057', name: 'Zenith Bank' },
+  { code: '033', name: 'United Bank for Africa (UBA)' },
+  { code: '214', name: 'First City Monument Bank (FCMB)' },
+  { code: '070', name: 'Fidelity Bank' },
+  { code: '032', name: 'Union Bank' },
+  { code: '076', name: 'Polaris Bank' },
+  { code: '035', name: 'Wema Bank' },
+  { code: '232', name: 'Sterling Bank' },
+  { code: '050', name: 'Ecobank Nigeria' },
+  { code: '082', name: 'Keystone Bank' },
+])
+const bankDigits = computed(() => String(bankForm.value.account_number || '').replace(/\D/g, ''))
 
 // Update Email form state
 const emailForm = ref({ email: '', password: '' })
@@ -293,6 +366,82 @@ const onFileChange = async (e) => {
     uploading.value = false
     if (fileInput.value) fileInput.value.value = ''
   }
+}
+
+const resolveBank = async () => {
+  bankErrors.value = {}
+  bankMessage.value = ''
+  bankError.value = false
+  resolvedName.value = ''
+  // Validate inputs
+  if (!bankForm.value.bank_code) {
+    bankMessage.value = 'Please select a bank.'
+    bankError.value = true
+    return
+  }
+  if (bankDigits.value.length !== 10) {
+    bankErrors.value.account_number = 'Enter a valid 10-digit account number.'
+    return
+  }
+  bankBusy.value = true
+  try {
+    const bankName = (bankOptions.value.find(b => b.code === bankForm.value.bank_code)?.name) || null
+    const { data } = await axios.post('/api/profile/bank-details', {
+      bank_code: bankForm.value.bank_code,
+      bank_name: bankName,
+      account_number: bankDigits.value,
+      gateway: bankForm.value.gateway || 'paystack',
+      confirm: false,
+    })
+    resolvedName.value = data?.resolved_name || ''
+    bankMessage.value = resolvedName.value ? 'Is this your account name?' : (data?.message || 'Resolved.')
+    bankError.value = false
+  } catch (err) {
+    bankError.value = true
+    bankMessage.value = err?.response?.data?.message || 'Failed to resolve bank account.'
+  } finally {
+    bankBusy.value = false
+  }
+}
+
+const saveBank = async () => {
+  if (!resolvedName.value) {
+    bankMessage.value = 'Resolve your bank account first.'
+    bankError.value = true
+    return
+  }
+  bankBusy.value = true
+  try {
+    const bankName = (bankOptions.value.find(b => b.code === bankForm.value.bank_code)?.name) || null
+    const { data } = await axios.post('/api/profile/bank-details', {
+      bank_code: bankForm.value.bank_code,
+      bank_name: bankName,
+      account_number: bankDigits.value,
+      gateway: bankForm.value.gateway || 'paystack',
+      confirm: true,
+    })
+    // Update profile object with verified details
+    profile.value.bank_details = data?.bank_details || {
+      bank_code: bankForm.value.bank_code,
+      bank_name: bankName,
+      account_number: bankDigits.value,
+      account_name: resolvedName.value,
+      has_verified: true,
+    }
+    bankMessage.value = data?.message || 'Bank details saved successfully.'
+    bankError.value = false
+  } catch (err) {
+    bankError.value = true
+    bankMessage.value = err?.response?.data?.message || 'Failed to save bank details.'
+  } finally {
+    bankBusy.value = false
+  }
+}
+
+const clearResolved = () => {
+  resolvedName.value = ''
+  bankMessage.value = ''
+  bankError.value = false
 }
 
 const updateEmail = async () => {

@@ -236,12 +236,28 @@ class AdminReportsController extends Controller
     public function auditTrail(Request $request)
     {
         $limit = (int) $request->query('limit', 100);
-        $logs = ShariahAuditLog::query()
-            ->orderByDesc('created_at')
-            ->limit($limit)
-            ->get();
+        $action = $request->query('action');
+        $userId = $request->query('user_id');
+        $from = $request->query('from');
+        $to = $request->query('to');
+        $format = strtolower((string) $request->query('format', 'json'));
 
-        // Attach user names in a single query
+        $q = ShariahAuditLog::query();
+        if (!empty($action)) {
+            $q->where('action', 'like', '%' . $action . '%');
+        }
+        if (!empty($userId)) {
+            $q->where('user_id', (int) $userId);
+        }
+        if (!empty($from)) {
+            $q->where('created_at', '>=', \Illuminate\Support\Carbon::parse($from)->startOfDay());
+        }
+        if (!empty($to)) {
+            $q->where('created_at', '<=', \Illuminate\Support\Carbon::parse($to)->endOfDay());
+        }
+
+        $logs = $q->orderByDesc('created_at')->limit($limit)->get();
+
         $userMap = User::query()
             ->whereIn('id', $logs->pluck('user_id')->filter()->unique()->values())
             ->pluck('name', 'id');
@@ -255,7 +271,37 @@ class AdminReportsController extends Controller
                 'payload' => $l->payload,
                 'created_at' => optional($l->created_at)->toISOString(),
             ];
-        });
+        })->values();
+
+        if ($format === 'csv') {
+            $lines = [];
+            $lines[] = 'id,user_id,user_name,action,created_at';
+
+            $esc = function ($v) {
+                if (is_array($v) || is_object($v)) {
+                    $v = json_encode($v);
+                }
+                $s = (string) ($v ?? '');
+                $s = str_replace(["\r", "\n"], ' ', $s);
+                $s = str_replace('"', '""', $s);
+                return '"' . $s . '"';
+            };
+
+            foreach ($rows as $r) {
+                $lines[] = implode(',', [
+                    $esc($r['id'] ?? ''),
+                    $esc($r['user_id'] ?? ''),
+                    $esc($r['user_name'] ?? ''),
+                    $esc($r['action'] ?? ''),
+                    $esc($r['created_at'] ?? ''),
+                ]);
+            }
+
+            $csv = implode("\n", $lines);
+            return response($csv)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', 'attachment; filename="audit_trail.csv"');
+        }
 
         return response()->json([
             'rows' => $rows,

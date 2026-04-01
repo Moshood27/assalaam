@@ -222,10 +222,27 @@ class LoanController extends Controller
             $fee = (float) ($q->admin_fee_flat ?? 0) + ($principalAmount * ((float) ($q->admin_fee_pct ?? 0) / 100));
             $credit = max($principalAmount - $fee, 0);
 
-            DB::transaction(function () use ($q, $user, $credit) {
+            $reference = 'QHDISB-'.now()->format('YmdHis').'-'.$user->id.'-'.Str::upper(Str::random(6));
+            DB::transaction(function () use ($q, $user, $credit, $reference) {
                 // Ensure status is active and credit wallet
                 $q->update(['status' => 'active']);
                 $user->increment('balance', $credit);
+
+                // Record wallet transaction for loan disbursement (default: internal credit, non-withdrawable)
+                WalletTransaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'credit',
+                    'amount' => $credit,
+                    'reference' => $reference,
+                    'source' => 'loan_disbursement',
+                    'withdrawable' => false,
+                    'meta' => [
+                        'qard_hasan_id' => $q->id,
+                        'qard_id_string' => $q->qard_id_string,
+                        'mode' => 'internal',
+                        'auto_instant' => true,
+                    ],
+                ]);
             });
 
             // Refresh relations
@@ -393,7 +410,7 @@ class LoanController extends Controller
     {
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'source' => ['nullable', 'in:auto,wallet,paystack,flutterwave'],
+            'source' => ['nullable', 'in:auto,wallet,paystack,flutterwave,bank_transfer,ussd'],
             'callback_url' => ['nullable', 'url'],
         ]);
 
@@ -431,6 +448,75 @@ class LoanController extends Controller
             $wasCapped = $inputAmount > $before['remaining_principal'];
 
             $source = $data['source'] ?? 'auto';
+
+            // Offline instruction paths (bank transfer / USSD)
+            if (in_array($source, ['bank_transfer', 'ussd'], true)) {
+                $va = [
+                    'account_number' => $user->dva_account_number,
+                    'account_name' => $user->dva_account_name,
+                    'bank_name' => $user->dva_bank_name,
+                ];
+                $hasVa = !empty($va['account_number']) && !empty($va['bank_name']);
+
+                // Best-effort audit log
+                try {
+                    ShariahAudit::log($user, 'repay_qard_hasan_instructions', [
+                        'loan_id' => $q->id,
+                        'qard' => $q->qard_id_string,
+                        'source' => $source,
+                        'expected_amount' => $appliedAmount,
+                        'has_virtual_account' => $hasVa,
+                    ]);
+                } catch (\Throwable $e) {}
+
+                $steps = [];
+                if ($hasVa) {
+                    if ($source === 'bank_transfer') {
+                        $steps = [
+                            'Open your banking app and make a transfer to the virtual account below.',
+                            'Use the loan ID ' . $q->qard_id_string . ' as narration/reference if your bank supports it.',
+                            'Once funds reflect in your wallet, return to this screen and choose Wallet as the source to apply repayment instantly.'
+                        ];
+                    } else { // ussd
+                        $steps = [
+                            'Dial your bank\'s USSD code and choose transfer.',
+                            'Transfer the amount to the virtual account below.',
+                            'Use the loan ID ' . $q->qard_id_string . ' as narration/reference if prompted.',
+                            'After funds reflect in your wallet, choose Wallet as the source to apply repayment.'
+                        ];
+                    }
+                } else {
+                    $steps = [
+                        'Assign your dedicated virtual account first.',
+                        'Use the endpoint /api/virtual-account/assign from your profile settings to generate a virtual account.',
+                        'Then make a transfer/USSD payment to that account and repay using Wallet once funds reflect.'
+                    ];
+                }
+
+                return response()->json([
+                    'instructions' => [
+                        'method' => $source,
+                        'expected_amount' => $appliedAmount,
+                        'virtual_account' => $hasVa ? $va : null,
+                        'assign_endpoint' => $hasVa ? null : '/api/virtual-account/assign',
+                        'reference_hint' => $q->qard_id_string,
+                        'steps' => $steps,
+                        'note' => 'Transfers credit your wallet first; repayment is applied from wallet to maintain transparent records.'
+                    ],
+                    'summary' => [
+                        'amount_input' => $inputAmount,
+                        'amount_applied' => $appliedAmount,
+                        'capped' => $wasCapped,
+                        'before' => $before,
+                        'after' => [
+                            'paid_amount' => (float) $q->paid_amount,
+                            'remaining_principal' => $q->remaining_principal,
+                        ],
+                        'source' => $source,
+                        'initiated' => false,
+                    ],
+                ]);
+            }
 
             // Decide funding path
             $useWallet = $source === 'wallet' || ($source === 'auto' && ((float)$user->balance >= $appliedAmount));

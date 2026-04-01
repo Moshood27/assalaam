@@ -256,8 +256,24 @@ class QardHasanResource extends Resource
                     ->icon('heroicon-o-paper-airplane')
                     ->color('success')
                     ->visible(fn (QardHasan $record) => $record->status === 'pending')
-                    ->requiresConfirmation()
-                    ->action(function (QardHasan $record) {
+                    ->form([
+                        Forms\Components\Radio::make('disbursement_mode')
+                            ->label('Disbursement Mode')
+                            ->options([
+                                'internal' => 'Internal Credit (Default) — spend inside app; withdrawals disabled',
+                                'cash_out' => 'Cash-Out Enabled — allow withdrawal to bank',
+                            ])
+                            ->default('internal')
+                            ->inline(false)
+                            ->columns(1)
+                            ->required(),
+                        Forms\Components\Textarea::make('note')
+                            ->label('Internal Note (optional)')
+                            ->maxLength(200)
+                            ->rows(2)
+                            ->placeholder('e.g., Low liquidity this week — restrict to internal spend'),
+                    ])
+                    ->action(function (QardHasan $record, array $data) {
                         // Enforce 6-month membership before disbursement
                         if ($record->user && method_exists($record->user, 'monthsInSystem') && $record->user->monthsInSystem() < 6) {
                             Notification::make()
@@ -289,10 +305,45 @@ class QardHasanResource extends Resource
                         $fee = (float) $record->admin_fee_flat + ($principal * ((float) $record->admin_fee_pct / 100));
                         $credit = max($principal - $fee, 0);
 
+                        $mode = $data['disbursement_mode'] ?? 'internal';
+                        $withdrawable = $mode === 'cash_out';
+
+                        // If admin selected Cash-Out, ensure member has verified bank details
+                        if ($withdrawable) {
+                            $member = $record->user?->fresh();
+                            $hasBank = $member && !empty($member->bank_code) && !empty($member->account_number) && !empty($member->account_name);
+                            if (!$hasBank) {
+                                Notification::make()
+                                    ->title('Bank details required')
+                                    ->body('Member has no verified bank details. Only Internal Credit is allowed. Ask the member to add bank details in Profile > Bank Settings.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                        }
+
+                        $reference = 'QHDISB-'.now()->format('YmdHis').'-'.$record->user_id.'-'.strtoupper(Str::random(6));
+
                         // Disburse within transaction
-                        DB::transaction(function () use ($record, $credit) {
+                        DB::transaction(function () use ($record, $credit, $withdrawable, $reference, $mode, $data) {
                             // Credit member wallet
                             $record->user->increment('balance', $credit);
+
+                            // Record wallet transaction with loan_disbursement source and withdrawable flag
+                            \App\Models\WalletTransaction::create([
+                                'user_id' => $record->user_id,
+                                'type' => 'credit',
+                                'amount' => $credit,
+                                'reference' => $reference,
+                                'source' => 'loan_disbursement',
+                                'withdrawable' => $withdrawable,
+                                'meta' => [
+                                    'qard_hasan_id' => $record->id,
+                                    'qard_id_string' => $record->qard_id_string,
+                                    'mode' => $mode,
+                                    'note' => trim((string) ($data['note'] ?? '')) ?: null,
+                                ],
+                            ]);
 
                             // Mark loan as active (disbursed)
                             $record->update(['status' => 'active']);
@@ -323,7 +374,8 @@ class QardHasanResource extends Resource
                             if ($fresh) {
                                 $sms = app(\App\Services\SmsService::class);
                                 $push = app(\App\Services\PushService::class);
-                                $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet. Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($fresh->balance ?? 0), 2);
+                                $modeText = $withdrawable ? 'Cash-out enabled' : 'Internal use only';
+                                $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($fresh->balance ?? 0), 2);
                                 $sms->send($fresh->phone ?? null, $msg);
                                 $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
                                 $push->send($token, 'Loan Disbursed', $msg, [
@@ -332,6 +384,7 @@ class QardHasanResource extends Resource
                                     'qard_id_string' => $record->qard_id_string,
                                     'credited_amount' => $credit,
                                     'balance' => (float) ($fresh->balance ?? 0),
+                                    'withdrawable' => $withdrawable,
                                 ]);
                             }
                         } catch (\Throwable $e) {
@@ -341,6 +394,61 @@ class QardHasanResource extends Resource
                         Notification::make()
                             ->title('Loan disbursed')
                             ->body('The loan has been disbursed and member wallet credited. Emails sent to member and admins (if configured).')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('toggle_cash_out')
+                    ->label('Toggle Cash-Out Permission')
+                    ->icon('heroicon-o-adjustments-vertical')
+                    ->color('warning')
+                    ->visible(fn (QardHasan $record) => $record->status === 'active')
+                    ->form([
+                        Forms\Components\Toggle::make('enable_cash_out')
+                            ->label('Allow Withdrawal to Bank for this Loan Disbursement')
+                            ->default(false),
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Reason (optional)')
+                            ->maxLength(200)
+                            ->rows(2),
+                    ])
+                    ->action(function (QardHasan $record, array $data) {
+                        $enable = (bool) ($data['enable_cash_out'] ?? false);
+                        // Find the wallet transaction for this loan disbursement
+                        $txn = \App\Models\WalletTransaction::query()
+                            ->where('user_id', $record->user_id)
+                            ->where('source', 'loan_disbursement')
+                            ->where('meta->qard_hasan_id', $record->id)
+                            ->orderByDesc('id')
+                            ->first();
+                        if (!$txn) {
+                            Notification::make()
+                                ->title('No disbursement record found')
+                                ->body('Could not find the wallet transaction for this loan disbursement.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+                        $txn->withdrawable = $enable;
+                        $meta = (array) ($txn->meta ?? []);
+                        $meta['admin_toggle_reason'] = trim((string) ($data['reason'] ?? '')) ?: null;
+                        $meta['admin_toggled_at'] = now()->toISOString();
+                        $meta['admin_toggled_by'] = auth()->id();
+                        $txn->meta = $meta;
+                        $txn->save();
+
+                        // Best-effort notify member via SMS
+                        try {
+                            $record->loadMissing('user');
+                            $sms = app(\App\Services\SmsService::class);
+                            $msg = $enable
+                                ? ('Cash-out ENABLED for loan '.($record->qard_id_string).'. You can now withdraw the funds to your bank.')
+                                : ('Cash-out DISABLED for loan '.($record->qard_id_string).'. Withdrawal to bank is restricted; you can still spend inside the app.');
+                            $sms->send($record->user?->phone ?? null, $msg);
+                        } catch (\Throwable $e) {}
+
+                        Notification::make()
+                            ->title('Cash-out permission updated')
+                            ->body('Withdrawable flag for the disbursement has been '.($enable ? 'enabled' : 'disabled').'.')
                             ->success()
                             ->send();
                     }),

@@ -11,6 +11,10 @@
       <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl">
         <p class="text-emerald-100 text-sm">Available Balance</p>
         <h2 class="text-4xl font-bold mt-1">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.balance) }}</h2>
+        <div class="mt-2 text-emerald-100 text-xs flex justify-between gap-2">
+          <span>Available for Withdrawal</span>
+          <span class="font-bold">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.available_for_withdrawal || 0) }}</span>
+        </div>
         <div class="mt-5 flex gap-2">
           <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">Allocate to Schemes</button>
           <button @click="showFund = !showFund" class="bg-white text-emerald-800 px-4 py-2 rounded-xl text-xs font-bold">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
@@ -124,6 +128,30 @@
           {{ loading ? 'Transferring…' : 'Send' }}
         </button>
         <p class="text-[10px] text-slate-500 mt-2">You will confirm with your Transaction PIN.</p>
+      </div>
+
+      <!-- Withdrawal Breakdown -->
+      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <h3 class="font-bold text-slate-800 mb-3">Withdrawal Breakdown</h3>
+        <div class="grid grid-cols-1 gap-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Credits (Withdrawable)</span>
+            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_withdrawable || 0) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Credits (Restricted)</span>
+            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_restricted || 0) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Total Debits</span>
+            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.total_debits || 0) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Remaining Withdrawable</span>
+            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.remaining_withdrawable || 0) }}</span>
+          </div>
+        </div>
+        <p class="text-[10px] text-slate-500 mt-2">Note: Loan disbursements are marked as restricted by default and cannot be withdrawn to bank unless enabled by Admin. You can still spend restricted funds on Airtime/Data/Store inside the app.</p>
       </div>
 
       <!-- Recent Wallet Transactions -->
