@@ -28,9 +28,10 @@ axios.interceptors.response.use(
   (error) => {
     const status = error?.response?.status
     // 401 = Unauthorized (expired/invalid token)
-    // 403 = Forbidden (e.g., user inactive/suspended)
     // 423 = Locked (account locked)
-    if (status === 401 || status === 403 || status === 423) {
+    // Note: 403 is also used by the API for business logic errors (e.g., invalid PIN).
+    // Do NOT auto-logout on 403 to avoid redirecting members during normal error flows.
+    if (status === 401 || status === 423) {
       // Clear both member and admin tokens to be safe
       const hadMember = !!localStorage.getItem('token')
       const hadAdmin = !!localStorage.getItem('admin_token')

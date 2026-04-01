@@ -422,11 +422,13 @@ class WalletController extends Controller
             return response()->json(['message' => 'Insufficient wallet balance'], 422);
         }
 
-        $reference = 'P2P_'.now()->format('YmdHis').'_FROM_'.$sender->id.'_'.bin2hex(random_bytes(3));
+        $groupRef = 'P2P_'.now()->format('YmdHis').'_FROM_'.$sender->id.'_'.bin2hex(random_bytes(3));
+        $referenceDebit = $groupRef.'_D';
+        $referenceCredit = $groupRef.'_C';
         $insufficient = false;
         $finalSenderBal = null;
 
-        DB::transaction(function () use ($sender, $recipient, $amount, $reference, $validated, &$insufficient, &$finalSenderBal) {
+        DB::transaction(function () use ($sender, $recipient, $amount, $groupRef, $referenceDebit, $referenceCredit, $validated, &$insufficient, &$finalSenderBal) {
             // Lock rows in ascending order to reduce deadlocks
             $ids = [$sender->id, $recipient->id];
             sort($ids);
@@ -447,6 +449,7 @@ class WalletController extends Controller
                 'to_user_id' => $lockedRecipient->id,
                 'to_name' => $lockedRecipient->name,
                 'to_membership' => $lockedRecipient->membership_number,
+                'group_ref' => $groupRef,
             ];
             if (!empty($validated['note'])) $metaDebit['note'] = $validated['note'];
 
@@ -454,6 +457,7 @@ class WalletController extends Controller
                 'from_user_id' => $lockedSender->id,
                 'from_name' => $lockedSender->name,
                 'from_membership' => $lockedSender->membership_number,
+                'group_ref' => $groupRef,
             ];
             if (!empty($validated['note'])) $metaCredit['note'] = $validated['note'];
 
@@ -461,7 +465,7 @@ class WalletController extends Controller
                 'user_id' => $lockedSender->id,
                 'type' => 'debit',
                 'amount' => $amount,
-                'reference' => $reference,
+                'reference' => $referenceDebit,
                 'source' => 'p2p_transfer',
                 'meta' => $metaDebit,
             ]);
@@ -470,7 +474,7 @@ class WalletController extends Controller
                 'user_id' => $lockedRecipient->id,
                 'type' => 'credit',
                 'amount' => $amount,
-                'reference' => $reference,
+                'reference' => $referenceCredit,
                 'source' => 'p2p_transfer',
                 'meta' => $metaCredit,
             ]);
@@ -485,16 +489,16 @@ class WalletController extends Controller
         // Best-effort SMS notifications
         try {
             $sms = app(\App\Services\SmsService::class);
-            $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->name.' ('.$recipient->membership_number.'). Ref: '.$reference.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
+            $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->name.' ('.$recipient->membership_number.'). Ref: '.$groupRef.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
             $sms->send($sender->phone ?? null, $msgFrom);
-            $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->name.' ('.$sender->membership_number.'). Ref: '.$reference.'.';
+            $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->name.' ('.$sender->membership_number.'). Ref: '.$groupRef.'.';
             $sms->send($recipient->phone ?? null, $msgTo);
         } catch (\Throwable $e) {
             // ignore
         }
 
         return response()->json([
-            'reference' => $reference,
+            'reference' => $groupRef,
             'debited' => $amount,
             'balance' => (float) $finalSenderBal,
             'recipient' => [

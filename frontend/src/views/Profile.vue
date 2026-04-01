@@ -5,7 +5,7 @@
         <button @click="$router.back()" class="text-2xl">⬅️</button>
         <h1 class="text-xl font-bold">Profile Information</h1>
       </div>
-      <button @click="$router.push('/settings')" class="text-sm font-bold text-emerald-700">Support</button>
+      <button @click="$router.push('/support')" class="text-sm font-bold text-emerald-700">Support</button>
     </header>
 
     <div class="p-4 space-y-4">
