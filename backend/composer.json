@@ -11,7 +11,7 @@
         "filament/filament": "^3.2",
         "kreait/laravel-firebase": "^7.1",
         "laravel/framework": "^12.0",
-        "laravel/reverb": "^1.1",
+        "laravel/reverb": "^1.9",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^2.2",
