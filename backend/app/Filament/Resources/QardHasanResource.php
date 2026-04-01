@@ -125,7 +125,7 @@ class QardHasanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['user', 'guarantors']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['user', 'guarantors', 'approvedBy']))
             ->columns([
                 TextColumn::make('created_at')->label('Created')->since()->sortable(),
                 TextColumn::make('user.name')->label('Member')->searchable(),
@@ -135,7 +135,10 @@ class QardHasanResource extends Resource
                     ->getStateUsing(fn (QardHasan $record) => $record->guarantors?->pluck('name')->filter()->implode(', ') ?: '-'),
                 TextColumn::make('qard_id_string')->label('Loan ID')->searchable(),
                 TextColumn::make('principal_amount')->money('ngn', true)->label('Principal')->sortable(),
+                TextColumn::make('credited_amount')->money('ngn', true)->label('Credited')->sortable(),
                 TextColumn::make('paid_amount')->money('ngn', true)->label('Paid')->sortable(),
+                TextColumn::make('approvedBy.name')->label('Approved By')->formatStateUsing(fn($state) => $state ?: '-')->toggleable(),
+                TextColumn::make('approved_at')->label('Approved At')->dateTime()->sortable()->toggleable(),
                 TextColumn::make('status')->badge()->colors([
                     'warning' => ['pending'],
                     'success' => ['active', 'completed'],

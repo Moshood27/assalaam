@@ -42,17 +42,24 @@ class QardHasan extends Model
         'admin_fee_flat' => 'float',
         'admin_fee_pct' => 'float',
         'paid_amount' => 'float',
+                'approved_at' => 'datetime',
     ];
 
     protected $appends = [
         'remaining_principal',
         'progress_pct',
         'is_completed',
+        'credited_amount',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function repayments()
@@ -101,5 +108,13 @@ class QardHasan extends Model
     public function getIsCompletedAttribute(): bool
     {
         return $this->status === 'completed' || $this->remaining_principal <= 0.0;
+    }
+
+    public function getCreditedAmountAttribute(): float
+    {
+        $p = (float) $this->principal_amount;
+        $fee = (float) $this->admin_fee_flat + ($p * ((float) $this->admin_fee_pct / 100));
+        $credit = $p - $fee;
+        return $credit > 0 ? round($credit, 2) : 0.0;
     }
 }
