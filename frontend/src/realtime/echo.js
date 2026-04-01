@@ -18,8 +18,9 @@ function resolveConfig() {
     const wsPort = Number(import.meta?.env?.VITE_REVERB_PORT || (isSecure ? 443 : 8080))
     const key = import.meta?.env?.VITE_REVERB_APP_KEY || 'local-key'
 
-    // Auth endpoint for private channels
-    const authEndpoint = '/api/broadcasting/auth'
+    // Auth endpoint for private channels (must be absolute for Capacitor/mobile)
+    const base = backendOrigin && backendOrigin.endsWith('/') ? backendOrigin.slice(0, -1) : backendOrigin
+    const authEndpoint = `${base}/broadcasting/auth`
 
     return { key, wsHost, wsPort, isSecure, authEndpoint }
 }
@@ -30,13 +31,15 @@ export function getEcho() {
     const { key, wsHost, wsPort, isSecure, authEndpoint } = resolveConfig()
 
     echoInstance = new Echo({
-        broadcaster: 'reverb', // Set this as a string
+        // Use 'pusher' for Reverb compatibility when Echo v1 is installed
+        broadcaster: 'pusher',
         key: key,
         wsHost: wsHost,
         wsPort: wsPort,
         wssPort: wsPort,
         forceTLS: isSecure,
         enabledTransports: ['ws', 'wss'],
+        disableStats: true,
         authEndpoint,
         auth: {
             headers: {
