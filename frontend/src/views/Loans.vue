@@ -75,13 +75,13 @@
                       <input v-model.number="createForm.admin_fee_pct" type="number" min="0" max="2" step="0.01" class="input mt-1"/>
                     </label>
                     <label v-if="(eligibility.required_guarantors || 0) > 0" class="text-[11px] text-slate-500 font-bold">Guarantor ID 1
-                      <input v-model.number="createForm.guarantor1" type="number" min="1" class="input mt-1" placeholder="Enter member ID"/>
+                      <input v-model="createForm.guarantor1" type="text" class="input mt-1" placeholder="Enter membership number (e.g., AT-TAQWA/02/005)"/>
                     </label>
                     <label v-if="(eligibility.required_guarantors || 0) > 0" class="text-[11px] text-slate-500 font-bold">Guarantor ID 2
-                      <input v-model.number="createForm.guarantor2" type="number" min="1" class="input mt-1" placeholder="Enter member ID"/>
+                      <input v-model="createForm.guarantor2" type="text" class="input mt-1" placeholder="Enter membership number (e.g., AT-TAQWA/02/005)"/>
                     </label>
                     <label v-if="(eligibility.required_guarantors || 0) > 0" class="text-[11px] text-slate-500 font-bold">Guarantor ID 3 (optional)
-                      <input v-model.number="createForm.guarantor3" type="number" min="1" class="input mt-1" placeholder="Enter member ID"/>
+                      <input v-model="createForm.guarantor3" type="text" class="input mt-1" placeholder="Enter membership number (e.g., AT-TAQWA/02/005)"/>
                     </label>
                   </div>
                   <p class="mt-2 text-[10px] text-slate-500">
@@ -295,7 +295,7 @@ const { notice, showNotice, closeNotice } = useNotice()
 
 // Eligibility and create loan
 const eligibility = ref({ savings: 0, shares: 0, base: 0, eligibility: 0, eligibility_adjusted: 0, months_in_system: 0, is_first_loan: true, can_request: false, reason: '', coop_score: null, instant_approval: false, required_guarantors: 2 })
-const createForm = ref({ total_installments: 1, interval: 'monthly', admin_fee_flat: 0, admin_fee_pct: 0, guarantor1: null, guarantor2: null, guarantor3: null })
+const createForm = ref({ total_installments: 1, interval: 'monthly', admin_fee_flat: 0, admin_fee_pct: 0, guarantor1: '', guarantor2: '', guarantor3: '' })
 const creating = ref(false)
 const createMsg = ref('')
 const createErr = ref('')
@@ -382,18 +382,27 @@ const createLoan = async () => {
   }
   // Collect guarantors based on dynamic requirement
   const req = Number(eligibility.value?.required_guarantors || 0)
-  const gids = [createForm.value.guarantor1, createForm.value.guarantor2, createForm.value.guarantor3]
-    .filter(v => v && Number(v) > 0)
-    .map(v => Number(v))
-  let uniqueGids = Array.from(new Set(gids))
+  const entries = [createForm.value.guarantor1, createForm.value.guarantor2, createForm.value.guarantor3]
+    .map(v => (v || '').toString().trim())
+    .filter(v => v.length > 0)
+  // Deduplicate case-insensitively while preserving original casing
+  const seen = new Set()
+  const uniqueMemberships = []
+  for (const e of entries) {
+    const key = e.toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      uniqueMemberships.push(e)
+    }
+  }
   if (req > 0) {
-    if (uniqueGids.length < req || uniqueGids.length > 3) {
+    if (uniqueMemberships.length < req || uniqueMemberships.length > 3) {
       createErr.value = `Provide at least ${req} (max three) guarantor IDs.`
       return
     }
   } else {
     // Instant path: ignore any entered guarantors
-    uniqueGids = []
+    uniqueMemberships.length = 0
   }
 
   creating.value = true
@@ -404,7 +413,7 @@ const createLoan = async () => {
       interval: createForm.value.interval,
       admin_fee_flat: createForm.value.admin_fee_flat,
       admin_fee_pct: createForm.value.admin_fee_pct,
-      ...(req > 0 ? { guarantor_ids: uniqueGids } : {}),
+      ...(req > 0 ? { guarantor_memberships: uniqueMemberships } : {}),
     }
     const { data } = await axios.post('/api/loans', payload, {
       headers: { Authorization: `Bearer ${token}` }

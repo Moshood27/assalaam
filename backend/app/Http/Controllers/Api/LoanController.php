@@ -91,6 +91,8 @@ class LoanController extends Controller
             'admin_fee_pct' => ['nullable', 'numeric', 'min:0', 'max:2'],
             'guarantor_ids' => ['nullable', 'array', 'max:3'],
             'guarantor_ids.*' => ['integer', 'distinct', 'exists:users,id'],
+            'guarantor_memberships' => ['nullable', 'array', 'max:3'],
+            'guarantor_memberships.*' => ['string', 'distinct'],
         ]);
 
         // Compute Coop Score and derived requirements
@@ -143,7 +145,31 @@ class LoanController extends Controller
         }
 
         // Validate guarantors based on Coop Score policy
-        $guarantorIds = array_values(array_unique($data['guarantor_ids'] ?? []));
+        // Build guarantor ID list from either numeric IDs or membership numbers (alphanumeric)
+        $guarantorIds = array_values(array_unique(array_map('intval', $data['guarantor_ids'] ?? [])));
+        $membershipInputs = $data['guarantor_memberships'] ?? null;
+        if (is_array($membershipInputs) && !empty($membershipInputs)) {
+            // Normalize and deduplicate membership strings (case-insensitive)
+            $map = [];
+            foreach ($membershipInputs as $raw) {
+                $code = trim((string) $raw);
+                if ($code === '') continue;
+                $k = strtolower($code);
+                if (!isset($map[$k])) $map[$k] = $code;
+            }
+            foreach (array_values($map) as $mn) {
+                $matches = User::where('membership_number', $mn)->get(['id','membership_number']);
+                if ($matches->count() === 0) {
+                    return response()->json(['message' => 'Guarantor not found for membership: ' . $mn], 422);
+                }
+                if ($matches->count() > 1) {
+                    return response()->json(['message' => 'Multiple members found for membership: ' . $mn . '. Please select a different identifier or contact support.'], 422);
+                }
+                $guarantorIds[] = (int) $matches->first()->id;
+            }
+            $guarantorIds = array_values(array_unique($guarantorIds));
+        }
+
         if ($requiredGuarantors > 0) {
             if (count($guarantorIds) < $requiredGuarantors || count($guarantorIds) > 3) {
                 return response()->json(['message' => 'Select at least ' . $requiredGuarantors . ' and at most three guarantors.'], 422);

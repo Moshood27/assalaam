@@ -17,6 +17,9 @@ class Kernel extends ConsoleKernel
 
         // Check every minute for AGM sessions that just opened and notify members once
         $schedule->command('agm:notify-voting-open')->everyMinute();
+
+        // Close expired AGM sessions and notify members once
+        $schedule->command('agm:close-expired-sessions')->everyMinute();
     }
 
     /**
