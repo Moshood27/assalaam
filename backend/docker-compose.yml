@@ -95,6 +95,16 @@ services:
       - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
     networks:
       - sail
+  reverb:
+    build:
+      context: ./backend
+      dockerfile: ../docker/php/Dockerfile
+    container_name: attaqwa-reverb
+    command: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080" ]
+    env_file: [ ".env" ]
+    networks:
+      - attaqwa-network
+    restart: unless-stopped
 
 networks:
   sail:
