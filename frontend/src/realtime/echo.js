@@ -40,8 +40,8 @@ export function getEcho() {
     const { key, wsHost, wsPort, isSecure, authEndpoint } = resolveConfig()
 
     echoInstance = new Echo({
-        // Use 'pusher' for Reverb compatibility when Echo v1 is installed
-        broadcaster: 'pusher',
+        // Use 'reverb' broadcaster for Laravel Reverb (Pusher-compatible)
+        broadcaster: 'reverb',
         key: key,
         wsHost: wsHost,
         wsPort: wsPort,

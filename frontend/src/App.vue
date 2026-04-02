@@ -162,6 +162,16 @@ onMounted(async () => {
   <div>
     <router-view />
 
+    <!-- Floating Chat Launcher (visible when logged in) -->
+    <button
+      v-if="isLoggedIn"
+      @click="$router.push('/support')"
+      aria-label="Open Support Chat"
+      class="fixed bottom-20 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-emerald-50"
+    >
+      <span class="i-mdi-headset text-2xl text-emerald-600"></span>
+    </button>
+
     <!-- Floating Bell Icon (visible when logged in) -->
     <button v-if="isLoggedIn" @click="showInbox = true" class="fixed bottom-6 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 flex items-center justify-center">
       <span class="i-mdi-bell-outline text-2xl"></span>
