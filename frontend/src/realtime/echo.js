@@ -14,7 +14,16 @@ function resolveConfig() {
     const scheme = (import.meta?.env?.VITE_REVERB_SCHEME || url.protocol.replace(':', '') || 'https').toLowerCase()
     const isSecure = scheme === 'https' || scheme === 'wss'
 
-    const wsHost = import.meta?.env?.VITE_REVERB_HOST || url.hostname
+    let wsHost = import.meta?.env?.VITE_REVERB_HOST || url.hostname
+    const localHosts = ['localhost', '127.0.0.1', '::1']
+    if (localHosts.includes(wsHost)) {
+        // Fallback to backend hostname or brand domain to work in APK
+        try {
+            wsHost = new URL(import.meta?.env?.VITE_BACKEND_ORIGIN || import.meta?.env?.VITE_API_URL || 'https://attaqwacooposg.com').hostname
+        } catch {
+            wsHost = 'attaqwacooposg.com'
+        }
+    }
     const wsPort = Number(import.meta?.env?.VITE_REVERB_PORT || (isSecure ? 443 : 8080))
     const key = import.meta?.env?.VITE_REVERB_APP_KEY || 'local-key'
 

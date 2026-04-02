@@ -14,8 +14,13 @@ let lastPage = 1
 const listEl = ref(null)
 
 async function fetchProfile() {
-  const { data } = await axios.get('/api/profile')
-  userId.value = data?.id || null
+  try {
+    const { data } = await axios.get('/api/profile')
+    userId.value = data?.id || null
+  } catch (e) {
+    console.warn('fetchProfile failed', e?.message || e)
+    userId.value = null
+  }
 }
 
 function scrollToBottom() {
@@ -95,9 +100,18 @@ function unsubscribe() {
 }
 
 onMounted(async () => {
-  await fetchProfile()
-  await loadMessages(true)
-  subscribe()
+  try {
+    loading.value = true
+    await fetchProfile()
+    if (userId.value) {
+      await loadMessages(true)
+      subscribe()
+    }
+  } catch (err) {
+    console.error('Initialization failed', err)
+  } finally {
+    loading.value = false
+  }
 })
 
 onBeforeUnmount(() => unsubscribe())
