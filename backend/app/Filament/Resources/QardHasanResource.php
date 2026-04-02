@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use App\Mail\LoanRejectedUser;
+use App\Services\PayoutService;
+use Exception;
 
 class QardHasanResource extends Resource
 {
@@ -335,6 +337,25 @@ class QardHasanResource extends Resource
                         }
 
                         $reference = 'QHDISB-'.now()->format('YmdHis').'-'.$record->user_id.'-'.strtoupper(Str::random(6));
+
+                        // If cash-out, trigger real payout before ledger updates
+                        if ($withdrawable) {
+                            try {
+                                PayoutService::sendToBank(
+                                    (string) $record->user->account_number,
+                                    (string) $record->user->bank_code,
+                                    (float) $credit,
+                                    (string) $reference
+                                );
+                            } catch (Exception $e) {
+                                Notification::make()
+                                    ->title('Payout Failed')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                        }
 
                         // Disburse within transaction
                         DB::transaction(function () use ($record, $credit, $withdrawable, $reference, $mode, $data) {

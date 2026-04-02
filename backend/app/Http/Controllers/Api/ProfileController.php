@@ -344,6 +344,7 @@ class ProfileController extends Controller
                 'bank_name' => $bankNameInput,
                 'account_number' => $accountNumber,
                 'provider' => $provider,
+                'has_verified' => false,
                 'message' => 'Confirm to save these bank details.',
             ]);
         }
@@ -362,6 +363,7 @@ class ProfileController extends Controller
                 'bank_name' => $user->bank_name,
                 'account_number' => $user->account_number,
                 'account_name' => $user->account_name,
+                'has_verified' => true,
             ],
         ]);
     }
