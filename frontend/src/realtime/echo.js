@@ -48,6 +48,8 @@ export function getEcho() {
         wssPort: wsPort,
         forceTLS: isSecure,
         enabledTransports: ['ws', 'wss'],
+        // Force the WebSocket path to root to avoid double "/app" when site is hosted under "/app"
+        wsPath: '/reverb',
         disableStats: true,
         authEndpoint,
         auth: {
