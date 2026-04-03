@@ -265,6 +265,7 @@ class StoreOrderController extends Controller
     {
         $validated = $request->validate([
             'pin' => ['required','regex:/^\d{4}$/'],
+            'amount' => 'nullable|numeric|min:0.01',
         ]);
 
         $user = $request->user();
@@ -291,19 +292,50 @@ class StoreOrderController extends Controller
             return response()->json(['message' => 'No installment schedule found'], 422);
         }
 
-        // Find next pending installment
+        // Find next pending or partial installment
         $index = null;
         foreach ($schedule as $i => $item) {
             $st = strtolower((string)($item['status'] ?? ''));
-            if ($st === 'pending') { $index = $i; break; }
+            if ($st === 'pending' || $st === 'partial') { $index = $i; break; }
         }
         if ($index === null) {
             return response()->json(['message' => 'All installments have been paid'], 422);
         }
 
-        $amount = (float) ($schedule[$index]['amount'] ?? 0);
-        if ($amount <= 0) {
+        $nextAmount = (float) ($schedule[$index]['amount'] ?? 0);
+        if ($nextAmount <= 0) {
             return response()->json(['message' => 'Invalid installment amount'], 422);
+        }
+        $alreadyPaid = (float) ($schedule[$index]['paid_amount'] ?? 0);
+
+        // Compute total remaining across all schedule
+        $totalRemaining = 0.0;
+        foreach ($schedule as $it) {
+            $amt = (float)($it['amount'] ?? 0);
+            $pd = (float)($it['paid_amount'] ?? 0);
+            $st = strtolower((string)($it['status'] ?? ''));
+            if ($st !== 'paid') {
+                $totalRemaining += max(0.0, round($amt - $pd, 2));
+            }
+        }
+        $totalRemaining = round($totalRemaining, 2);
+        if ($totalRemaining <= 0) {
+            return response()->json(['message' => 'All installments have been paid'], 422);
+        }
+
+        // Minimum acceptable is at least one full monthly installment, except the final remaining which may be < monthly
+        $minDueForNext = $totalRemaining < $nextAmount ? $totalRemaining : $nextAmount;
+
+        // Determine amount to apply: default is exactly next due if not provided
+        $toApply = isset($validated['amount']) ? (float)$validated['amount'] : $minDueForNext;
+        $toApply = round($toApply, 2);
+
+        if ($toApply < $minDueForNext) {
+            return response()->json(['message' => 'Minimum payment is ₦ ' . number_format($minDueForNext, 2)], 422);
+        }
+        // Do not accept beyond total remaining
+        if ($toApply > $totalRemaining) {
+            $toApply = $totalRemaining;
         }
 
         // Allow payment when order is in murabaha_* states
@@ -312,27 +344,63 @@ class StoreOrderController extends Controller
             return response()->json(['message' => 'Installment payment not allowed for this order status'], 422);
         }
 
-        if ((float) $user->balance < $amount) {
+        if ((float) $user->balance < $toApply) {
             return response()->json(['message' => 'Insufficient Coop Balance'], 422);
         }
 
-        $reference = 'MURABAHAPAY_' . now()->format('YmdHis') . '_' . $user->id . '_' . $order->id . '_' . ($schedule[$index]['installment'] ?? ($index+1));
+        $reference = 'MURABAHAPAY_' . now()->format('YmdHis') . '_' . $user->id . '_' . $order->id;
 
-        DB::transaction(function () use ($user, $order, &$meta, &$schedule, $index, $amount, $reference) {
+        DB::transaction(function () use ($user, $order, &$meta, &$schedule, $toApply, $reference) {
             // Debit wallet
-            $user->decrement('balance', $amount);
+            $user->decrement('balance', $toApply);
 
-            // Mark installment as paid
-            $schedule[$index]['status'] = 'paid';
-            $schedule[$index]['paid_at'] = now()->toDateTimeString();
-            $meta['financing']['schedule'] = $schedule;
+            $remainingToApply = $toApply;
+            $covered = [];
+            foreach ($schedule as $i => &$it) {
+                if ($remainingToApply <= 0) break;
+                $st = strtolower((string)($it['status'] ?? ''));
+                if ($st === 'paid') continue;
 
-            // Update order status based on remaining installments
-            $remaining = 0;
-            foreach ($schedule as $it) {
-                if (strtolower((string)($it['status'] ?? '')) === 'pending') { $remaining++; }
+                $amt = (float)($it['amount'] ?? 0);
+                $pd = (float)($it['paid_amount'] ?? 0);
+                $left = max(0.0, round($amt - $pd, 2));
+                if ($left <= 0) { $it['status'] = 'paid'; $it['paid_at'] = $it['paid_at'] ?? now()->toDateTimeString(); continue; }
+
+                $apply = min($left, $remainingToApply);
+                $pd = round($pd + $apply, 2);
+                $it['paid_amount'] = $pd;
+                if ($pd + 0.00001 >= $amt) {
+                    $it['status'] = 'paid';
+                    $it['paid_at'] = now()->toDateTimeString();
+                } else {
+                    $it['status'] = 'partial';
+                }
+                $remainingToApply = round($remainingToApply - $apply, 2);
+
+                $covered[] = [
+                    'installment' => $it['installment'] ?? ($i+1),
+                    'applied' => $apply,
+                    'status' => $it['status'],
+                ];
             }
-            if ($remaining === 0) {
+            unset($it);
+
+            // Update totals in meta
+            $totalPaid = 0.0;
+            foreach ($schedule as $it2) {
+                $amt2 = (float)($it2['amount'] ?? 0);
+                $pd2 = (float)($it2['paid_amount'] ?? 0);
+                $totalPaid += min($amt2, $pd2);
+            }
+            $totalPaid = round($totalPaid, 2);
+            $remainingAmt = max(0.0, round(((float)$order->total_amount) - $totalPaid, 2));
+
+            $meta['financing']['schedule'] = $schedule;
+            $meta['financing']['total_paid'] = $totalPaid;
+            $meta['financing']['remaining'] = $remainingAmt;
+
+            // Update order status
+            if ($remainingAmt <= 0.0) {
                 $order->status = 'completed';
             } else {
                 $order->status = 'murabaha_active';
@@ -343,14 +411,14 @@ class StoreOrderController extends Controller
             // Record wallet transaction
             $wtMeta = [
                 'store_order_id' => $order->id,
-                'installment' => $schedule[$index]['installment'] ?? ($index+1),
-                'amount' => $amount,
+                'amount' => $toApply,
                 'type' => 'murabaha_installment',
+                'applied' => $covered,
             ];
             WalletTransaction::create([
                 'user_id' => $user->id,
                 'type' => 'debit',
-                'amount' => $amount,
+                'amount' => $toApply,
                 'reference' => $reference,
                 'source' => 'store_installment',
                 'meta' => $wtMeta,

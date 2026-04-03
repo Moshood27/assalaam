@@ -9,12 +9,12 @@
       <div v-if="loading" class="text-slate-500 text-sm">Loading…</div>
       <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
       <section v-else class="card p-5 space-y-3">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <div class="text-xs text-slate-500">Reference</div>
-            <div class="font-bold text-slate-800">{{ order.reference }}</div>
+            <div class="font-bold text-slate-800 break-all">{{ order.reference }}</div>
           </div>
-          <div class="text-right">
+          <div class="text-left sm:text-right">
             <div class="text-xs text-slate-500">Total Amount</div>
             <div class="text-lg font-extrabold text-emerald-700">₦ {{ money(order.total_amount) }}</div>
           </div>
@@ -39,18 +39,26 @@
         <div class="text-xs text-slate-500">Date: {{ new Date(order.created_at).toLocaleString() }}</div>
 
         <div v-if="financing" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-slate-700">
-          <div class="font-black uppercase tracking-widest text-amber-700 mb-1">Murabaha Financing</div>
-          <div>Tenor: <span class="font-bold">{{ financing.months }} months</span></div>
-          <div>Profit Rate: <span class="font-bold">{{ financingRate }}</span></div>
-          <div v-if="financingMonthly !== null">Monthly Installment (est.): <span class="font-bold">₦ {{ money(financingMonthly) }}</span></div>
-          <div v-if="financingNextDue">Next Due Date: <span class="font-bold">{{ financingNextDue }}</span></div>
+          <div class="font-black uppercase tracking-widest text-amber-700 mb-2">Murabaha Financing</div>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div>Tenor: <span class="font-bold">{{ financing.months }} months</span></div>
+            <div>Profit Rate: <span class="font-bold">{{ financingRate }}</span></div>
+            <div v-if="monthlyDue !== null">Monthly (min): <span class="font-bold">₦ {{ money(monthlyDue) }}</span></div>
+            <div v-if="financingNextDue">Next Due: <span class="font-bold">{{ financingNextDue }}</span></div>
+            <div>Total Paid: <span class="font-bold text-emerald-700">₦ {{ money(totalPaid) }}</span></div>
+            <div>Remaining: <span class="font-bold text-rose-700">₦ {{ money(remaining) }}</span></div>
+          </div>
 
-          <div class="mt-2 flex items-center gap-2">
-            <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="paying || !canPayInstallment" @click="openPin()">
-              <span v-if="paying" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Processing…</span>
-              <span v-else>Pay Next Installment</span>
-            </button>
-            <div class="text-[11px] text-slate-500">Amount: <span class="font-bold">₦ {{ money(financingMonthly || 0) }}</span></div>
+          <div class="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+            <label class="text-[11px] text-slate-600 font-bold">Enter Amount to Pay</label>
+            <div class="flex items-center gap-2">
+              <input v-model.number="payAmount" :min="monthlyDue || 0" :max="remaining || undefined" step="0.01" type="number" inputmode="decimal" class="input !py-1 !px-2 w-40" placeholder="e.g. 10000"/>
+              <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="paying || !canPayInstallment || !validPayAmount" @click="openPin()">
+                <span v-if="paying" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Processing…</span>
+                <span v-else>Pay Installment</span>
+              </button>
+            </div>
+            <div class="text-[11px] text-slate-500">Min: ₦ {{ money(monthlyDue || 0) }} • Max: ₦ {{ money(remaining || 0) }}</div>
           </div>
 
           <div v-if="payError" class="mt-2 text-rose-700 bg-rose-50 border border-rose-200 p-2 rounded">{{ payError }}</div>
@@ -96,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import axios from '../http'
 import { useRoute } from 'vue-router'
 import CustomNotice from '../components/CustomNotice.vue'
@@ -114,18 +122,39 @@ const financingRate = computed(() => {
   const r = Number(financing.value?.profit_rate || 0)
   return `${Math.round(r * 100)}%`
 })
-const financingMonthly = computed(() => {
-  const s = Array.isArray(financing.value?.schedule) ? financing.value.schedule : []
-  if (!s.length) return null
-  const next = s.find(x => String(x.status || '').toLowerCase() === 'pending') || s[0]
-  return Number(next?.amount || 0)
+
+// Determine next due installment and amounts
+const schedule = computed(() => Array.isArray(financing.value?.schedule) ? financing.value.schedule : [])
+const nextInstallment = computed(() => schedule.value.find(x => ['pending','partial'].includes(String(x.status||'').toLowerCase())) || schedule.value[0] || null)
+const monthlyDue = computed(() => {
+  const it = nextInstallment.value
+  if (!it) return null
+  const amt = Number(it.amount || 0)
+  const paid = Number(it.paid_amount || 0)
+  return Math.max(0, Number((amt - paid).toFixed(2)))
 })
 const financingNextDue = computed(() => {
-  const s = Array.isArray(financing.value?.schedule) ? financing.value.schedule : []
-  if (!s.length) return null
-  const next = s.find(x => String(x.status || '').toLowerCase() === 'pending') || s[0]
-  if (!next?.due_date) return null
-  try { return new Date(next.due_date).toLocaleDateString() } catch (_) { return next.due_date }
+  const it = nextInstallment.value
+  if (!it?.due_date) return null
+  try { return new Date(it.due_date).toLocaleDateString() } catch (_) { return it.due_date }
+})
+
+const totalPaid = computed(() => {
+  if (!financing.value) return 0
+  if (typeof financing.value.total_paid === 'number') return Number(financing.value.total_paid || 0)
+  let sum = 0
+  for (const it of schedule.value) {
+    const amt = Number(it.amount || 0)
+    const pd = Number(it.paid_amount || 0)
+    sum += Math.min(amt, pd)
+  }
+  return Number(sum.toFixed(2))
+})
+const remaining = computed(() => {
+  if (!financing.value) return 0
+  if (typeof financing.value.remaining === 'number') return Number(financing.value.remaining || 0)
+  const tot = Number(order.value?.total_amount || 0)
+  return Math.max(0, Number((tot - totalPaid.value).toFixed(2)))
 })
 
 // Installment payment state & actions
@@ -133,11 +162,30 @@ const paying = ref(false)
 const payError = ref('')
 const paySuccess = ref('')
 const pinPrompt = ref({ visible: false })
-const canPayInstallment = computed(() => !!financing.value && financingMonthly.value !== null && String(order.value?.status||'').toLowerCase().startsWith('murabaha'))
+const payAmount = ref(null)
+
+watch(monthlyDue, (v) => {
+  // default pay to monthly due, but not beyond remaining
+  const minPay = Math.min(Number(v || 0), Number(remaining.value || 0))
+  payAmount.value = minPay > 0 ? Number(minPay.toFixed(2)) : null
+})
+
+const validPayAmount = computed(() => {
+  const amt = Number(payAmount.value || 0)
+  const min = Math.min(Number(monthlyDue.value || 0), Number(remaining.value || 0))
+  const max = Number(remaining.value || 0)
+  return amt > 0 && amt >= min && amt <= max
+})
+
+const canPayInstallment = computed(() => !!financing.value && Number(remaining.value) > 0 && String(order.value?.status||'').toLowerCase().startsWith('murabaha'))
 
 const openPin = () => {
   payError.value = ''
   paySuccess.value = ''
+  if (!payAmount.value && monthlyDue.value) {
+    const minPay = Math.min(Number(monthlyDue.value || 0), Number(remaining.value || 0))
+    payAmount.value = minPay > 0 ? Number(minPay.toFixed(2)) : null
+  }
   pinPrompt.value.visible = true
 }
 
@@ -149,7 +197,9 @@ const handlePinConfirm = async (val) => {
   }
   paying.value = true
   try {
-    const { data } = await axios.post(`/api/store/orders/${id}/installments/pay`, { pin })
+    const payload = { pin }
+    if (validPayAmount.value) payload.amount = Number(payAmount.value)
+    const { data } = await axios.post(`/api/store/orders/${id}/installments/pay`, payload)
     order.value = data?.order || order.value
     paySuccess.value = data?.message || 'Installment paid successfully'
     // refresh to get updated schedule/status
