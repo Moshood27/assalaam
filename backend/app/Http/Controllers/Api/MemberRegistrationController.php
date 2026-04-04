@@ -30,6 +30,30 @@ class MemberRegistrationController extends Controller
             'confirm_password' => ['required', 'same:password'],
         ]);
 
+        // If there's an existing non-finalized application for this email, reuse it
+        $existing = MemberApplication::where('email', $data['email'] ?? null)
+            ->whereNull('finalized_at')
+            ->latest('id')
+            ->first();
+
+        if ($existing) {
+            // Update details to latest submission
+            $existing->fill([
+                'name' => $data['name'],
+                'phone' => $data['phone'],
+                'address' => $data['address'],
+                'branch_id' => $data['branch_id'],
+                'password_hash' => Crypt::encryptString($data['password']), // store encrypted; will hash once on User model
+                'submitted_at' => now(),
+            ]);
+            $existing->save();
+
+            return response()->json([
+                'message' => 'Existing application found. Please continue.',
+                'token' => $existing->token,
+            ]);
+        }
+
         // Create a short token the frontend will keep to continue the process
         $token = Str::uuid()->toString();
 
@@ -224,8 +248,19 @@ class MemberRegistrationController extends Controller
     {
         $data = $request->validate([
             'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
+            'bvn' => ['required', 'regex:/^\\d{11}$/'],
         ]);
         $app = MemberApplication::where('token', $data['token'])->firstOrFail();
+
+        // Prevent re-finalizing the same application
+        if (!empty($app->finalized_at)) {
+            return response()->json(['message' => 'This application has already been finalized. Please proceed to login.'], 422);
+        }
+        // Prevent duplicate BVN usage across different accounts
+        $bvn = $data['bvn'];
+        if (User::where('bvn', $bvn)->exists()) {
+            return response()->json(['message' => 'This BVN is already associated with an existing member. If you believe this is an error, please contact support.'], 422);
+        }
 
         // Validate required documents and verifications
         $missing = [];
@@ -242,6 +277,42 @@ class MemberRegistrationController extends Controller
         if (empty($app->email_verified_at) || empty($app->phone_verified_at)) {
             return response()->json(['message' => 'Both email and phone must be verified before joining.'], 422);
         }
+
+        // Perform BVN + Face match verification using configured KYC provider
+        try {
+            $verifier = app(\App\Services\Kyc\KycVerifier::class);
+            $kyc = $verifier->verifyBvnWithFace($bvn, $app->passport_path, $app->id_card_path);
+        } catch (\Throwable $e) {
+            \Log::error('KYC verification exception', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to perform KYC verification. Please try again later.'], 503);
+        }
+        if (empty($kyc['success'])) {
+            $reason = $kyc['status'] ?? 'failed';
+            \Log::warning('KYC verification failed', [
+                'provider' => $kyc['provider'] ?? null,
+                'status' => $kyc['status'] ?? null,
+                'score' => $kyc['score'] ?? null,
+                'reference_source' => $kyc['meta']['reference_source'] ?? null,
+                'app_token' => $app->token,
+                'email' => $app->email,
+                'branch_id' => $app->branch_id,
+            ]);
+            return response()->json([
+                'message' => 'KYC verification failed: '.$reason,
+                'details' => $kyc['meta'] ?? null,
+            ], 422);
+        }
+
+        // KYC passed — log minimal observability fields for support
+        \Log::info('KYC verification passed', [
+            'provider' => $kyc['provider'] ?? null,
+            'status' => $kyc['status'] ?? null,
+            'score' => $kyc['score'] ?? null,
+            'reference_source' => $kyc['meta']['reference_source'] ?? null,
+            'app_token' => $app->token,
+            'email' => $app->email,
+            'branch_id' => $app->branch_id,
+        ]);
 
         // Generate a unique membership number within the branch (6 digits)
         $membership = $this->generateMembershipNumber((int) $app->branch_id);
@@ -262,6 +333,15 @@ class MemberRegistrationController extends Controller
         }
         $user->password = $plain;
         $user->passport_path = $app->passport_path; // keep uploaded path
+        // Persist BVN verification results
+        $user->bvn = $bvn;
+        $user->bvn_verified_at = now();
+        $user->dva_verification_meta = [
+            'provider' => $kyc['provider'] ?? null,
+            'status' => $kyc['status'] ?? null,
+            'score' => $kyc['score'] ?? null,
+            'meta' => $kyc['meta'] ?? null,
+        ];
         $user->save();
 
         $app->finalized_at = now();
@@ -271,6 +351,39 @@ class MemberRegistrationController extends Controller
             'message' => 'Registration complete. Welcome to the Cooperative!',
             'membership_number' => $user->membership_number,
             'branch_id' => $user->branch_id,
+        ]);
+    }
+
+    /** Registration status helper for resuming onboarding */
+    public function status(Request $request)
+    {
+        $data = $request->validate([
+            'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
+        ]);
+        $app = MemberApplication::where('token', $data['token'])->firstOrFail();
+
+        $docs = [
+            'passport_path' => $app->passport_path,
+            'id_card_path' => $app->id_card_path,
+            'proof_of_address_path' => $app->proof_of_address_path,
+        ];
+        $emailVerified = !empty($app->email_verified_at);
+        $phoneVerified = !empty($app->phone_verified_at);
+        $expiresIn = 0;
+        if ($app->otp_expires_at && now()->lessThan($app->otp_expires_at)) {
+            $expiresIn = $app->otp_expires_at->diffInSeconds(now());
+        }
+
+        return response()->json([
+            'message' => 'ok',
+            'application' => array_merge($docs, [
+                'email_verified' => $emailVerified,
+                'phone_verified' => $phoneVerified,
+                'masked_email' => $app->email ? $this->maskEmail($app->email) : null,
+                'masked_phone' => $app->phone ? $this->maskPhone($app->phone) : null,
+                'seconds_to_expiry' => $expiresIn,
+                'finalized' => !empty($app->finalized_at),
+            ]),
         ]);
     }
 

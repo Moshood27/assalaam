@@ -137,8 +137,18 @@
             <button @click="handleResend" :disabled="resendCooldown > 0" class="text-sm font-semibold text-emerald-700 hover:underline disabled:opacity-50">Resend Codes <span v-if="resendCooldown>0">({{ resendCooldown }})</span></button>
           </div>
 
+          <!-- BVN input -->
+          <div class="rounded-xl border border-slate-200 p-4 bg-white/60">
+            <div class="font-semibold text-slate-800">BVN</div>
+            <p class="text-xs text-slate-600 mt-1">Enter your 11‑digit Bank Verification Number. We'll verify your identity before completing registration.</p>
+            <div class="mt-3">
+              <input v-model="bvn" @input="onBvnInput" type="text" inputmode="numeric" maxlength="11" class="input w-56" placeholder="***********" />
+              <p v-if="bvn && !isBvnValid" class="text-rose-600 text-xs mt-1">BVN must be 11 digits.</p>
+            </div>
+          </div>
+
           <div class="flex items-center gap-3">
-            <button @click="handleFinalize" :disabled="!emailVerified || !phoneVerified || loadingFinalize" class="btn-primary h-12 px-6">
+            <button @click="handleFinalize" :disabled="!emailVerified || !phoneVerified || !isBvnValid || loadingFinalize" class="btn-primary h-12 px-6">
               <span v-if="loadingFinalize" class="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
               <span>Finish Registration</span>
             </button>
@@ -162,7 +172,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import axios from '../http.js'
 import SearchableSelect from '../components/SearchableSelect.vue'
 import brand from '../brand'
@@ -210,6 +220,14 @@ let timer = null
 const resendCooldown = ref(0)
 let resendTimer = null
 
+// BVN state
+const bvn = ref('')
+const isBvnValid = computed(() => /^[0-9]{11}$/.test(bvn.value))
+function onBvnInput() {
+  // Keep only digits and max 11
+  bvn.value = (bvn.value || '').replace(/[^0-9]/g, '').slice(0, 11)
+}
+
 onMounted(async () => {
   try {
     const { data } = await axios.get('/api/branches')
@@ -217,9 +235,35 @@ onMounted(async () => {
   } catch (e) {}
 
   if (token.value) {
-    // If token exists, assume returning to continue: go to docs step
-    step.value = 2
-    startTimers()
+    try {
+      const { data } = await axios.get('/api/register/status', { params: { token: token.value } })
+      const app = data?.application || {}
+      // If already finalized, clear token and send to login
+      if (app.finalized) {
+        localStorage.removeItem('reg_token')
+        return router.replace({ name: 'login' })
+      }
+      // Restore uploaded docs state
+      uploaded.value = {
+        passport_path: app.passport_path || '',
+        id_card_path: app.id_card_path || '',
+        proof_of_address_path: app.proof_of_address_path || ''
+      }
+      // Determine next step: 3 if all docs present, else 2
+      const docsComplete = !!(uploaded.value.passport_path && uploaded.value.id_card_path && uploaded.value.proof_of_address_path)
+      step.value = docsComplete ? 3 : 2
+      // Restore verification flags and masked contacts
+      emailVerified.value = !!app.email_verified
+      phoneVerified.value = !!app.phone_verified
+      maskedEmail.value = app.masked_email || ''
+      maskedPhone.value = app.masked_phone || ''
+      // Restore countdown if available
+      countdown.value = typeof app.seconds_to_expiry === 'number' ? app.seconds_to_expiry : 0
+      if (countdown.value > 0) startTimers()
+    } catch (e) {
+      // Fallback: continue from documents step
+      step.value = 2
+    }
   }
 })
 
@@ -237,7 +281,27 @@ async function handleStart() {
     const { data } = await axios.post('/api/register/start', form.value)
     token.value = data.token
     localStorage.setItem('reg_token', token.value)
-    step.value = 2
+
+    // Immediately fetch status to resume if an existing application was reused
+    try {
+      const res = await axios.get('/api/register/status', { params: { token: token.value } })
+      const app = res?.data?.application || {}
+      uploaded.value = {
+        passport_path: app.passport_path || '',
+        id_card_path: app.id_card_path || '',
+        proof_of_address_path: app.proof_of_address_path || ''
+      }
+      const docsComplete = !!(uploaded.value.passport_path && uploaded.value.id_card_path && uploaded.value.proof_of_address_path)
+      step.value = docsComplete ? 3 : 2
+      emailVerified.value = !!app.email_verified
+      phoneVerified.value = !!app.phone_verified
+      maskedEmail.value = app.masked_email || ''
+      maskedPhone.value = app.masked_phone || ''
+      countdown.value = typeof app.seconds_to_expiry === 'number' ? app.seconds_to_expiry : 0
+      if (countdown.value > 0) startTimers()
+    } catch (_) {
+      step.value = 2
+    }
   } catch (e) {
     errorStart.value = e?.response?.data?.message
       || e?.response?.data?.errors?.email?.[0]
@@ -337,12 +401,18 @@ async function handleFinalize() {
   loadingFinalize.value = true
   errorFinalize.value = ''
   try {
-    const { data } = await axios.post('/api/register/finalize', { token: token.value })
+    const { data } = await axios.post('/api/register/finalize', { token: token.value, bvn: bvn.value })
     result.value = data
     localStorage.removeItem('reg_token')
     step.value = 4
   } catch (e) {
     errorFinalize.value = e?.response?.data?.message || 'Could not complete registration'
+    const details = e?.response?.data?.details
+    if (details && typeof details === 'object') {
+      // Optionally show normalized reason for KYC failure
+      const reason = details?.message || details?.status
+      if (reason) errorFinalize.value += ` (${reason})`
+    }
   } finally {
     loadingFinalize.value = false
   }

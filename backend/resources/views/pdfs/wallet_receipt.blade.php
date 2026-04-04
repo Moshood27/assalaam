@@ -61,6 +61,7 @@
                         @php($src = (string)($tx->source ?? ''))
                         @if($src === 'paystack_dva') Bank Transfer (DVA)
                         @elseif($src === 'paystack_charge') Card Payment
+                        @elseif($src === 'paystack_autosave') Smart Savings (Autosave)
                         @elseif($src === 'wallet_allocation') Allocation to Schemes
                         @elseif($src === 'p2p_transfer') Member P2P Transfer
                         @elseif(str_starts_with($src, 'vtu_')) Value-added Services (VTU)

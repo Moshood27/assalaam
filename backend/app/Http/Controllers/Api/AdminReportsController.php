@@ -275,7 +275,7 @@ class AdminReportsController extends Controller
 
         if ($format === 'csv') {
             $lines = [];
-            $lines[] = 'id,user_id,user_name,action,created_at';
+            $lines[] = 'id,user_id,user_name,action,payload,created_at';
 
             $esc = function ($v) {
                 if (is_array($v) || is_object($v)) {
@@ -293,6 +293,7 @@ class AdminReportsController extends Controller
                     $esc($r['user_id'] ?? ''),
                     $esc($r['user_name'] ?? ''),
                     $esc($r['action'] ?? ''),
+                    $esc($r['payload'] ?? []),
                     $esc($r['created_at'] ?? ''),
                 ]);
             }

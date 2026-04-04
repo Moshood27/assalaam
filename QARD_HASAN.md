@@ -17,9 +17,9 @@ The relevant backend models are:
 
 - QardHasan
   - Fields (key): user_id, qard_id_string, principal_amount, total_installments, per_installment, interval, admin_fee_flat, admin_fee_pct, paid_amount, status (pending | active | completed | cancelled), rejection_reason, approved_by, approved_at
-  - Accessors: remaining_principal, progress_pct, is_completed, credited_amount
+  - Accessors: remaining_principal, progress_pct, is_completed, credited_amount, next_due_at
   - Relationships: belongsTo user, belongsTo approvedBy (User), hasMany repayments, belongsToMany guarantors (pivot)
-  - Helpers: allGuarantorsAccepted(), pendingGuarantorCount()
+  - Helpers: allGuarantorsAccepted(), pendingGuarantorCount(), generateInstallmentSchedule()
 
 - QardHasanRepayment
   - Fields: qard_hasan_id, amount, reference, status (pending | success), paid_at
@@ -86,7 +86,7 @@ Endpoint to view member‑specific eligibility summary: GET /api/loans/eligibili
   - Body:
     {
       "amount": 5000.00,                // required, ≥ 0.01; capped to remaining principal
-      "source": "auto|wallet|paystack|flutterwave", // optional; auto uses wallet if balance is enough
+      "source": "auto|wallet|paystack|flutterwave|bank_transfer|ussd", // optional; auto uses wallet if balance is enough
       "callback_url": "https://…"      // optional, for gateway redirect
     }
   - Rules and behavior:
@@ -100,6 +100,8 @@ Endpoint to view member‑specific eligibility summary: GET /api/loans/eligibili
 - For non‑instant loans, selected guarantors are attached to the loan with pivot status=pending and a unique token; SMS/Push notify them to review and accept/decline in the app.
 - Disbursement requires that all guarantors have accepted (status=accepted) and that at least two guarantors are present.
 - Admin override: In Filament, admins can run “Accept Guarantors” to mark all attached guarantors as accepted (sets responded_at=now).
+- Automated nudges: The system sends push reminders to pending guarantors twice daily and tracks nudge_count/last_nudged_at on the pivot.
+- Auto‑escalation: If a guarantor request stalls for 48h, it is auto‑escalated (escalated_at is set) and admins are notified; members can also request escalation via POST /api/guarantor/loans/{id}/escalate.
 
 
 ## 6) Admin Workflows (Filament > Loans)
@@ -145,7 +147,9 @@ All outbound notifications are best‑effort and do not block core flows.
 - GET /api/loans — list the authenticated member’s loans (with repayments and guarantors)
 - GET /api/loans/eligibility — show member eligibility, Coop Score, required_guarantors, and boosted limits
 - POST /api/loans — create a loan (see body schema above)
-- POST /api/loans/{id}/repay — repay a loan (wallet or gateway)
+- POST /api/loans/{id}/repay — repay a loan (wallet, bank_transfer/ussd instructions, or gateway)
+- GET /api/reports/loans/{id}/schedule — view your amortization schedule and next due installment
+- Admin audit logs: GET /api/admin/reports/audit-trail?from=YYYY-MM-DD&to=YYYY-MM-DD&action=…&user_id=…&format=json|csv
 - Webhooks (server‑side):
   - POST /api/webhooks/paystack — finalizes Paystack repayments (and other payments)
   - POST /api/webhooks/flutterwave — finalizes Flutterwave repayments (if enabled)

@@ -14,7 +14,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind KYC verifier as a singleton for cleaner resolution and future extension
+        $this->app->singleton(\App\Services\Kyc\KycVerifier::class, function () {
+            return new \App\Services\Kyc\KycVerifier();
+        });
     }
 
     /**

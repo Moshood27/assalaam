@@ -23,6 +23,12 @@ class Kernel extends ConsoleKernel
 
         // Close expired AGM sessions and notify members once
         $schedule->command('agm:close-expired-sessions')->everyMinute();
+
+        // Autosave Smart Savings: run daily at 08:00 Africa/Lagos; command internally checks weekday
+        $schedule->command('autosave:charge')->dailyAt('08:00')->timezone('Africa/Lagos');
+
+        // Takaful monthly contribution charge: on the 1st of every month at 08:10 Africa/Lagos
+        $schedule->command('takaful:charge')->monthlyOn(1, '08:10')->timezone('Africa/Lagos');
     }
 
     /**

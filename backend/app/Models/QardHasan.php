@@ -4,10 +4,91 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class QardHasan extends Model
 {
     use HasFactory;
+
+    /**
+     * Compute the next due date for this loan based on interval, total installments, and progress.
+     * This is a computed helper and does not persist any schedule.
+     */
+    public function getNextDueAtAttribute(): ?string
+    {
+        // If not active (not yet disbursed) or already completed, next due is not applicable
+        if (!in_array($this->status, ['active'], true)) {
+            return null;
+        }
+        if ((float)$this->principal_amount <= 0 || (int)$this->total_installments <= 0) {
+            return null;
+        }
+
+        $per = (float) $this->per_installment;
+        if ($per <= 0) {
+            // Derive per installment if not stored or invalid
+            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
+        }
+
+        $paid = (float) $this->paid_amount;
+        $installmentsPaid = (int) floor($per > 0 ? ($paid / $per) : 0);
+        if ($installmentsPaid >= (int) $this->total_installments) {
+            return null; // fully paid
+        }
+
+        $schedule = $this->generateInstallmentSchedule();
+        if (empty($schedule)) return null;
+
+        // Next installment index is installmentsPaid (0-based)
+        $idx = max(0, min($installmentsPaid, count($schedule) - 1));
+        $next = $schedule[$idx]['due_at'] ?? null;
+        return $next instanceof Carbon ? $next->toISOString() : (is_string($next) ? $next : null);
+    }
+
+    /**
+     * Generate a simple installment schedule as an array of [index, due_at (Carbon), amount].
+     * Start date: approved_at when present, otherwise created_at; first installment is one interval after start.
+     */
+    public function generateInstallmentSchedule(?Carbon $startAt = null): array
+    {
+        $total = (int) $this->total_installments;
+        if ($total <= 0) return [];
+
+        $per = (float) $this->per_installment;
+        if ($per <= 0) {
+            $per = round(((float)$this->principal_amount) / max($total, 1), 2);
+        }
+
+        $interval = strtolower((string) $this->interval ?: 'monthly');
+        $start = $startAt ?: ($this->approved_at ?: $this->created_at ?: now());
+        $start = ($start instanceof Carbon) ? $start->copy() : Carbon::parse((string) $start);
+
+        $items = [];
+        $cursor = $start->copy();
+        for ($i = 0; $i < $total; $i++) {
+            $cursor = $this->addInterval($cursor, $interval); // move by one interval each time
+            $items[] = [
+                'index' => $i + 1,
+                'due_at' => $cursor->copy(),
+                'amount' => $per,
+            ];
+        }
+        return $items;
+    }
+
+    /**
+     * Add interval (daily|weekly|monthly) to a Carbon date and return a cloned instance.
+     */
+    public function addInterval(Carbon $date, string $interval): Carbon
+    {
+        $d = $date->copy();
+        $key = strtolower(trim($interval));
+        return match ($key) {
+            'daily' => $d->addDay(),
+            'weekly' => $d->addWeek(),
+            default => $d->addMonth(), // monthly fallback
+        };
+    }
 
     protected static function booted(): void
     {
@@ -50,6 +131,7 @@ class QardHasan extends Model
         'progress_pct',
         'is_completed',
         'credited_amount',
+        'next_due_at',
     ];
 
     public function user()

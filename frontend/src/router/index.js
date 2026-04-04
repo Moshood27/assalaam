@@ -24,6 +24,7 @@ const Policy = () => import('../views/Policy.vue')
 const Support = () => import('../views/Support.vue')
 const Projects = () => import('../views/Projects.vue')
 const Project = () => import('../views/Project.vue')
+const Takaful = () => import('../views/Takaful.vue')
 
 const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminRegister = () => import('../views/admin/AdminRegister.vue')
@@ -42,6 +43,7 @@ const routes = [
   { path: '/pay', name: 'pay', component: MakePayment, meta: { requiresAuth: true } },
   { path: '/passbook', name: 'passbook', component: Passbook, meta: { requiresAuth: true } },
   { path: '/reports', name: 'reports', component: Reports, meta: { requiresAuth: true } },
+  { path: '/takaful', name: 'takaful', component: Takaful, meta: { requiresAuth: true } },
   { path: '/settings', name: 'settings', component: Settings, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/store', name: 'store', component: Store, meta: { requiresAuth: true } },

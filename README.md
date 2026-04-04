@@ -1604,3 +1604,34 @@ Notes
 - On Android emulators without biometrics enrolled, enable biometrics/enroll in emulator settings.
 - The app does not delete biometric credentials on logout so users can use Quick Login next time. If you need to clear, remove the device credentials from system settings or implement a “Forget biometrics on this device” in Settings.
 # coop_app
+
+
+
+## KYC 2.0: Automated BVN + Face Verification
+This release adds automated BVN and face verification during member signup to eliminate ghost members and reduce loan fraud.
+
+- Flow (backend endpoints):
+  - POST /api/register/start → returns token
+  - POST /api/register/upload → upload passport (selfie), ID card, proof of address
+  - POST /api/register/send-otps → email/SMS OTPs
+  - POST /api/register/verify-email → verify email code
+  - POST /api/register/verify-sms → verify SMS code
+  - POST /api/register/finalize → now requires: token, bvn (11 digits). Performs BVN + face match before creating user.
+
+- Providers:
+  - mock (default): accepts even-ending BVNs, for local/dev.
+  - dojah: real BVN/face verification via Dojah.
+
+- Configuration (backend/.env):
+  - KYC_PROVIDER=mock | dojah
+  - KYC_FACE_MATCH_MIN=0.82
+  - DOJAH_APP_ID= (if provider=dojah)
+  - DOJAH_SECRET= (if provider=dojah)
+  - DOJAH_BASE_URL=https://api.dojah.io (default)
+
+- Storage:
+  - On success, User is saved with bvn, bvn_verified_at, and dva_verification_meta (JSON with provider, status, score, meta).
+
+- Notes:
+  - Selfie/Passport image path from upload is used as the live face. Reference image is taken from provider BVN record if available, else the uploaded ID image is used for comparison.
+

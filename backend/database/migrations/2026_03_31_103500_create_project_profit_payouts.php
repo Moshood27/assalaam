@@ -7,23 +7,12 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (!Schema::hasTable('project_profit_payouts')) {
-            Schema::create('project_profit_payouts', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('project_profit_id')->constrained('project_profits');
-                $table->foreignId('project_id')->constrained('projects');
-                $table->foreignId('user_id')->constrained('users');
-                $table->decimal('amount', 15, 2);
-                $table->string('status')->default('success');
-                $table->timestamp('notified_at')->nullable();
-                $table->timestamps();
-                $table->unique(['project_profit_id', 'user_id'], 'payouts_profit_user_unique');
-            });
-        }
+        // No-op: superseded by 2026_03_31_101500_create_project_profit_payouts migration.
+        // This migration remains to preserve chronology but does not perform any action.
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('project_profit_payouts');
+        // No-op
     }
 };

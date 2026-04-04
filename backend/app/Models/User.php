@@ -39,6 +39,7 @@ class User extends Authenticatable implements FilamentUser
         'is_admin',
         'is_defaulter',
         'paystack_customer_code',
+        'paystack_authorization_code',
         'dva_account_number',
         'dva_bank_name',
         'dva_account_name',
@@ -50,6 +51,12 @@ class User extends Authenticatable implements FilamentUser
         'bank_code',
         'account_number',
         'account_name',
+        'autosave_enabled',
+        'autosave_amount',
+        'autosave_weekday',
+        'autosave_last_run_at',
+        'deceased_at',
+        'major_loss_at',
     ];
 
     /**
@@ -79,6 +86,12 @@ class User extends Authenticatable implements FilamentUser
             'bvn_verified_at' => 'datetime',
             'dva_verification_meta' => 'array',
             'pin_set_at' => 'datetime',
+            'autosave_enabled' => 'boolean',
+            'autosave_amount' => 'decimal:2',
+            'autosave_weekday' => 'integer',
+            'autosave_last_run_at' => 'datetime',
+            'deceased_at' => 'datetime',
+            'major_loss_at' => 'datetime',
         ];
     }
 

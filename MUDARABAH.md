@@ -143,7 +143,11 @@ Notes:
 ## 9) Profit Booking and Distribution (Current State)
 - Admin can record a ProjectProfit with gross_profit and a management_fee_percent (often equal to the project’s setting).
 - The system stores management_fee_amount and net_distributable on that profit record.
-- Distribution of net_distributable to members pro-rata (after the management fee) should be implemented as a follow-up process or job.
+- Distribution of net_distributable to members pro-rata (after the management fee) is implemented via a queued job DistributeProjectProfit. From Filament > Investments > Project Profits, use the Distribute action on a profit to:
+  - Compute each member’s share based on their proportion of total invested up to the profit timestamp (rounding fairly to kobo).
+  - Create ProjectProfitPayout records per member and credit their wallet balances with matching WalletTransaction entries.
+  - Send in-app notifications (ProjectProfitDistributed) and a best-effort push notification.
+  - Ensure idempotency by skipping if payouts already exist for the profit.
 
 
 ## 10) Testing Tips

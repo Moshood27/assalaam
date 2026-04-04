@@ -95,4 +95,9 @@ return [
         'commission_rate' => (float) env('GOALS_COMMISSION_RATE', 0.05),
     ],
 
-];
+    // Takaful (Mutual Protection Pool)
+    'takaful' => [
+        'monthly_amount' => (float) env('TAKAFUL_MONTHLY_AMOUNT', 200),
+    ],
+
+    ];

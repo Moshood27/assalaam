@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\LoanController;
 use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\AdminReportsController;
+use App\Http\Controllers\Api\AdminTakafulController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\AdminUtilityController;
 use App\Http\Controllers\Api\AdminProfileController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Api\SecurityController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\MemberRegistrationController;
 use App\Http\Controllers\Api\NotificationsController;
+use App\Http\Controllers\Api\TakafulController;
 
 Route::get('/health', function () {
     return response()
@@ -42,6 +44,7 @@ Route::middleware('throttle:api')->group(function () {
     Route::post('/register/send-otps', [MemberRegistrationController::class, 'sendOtps']);
     Route::post('/register/verify-email', [MemberRegistrationController::class, 'verifyEmail']);
     Route::post('/register/verify-sms', [MemberRegistrationController::class, 'verifySms']);
+    Route::get('/register/status', [MemberRegistrationController::class, 'status']);
     Route::post('/register/finalize', [MemberRegistrationController::class, 'finalize']);
 });
 // Login endpoints with stricter throttle
@@ -67,6 +70,13 @@ Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin')->group(functi
 
     // In-App Support Chat (admin -> member)
     Route::post('/support/{user}/message', [\App\Http\Controllers\Api\SupportChatAdminController::class, 'sendToUser']);
+
+    // Takaful (Mutual Protection Pool) admin endpoints
+    Route::get('/takaful/summary', [AdminTakafulController::class, 'summary']);
+    Route::get('/takaful/ledger', [AdminTakafulController::class, 'ledger']);
+    Route::post('/takaful/charge', [AdminTakafulController::class, 'charge']);
+    Route::post('/takaful/mark-deceased', [AdminTakafulController::class, 'markDeceased']);
+    Route::post('/takaful/mark-major-loss', [AdminTakafulController::class, 'markMajorLoss']);
 });
 
 // Webhook (public, signature-verified inside controller)
@@ -78,6 +88,10 @@ Route::match(['get', 'post'], '/vtu/webhook', [\App\Http\Controllers\Api\Utility
 
 // Protected endpoints
 Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
+    // Takaful (member-facing)
+    Route::get('/takaful/summary', [TakafulController::class, 'summary']);
+    Route::get('/takaful/contributions', [TakafulController::class, 'contributions']);
+    Route::post('/takaful/pay-now', [TakafulController::class, 'payNow']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Member profile

@@ -274,15 +274,26 @@ class WebhookController extends Controller
                     return response()->json(['status' => 'ok']);
                 }
 
-                DB::transaction(function () use ($topupUser, $amountNgn, $reference, $vdChannel, $vd, $customerCode) {
-                    // Persist Paystack customer code for future lookups if missing
+                DB::transaction(function () use ($topupUser, $amountNgn, $reference, $vdChannel, $vd, $customerCode, $metadata) {
+                    // Persist Paystack customer code and authorization code for future lookups/charges
+                    $dirty = false;
                     if (empty($topupUser->paystack_customer_code) && !empty($customerCode)) {
                         $topupUser->paystack_customer_code = $customerCode;
-                        $topupUser->save();
+                        $dirty = true;
                     }
+                    $authCode = $vd['authorization']['authorization_code'] ?? null;
+                    if (empty($topupUser->paystack_authorization_code) && !empty($authCode)) {
+                        $topupUser->paystack_authorization_code = $authCode;
+                        $dirty = true;
+                    }
+                    if ($dirty) { $topupUser->save(); }
 
                     // Credit wallet
                     $topupUser->increment('balance', $amountNgn);
+
+                    // Detect autosave via metadata
+                    $isAutosave = is_array($metadata) && (($metadata['type'] ?? null) === 'autosave');
+                    $source = $vdChannel === 'bank_transfer' ? 'paystack_dva' : ($isAutosave ? 'paystack_autosave' : 'paystack_charge');
 
                     // Record wallet credit transaction
                     WalletTransaction::create([
@@ -290,11 +301,12 @@ class WebhookController extends Controller
                         'type' => 'credit',
                         'amount' => $amountNgn,
                         'reference' => $reference,
-                        'source' => $vdChannel === 'bank_transfer' ? 'paystack_dva' : 'paystack_charge',
+                        'source' => $source,
                         'meta' => [
                             'channel' => $vdChannel,
                             'customer_code' => $vd['customer']['customer_code'] ?? null,
                             'receiver_account' => $vd['authorization']['receiver_bank_account_number'] ?? ($vd['authorization']['account_number'] ?? null),
+                            'metadata' => $metadata,
                         ],
                     ]);
                 });
@@ -380,6 +392,26 @@ class WebhookController extends Controller
             }
 
             $user = User::find($contributions->first()->user_id);
+
+            // Persist Paystack customer/authorization codes on user for future autosave charges
+            try {
+                if ($user) {
+                    $dirty = false;
+                    $custCode = $vd['customer']['customer_code'] ?? null;
+                    if (empty($user->paystack_customer_code) && !empty($custCode)) {
+                        $user->paystack_customer_code = $custCode;
+                        $dirty = true;
+                    }
+                    $authCode = $vd['authorization']['authorization_code'] ?? null;
+                    if (empty($user->paystack_authorization_code) && !empty($authCode)) {
+                        $user->paystack_authorization_code = $authCode;
+                        $dirty = true;
+                    }
+                    if ($dirty) { $user->save(); }
+                }
+            } catch (\Throwable $e) {
+                // ignore persistence error; not critical for payment finalization
+            }
 
             foreach ($contributions as $contribution) {
                 $contribution->status = 'success';
