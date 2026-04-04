@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Unique;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\WalletCredited;
+use App\Services\TakafulService;
+use Filament\Notifications\Notification;
 use App\Services\SmsService;
 
 class UserResource extends Resource
@@ -156,6 +158,13 @@ class UserResource extends Resource
                             ->maxLength(255)
                             ->disabled(),
                     ])->columns(2),
+                Forms\Components\Section::make('Takaful Policy')
+                    ->schema([
+                        Forms\Components\Toggle::make('takaful_exempt')->label('Exempt from Takaful charges'),
+                        Forms\Components\Toggle::make('takaful_notify_contacts')->label('Notify guarantors/next-of-kin on settlement')->default(true),
+                        Forms\Components\DateTimePicker::make('deceased_at')->label('Deceased At')->native(false)->seconds(false),
+                        Forms\Components\DateTimePicker::make('major_loss_at')->label('Major Loss At')->native(false)->seconds(false),
+                    ])->columns(2),
             ]);
     }
 
@@ -280,6 +289,46 @@ class UserResource extends Resource
                     })
                     ->color('success')
                     ->requiresConfirmation(),
+                Action::make('markDeceased')
+                    ->label('Mark Deceased')
+                    ->icon('heroicon-o-user-minus')
+                    ->color('danger')
+                    ->form([
+                        Forms\Components\DateTimePicker::make('date')->label('Date')->native(false)->seconds(false),
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function (User $record, array $data) {
+                        $date = $data['date'] ?? null;
+                        $record->deceased_at = $date ?: now();
+                        $record->save();
+                        $svc = app(TakafulService::class);
+                        $summary = $svc->settleMemberLoans($record, 'deceased');
+                        Notification::make()
+                            ->title('Member marked deceased; settlement attempted')
+                            ->body('Total settled: ₦'.number_format((float)($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float)($summary['pool_after'] ?? 0), 2))
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('markMajorLoss')
+                    ->label('Mark Major Loss')
+                    ->icon('heroicon-o-exclamation-triangle')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\DateTimePicker::make('date')->label('Date')->native(false)->seconds(false),
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function (User $record, array $data) {
+                        $date = $data['date'] ?? null;
+                        $record->major_loss_at = $date ?: now();
+                        $record->save();
+                        $svc = app(TakafulService::class);
+                        $summary = $svc->settleMemberLoans($record, 'major_loss');
+                        Notification::make()
+                            ->title('Member marked major loss; settlement attempted')
+                            ->body('Total settled: ₦'.number_format((float)($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float)($summary['pool_after'] ?? 0), 2))
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

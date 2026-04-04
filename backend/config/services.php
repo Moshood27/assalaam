@@ -98,6 +98,7 @@ return [
     // Takaful (Mutual Protection Pool)
     'takaful' => [
         'monthly_amount' => (float) env('TAKAFUL_MONTHLY_AMOUNT', 200),
+        'notify_contacts' => (bool) env('TAKAFUL_NOTIFY_CONTACTS', true),
     ],
 
     ];

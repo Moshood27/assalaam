@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\RepaymentReceiptUser;
 use App\Mail\PaymentStatusMail;
 use App\Services\SmsService;
+use App\Services\TakafulService;
 
 class WebhookController extends Controller
 {
@@ -316,6 +317,24 @@ class WebhookController extends Controller
                     'user_id' => $topupUser->id,
                     'channel' => $vdChannel,
                 ]);
+
+                // After crediting wallet, attempt auto-retry for any pending Takaful contributions (best-effort)
+                try {
+                    $svc = app(TakafulService::class);
+                    $retry = $svc->retryPendingForUser($topupUser->fresh());
+                    \Log::info('Takaful auto-retry after wallet top-up (paystack)', [
+                        'user_id' => $topupUser->id,
+                        'attempted' => $retry['attempted'] ?? 0,
+                        'succeeded' => $retry['succeeded'] ?? 0,
+                        'charged_total' => $retry['charged_total'] ?? 0,
+                        'periods' => $retry['processed_periods'] ?? [],
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::warning('Takaful auto-retry failed after wallet top-up (paystack)', [
+                        'user_id' => $topupUser->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
 
                 // Notify user (non-blocking) + best-effort Push
                 try {
@@ -784,6 +803,24 @@ class WebhookController extends Controller
             'reference' => $reference,
             'user_id' => $topupUser->id,
         ]);
+
+        // After crediting wallet, attempt auto-retry for any pending Takaful contributions (best-effort)
+        try {
+            $svc = app(TakafulService::class);
+            $retry = $svc->retryPendingForUser($topupUser->fresh());
+            \Log::info('Takaful auto-retry after wallet top-up (flutterwave)', [
+                'user_id' => $topupUser->id,
+                'attempted' => $retry['attempted'] ?? 0,
+                'succeeded' => $retry['succeeded'] ?? 0,
+                'charged_total' => $retry['charged_total'] ?? 0,
+                'periods' => $retry['processed_periods'] ?? [],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Takaful auto-retry failed after wallet top-up (flutterwave)', [
+                'user_id' => $topupUser->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Notify user (non-blocking)
         try {

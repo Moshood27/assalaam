@@ -14,6 +14,84 @@ use Illuminate\Support\Str;
 
 class TakafulService
 {
+    /**
+     * Retry pending Takaful contributions for a user after wallet top-up.
+     * Processes oldest first and stops when funds are insufficient.
+     */
+    public function retryPendingForUser(User $user, ?int $max = null): array
+    {
+        $result = [
+            'attempted' => 0,
+            'succeeded' => 0,
+            'stopped_insufficient' => false,
+            'charged_total' => 0.0,
+            'processed_periods' => [],
+        ];
+
+        $pending = TakafulContribution::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->orderBy('period')
+            ->get();
+
+        if ($pending->isEmpty()) {
+            return $result;
+        }
+
+        foreach ($pending as $row) {
+            if ($max !== null && $result['attempted'] >= $max) break;
+            $result['attempted']++;
+
+            DB::transaction(function () use ($row, &$result) {
+                /** @var TakafulContribution $fresh */
+                $fresh = TakafulContribution::whereKey($row->id)->lockForUpdate()->first();
+                /** @var User $member */
+                $member = User::whereKey($fresh->user_id)->lockForUpdate()->first();
+
+                // If already paid (race/previous retry), skip
+                if ($fresh->status === 'success') {
+                    return; // leave counters as-is
+                }
+
+                $amt = (float) $fresh->amount;
+                if ((float) $member->balance < $amt) {
+                    // stop further processing; mark flag; return from this txn
+                    $result['stopped_insufficient'] = true;
+                    return;
+                }
+
+                // Debit wallet
+                $reference = 'TAKAFUL_RETRY_' . now()->format('YmdHis') . '_' . $member->id . '_' . bin2hex(random_bytes(3));
+                $member->decrement('balance', $amt);
+                WalletTransaction::create([
+                    'user_id' => $member->id,
+                    'type' => 'debit',
+                    'amount' => $amt,
+                    'reference' => $reference,
+                    'source' => 'takaful_contribution',
+                    'meta' => ['period' => $fresh->period, 'initiated_by' => 'auto_retry'],
+                ]);
+
+                // Mark contribution paid
+                $fresh->status = 'success';
+                $fresh->reference = $reference;
+                $fresh->save();
+
+                // Credit pool
+                TakafulPoolEntry::create([
+                    'direction' => 'credit',
+                    'amount' => $amt,
+                    'reference' => $reference,
+                    'meta' => ['user_id' => $member->id, 'period' => $fresh->period, 'initiated_by' => 'auto_retry'],
+                ]);
+
+                $result['succeeded']++;
+                $result['charged_total'] += $amt;
+                $result['processed_periods'][] = $fresh->period;
+            });
+        }
+
+        return $result;
+    }
     public function monthlyAmount(): float
     {
         return (float) config('services.takaful.monthly_amount', 200.00);
@@ -34,6 +112,11 @@ class TakafulService
         // Exclude admin accounts by default
         $query->where(function ($q) {
             $q->whereNull('is_admin')->orWhere('is_admin', false);
+        });
+        // Do not charge members marked deceased or exempted by policy
+        $query->whereNull('deceased_at');
+        $query->where(function ($w) {
+            $w->whereNull('takaful_exempt')->orWhere('takaful_exempt', false);
         });
         if ($userId) {
             $query->whereKey($userId);
@@ -341,6 +424,35 @@ class TakafulService
                     'reason' => $reason,
                     'reference' => $reference,
                 ]);
+
+                // Best-effort notifications to guarantors (policy-dependent)
+                try {
+                    $notifyEnabled = (bool) config('services.takaful.notify_contacts', true);
+                    $memberAllows = (bool) ($user->takaful_notify_contacts ?? true);
+                    if ($notifyEnabled && $memberAllows) {
+                        $guarantors = $locked->guarantors()->get();
+                        foreach ($guarantors as $g) {
+                            // Push notification if possible
+                            try {
+                                $push = app(\App\Services\PushService::class);
+                                $token = $g->fcm_token ?: ($g->device_token ?? null);
+                                $push->send($token, 'Takaful Settlement', 'Loan '.$locked->qard_id_string.' was settled from the welfare pool due to '.$reason.'.', [
+                                    'type' => 'takaful_settlement',
+                                    'qard_code' => $locked->qard_id_string,
+                                    'amount' => (float) $stillRemaining,
+                                ]);
+                            } catch (\Throwable $e) {}
+                            // Best-effort SMS
+                            try {
+                                $sms = app(\App\Services\SmsService::class);
+                                $msg = 'Notice: Loan '.$locked->qard_id_string.' settled from Takaful ('.$reason.'). Amount: ₦'.number_format($stillRemaining, 2);
+                                $sms->send($g->phone ?? null, $msg);
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // ignore notification errors
+                }
 
                 $summary['loans'][] = [
                     'qard_id' => $locked->qard_id_string,

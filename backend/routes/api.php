@@ -74,6 +74,12 @@ Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin')->group(functi
     // Takaful (Mutual Protection Pool) admin endpoints
     Route::get('/takaful/summary', [AdminTakafulController::class, 'summary']);
     Route::get('/takaful/ledger', [AdminTakafulController::class, 'ledger']);
+    // Exports
+    Route::get('/takaful/export/ledger.csv', [AdminTakafulController::class, 'exportLedgerCsv']);
+    Route::get('/takaful/export/ledger.pdf', [AdminTakafulController::class, 'exportLedgerPdf']);
+    Route::get('/takaful/export/summary.csv', [AdminTakafulController::class, 'exportSummaryCsv']);
+    Route::get('/takaful/export/summary.pdf', [AdminTakafulController::class, 'exportSummaryPdf']);
+    // Manual batch charge and policy actions
     Route::post('/takaful/charge', [AdminTakafulController::class, 'charge']);
     Route::post('/takaful/mark-deceased', [AdminTakafulController::class, 'markDeceased']);
     Route::post('/takaful/mark-major-loss', [AdminTakafulController::class, 'markMajorLoss']);

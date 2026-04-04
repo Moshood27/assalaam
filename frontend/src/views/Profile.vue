@@ -89,10 +89,23 @@
                 {{ bvnAssigned ? 'Assigned' : 'Not Assigned' }}
               </span>
             </div>
+            <p class="text-[11px] text-slate-600 mt-1">
+              Status:
+              <span :class="profile.bvn_verified ? 'text-emerald-700 font-semibold' : 'text-slate-600'">
+                {{ profile.bvn_verified ? 'Verified' : 'Not Verified' }}
+              </span>
+              <span v-if="profile.bvn_verified_at"> on {{ profile.bvn_verified_at }}</span>
+            </p>
           </div>
           <div class="bg-slate-50 p-3 rounded-xl">
             <p class="text-[10px] text-slate-400 font-bold uppercase">Verification Details</p>
             <p class="font-bold text-slate-800 text-sm">{{ profile.verification_details || '—' }}</p>
+            <div class="mt-1 text-xs text-slate-600">
+              <div>KYC Provider: <span class="font-semibold">{{ (profile.kyc && profile.kyc.provider) || '—' }}</span>
+                <span v-if="profile.kyc && profile.kyc.score" class="ml-1">(score: {{ Number(profile.kyc.score).toFixed(2) }})</span>
+              </div>
+              <div v-if="profile.kyc && profile.kyc.status">KYC Status: <span class="font-semibold">{{ profile.kyc.status }}</span></div>
+            </div>
           </div>
         </div>
         <div class="mt-3 text-xs text-gray-500">KYC status is used to prevent fraud and verify identity.</div>

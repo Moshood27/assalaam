@@ -57,6 +57,8 @@ class User extends Authenticatable implements FilamentUser
         'autosave_last_run_at',
         'deceased_at',
         'major_loss_at',
+        'takaful_exempt',
+        'takaful_notify_contacts',
     ];
 
     /**
@@ -92,6 +94,8 @@ class User extends Authenticatable implements FilamentUser
             'autosave_last_run_at' => 'datetime',
             'deceased_at' => 'datetime',
             'major_loss_at' => 'datetime',
+            'takaful_exempt' => 'boolean',
+            'takaful_notify_contacts' => 'boolean',
         ];
     }
 

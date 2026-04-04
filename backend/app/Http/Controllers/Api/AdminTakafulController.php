@@ -151,6 +151,144 @@ class AdminTakafulController extends Controller
     }
 
     /**
+     * CSV export for ledger (same filters as ledger())
+     */
+    public function exportLedgerCsv(Request $request)
+    {
+        $admin = $request->user();
+        if (!$admin || !$admin->is_admin) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $validated = $request->validate([
+            'direction' => 'nullable|in:credit,debit',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'user_id' => 'nullable|integer|min:1',
+        ]);
+        $base = TakafulPoolEntry::query();
+        if (!empty($validated['direction'])) { $base->where('direction', $validated['direction']); }
+        if (!empty($validated['date_from'])) { $base->whereDate('created_at', '>=', $validated['date_from']); }
+        if (!empty($validated['date_to'])) { $base->whereDate('created_at', '<=', $validated['date_to']); }
+        if (!empty($validated['user_id'])) { $base->where('meta->user_id', (int) $validated['user_id']); }
+        $rows = $base->orderByDesc('created_at')->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="takaful_ledger.csv"',
+        ];
+        $callback = function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Date','Direction','Amount','Reference','User ID','Period','Qard Code','Reason']);
+            foreach ($rows as $r) {
+                $u = $r->meta['user_id'] ?? null;
+                $period = $r->meta['period'] ?? null;
+                $qard = $r->meta['qard_code'] ?? null;
+                $reason = $r->meta['reason'] ?? null;
+                fputcsv($out, [
+                    $r->created_at,
+                    $r->direction,
+                    number_format((float)$r->amount, 2, '.', ''),
+                    $r->reference,
+                    $u,
+                    $period,
+                    $qard,
+                    $reason,
+                ]);
+            }
+            fclose($out);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * PDF export for ledger
+     */
+    public function exportLedgerPdf(Request $request)
+    {
+        $admin = $request->user();
+        if (!$admin || !$admin->is_admin) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $validated = $request->validate([
+            'direction' => 'nullable|in:credit,debit',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'user_id' => 'nullable|integer|min:1',
+        ]);
+        $base = TakafulPoolEntry::query();
+        if (!empty($validated['direction'])) { $base->where('direction', $validated['direction']); }
+        if (!empty($validated['date_from'])) { $base->whereDate('created_at', '>=', $validated['date_from']); }
+        if (!empty($validated['date_to'])) { $base->whereDate('created_at', '<=', $validated['date_to']); }
+        if (!empty($validated['user_id'])) { $base->where('meta->user_id', (int) $validated['user_id']); }
+        $rows = $base->orderByDesc('created_at')->get();
+        $summary = [
+            'credits' => (float) (clone $base)->where('direction','credit')->sum('amount'),
+            'debits' => (float) (clone $base)->where('direction','debit')->sum('amount'),
+            'balance' => TakafulPoolEntry::balance(),
+        ];
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::setOptions(['isHtml5ParserEnabled' => false])
+            ->loadView('pdfs.takaful_ledger', ['rows' => $rows, 'summary' => $summary, 'filters' => $validated]);
+        return $pdf->download('takaful_ledger.pdf');
+    }
+
+    /**
+     * CSV export for summary (monthly contributions summary)
+     */
+    public function exportSummaryCsv(Request $request)
+    {
+        $admin = $request->user();
+        if (!$admin || !$admin->is_admin) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $period = $request->query('period') ?: now()->format('Y-m');
+        $contribs = TakafulContribution::where('period', $period);
+        $rows = $contribs->get();
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="takaful_summary_'.$period.'.csv"',
+        ];
+        $callback = function () use ($rows, $period) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Period','User ID','Amount','Status','Reference','Date']);
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $period,
+                    $r->user_id,
+                    number_format((float)$r->amount, 2, '.', ''),
+                    $r->status,
+                    $r->reference,
+                    $r->created_at,
+                ]);
+            }
+            fclose($out);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * PDF export for monthly summary
+     */
+    public function exportSummaryPdf(Request $request)
+    {
+        $admin = $request->user();
+        if (!$admin || !$admin->is_admin) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $period = $request->query('period') ?: now()->format('Y-m');
+        $contribs = TakafulContribution::where('period', $period);
+        $data = [
+            'period' => $period,
+            'count' => (int) (clone $contribs)->count(),
+            'sum' => (float) (clone $contribs)->sum('amount'),
+            'by_status' => (clone $contribs)->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c','status'),
+            'rows' => $contribs->orderByDesc('created_at')->get(),
+        ];
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::setOptions(['isHtml5ParserEnabled' => false])
+            ->loadView('pdfs.takaful_summary', $data);
+        return $pdf->download('takaful_summary_'.$period.'.pdf');
+    }
+
+    /**
      * Manual batch charge trigger.
      */
     public function charge(Request $request, TakafulService $service)

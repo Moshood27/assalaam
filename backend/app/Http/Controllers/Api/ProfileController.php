@@ -70,6 +70,14 @@ class ProfileController extends Controller
                 : null,
             // BVN considered assigned if present, verified timestamp exists, or a DVA has been assigned
             'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
+            // KYC 2.0 status: expose verification flags and provider details (if present)
+            'bvn_verified' => (bool) $user->bvn_verified_at,
+            'bvn_verified_at' => $user->bvn_verified_at ? $user->bvn_verified_at->toDateTimeString() : null,
+            'kyc' => [
+                'provider' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['provider'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->provider ?? null) : null),
+                'status' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['status'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->status ?? null) : null),
+                'score' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['score'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->score ?? null) : null),
+            ],
             'passport_url' => $passportUrl,
             // Transaction PIN status for improved UX on the client
             'pin_set' => method_exists($user, 'hasTransactionPin') ? $user->hasTransactionPin() : (!empty($user->transaction_pin_hash)),
