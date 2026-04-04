@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Response;
+use App\Http\Controllers\Api\AdminTakafulController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -73,3 +74,22 @@ Route::get('/storage-proxy/{path}', function (string $path) {
         'Cache-Control' => 'public, max-age=31536000',
     ]);
 })->where('path', '.*');
+
+
+// Provide a fallback named 'login' route so middleware can redirect unauthenticated browser requests
+// without throwing RouteNotFoundException. For API calls, respond with 401 JSON.
+Route::get('/login', function (\Illuminate\Http\Request $request) {
+    if ($request->expectsJson() || $request->is('api/*')) {
+        return response()->json(['message' => 'Unauthenticated. Please login.'], 401);
+    }
+    return response('Unauthenticated. Please login via the app.', 401);
+})->name('login');
+
+
+// Web (session-authenticated) export routes for Takaful to support Filament downloads without Bearer tokens.
+Route::middleware(['auth'])->prefix('admin/takaful/export')->group(function () {
+    Route::get('/ledger.csv', [AdminTakafulController::class, 'exportLedgerCsv'])->name('takaful.web.export.ledger.csv');
+    Route::get('/ledger.pdf', [AdminTakafulController::class, 'exportLedgerPdf'])->name('takaful.web.export.ledger.pdf');
+    Route::get('/summary.csv', [AdminTakafulController::class, 'exportSummaryCsv'])->name('takaful.web.export.summary.csv');
+    Route::get('/summary.pdf', [AdminTakafulController::class, 'exportSummaryPdf'])->name('takaful.web.export.summary.pdf');
+});

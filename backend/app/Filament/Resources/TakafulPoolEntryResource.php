@@ -105,12 +105,12 @@ class TakafulPoolEntryResource extends Resource
                 Tables\Actions\Action::make('exportCsv')
                     ->label('Export CSV')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn () => url('/api/admin/takaful/export/ledger.csv'))
+                    ->url(fn () => route('takaful.web.export.ledger.csv'))
                     ->openUrlInNewTab(),
                 Tables\Actions\Action::make('exportPdf')
                     ->label('Export PDF')
                     ->icon('heroicon-o-document-text')
-                    ->url(fn () => url('/api/admin/takaful/export/ledger.pdf'))
+                    ->url(fn () => route('takaful.web.export.ledger.pdf'))
                     ->openUrlInNewTab(),
             ])
             ->actions([])

@@ -132,12 +132,12 @@ class TakafulContributionResource extends Resource
                 Tables\Actions\Action::make('exportSummaryCsv')
                     ->label('Export Summary CSV')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn () => url('/api/admin/takaful/export/summary.csv'))
+                    ->url(fn () => route('takaful.web.export.summary.csv'))
                     ->openUrlInNewTab(),
                 Tables\Actions\Action::make('exportSummaryPdf')
                     ->label('Export Summary PDF')
                     ->icon('heroicon-o-document-text')
-                    ->url(fn () => url('/api/admin/takaful/export/summary.pdf'))
+                    ->url(fn () => route('takaful.web.export.summary.pdf'))
                     ->openUrlInNewTab(),
             ])
             ->actions([])
