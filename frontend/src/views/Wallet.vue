@@ -22,6 +22,18 @@
         </div>
       </div>
 
+      <!-- Merchant Pay (QR) quick access -->
+      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-slate-800">Merchant Pay (QR)</h3>
+          <div class="flex gap-2">
+            <button @click="$router.push('/merchant/receive')" class="bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold">Receive via QR</button>
+            <button @click="$router.push('/merchant/pay')" class="bg-white text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold">Pay Merchant</button>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Let local shops accept Attaqwa Pay. Generate a QR to receive or pay a merchant by scanning their QR.</p>
+      </div>
+
       <!-- Virtual Account Info -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-3">

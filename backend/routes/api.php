@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\MemberRegistrationController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\TakafulController;
+use App\Http\Controllers\Api\TransparencyController;
+use App\Http\Controllers\Api\MerchantPayController;
 
 Route::get('/health', function () {
     return response()
@@ -98,6 +100,10 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/takaful/summary', [TakafulController::class, 'summary']);
     Route::get('/takaful/contributions', [TakafulController::class, 'contributions']);
     Route::post('/takaful/pay-now', [TakafulController::class, 'payNow']);
+
+    // Transparency (Portfolio / Proof of Reserve)
+    Route::get('/transparency', [TransparencyController::class, 'index']);
+
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Member profile
@@ -134,6 +140,11 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/wallet/transfer', [\App\Http\Controllers\Api\WalletController::class, 'transfer']);
     Route::post('/wallet/withdraw', [\App\Http\Controllers\Api\WalletController::class, 'withdraw']);
     Route::get('/wallet/withdrawals', [\App\Http\Controllers\Api\WalletController::class, 'withdrawals']);
+
+    // Merchant Pay (QR)
+    Route::get('/merchant/pay/qr', [MerchantPayController::class, 'generateQr']);
+    Route::post('/merchant/pay/resolve', [MerchantPayController::class, 'resolve']);
+    Route::post('/merchant/pay', [MerchantPayController::class, 'pay']);
 
     // Projects (Pooled Investments)
     Route::get('/projects', [ProjectController::class, 'index']);

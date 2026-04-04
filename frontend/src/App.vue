@@ -172,10 +172,15 @@ onMounted(async () => {
       <span class="i-mdi-headset text-2xl text-emerald-600"></span>
     </button>
 
-    <!-- Floating Bell Icon (visible when logged in) -->
-    <button v-if="isLoggedIn" @click="showInbox = true" class="fixed bottom-6 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 flex items-center justify-center">
-      <span class="i-mdi-bell-outline text-2xl"></span>
-      <span v-if="unreadCount>0" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">{{ unreadCount }}</span>
+    <!-- Floating Inbox Widget (visible when logged in) -->
+    <button
+      v-if="isLoggedIn"
+      @click="showInbox = true"
+      aria-label="Open Inbox"
+      class="fixed bottom-6 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:bg-slate-50 active:scale-[0.98] transition"
+    >
+      <span class="i-mdi-inbox-outline text-2xl md:text-3xl"></span>
+      <span v-if="unreadCount>0" class="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 bg-red-600 text-white text-[10px] md:text-xs rounded-full px-1.5 md:px-2 py-0.5">{{ unreadCount }}</span>
     </button>
 
     <InboxDrawer v-model="showInbox" @unread="(n)=> unreadCount = n" />

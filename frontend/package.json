@@ -23,6 +23,7 @@
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",
     "@capacitor/splash-screen": "^6.0.4",
+    "@capacitor-mlkit/barcode-scanning": "^6.2.0",
     "@capgo/capacitor-native-biometric": "^6.0.4",
     "@tailwindcss/postcss": "^4.2.1",
     "apexcharts": "^5.10.4",

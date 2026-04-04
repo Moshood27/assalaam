@@ -29,6 +29,9 @@ class Kernel extends ConsoleKernel
 
         // Takaful monthly contribution charge: on the 1st of every month at 08:10 Africa/Lagos
         $schedule->command('takaful:charge')->monthlyOn(1, '08:10')->timezone('Africa/Lagos');
+
+        // The Hunter: hourly sweep to auto-recover overdue loan installments from wallet balances
+        $schedule->command('loans:hunter-sweep')->hourly();
     }
 
     /**

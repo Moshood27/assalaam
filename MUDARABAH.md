@@ -120,6 +120,7 @@ Notes:
 - List Projects: GET /api/projects
 - Project Details: GET /api/projects/{id}
 - My Investments in a Project: GET /api/projects/{id}/investments
+- Transparency Dashboard (Portfolio): GET /api/transparency
 - Start Payment (Online Checkout): POST /api/initiate-payment
   - items[].scheme_id (required)
   - items[].project_id (optional, must refer to active project)

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TakafulPoolEntryResource\Pages;
 use App\Models\TakafulPoolEntry;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -92,11 +93,13 @@ class TakafulPoolEntryResource extends Resource
                     }),
                 Filter::make('user_id')
                     ->form([
-                        Forms\Components\TextInput::make('user_id')->numeric()->label('User ID'),
+                        Forms\Components\Select::make('user_id')
+                            ->label('Member')
+                            ->searchable()
+                            ->options(User::orderBy('name')->pluck('name', 'id')),
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['user_id'])) {
-                            // meta->user_id JSON search (MySQL/PG compatible via where)
                             $query->where('meta->user_id', (int) $data['user_id']);
                         }
                     }),

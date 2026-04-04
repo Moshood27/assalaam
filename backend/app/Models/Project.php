@@ -12,6 +12,8 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
+        'report_url',
+        'media_urls',
         'target_amount',
         'management_fee_percent',
         'active',
@@ -25,6 +27,7 @@ class Project extends Model
         'active' => 'boolean',
         'started_at' => 'datetime',
         'closed_at' => 'datetime',
+        'media_urls' => 'array',
     ];
 
     public function investments()

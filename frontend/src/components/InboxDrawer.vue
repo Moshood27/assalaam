@@ -74,7 +74,10 @@ watch(open, (v) => { if (v) fetchList(page.value) })
     <aside v-if="open" class="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white shadow-xl z-50 flex flex-col">
       <header class="p-4 border-b flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="i-mdi-bell-outline text-xl"></span>
+          <button class="sm:hidden mr-1 rounded-full p-2 hover:bg-slate-100" @click="open = false" aria-label="Back">
+            <span class="i-mdi-arrow-left text-xl"></span>
+          </button>
+          <span class="i-mdi-inbox-outline text-xl"></span>
           <h2 class="font-semibold">Inbox</h2>
         </div>
         <button class="text-sm text-blue-600 hover:underline" @click="markAll" :disabled="unread===0">Mark all as read</button>

@@ -25,6 +25,9 @@ const Support = () => import('../views/Support.vue')
 const Projects = () => import('../views/Projects.vue')
 const Project = () => import('../views/Project.vue')
 const Takaful = () => import('../views/Takaful.vue')
+const Transparency = () => import('../views/Transparency.vue')
+const MerchantReceive = () => import('../views/MerchantReceive.vue')
+const MerchantPay = () => import('../views/MerchantPay.vue')
 
 const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminRegister = () => import('../views/admin/AdminRegister.vue')
@@ -48,11 +51,15 @@ const routes = [
   { path: '/settings', name: 'settings', component: Settings, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/store', name: 'store', component: Store, meta: { requiresAuth: true } },
+  // Merchant QR pay
+  { path: '/merchant/receive', name: 'merchant.receive', component: MerchantReceive, meta: { requiresAuth: true } },
+  { path: '/merchant/pay', name: 'merchant.pay', component: MerchantPay, meta: { requiresAuth: true } },
   { path: '/store/orders', name: 'store.orders', component: () => import('../views/StoreOrders.vue'), meta: { requiresAuth: true } },
   { path: '/store/orders/:id', name: 'store.order', component: OrderReceipt, meta: { requiresAuth: true } },
   { path: '/goals', name: 'goals', component: () => import('../views/Goals.vue'), meta: { requiresAuth: true } },
   { path: '/projects', name: 'projects', component: Projects, meta: { requiresAuth: true } },
   { path: '/projects/:id', name: 'project', component: Project, meta: { requiresAuth: true } },
+  { path: '/transparency', name: 'transparency', component: Transparency, meta: { requiresAuth: true } },
   // VTU
   { path: '/vtu', name: 'vtu', component: VTU, meta: { requiresAuth: true } },
   { path: '/vtu/history', name: 'vtu.history', component: VTUHistory, meta: { requiresAuth: true } },

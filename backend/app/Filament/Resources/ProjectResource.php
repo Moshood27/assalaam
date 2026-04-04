@@ -37,6 +37,18 @@ class ProjectResource extends Resource
                         Forms\Components\Textarea::make('description')
                             ->rows(4)
                             ->columnSpanFull(),
+                        Forms\Components\TextInput::make('report_url')
+                            ->label('Report URL (PDF)')
+                            ->url()
+                            ->maxLength(1000),
+                        Forms\Components\Repeater::make('media_urls')
+                            ->label('Site Photos / Media URLs')
+                            ->schema([
+                                Forms\Components\TextInput::make('url')->label('URL')->url()->required()->maxLength(1000),
+                            ])
+                            ->default([])
+                            ->collapsed()
+                            ->columnSpanFull(),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Parameters')
