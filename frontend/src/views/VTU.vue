@@ -292,6 +292,22 @@ const canBuyCable = computed(() => !!cable.value.service && cable.value.smartcar
 const selectedBundle = computed(() => bundles.value.find(b => b.code === dataForm.value.bundleCode))
 const selectedTvBundle = computed(() => tvBundles.value.find(b => b.code === cable.value.bundleCode))
 
+// After a pending response, schedule a one-time status check to finalize UI and refresh wallet
+async function scheduleStatusCheck(reference, deliveredMessage = 'Delivered') {
+  try {
+    // wait ~35s to allow provider callback/reconciliation
+    await new Promise(res => setTimeout(res, 35000))
+    const { data } = await axios.get(`/api/vtu/status/${reference}`)
+    if (data?.status === 'success') {
+      await loadWallet()
+      showCustomNotice('Success', deliveredMessage, 'success')
+    }
+  } catch (e) {
+    // silent: user can still check History manually
+    console.debug('Status check error', e?.response?.data || e?.message)
+  }
+}
+
 // Data Loading
 const loadWallet = async () => {
   try {
@@ -363,6 +379,9 @@ const buyAirtime = async () => {
       showCustomNotice('Success', data.message || 'Transaction processing...', 'success')
       airtime.value.amount = ''
       await loadWallet()
+      if (data.status === 'pending' && data.reference) {
+        scheduleStatusCheck(data.reference, 'Airtime delivered!')
+      }
     } else {
       showCustomNotice('Notice', data.message || 'Check transaction history', 'info')
     }
@@ -415,6 +434,9 @@ const buyData = async () => {
       showCustomNotice('Success', data.message || 'Data purchase processing...', 'success')
       dataForm.value.bundleCode = ''
       await loadWallet()
+      if (data.status === 'pending' && data.reference) {
+        scheduleStatusCheck(data.reference, 'Data bundle delivered!')
+      }
     }
   } catch (e) {
     if (checkIfActuallySuccess(e.response?.data)) {
@@ -461,6 +483,9 @@ const buyElectricity = async () => {
     if (data.status === 'success' || data.status === 'pending') {
       showCustomNotice('Success', data.message || 'Electricity vend processing...', 'success')
       await loadWallet()
+      if (data.status === 'pending' && data.reference) {
+        scheduleStatusCheck(data.reference, 'Electricity token vended!')
+      }
     }
   } catch (e) {
     if (checkIfActuallySuccess(e.response?.data)) {
@@ -506,6 +531,9 @@ const buyCable = async () => {
     if (data.status === 'success' || data.status === 'pending') {
       showCustomNotice('Success', data.message || 'Cable subscription processing...', 'success')
       await loadWallet()
+      if (data.status === 'pending' && data.reference) {
+        scheduleStatusCheck(data.reference, 'Cable subscription delivered!')
+      }
     }
   } catch (e) {
     if (checkIfActuallySuccess(e.response?.data)) {

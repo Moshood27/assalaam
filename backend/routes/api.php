@@ -96,6 +96,8 @@ Route::post('/webhooks/flutterwave', [WebhookController::class, 'handleFlutterwa
 
 // VTpass webhook (public) - accept GET (VTpass URL verification) and POST (real callbacks)
 Route::match(['get', 'post'], '/vtu/webhook', [\App\Http\Controllers\Api\UtilityController::class, 'handleWebhook']);
+// Alias for ClubKonnect/Nellobytes callback URL
+Route::match(['get', 'post'], '/vtu/callback', [\App\Http\Controllers\Api\UtilityController::class, 'handleWebhook']);
 
 // Protected endpoints
 Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
@@ -173,6 +175,8 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/vtu/data', [\App\Http\Controllers\Api\UtilityController::class, 'purchaseData']);
     Route::post('/vtu/electricity', [\App\Http\Controllers\Api\UtilityController::class, 'purchaseElectricity']);
     Route::post('/vtu/cable', [\App\Http\Controllers\Api\UtilityController::class, 'purchaseCable']);
+    // Manual status check by OrderID/RequestID (member-initiated requery)
+    Route::get('/vtu/status/{orderId}', [\App\Http\Controllers\Api\UtilityController::class, 'checkStatus']);
 
     // Coop Store (member-facing)
     Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']);

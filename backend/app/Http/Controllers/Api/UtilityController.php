@@ -162,6 +162,147 @@ class UtilityController extends Controller
         return response()->json($query->paginate($perPage));
     }
 
+    public function checkStatus(Request $request, string $orderId)
+    {
+        // Authenticated user can check only their own transaction by reference (RequestID)
+        if (!Schema::hasTable('utility_transactions')) {
+            return response()->json(['message' => 'Not available'], 404);
+        }
+        $user = $request->user();
+        $tx = UtilityTransaction::where('user_id', $user->id)
+            ->where('reference', $orderId)
+            ->first();
+        if (!$tx) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+
+        // Try ClubKonnect (by RequestID), then VTpass
+        $result = null;
+        $source = null;
+        $ck = $this->requeryClubKonnectByRequestId($orderId);
+        if (($ck['ok'] ?? false) && is_array($ck['body'] ?? null)) {
+            $result = $ck['body'];
+            $source = 'clubkonnect';
+        } else {
+            $vt = $this->requeryVtpass($orderId);
+            if (($vt['ok'] ?? false) && is_array($vt['body'] ?? null)) {
+                $result = $vt['body'];
+                $source = 'vtpass';
+            }
+        }
+
+        if (!$result) {
+            return response()->json([
+                'message' => 'Still Processing',
+                'status' => 'pending',
+                'reference' => $orderId,
+            ], 200);
+        }
+
+        $status = 'failed';
+        if ($this->isVtpassSuccess($result)) {
+            $status = 'success';
+        } elseif ($this->isVtpassPending($result)) {
+            $status = 'pending';
+        }
+
+        DB::transaction(function () use ($tx, $result, $status) {
+            $user = $tx->user()->lockForUpdate()->first();
+            // Persist latest provider response
+            $tx->provider_response = $result;
+
+            if ($status === 'success') {
+                if ($tx->status !== 'success') {
+                    $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                    $tx->status = 'success';
+                    $tx->profit = $profit;
+
+                    $hasDebit = WalletTransaction::where('reference', $tx->reference)
+                        ->where('type', 'debit')
+                        ->exists();
+                    if (!$hasDebit) {
+                        $debitAmount = (float) $tx->amount;
+                        $user->decrement('balance', $debitAmount);
+                        WalletTransaction::create([
+                            'user_id' => $user->id,
+                            'type' => 'debit',
+                            'amount' => $debitAmount,
+                            'reference' => $tx->reference,
+                            'source' => match ($tx->type) {
+                                'airtime' => 'vtu_airtime',
+                                'data' => 'vtu_data',
+                                'electricity' => 'vtu_electricity',
+                                'cable' => 'vtu_cable',
+                                default => 'vtu_other',
+                            },
+                            'meta' => [
+                                'network' => $tx->network,
+                                'phone_number' => $tx->phone_number,
+                                'utility_tx_id' => $tx->id,
+                                'requery' => true,
+                            ],
+                        ]);
+                    }
+                }
+            } elseif ($status === 'failed') {
+                $tx->status = 'failed';
+                $hasDebit = WalletTransaction::where('reference', $tx->reference)
+                    ->where('type', 'debit')
+                    ->exists();
+                if ($hasDebit) {
+                    $refundRef = $tx->reference . '-REFUND';
+                    $hasRefund = WalletTransaction::where('reference', $refundRef)
+                        ->where('type', 'credit')
+                        ->exists();
+                    if (!$hasRefund) {
+                        $refundAmount = (float) $tx->amount;
+                        $user->increment('balance', $refundAmount);
+                        WalletTransaction::create([
+                            'user_id' => $user->id,
+                            'type' => 'credit',
+                            'amount' => $refundAmount,
+                            'reference' => $refundRef,
+                            'source' => 'vtu_refund',
+                            'meta' => [
+                                'utility_tx_id' => $tx->id,
+                                'original_reference' => $tx->reference,
+                                'requery' => true,
+                            ],
+                        ]);
+                    }
+                }
+            } else {
+                $tx->status = 'pending';
+            }
+
+            $tx->save();
+        });
+
+        $fresh = $tx->fresh();
+        if ($status === 'success') {
+            return response()->json([
+                'message' => 'Delivered',
+                'status' => 'success',
+                'reference' => $orderId,
+                'transaction' => $fresh,
+            ], 200);
+        }
+        if ($status === 'pending') {
+            return response()->json([
+                'message' => 'Still Processing',
+                'status' => 'pending',
+                'reference' => $orderId,
+                'transaction' => $fresh,
+            ], 200);
+        }
+        return response()->json([
+            'message' => 'Failed',
+            'status' => 'failed',
+            'reference' => $orderId,
+            'transaction' => $fresh,
+        ], 200);
+    }
+
     public function purchaseAirtime(Request $request)
     {
         $validated = $request->validate([
@@ -269,7 +410,7 @@ class UtilityController extends Controller
                                 'provider_response' => $rb,
                             ]);
                             return response()->json([
-                                'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                                'message' => 'Processing! Your airtime is on the way. Please check your balance in 1 minute.',
                                 'status' => 'pending',
                                 'provider' => $rb,
                                 'reference' => $reference,
@@ -293,7 +434,7 @@ class UtilityController extends Controller
                             'provider_response' => $body,
                         ]);
                         return response()->json([
-                            'message' => 'Airtime is processing. Unable to confirm now; please check history soon.',
+                            'message' => 'Processing! Your airtime is on the way. Please check your balance in 1 minute.',
                             'status' => 'pending',
                             'provider' => $requery['body'] ?? $body,
                             'reference' => $reference,
@@ -309,37 +450,87 @@ class UtilityController extends Controller
                                 // Treat as success below; set $body to requery body so we persist it
                                 $body = $ckb;
                             } elseif ($this->isVtpassPending($ckb)) {
-                                // Still pending; return pending to client
-                                $tx->update([
-                                    'status' => 'pending',
-                                    'provider_response' => $ckb,
-                                ]);
+                                // ClubKonnect accepted (100). Debit member immediately and mark pending to protect Coop funds.
+                                DB::transaction(function () use ($user, $amount, $reference, $tx, $ckb) {
+                                    $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                    if ((float)$lockedUser->balance >= (float)$amount) {
+                                        $lockedUser->decrement('balance', $amount);
+
+                                        $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'profit' => $profit,
+                                            'provider_response' => $ckb,
+                                        ]);
+
+                                        WalletTransaction::create([
+                                            'user_id' => $lockedUser->id,
+                                            'type' => 'debit',
+                                            'amount' => $amount,
+                                            'reference' => $reference,
+                                            'source' => 'vtu_airtime',
+                                            'meta' => [
+                                                'network' => $tx->network,
+                                                'phone_number' => $tx->phone_number,
+                                                'utility_tx_id' => $tx->id,
+                                                'status' => 'pending',
+                                            ],
+                                        ]);
+                                    } else {
+                                        // Not enough funds at this exact moment; keep pending without debit
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'provider_response' => $ckb,
+                                        ]);
+                                    }
+                                });
                                 return response()->json([
-                                    'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                                    'message' => 'Processing! Your airtime is on the way. Please check your balance in 1 minute.',
                                     'status' => 'pending',
                                     'provider' => $ckb,
                                     'reference' => $reference,
                                 ], 200);
-                            } else {
-                                // Provider-declared failure after requery
-                                $tx->update([
-                                    'status' => 'failed',
-                                    'provider_response' => $ckb,
-                                ]);
-                                return response()->json([
-                                    'message' => 'Airtime purchase failed',
                                     'provider' => $ckb,
                                     'reference' => $reference,
                                 ], 400);
                             }
                         } else {
-                            // Requery failed; keep pending and let webhook/reconciliation finalize
-                            $tx->update([
-                                'status' => 'pending',
-                                'provider_response' => $body,
-                            ]);
+                            // Requery failed (network or non-OK). Since ClubKonnect already accepted (100), debit immediately and keep tx pending.
+                            DB::transaction(function () use ($user, $amount, $reference, $tx, $body) {
+                                $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                if ((float)$lockedUser->balance >= (float)$amount) {
+                                    $lockedUser->decrement('balance', $amount);
+
+                                    $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'profit' => $profit,
+                                        'provider_response' => $body,
+                                    ]);
+
+                                    WalletTransaction::create([
+                                        'user_id' => $lockedUser->id,
+                                        'type' => 'debit',
+                                        'amount' => $amount,
+                                        'reference' => $reference,
+                                        'source' => 'vtu_airtime',
+                                        'meta' => [
+                                            'network' => $tx->network,
+                                            'phone_number' => $tx->phone_number,
+                                            'utility_tx_id' => $tx->id,
+                                            'status' => 'pending',
+                                        ],
+                                    ]);
+                                } else {
+                                    // Not enough funds at this exact moment; keep pending without debit
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'provider_response' => $body,
+                                    ]);
+                                }
+                            });
                             return response()->json([
-                                'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                                'message' => 'Order received and processing.',
                                 'status' => 'pending',
                                 'provider' => $ckRequery['body'] ?? $body,
                                 'reference' => $reference,
@@ -563,7 +754,7 @@ class UtilityController extends Controller
                                 'provider_response' => $rb,
                             ]);
                             return response()->json([
-                                'message' => 'Data purchase is processing with provider. Check history for final status shortly.',
+                                'message' => 'Processing! Your data is on the way. Please check your balance in 1 minute.',
                                 'status' => 'pending',
                                 'provider' => $rb,
                                 'reference' => $reference,
@@ -594,17 +785,128 @@ class UtilityController extends Controller
                         ], 200);
                     }
                 } else {
-                    // For non-VTpass providers, do not requery here; allow webhook or later reconciliation
-                    $tx->update([
-                        'status' => 'pending',
-                        'provider_response' => $body,
-                    ]);
-                    return response()->json([
-                        'message' => 'Data purchase is processing with provider. Check history for final status shortly.',
-                        'status' => 'pending',
-                        'provider' => $body,
-                        'reference' => $reference,
-                    ], 200);
+                    // For ClubKonnect, perform a single immediate requery by RequestID to reduce false pendings
+                    if (($providerUsed ?? '') === 'clubkonnect') {
+                        $ckRequery = $this->requeryClubKonnectByRequestId($reference);
+                        if ($ckRequery['ok']) {
+                            $ckb = $ckRequery['body'];
+                            if ($this->isVtpassSuccess($ckb)) {
+                                // Treat as success below; set $body to requery body so we persist it
+                                $body = $ckb;
+                            } elseif ($this->isVtpassPending($ckb)) {
+                                // ClubKonnect accepted (100). Debit member immediately and mark pending to protect Coop funds.
+                                DB::transaction(function () use ($user, $amount, $reference, $tx, $ckb, $convenience, $bundleCode) {
+                                    $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                    $debit = round($amount + $convenience, 2);
+                                    if ((float)$lockedUser->balance >= (float)$debit) {
+                                        $lockedUser->decrement('balance', $debit);
+
+                                        $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'profit' => $profit,
+                                            'provider_response' => $ckb,
+                                        ]);
+
+                                        WalletTransaction::create([
+                                            'user_id' => $lockedUser->id,
+                                            'type' => 'debit',
+                                            'amount' => $debit,
+                                            'reference' => $reference,
+                                            'source' => 'vtu_data',
+                                            'meta' => [
+                                                'network' => $tx->network,
+                                                'phone_number' => $tx->phone_number,
+                                                'bundle_code' => $bundleCode,
+                                                'utility_tx_id' => $tx->id,
+                                                'convenience_fee' => $convenience,
+                                                'status' => 'pending',
+                                            ],
+                                        ]);
+                                    } else {
+                                        // Not enough funds at this exact moment; keep pending without debit
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'provider_response' => $ckb,
+                                        ]);
+                                    }
+                                });
+                                return response()->json([
+                                    'message' => 'Processing! Your data is on the way. Please check your balance in 1 minute.',
+                                    'status' => 'pending',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 200);
+                            } else {
+                                // Provider-declared failure after requery
+                                $tx->update([
+                                    'status' => 'failed',
+                                    'provider_response' => $ckb,
+                                ]);
+                                return response()->json([
+                                    'message' => 'Data purchase failed',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 400);
+                            }
+                        } else {
+                            // Requery failed (network or non-OK). Since ClubKonnect already accepted (100), debit immediately and keep tx pending.
+                            DB::transaction(function () use ($user, $amount, $reference, $tx, $body, $convenience, $bundleCode) {
+                                $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                $debit = round($amount + $convenience, 2);
+                                if ((float)$lockedUser->balance >= (float)$debit) {
+                                    $lockedUser->decrement('balance', $debit);
+
+                                    $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'profit' => $profit,
+                                        'provider_response' => $body,
+                                    ]);
+
+                                    WalletTransaction::create([
+                                        'user_id' => $lockedUser->id,
+                                        'type' => 'debit',
+                                        'amount' => $debit,
+                                        'reference' => $reference,
+                                        'source' => 'vtu_data',
+                                        'meta' => [
+                                            'network' => $tx->network,
+                                            'phone_number' => $tx->phone_number,
+                                            'bundle_code' => $bundleCode,
+                                            'utility_tx_id' => $tx->id,
+                                            'convenience_fee' => $convenience,
+                                            'status' => 'pending',
+                                        ],
+                                    ]);
+                                } else {
+                                    // Not enough funds at this exact moment; keep pending without debit
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'provider_response' => $body,
+                                    ]);
+                                }
+                            });
+                            return response()->json([
+                                'message' => 'Order received and processing.',
+                                'status' => 'pending',
+                                'provider' => $ckRequery['body'] ?? $body,
+                                'reference' => $reference,
+                            ], 200);
+                        }
+                    } else {
+                        // For other non-VTpass providers, do not requery here; allow webhook or later reconciliation
+                        $tx->update([
+                            'status' => 'pending',
+                            'provider_response' => $body,
+                        ]);
+                        return response()->json([
+                            'message' => 'Data purchase is processing with provider. Check history for final status shortly.',
+                            'status' => 'pending',
+                            'provider' => $body,
+                            'reference' => $reference,
+                        ], 200);
+                    }
                 }
             } else {
                 // Unknown/ambiguous provider state. In Sandbox, VTpass can still deliver later
@@ -1115,7 +1417,7 @@ class UtilityController extends Controller
                                 'provider_response' => $rb,
                             ]);
                             return response()->json([
-                                'message' => 'Electricity vend is processing with provider. Check history for final status shortly.',
+                                'message' => 'Processing! Your electricity vend is on the way. Please check your balance in 1 minute.',
                                 'status' => 'pending',
                                 'provider' => $rb,
                                 'reference' => $reference,
@@ -1342,7 +1644,7 @@ class UtilityController extends Controller
                                 'provider_response' => $rb,
                             ]);
                             return response()->json([
-                                'message' => 'Cable subscription is processing with provider. Check history for final status shortly.',
+                                'message' => 'Processing! Your cable subscription is on the way. Please check your balance in 1 minute.',
                                 'status' => 'pending',
                                 'provider' => $rb,
                                 'reference' => $reference,
@@ -1371,17 +1673,126 @@ class UtilityController extends Controller
                         ], 200);
                     }
                 } else {
-                    // For non-VTpass providers, do not requery here; allow webhook or later reconciliation
-                    $tx->update([
-                        'status' => 'pending',
-                        'provider_response' => $body,
-                    ]);
-                    return response()->json([
-                        'message' => 'Cable subscription is processing with provider. Check history for final status shortly.',
-                        'status' => 'pending',
-                        'provider' => $body,
-                        'reference' => $reference,
-                    ], 200);
+                    // For ClubKonnect, perform a single immediate requery by RequestID to reduce false pendings
+                    if (($providerUsed ?? '') === 'clubkonnect') {
+                        $ckRequery = $this->requeryClubKonnectByRequestId($reference);
+                        if ($ckRequery['ok']) {
+                            $ckb = $ckRequery['body'];
+                            if ($this->isVtpassSuccess($ckb)) {
+                                // Treat as success below; set $body to requery body so we persist it
+                                $body = $ckb;
+                            } elseif ($this->isVtpassPending($ckb)) {
+                                // ClubKonnect accepted (100). Debit member immediately and mark pending to protect Coop funds.
+                                DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $ckb, $convenience, $service, $smartcard, $bundleCode) {
+                                    $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                    if ((float)$lockedUser->balance >= (float)$totalDebit) {
+                                        $lockedUser->decrement('balance', $totalDebit);
+
+                                        $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'profit' => $profit,
+                                            'provider_response' => $ckb,
+                                        ]);
+
+                                        WalletTransaction::create([
+                                            'user_id' => $lockedUser->id,
+                                            'type' => 'debit',
+                                            'amount' => $totalDebit,
+                                            'reference' => $reference,
+                                            'source' => 'vtu_cable',
+                                            'meta' => [
+                                                'service' => $service,
+                                                'smartcard_number' => $smartcard,
+                                                'bundle_code' => $bundleCode,
+                                                'utility_tx_id' => $tx->id,
+                                                'convenience_fee' => $convenience,
+                                                'status' => 'pending',
+                                            ],
+                                        ]);
+                                    } else {
+                                        // Not enough funds at this exact moment; keep pending without debit
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'provider_response' => $ckb,
+                                        ]);
+                                    }
+                                });
+                                return response()->json([
+                                    'message' => 'Processing! Your cable subscription is on the way. Please check your balance in 1 minute.',
+                                    'status' => 'pending',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 200);
+                            } else {
+                                // Provider-declared failure after requery
+                                $tx->update([
+                                    'status' => 'failed',
+                                    'provider_response' => $ckb,
+                                ]);
+                                return response()->json([
+                                    'message' => 'Cable subscription failed',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 400);
+                            }
+                        } else {
+                            // Requery failed (network or non-OK). Since ClubKonnect already accepted (100), debit immediately and keep tx pending.
+                            DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $body, $convenience, $service, $smartcard, $bundleCode) {
+                                $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                if ((float)$lockedUser->balance >= (float)$totalDebit) {
+                                    $lockedUser->decrement('balance', $totalDebit);
+
+                                    $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'profit' => $profit,
+                                        'provider_response' => $body,
+                                    ]);
+
+                                    WalletTransaction::create([
+                                        'user_id' => $lockedUser->id,
+                                        'type' => 'debit',
+                                        'amount' => $totalDebit,
+                                        'reference' => $reference,
+                                        'source' => 'vtu_cable',
+                                        'meta' => [
+                                            'service' => $service,
+                                            'smartcard_number' => $smartcard,
+                                            'bundle_code' => $bundleCode,
+                                            'utility_tx_id' => $tx->id,
+                                            'convenience_fee' => $convenience,
+                                            'status' => 'pending',
+                                        ],
+                                    ]);
+                                } else {
+                                    // Not enough funds at this exact moment; keep pending without debit
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'provider_response' => $body,
+                                    ]);
+                                }
+                            });
+                            return response()->json([
+                                'message' => 'Order received and processing.',
+                                'status' => 'pending',
+                                'provider' => $ckRequery['body'] ?? $body,
+                                'reference' => $reference,
+                            ], 200);
+                        }
+                    } else {
+                        // For other non-VTpass providers, do not requery here; allow webhook or later reconciliation
+                        $tx->update([
+                            'status' => 'pending',
+                            'provider_response' => $body,
+                        ]);
+                        return response()->json([
+                            'message' => 'Cable subscription is processing with provider. Check history for final status shortly.',
+                            'status' => 'pending',
+                            'provider' => $body,
+                            'reference' => $reference,
+                        ], 200);
+                    }
                 }
             } else {
                 $isSandbox = (bool) config('services.vtu.sandbox');
