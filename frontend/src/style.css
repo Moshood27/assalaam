@@ -118,6 +118,7 @@ input[type="number"] {
 
 /* Brand-specific theming: ATTAQWA (indigo palette) */
 .brand-attaqwa {
+  /* Indigo palette tokens */
   --indigo-50: 238 242 255;
   --indigo-100: 224 231 255;
   --indigo-200: 199 210 254;
@@ -126,7 +127,24 @@ input[type="number"] {
   --indigo-700: 67 56 202;
   --indigo-800: 55 48 163;
   --indigo-900: 49 46 129;
+
+  /* Remap global brand variables used by base gradients */
+  --brand-1: 99 102 241; /* indigo-500 */
+  --brand-2: 79 70 229;  /* indigo-600 */
+  --brand-3: 67 56 202;  /* indigo-700 */
+  --bg-0: 238 242 255;   /* indigo-50 */
 }
+
+/* Reduce stark white on auth/login background for ATTAQWA */
+.brand-attaqwa .auth-bg {
+  background: radial-gradient(900px 420px at 85% -10%, rgba(var(--indigo-500)/0.18), transparent 60%),
+              radial-gradient(700px 360px at -10% 15%, rgba(99 102 241/0.12), transparent 60%),
+              linear-gradient(180deg, rgba(255 255 255/0.92), rgba(var(--bg-0)/1));
+}
+
+/* Slightly tint common surfaces and separators */
+.brand-attaqwa .card { background-color: rgba(238,242,255,0.85); border-color: rgb(var(--indigo-100)); }
+.brand-attaqwa .navbar, .brand-attaqwa .bottom-nav { border-color: rgb(var(--indigo-100)); }
 
 /* Component overrides */
 .brand-attaqwa .btn-primary {
@@ -161,5 +179,10 @@ input[type="number"] {
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 .brand-attaqwa .to-emerald-900 { --tw-gradient-to: rgb(var(--indigo-900)) var(--tw-gradient-to-position); }
+/* Login button gradient remap (to-teal-600 and hover:to-teal-700) */
+.brand-attaqwa .to-teal-600 { --tw-gradient-to: rgb(var(--indigo-600)) var(--tw-gradient-to-position); }
+.brand-attaqwa .hover\:to-teal-700:hover { --tw-gradient-to: rgb(var(--indigo-700)) var(--tw-gradient-to-position); }
+/* Focus ring color remap */
+.brand-attaqwa .focus\:ring-emerald-600:focus { --tw-ring-color: rgb(var(--indigo-600)); }
 
 .brand-attaqwa .accent-emerald-700 { accent-color: rgb(var(--indigo-700)); }
