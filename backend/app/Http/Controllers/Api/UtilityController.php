@@ -24,7 +24,12 @@ class UtilityController extends Controller
         // Try our own cb_ref first (we append ?ref=reference in callback URLs)
         $cbRef = $request->query('ref') ?? ($payload['ref'] ?? null);
         $reference = $payload['request_id']
-            ?? ($payload['requestId'] ?? ($payload['reference'] ?? ($payload['data']['requestId'] ?? ($payload['content']['transactions']['requestId'] ?? $cbRef))));
+            ?? ($payload['requestId']
+            ?? ($payload['requestid']
+            ?? ($payload['reference']
+            ?? ($payload['RequestID']
+            ?? ($payload['data']['requestId']
+            ?? ($payload['content']['transactions']['requestId'] ?? $cbRef))))));
 
         if (!$reference) {
             return response()->json(['status' => 'received', 'note' => 'missing reference'], 200);
@@ -295,17 +300,64 @@ class UtilityController extends Controller
                         ], 200);
                     }
                 } else {
-                    // For non-VTpass providers, do not requery here; allow webhook or later reconciliation
-                    $tx->update([
-                        'status' => 'pending',
-                        'provider_response' => $body,
-                    ]);
-                    return response()->json([
-                        'message' => 'Airtime is processing with provider. Check history for final status shortly.',
-                        'status' => 'pending',
-                        'provider' => $body,
-                        'reference' => $reference,
-                    ], 200);
+                    // For ClubKonnect, perform a single immediate requery by RequestID to reduce false pendings
+                    if (($providerUsed ?? '') === 'clubkonnect') {
+                        $ckRequery = $this->requeryClubKonnectByRequestId($reference);
+                        if ($ckRequery['ok']) {
+                            $ckb = $ckRequery['body'];
+                            if ($this->isVtpassSuccess($ckb)) {
+                                // Treat as success below; set $body to requery body so we persist it
+                                $body = $ckb;
+                            } elseif ($this->isVtpassPending($ckb)) {
+                                // Still pending; return pending to client
+                                $tx->update([
+                                    'status' => 'pending',
+                                    'provider_response' => $ckb,
+                                ]);
+                                return response()->json([
+                                    'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                                    'status' => 'pending',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 200);
+                            } else {
+                                // Provider-declared failure after requery
+                                $tx->update([
+                                    'status' => 'failed',
+                                    'provider_response' => $ckb,
+                                ]);
+                                return response()->json([
+                                    'message' => 'Airtime purchase failed',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 400);
+                            }
+                        } else {
+                            // Requery failed; keep pending and let webhook/reconciliation finalize
+                            $tx->update([
+                                'status' => 'pending',
+                                'provider_response' => $body,
+                            ]);
+                            return response()->json([
+                                'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                                'status' => 'pending',
+                                'provider' => $ckRequery['body'] ?? $body,
+                                'reference' => $reference,
+                            ], 200);
+                        }
+                    } else {
+                        // For other non-VTpass providers, do not requery here; allow webhook or later reconciliation
+                        $tx->update([
+                            'status' => 'pending',
+                            'provider_response' => $body,
+                        ]);
+                        return response()->json([
+                            'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                            'status' => 'pending',
+                            'provider' => $body,
+                            'reference' => $reference,
+                        ], 200);
+                    }
                 }
             } else {
                 // Unknown/ambiguous provider state. In Sandbox, VTpass can still deliver later
@@ -1832,6 +1884,38 @@ class UtilityController extends Controller
         }
 
         return [ 'ok' => true, 'body' => $json, 'status' => $resp->status() ];
+    }
+
+    private function requeryClubKonnectByRequestId(string $requestId): array
+    {
+        $cfg = config('services.vtu.clubkonnect', []);
+        $enabled = (bool)($cfg['enabled'] ?? false);
+        $userId = $cfg['user_id'] ?? null;
+        $apiKey = $cfg['api_key'] ?? null;
+        $baseUrl = rtrim((string)($cfg['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
+        if (!$enabled || !$userId || !$apiKey) {
+            return [ 'ok' => false, 'error' => 'Provider not configured', 'body' => null, 'status' => 0 ];
+        }
+
+        try {
+            $resp = Http::timeout(12)
+                ->acceptJson()
+                ->get($baseUrl . '/APIQueryV1.asp', [
+                    'UserID' => $userId,
+                    'APIKey' => $apiKey,
+                    'RequestID' => $requestId,
+                ]);
+            $status = $resp->status();
+            $json = $resp->json();
+            if (!$resp->ok()) {
+                Log::warning('ClubKonnect requery bad response', ['status' => $status, 'body' => $json]);
+                return [ 'ok' => false, 'error' => 'Bad response', 'body' => (is_array($json)?$json:['raw'=>$resp->body()]), 'status' => $status ];
+            }
+            return [ 'ok' => true, 'body' => (is_array($json)?$json:['raw'=>$resp->body()]), 'status' => $status ];
+        } catch (\Throwable $e) {
+            Log::error('ClubKonnect requery HTTP error', ['error' => $e->getMessage()]);
+            return [ 'ok' => false, 'error' => 'Network error', 'body' => null, 'status' => 0 ];
+        }
     }
 
     // Normalize Nigerian MSISDNs to 11-digit local format (0XXXXXXXXXX)
