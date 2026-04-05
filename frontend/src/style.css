@@ -152,6 +152,8 @@ html, body, #app { height: 100%; }
 .brand-attaqwa .bg-emerald-50 { background-color: rgba(var(--brand-1) / 0.05); }
 .brand-attaqwa .border-emerald-100 { border-color: rgb(224 231 255); } /* indigo-100 */
 .brand-attaqwa .border-emerald-200 { border-color: rgb(199 210 254); } /* indigo-200 */
+.brand-attaqwa .bg-emerald-500 { background-color: rgb(var(--brand-2)); }
+.brand-attaqwa .bg-emerald-100 { background-color: rgb(224 231 255); } /* indigo-100 */
 
 /* Gradient remaps used by views (Login button, Wallet card) */
 .brand-attaqwa .from-emerald-700 { --tw-gradient-from: rgb(var(--brand-2)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-2) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
@@ -167,3 +169,43 @@ html, body, #app { height: 100%; }
 }
 .driver-popover-title { @apply font-black text-xl text-slate-900; }
 .driver-popover-description { @apply text-slate-600 text-sm leading-relaxed; }
+
+
+/* --- BRANDING OVERRIDE: ASSALAM (Teal) --- */
+.brand-assalam {
+  --brand-1: 20 184 166; /* teal-500 */
+  --brand-2: 13 148 136; /* teal-600 */
+  --brand-3: 15 118 110; /* teal-700 */
+  --bg-0: 248 250 252;   /* slate-50 */
+}
+
+/* Teal Component Remaps */
+.brand-assalam .btn-primary { 
+  @apply bg-teal-600 shadow-teal-600/20 hover:bg-teal-700; 
+  background-color: rgb(var(--brand-2));
+}
+.brand-assalam .badge-success { @apply bg-teal-100 text-teal-700; }
+.brand-assalam .segment-active { @apply text-teal-700; }
+.brand-assalam .bottom-nav-btn-active { @apply text-teal-700; color: rgb(var(--brand-2)); }
+.brand-assalam .input:focus { border-color: rgba(var(--brand-2) / 0.3); }
+
+/* Utility remaps for emerald -> teal within Assalam */
+.brand-assalam .text-emerald-700, .brand-assalam .text-emerald-600 { color: rgb(var(--brand-2)); }
+.brand-assalam .text-emerald-800 { color: rgb(19 78 74); } /* teal-900 */
+.brand-assalam .text-emerald-100 { color: rgb(204 251 241); } /* teal-100 */
+.brand-assalam .bg-emerald-700, .brand-assalam .bg-emerald-600 { background-color: rgb(var(--brand-2)); }
+.brand-assalam .bg-emerald-500 { background-color: rgb(var(--brand-2)); }
+.brand-assalam .bg-emerald-100 { background-color: rgb(204 251 241); } /* teal-100 */
+.brand-assalam .bg-emerald-50 { background-color: rgba(var(--brand-1) / 0.07); }
+.brand-assalam .border-emerald-100 { border-color: rgb(204 251 241); } /* teal-100 */
+.brand-assalam .border-emerald-200 { border-color: rgb(153 246 228); } /* teal-200 */
+.brand-assalam .accent-emerald-700 { accent-color: rgb(var(--brand-2)); }
+
+/* Gradient remaps used by views */
+.brand-assalam .from-emerald-700 { --tw-gradient-from: rgb(var(--brand-2)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-2) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.brand-assalam .from-emerald-800 { --tw-gradient-from: rgb(17 94 89) var(--tw-gradient-from-position); --tw-gradient-to: rgb(17 94 89 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.brand-assalam .to-emerald-900 { --tw-gradient-to: rgb(19 78 74) var(--tw-gradient-to-position); }
+.brand-assalam .to-teal-600 { --tw-gradient-to: rgb(var(--brand-2)) var(--tw-gradient-to-position); }
+
+/* Cross-brand: ensure native form accents follow brand color when emerald utilities are used */
+.brand-attaqwa .accent-emerald-700 { accent-color: rgb(var(--brand-2)); }
