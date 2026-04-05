@@ -1142,181 +1142,150 @@ class UtilityController extends Controller
         $cacheKey = 'vtu:data:variations:' . $serviceId;
         $ttl = now()->addMinutes(30);
 
-        $headers = [ 'api-key' => $apiKey ];
-        if ($publicKey) { $headers['public-key'] = $publicKey; }
-        if ($secretKey) { $headers['secret-key'] = $secretKey; }
-
         $convenience = (float) (config('services.vtu.convenience_fee', 0));
 
-        // If VTpass keys are not set, try ClubKonnect (Nellobytes) as a fallback source for plans; else serve cached/static
-        if (!$apiKey || (!$publicKey && !$secretKey)) {
-            $ck = config('services.vtu.clubkonnect', []);
-            $ckEnabled = (bool)($ck['enabled'] ?? false);
-            $ckUser = $ck['user_id'] ?? null;
-            $ckKey = $ck['api_key'] ?? null;
-            $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
-            if ($ckEnabled && $ckUser && $ckKey) {
-                try {
-                    $r = Http::timeout(10)
-                        ->acceptJson()
-                        ->get($ckBase . '/APIDatabundlePlansV2.asp', [ 'UserID' => $ckUser ]);
-                    $j = $r->json();
-                    if ($r->ok() && is_array($j)) {
-                        // Attempt to locate the array for the requested network
-                        $keyMap = [ 'mtn' => ['MTN','mtn'], 'glo' => ['Glo','glo'], 'airtel' => ['Airtel','airtel'], '9mobile' => ['9mobile','etisalat','9MOBILE'] ];
-                        $sections = $keyMap[$network] ?? [];
-                        $plansRaw = null;
-                        foreach ($sections as $k) {
-                            if (isset($j[$k]) && is_array($j[$k])) { $plansRaw = $j[$k]; break; }
-                            if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $plansRaw = $j['data'][$k]; break; }
-                            if (isset($j['plans'][$k]) && is_array($j['plans'][$k])) { $plansRaw = $j['plans'][$k]; break; }
-                        }
-                        // Fallback: if top-level is a list, filter by network label inside
-                        if ($plansRaw === null && isset($j['data']) && is_array($j['data'])) {
-                            $plansRaw = $j['data'];
-                        }
-                        if ($plansRaw === null && isset($j['plans']) && is_array($j['plans'])) {
-                            $plansRaw = $j['plans'];
-                        }
-                        if ($plansRaw === null && array_is_list($j)) {
-                            $plansRaw = $j;
-                        }
-
-                        $bundles = [];
-                        if (is_array($plansRaw)) {
-                            foreach ($plansRaw as $p) {
-                                // Optionally filter if items contain a network field
-                                $pn = strtolower((string)($p['network'] ?? $p['provider'] ?? ''));
-                                if ($pn && $pn !== $network) { continue; }
-                                $code = (string)($p['dataplan_id'] ?? ($p['id'] ?? ($p['code'] ?? '')));
-                                $name = (string)($p['name'] ?? ($p['plan'] ?? ($p['description'] ?? '')));
-                                $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
-                                if ($code === '' || $amount <= 0) { continue; }
-                                $bundles[] = [
-                                    'code' => $code,
-                                    'name' => $name,
-                                    'amount' => $amount,
-                                    'fixed' => true,
-                                    'convenience_fee' => $convenience,
-                                    'total_debit' => round($amount + $convenience, 2),
-                                ];
-                            }
-                        }
-
-                        if (!empty($bundles)) {
-                            $payload = [ 'bundles' => $bundles, 'provider_response' => $j ];
-                            \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, $ttl);
-                            return response()->json([
-                                'network' => $network,
-                                'service_id' => $serviceId,
-                                'convenience_fee' => $convenience,
-                                'bundles' => $bundles,
-                                'provider_response' => $j,
-                                'stale' => false,
-                                'note' => 'Fetched from ClubKonnect',
-                            ], 200);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    Log::warning('ClubKonnect data plans fetch failed', ['error' => $e->getMessage()]);
+        // Use routing order to decide which provider to fetch plans from first.
+        // This ensures the variation codes match the provider we are most likely to use for purchase.
+        $order = array_filter(array_map('trim', explode(',', (string) config('services.vtu.routing_order', 'clubkonnect,shago,vtpass'))));
+        $primaryProvider = 'vtpass';
+        foreach ($order as $p) {
+            $p = strtolower($p);
+            if ($p === 'clubkonnect') {
+                $ck = config('services.vtu.clubkonnect', []);
+                if (!empty($ck['enabled']) && !empty($ck['user_id'])) {
+                    $primaryProvider = 'clubkonnect';
+                    break;
+                }
+            } elseif ($p === 'vtpass') {
+                if ($apiKey && ($publicKey || $secretKey)) {
+                    $primaryProvider = 'vtpass';
+                    break;
                 }
             }
-
-            // Fallback to cached/static if CK not configured or failed
-            $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-            $resp = [
-                'network' => $network,
-                'service_id' => $serviceId,
-                'convenience_fee' => $convenience,
-                'bundles' => $cached['bundles'] ?? [],
-                'provider_response' => $cached['provider_response'] ?? null,
-                'stale' => true,
-                'note' => 'Provider not configured; serving cached/static bundles',
-            ];
-            return response()->json($resp, 200);
         }
 
-        try {
-            $resp = Http::withHeaders($headers)
-                ->timeout(8)
-                ->retry(1, 200)
-                ->acceptJson()
-                ->get($baseUrl . '/service-variations', [ 'serviceID' => $serviceId ]);
-        } catch (\Throwable $e) {
-            Log::error('VTU variations HTTP error', ['exception' => $e->getMessage()]);
-            $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-            if ($cached) {
-                $cached['stale'] = true;
-                $cached['note'] = 'Network error; serving cached bundles';
-                return response()->json(array_merge([
-                    'network' => $network,
-                    'service_id' => $serviceId,
-                    'convenience_fee' => $convenience,
-                ], $cached), 200);
+        if ($primaryProvider === 'clubkonnect') {
+            $ck = config('services.vtu.clubkonnect', []);
+            $ckUser = $ck['user_id'] ?? null;
+            $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
+            try {
+                $r = Http::timeout(10)
+                    ->acceptJson()
+                    ->get($ckBase . '/APIDatabundlePlansV2.asp', [ 'UserID' => $ckUser ]);
+                $j = $r->json();
+                if ($r->ok() && is_array($j)) {
+                    // Attempt to locate the array for the requested network
+                    $keyMap = [ 'mtn' => ['MTN','mtn'], 'glo' => ['Glo','glo'], 'airtel' => ['Airtel','airtel'], '9mobile' => ['9mobile','etisalat','9MOBILE'] ];
+                    $sections = $keyMap[$network] ?? [];
+                    $plansRaw = null;
+                    foreach ($sections as $k) {
+                        if (isset($j[$k]) && is_array($j[$k])) { $plansRaw = $j[$k]; break; }
+                        if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $plansRaw = $j['data'][$k]; break; }
+                        if (isset($j['plans'][$k]) && is_array($j['plans'][$k])) { $plansRaw = $j['plans'][$k]; break; }
+                    }
+                    if ($plansRaw === null && isset($j['data']) && is_array($j['data'])) { $plansRaw = $j['data']; }
+                    if ($plansRaw === null && isset($j['plans']) && is_array($j['plans'])) { $plansRaw = $j['plans']; }
+                    if ($plansRaw === null && array_is_list($j)) { $plansRaw = $j; }
+
+                    $bundles = [];
+                    if (is_array($plansRaw)) {
+                        foreach ($plansRaw as $p) {
+                            $pn = strtolower((string)($p['network'] ?? $p['provider'] ?? ''));
+                            if ($pn && $pn !== $network) { continue; }
+                            $code = (string)($p['dataplan_id'] ?? ($p['id'] ?? ($p['code'] ?? '')));
+                            $name = (string)($p['name'] ?? ($p['plan'] ?? ($p['description'] ?? '')));
+                            $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
+                            if ($code === '' || $amount <= 0) { continue; }
+                            $bundles[] = [
+                                'code' => $code,
+                                'name' => $name,
+                                'amount' => $amount,
+                                'fixed' => true,
+                                'convenience_fee' => $convenience,
+                                'total_debit' => round($amount + $convenience, 2),
+                            ];
+                        }
+                    }
+
+                    if (!empty($bundles)) {
+                        $payload = [ 'bundles' => $bundles, 'provider_response' => $j ];
+                        \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, $ttl);
+                        return response()->json([
+                            'network' => $network,
+                            'service_id' => $serviceId,
+                            'convenience_fee' => $convenience,
+                            'bundles' => $bundles,
+                            'provider_response' => $j,
+                            'stale' => false,
+                            'note' => 'Fetched from ClubKonnect',
+                        ], 200);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('ClubKonnect data plans fetch failed', ['error' => $e->getMessage()]);
             }
-            return response()->json([
-                'network' => $network,
-                'service_id' => $serviceId,
-                'convenience_fee' => $convenience,
-                'bundles' => [],
-                'note' => 'Network error; no cached bundles available',
-            ], 200);
         }
 
-        $json = $resp->json();
-        if (!$resp->ok()) {
-            Log::error('VTU variations bad response', ['status' => $resp->status(), 'body' => $json]);
-            $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-            if ($cached) {
-                $cached['stale'] = true;
-                $cached['note'] = 'Provider error; serving cached bundles';
-                return response()->json(array_merge([
-                    'network' => $network,
-                    'service_id' => $serviceId,
-                    'convenience_fee' => $convenience,
-                ], $cached), 200);
+        // Try VTpass if it was primary or as fallback
+        if ($apiKey && ($publicKey || $secretKey)) {
+            $headers = [ 'api-key' => $apiKey ];
+            if ($publicKey) { $headers['public-key'] = $publicKey; }
+            if ($secretKey) { $headers['secret-key'] = $secretKey; }
+
+            try {
+                $resp = Http::withHeaders($headers)
+                    ->timeout(8)
+                    ->retry(1, 200)
+                    ->acceptJson()
+                    ->get($baseUrl . '/service-variations', [ 'serviceID' => $serviceId ]);
+                $json = $resp->json();
+                if ($resp->ok() && is_array($json)) {
+                    $raw = $json['content']['varations'] ?? $json['content']['variations'] ?? $json['data']['variations'] ?? [];
+                    $bundles = array_values(array_map(function ($v) use ($convenience) {
+                        $code = $v['variation_code'] ?? ($v['code'] ?? null);
+                        $name = $v['name'] ?? '';
+                        $amount = (float) ($v['variation_amount'] ?? ($v['amount'] ?? 0));
+                        $fixed = (bool) ($v['fixedPrice'] ?? ($v['fixed'] ?? true));
+                        return [
+                            'code' => $code,
+                            'name' => $name,
+                            'amount' => $amount,
+                            'fixed' => $fixed,
+                            'convenience_fee' => $convenience,
+                            'total_debit' => round($amount + $convenience, 2),
+                            'type' => $v['type'] ?? null,
+                        ];
+                    }, is_array($raw) ? $raw : []));
+
+                    if (!empty($bundles)) {
+                        $payload = [ 'bundles' => $bundles, 'provider_response' => $json ];
+                        \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, $ttl);
+                        return response()->json([
+                            'network' => $network,
+                            'service_id' => $serviceId,
+                            'convenience_fee' => $convenience,
+                            'bundles' => $bundles,
+                            'provider_response' => $json,
+                            'stale' => false,
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::error('VTU variations fetch failed', ['exception' => $e->getMessage()]);
             }
-            return response()->json([
-                'network' => $network,
-                'service_id' => $serviceId,
-                'convenience_fee' => $convenience,
-                'bundles' => [],
-                'note' => 'Failed to fetch bundles; no cached bundles available',
-                'provider_status' => $resp->status(),
-            ], 200);
         }
 
-        $raw = $json['content']['varations'] ?? $json['content']['variations'] ?? $json['data']['variations'] ?? [];
-        $bundles = array_values(array_map(function ($v) use ($convenience) {
-            $code = $v['variation_code'] ?? ($v['code'] ?? null);
-            $name = $v['name'] ?? '';
-            $amount = (float) ($v['variation_amount'] ?? ($v['amount'] ?? 0));
-            $fixed = (bool) ($v['fixedPrice'] ?? ($v['fixed'] ?? true));
-            return [
-                'code' => $code,
-                'name' => $name,
-                'amount' => $amount,
-                'fixed' => $fixed,
-                'convenience_fee' => $convenience,
-                'total_debit' => round($amount + $convenience, 2),
-                'type' => $v['type'] ?? null,
-            ];
-        }, is_array($raw) ? $raw : []));
-
-        $payload = [
-            'bundles' => $bundles,
-            'provider_response' => $json,
-        ];
-        \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, $ttl);
-
+        // Final fallback to cached/static
+        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
         return response()->json([
             'network' => $network,
             'service_id' => $serviceId,
             'convenience_fee' => $convenience,
-            'bundles' => $bundles,
-            'provider_response' => $json,
-            'stale' => false,
-        ]);
+            'bundles' => $cached['bundles'] ?? [],
+            'provider_response' => $cached['provider_response'] ?? null,
+            'stale' => true,
+            'note' => 'Serving cached/static bundles',
+        ], 200);
     }
 
     public function tvBundles(Request $request)
@@ -1326,115 +1295,127 @@ class UtilityController extends Controller
         ]);
 
         $service = strtolower($validated['service']);
-
         $baseUrl = rtrim(config('services.vtu.base_url', 'https://vtpass.com/api'), '/');
         $apiKey = config('services.vtu.api_key');
         $publicKey = config('services.vtu.public_key');
         $secretKey = config('services.vtu.secret_key');
-        if (!$apiKey || (!$publicKey && !$secretKey)) {
-            // Fallback to ClubKonnect packages when VTpass is not configured
-            $ck = config('services.vtu.clubkonnect', []);
-            $ckEnabled = (bool)($ck['enabled'] ?? false);
-            $ckUser = $ck['user_id'] ?? null;
-            $ckKey = $ck['api_key'] ?? null; // not used by plans endpoint but confirm creds exist
-            $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
-            if ($ckEnabled && $ckUser && $ckKey) {
-                try {
-                    $r = \Illuminate\Support\Facades\Http::timeout(10)
-                        ->acceptJson()
-                        ->get($ckBase . '/APICableTVPackagesV2.asp', [ 'UserID' => $ckUser ]);
-                    $j = $r->json();
-                    if ($r->ok() && is_array($j)) {
-                        $map = [ 'dstv' => ['DStv','dstv'], 'gotv' => ['GOtv','gotv'], 'startimes' => ['StarTimes','startimes','Startimes','STARTIMES'] ];
-                        $keys = $map[$service] ?? [$service];
-                        $raw = null;
-                        foreach ($keys as $k) {
-                            if (isset($j[$k]) && is_array($j[$k])) { $raw = $j[$k]; break; }
-                            if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $raw = $j['data'][$k]; break; }
-                            if (isset($j['packages'][$k]) && is_array($j['packages'][$k])) { $raw = $j['packages'][$k]; break; }
-                        }
-                        if ($raw === null && isset($j['data']) && is_array($j['data'])) { $raw = $j['data']; }
-                        if ($raw === null && isset($j['packages']) && is_array($j['packages'])) { $raw = $j['packages']; }
-                        if ($raw === null && array_is_list($j)) { $raw = $j; }
+        $convenience = (float) (config('services.vtu.convenience_fee', 0));
 
-                        $convenience = (float) (config('services.vtu.convenience_fee', 0));
-                        $bundles = [];
-                        if (is_array($raw)) {
-                            foreach ($raw as $p) {
-                                $code = (string)($p['code'] ?? ($p['package_code'] ?? ($p['id'] ?? '')));
-                                $name = (string)($p['name'] ?? ($p['description'] ?? ''));
-                                $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
-                                if ($code === '') { continue; }
-                                $bundles[] = [
-                                    'code' => $code,
-                                    'name' => $name,
-                                    'amount' => $amount,
-                                    'fixed' => true,
-                                    'convenience_fee' => $convenience,
-                                    'total_debit' => round($amount + $convenience, 2),
-                                ];
-                            }
-                        }
-                        if (!empty($bundles)) {
-                            return response()->json([
-                                'service' => $service,
-                                'convenience_fee' => $convenience,
-                                'bundles' => $bundles,
-                                'provider_response' => $j,
-                                'note' => 'Fetched from ClubKonnect',
-                            ]);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning('ClubKonnect TV packages fetch failed', ['error' => $e->getMessage()]);
+        // Use routing order to decide which provider to fetch packages from first.
+        $order = array_filter(array_map('trim', explode(',', (string) config('services.vtu.routing_order', 'clubkonnect,shago,vtpass'))));
+        $primaryProvider = 'vtpass';
+        foreach ($order as $p) {
+            $p = strtolower($p);
+            if ($p === 'clubkonnect') {
+                $ck = config('services.vtu.clubkonnect', []);
+                if (!empty($ck['enabled']) && !empty($ck['user_id'])) {
+                    $primaryProvider = 'clubkonnect';
+                    break;
+                }
+            } elseif ($p === 'vtpass') {
+                if ($apiKey && ($publicKey || $secretKey)) {
+                    $primaryProvider = 'vtpass';
+                    break;
                 }
             }
-            return response()->json(['message' => 'Provider not configured'], 500);
         }
 
-        $headers = [ 'api-key' => $apiKey ];
-        if ($publicKey) { $headers['public-key'] = $publicKey; }
-        if ($secretKey) { $headers['secret-key'] = $secretKey; }
+        if ($primaryProvider === 'clubkonnect') {
+            $ck = config('services.vtu.clubkonnect', []);
+            $ckUser = $ck['user_id'] ?? null;
+            $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
+            try {
+                $r = Http::timeout(10)
+                    ->acceptJson()
+                    ->get($ckBase . '/APICableTVPackagesV2.asp', [ 'UserID' => $ckUser ]);
+                $j = $r->json();
+                if ($r->ok() && is_array($j)) {
+                    $map = [ 'dstv' => ['DStv','dstv'], 'gotv' => ['GOtv','gotv'], 'startimes' => ['StarTimes','startimes','Startimes','STARTIMES'] ];
+                    $keys = $map[$service] ?? [$service];
+                    $raw = null;
+                    foreach ($keys as $k) {
+                        if (isset($j[$k]) && is_array($j[$k])) { $raw = $j[$k]; break; }
+                        if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $raw = $j['data'][$k]; break; }
+                        if (isset($j['packages'][$k]) && is_array($j['packages'][$k])) { $raw = $j['packages'][$k]; break; }
+                    }
+                    if ($raw === null && isset($j['data']) && is_array($j['data'])) { $raw = $j['data']; }
+                    if ($raw === null && isset($j['packages']) && is_array($j['packages'])) { $raw = $j['packages']; }
+                    if ($raw === null && array_is_list($j)) { $raw = $j; }
 
-        try {
-            $resp = Http::withHeaders($headers)
-                ->acceptJson()
-                ->get($baseUrl . '/service-variations', [ 'serviceID' => $service ]);
-        } catch (\Throwable $e) {
-            Log::error('VTU TV variations HTTP error', ['exception' => $e->getMessage()]);
-            return response()->json(['message' => 'Network error'], 502);
+                    $bundles = [];
+                    if (is_array($raw)) {
+                        foreach ($raw as $p) {
+                            $code = (string)($p['code'] ?? ($p['package_code'] ?? ($p['id'] ?? '')));
+                            $name = (string)($p['name'] ?? ($p['description'] ?? ''));
+                            $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
+                            if ($code === '') { continue; }
+                            $bundles[] = [
+                                'code' => $code,
+                                'name' => $name,
+                                'amount' => $amount,
+                                'fixed' => true,
+                                'convenience_fee' => $convenience,
+                                'total_debit' => round($amount + $convenience, 2),
+                            ];
+                        }
+                    }
+                    if (!empty($bundles)) {
+                        return response()->json([
+                            'service' => $service,
+                            'convenience_fee' => $convenience,
+                            'bundles' => $bundles,
+                            'provider_response' => $j,
+                            'note' => 'Fetched from ClubKonnect',
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('ClubKonnect TV packages fetch failed', ['error' => $e->getMessage()]);
+            }
         }
 
-        $json = $resp->json();
-        if (!$resp->ok()) {
-            Log::error('VTU TV variations bad response', ['status' => $resp->status(), 'body' => $json]);
-            return response()->json(['message' => 'Failed to fetch TV bundles', 'details' => $json], 502);
+        // VTpass fallback
+        if ($apiKey && ($publicKey || $secretKey)) {
+            $headers = [ 'api-key' => $apiKey ];
+            if ($publicKey) { $headers['public-key'] = $publicKey; }
+            if ($secretKey) { $headers['secret-key'] = $secretKey; }
+
+            try {
+                $resp = Http::withHeaders($headers)
+                    ->acceptJson()
+                    ->get($baseUrl . '/service-variations', [ 'serviceID' => $service ]);
+                $json = $resp->json();
+                if ($resp->ok() && is_array($json)) {
+                    $raw = $json['content']['varations'] ?? $json['content']['variations'] ?? $json['data']['variations'] ?? [];
+                    $bundles = array_values(array_map(function ($v) use ($convenience) {
+                        $code = $v['variation_code'] ?? ($v['code'] ?? null);
+                        $name = $v['name'] ?? '';
+                        $amount = (float) ($v['variation_amount'] ?? ($v['amount'] ?? 0));
+                        $fixed = (bool) ($v['fixedPrice'] ?? ($v['fixed'] ?? true));
+                        return [
+                            'code' => $code,
+                            'name' => $name,
+                            'amount' => $amount,
+                            'fixed' => $fixed,
+                            'convenience_fee' => $convenience,
+                            'total_debit' => round($amount + $convenience, 2),
+                            'type' => $v['type'] ?? null,
+                        ];
+                    }, is_array($raw) ? $raw : []));
+
+                    return response()->json([
+                        'service' => $service,
+                        'convenience_fee' => $convenience,
+                        'bundles' => $bundles,
+                        'provider_response' => $json,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error('VTU TV variations HTTP error', ['exception' => $e->getMessage()]);
+            }
         }
 
-        $raw = $json['content']['varations'] ?? $json['content']['variations'] ?? $json['data']['variations'] ?? [];
-        $convenience = (float) (config('services.vtu.convenience_fee', 0));
-        $bundles = array_values(array_map(function ($v) use ($convenience) {
-            $code = $v['variation_code'] ?? ($v['code'] ?? null);
-            $name = $v['name'] ?? '';
-            $amount = (float) ($v['variation_amount'] ?? ($v['amount'] ?? 0));
-            $fixed = (bool) ($v['fixedPrice'] ?? ($v['fixed'] ?? true));
-            return [
-                'code' => $code,
-                'name' => $name,
-                'amount' => $amount,
-                'fixed' => $fixed,
-                'convenience_fee' => $convenience,
-                'total_debit' => round($amount + $convenience, 2),
-                'type' => $v['type'] ?? null,
-            ];
-        }, is_array($raw) ? $raw : []));
-
-        return response()->json([
-            'service' => $service,
-            'convenience_fee' => $convenience,
-            'bundles' => $bundles,
-            'provider_response' => $json,
-        ]);
+        return response()->json(['message' => 'No VTU provider available for TV bundles'], 502);
     }
 
     public function purchaseElectricity(Request $request)
@@ -2472,7 +2453,7 @@ class UtilityController extends Controller
 
             // Nellobytes/ClubKonnect success: statuscode=200 or orderstatus=ORDER_COMPLETED
             $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
-            if ($ckCode === '200' || $ckCode === 'OK' || $ckCode === '201') { // be liberal
+            if ($ckCode === '200' || $ckCode === 'OK' || $ckCode === '201' || $ckCode === '000') { // be liberal
                 return true;
             }
             $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
@@ -2501,27 +2482,34 @@ class UtilityController extends Controller
             if (in_array($txStatus, ['completed', 'successful', 'delivered'])) {
                 return true;
             }
+        } elseif (is_string($body)) {
+            $b = strtoupper(trim($body));
+            return in_array($b, ['ORDER_COMPLETED', 'SUCCESS', 'OK', 'COMPLETED']);
         }
         return false;
     }
 
     private function isVtpassPending($body): bool
     {
-        if (!is_array($body)) { return false; }
-        $status = strtolower((string)($body['status'] ?? ''));
-        if (in_array($status, ['pending', 'processing', 'initiated', 'queued', 'order_received', 'order_onhold'])) { return true; }
-        $txStatus = strtolower((string)($body['data']['transactions']['status'] ?? ($body['content']['transactions']['status'] ?? ($body['transactions']['status'] ?? ''))));
-        if (in_array($txStatus, ['pending', 'processing', 'initiated', 'queued'])) { return true; }
-        // Nellobytes/ClubKonnect pending fields
-        $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
-        if ($ckCode === '100') { return true; }
-        $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
-        if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'RECEIVED', 'ORDER_ONHOLD', 'ONHOLD'])) { return true; }
-        $desc = strtolower((string)($body['response_description'] ?? ($body['message'] ?? '')));
-        if ($desc && (str_contains($desc, 'pending') || str_contains($desc, 'processing') || str_contains($desc, 'initiated') || str_contains($desc, 'queue'))) { return true; }
-        // Some VTpass variants use non-000 codes while processing
-        $code = (string)($body['code'] ?? ($body['data']['code'] ?? ''));
-        if (in_array($code, ['016', '099'])) { return true; }
+        if (is_array($body)) {
+            $status = strtolower((string)($body['status'] ?? ''));
+            if (in_array($status, ['pending', 'processing', 'initiated', 'queued', 'order_received', 'order_onhold'])) { return true; }
+            $txStatus = strtolower((string)($body['data']['transactions']['status'] ?? ($body['content']['transactions']['status'] ?? ($body['transactions']['status'] ?? ''))));
+            if (in_array($txStatus, ['pending', 'processing', 'initiated', 'queued'])) { return true; }
+            // Nellobytes/ClubKonnect pending fields
+            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
+            if ($ckCode === '100') { return true; }
+            $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
+            if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'RECEIVED', 'ORDER_ONHOLD', 'ONHOLD'])) { return true; }
+            $desc = strtolower((string)($body['response_description'] ?? ($body['message'] ?? '')));
+            if ($desc && (str_contains($desc, 'pending') || str_contains($desc, 'processing') || str_contains($desc, 'initiated') || str_contains($desc, 'queue'))) { return true; }
+            // Some VTpass variants use non-000 codes while processing
+            $code = (string)($body['code'] ?? ($body['data']['code'] ?? ''));
+            if (in_array($code, ['016', '099'])) { return true; }
+        } elseif (is_string($body)) {
+            $b = strtoupper(trim($body));
+            return in_array($b, ['ORDER_RECEIVED', 'ORDER_ONHOLD', 'PENDING', 'PROCESSING']);
+        }
         return false;
     }
 
