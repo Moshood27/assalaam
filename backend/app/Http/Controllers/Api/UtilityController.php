@@ -21,8 +21,10 @@ class UtilityController extends Controller
 
         // Extract request_id/reference from common fields
         $payload = $request->all();
+        // Try our own cb_ref first (we append ?ref=reference in callback URLs)
+        $cbRef = $request->query('ref') ?? ($payload['ref'] ?? null);
         $reference = $payload['request_id']
-            ?? ($payload['requestId'] ?? ($payload['reference'] ?? ($payload['data']['requestId'] ?? ($payload['content']['transactions']['requestId'] ?? null))));
+            ?? ($payload['requestId'] ?? ($payload['reference'] ?? ($payload['data']['requestId'] ?? ($payload['content']['transactions']['requestId'] ?? $cbRef))));
 
         if (!$reference) {
             return response()->json(['status' => 'received', 'note' => 'missing reference'], 200);
@@ -162,6 +164,7 @@ class UtilityController extends Controller
             'phone_number' => 'required|string|min:10|max:15',
             'amount' => 'required|numeric|min:50',
             'reference' => 'nullable|string|max:100',
+            'bonus_type' => 'nullable|string|max:5',
             'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
@@ -209,6 +212,9 @@ class UtilityController extends Controller
             'amount' => $amount,
             'phone' => $phone,
         ];
+        if (!empty($validated['bonus_type'] ?? null)) {
+            $payload['bonus_type'] = $validated['bonus_type'];
+        }
 
         // Provide per-request callback URL to ensure webhook delivery even if dashboard isn't configured
         $callbackUrl = trim((string) config('services.vtu.webhook_url'));
@@ -216,7 +222,8 @@ class UtilityController extends Controller
             $payload['callback_url'] = $callbackUrl;
         }
 
-        $response = $this->callVtpass($payload);
+        $response = $this->callVtuSmart('airtime', $payload);
+        $providerUsed = $response['provider_used'] ?? 'vtpass';
 
         if (!$response['ok']) {
             $tx->update([
@@ -243,46 +250,60 @@ class UtilityController extends Controller
         if (!$success) {
             // If provider indicates pending/processing, perform a single requery before deciding
             if ($this->isVtpassPending($body)) {
-                $requery = $this->requeryVtpass($reference);
-                if ($requery['ok']) {
-                    $rb = $requery['body'];
-                    if ($this->isVtpassSuccess($rb)) {
-                        // Treat as success below (continue to debit)
-                        $body = $rb;
-                    } elseif ($this->isVtpassPending($rb)) {
-                        // Keep transaction pending and inform client
+                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                    $requery = $this->requeryVtpass($reference);
+                    if ($requery['ok']) {
+                        $rb = $requery['body'];
+                        if ($this->isVtpassSuccess($rb)) {
+                            // Treat as success below (continue to debit)
+                            $body = $rb;
+                        } elseif ($this->isVtpassPending($rb)) {
+                            // Keep transaction pending and inform client
+                            $tx->update([
+                                'status' => 'pending',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                                'status' => 'pending',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 200);
+                        } else {
+                            // Definitive failure after requery
+                            $tx->update([
+                                'status' => 'failed',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Airtime purchase failed',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 400);
+                        }
+                    } else {
+                        // Requery failed (network or 4xx); keep as pending and let client retry/view history
                         $tx->update([
                             'status' => 'pending',
-                            'provider_response' => $rb,
+                            'provider_response' => $body,
                         ]);
                         return response()->json([
-                            'message' => 'Airtime is processing with provider. Check history for final status shortly.',
+                            'message' => 'Airtime is processing. Unable to confirm now; please check history soon.',
                             'status' => 'pending',
-                            'provider' => $rb,
+                            'provider' => $requery['body'] ?? $body,
                             'reference' => $reference,
                         ], 200);
-                    } else {
-                        // Definitive failure after requery
-                        $tx->update([
-                            'status' => 'failed',
-                            'provider_response' => $rb,
-                        ]);
-                        return response()->json([
-                            'message' => 'Airtime purchase failed',
-                            'provider' => $rb,
-                            'reference' => $reference,
-                        ], 400);
                     }
                 } else {
-                    // Requery failed (network or 4xx); keep as pending and let client retry/view history
+                    // For non-VTpass providers, do not requery here; allow webhook or later reconciliation
                     $tx->update([
                         'status' => 'pending',
                         'provider_response' => $body,
                     ]);
                     return response()->json([
-                        'message' => 'Airtime is processing. Unable to confirm now; please check history soon.',
+                        'message' => 'Airtime is processing with provider. Check history for final status shortly.',
                         'status' => 'pending',
-                        'provider' => $requery['body'] ?? $body,
+                        'provider' => $body,
                         'reference' => $reference,
                     ], 200);
                 }
@@ -449,7 +470,8 @@ class UtilityController extends Controller
         }
 
         $bundleCode = $validated['bundle_code'];
-        $response = $this->callVtpass($payload);
+        $response = $this->callVtuSmart('data', $payload);
+        $providerUsed = $response['provider_used'] ?? 'vtpass';
 
         if (!$response['ok']) {
             $tx->update([
@@ -475,46 +497,60 @@ class UtilityController extends Controller
         if (!$success) {
             // If provider indicates pending/processing, perform a single requery before deciding
             if ($this->isVtpassPending($body)) {
-                $requery = $this->requeryVtpass($reference);
-                if ($requery['ok']) {
-                    $rb = $requery['body'];
-                    if ($this->isVtpassSuccess($rb)) {
-                        // Treat as success below (continue to debit)
-                        $body = $rb;
-                    } elseif ($this->isVtpassPending($rb)) {
-                        // Keep transaction pending and inform client
+                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                    $requery = $this->requeryVtpass($reference);
+                    if ($requery['ok']) {
+                        $rb = $requery['body'];
+                        if ($this->isVtpassSuccess($rb)) {
+                            // Treat as success below (continue to debit)
+                            $body = $rb;
+                        } elseif ($this->isVtpassPending($rb)) {
+                            // Keep transaction pending and inform client
+                            $tx->update([
+                                'status' => 'pending',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Data purchase is processing with provider. Check history for final status shortly.',
+                                'status' => 'pending',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 200);
+                        } else {
+                            // Definitive failure after requery
+                            $tx->update([
+                                'status' => 'failed',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Data purchase failed',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 400);
+                        }
+                    } else {
+                        // Requery failed (network or 4xx); keep as pending and let client retry/view history
                         $tx->update([
                             'status' => 'pending',
-                            'provider_response' => $rb,
+                            'provider_response' => $body,
                         ]);
                         return response()->json([
-                            'message' => 'Data purchase is processing with provider. Check history for final status shortly.',
+                            'message' => 'Data purchase is processing. Unable to confirm now; please check history soon.',
                             'status' => 'pending',
-                            'provider' => $rb,
+                            'provider' => $requery['body'] ?? $body,
                             'reference' => $reference,
                         ], 200);
-                    } else {
-                        // Definitive failure after requery
-                        $tx->update([
-                            'status' => 'failed',
-                            'provider_response' => $rb,
-                        ]);
-                        return response()->json([
-                            'message' => 'Data purchase failed',
-                            'provider' => $rb,
-                            'reference' => $reference,
-                        ], 400);
                     }
                 } else {
-                    // Requery failed (network or 4xx); keep as pending and let client retry/view history
+                    // For non-VTpass providers, do not requery here; allow webhook or later reconciliation
                     $tx->update([
                         'status' => 'pending',
                         'provider_response' => $body,
                     ]);
                     return response()->json([
-                        'message' => 'Data purchase is processing. Unable to confirm now; please check history soon.',
+                        'message' => 'Data purchase is processing with provider. Check history for final status shortly.',
                         'status' => 'pending',
-                        'provider' => $requery['body'] ?? $body,
+                        'provider' => $body,
                         'reference' => $reference,
                     ], 200);
                 }
@@ -637,8 +673,81 @@ class UtilityController extends Controller
 
         $convenience = (float) (config('services.vtu.convenience_fee', 0));
 
-        // If provider keys are not set, serve cached or static fallback
+        // If VTpass keys are not set, try ClubKonnect (Nellobytes) as a fallback source for plans; else serve cached/static
         if (!$apiKey || (!$publicKey && !$secretKey)) {
+            $ck = config('services.vtu.clubkonnect', []);
+            $ckEnabled = (bool)($ck['enabled'] ?? false);
+            $ckUser = $ck['user_id'] ?? null;
+            $ckKey = $ck['api_key'] ?? null;
+            $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
+            if ($ckEnabled && $ckUser && $ckKey) {
+                try {
+                    $r = Http::timeout(10)
+                        ->acceptJson()
+                        ->get($ckBase . '/APIDatabundlePlansV2.asp', [ 'UserID' => $ckUser ]);
+                    $j = $r->json();
+                    if ($r->ok() && is_array($j)) {
+                        // Attempt to locate the array for the requested network
+                        $keyMap = [ 'mtn' => ['MTN','mtn'], 'glo' => ['Glo','glo'], 'airtel' => ['Airtel','airtel'], '9mobile' => ['9mobile','etisalat','9MOBILE'] ];
+                        $sections = $keyMap[$network] ?? [];
+                        $plansRaw = null;
+                        foreach ($sections as $k) {
+                            if (isset($j[$k]) && is_array($j[$k])) { $plansRaw = $j[$k]; break; }
+                            if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $plansRaw = $j['data'][$k]; break; }
+                            if (isset($j['plans'][$k]) && is_array($j['plans'][$k])) { $plansRaw = $j['plans'][$k]; break; }
+                        }
+                        // Fallback: if top-level is a list, filter by network label inside
+                        if ($plansRaw === null && isset($j['data']) && is_array($j['data'])) {
+                            $plansRaw = $j['data'];
+                        }
+                        if ($plansRaw === null && isset($j['plans']) && is_array($j['plans'])) {
+                            $plansRaw = $j['plans'];
+                        }
+                        if ($plansRaw === null && array_is_list($j)) {
+                            $plansRaw = $j;
+                        }
+
+                        $bundles = [];
+                        if (is_array($plansRaw)) {
+                            foreach ($plansRaw as $p) {
+                                // Optionally filter if items contain a network field
+                                $pn = strtolower((string)($p['network'] ?? $p['provider'] ?? ''));
+                                if ($pn && $pn !== $network) { continue; }
+                                $code = (string)($p['dataplan_id'] ?? ($p['id'] ?? ($p['code'] ?? '')));
+                                $name = (string)($p['name'] ?? ($p['plan'] ?? ($p['description'] ?? '')));
+                                $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
+                                if ($code === '' || $amount <= 0) { continue; }
+                                $bundles[] = [
+                                    'code' => $code,
+                                    'name' => $name,
+                                    'amount' => $amount,
+                                    'fixed' => true,
+                                    'convenience_fee' => $convenience,
+                                    'total_debit' => round($amount + $convenience, 2),
+                                ];
+                            }
+                        }
+
+                        if (!empty($bundles)) {
+                            $payload = [ 'bundles' => $bundles, 'provider_response' => $j ];
+                            \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, $ttl);
+                            return response()->json([
+                                'network' => $network,
+                                'service_id' => $serviceId,
+                                'convenience_fee' => $convenience,
+                                'bundles' => $bundles,
+                                'provider_response' => $j,
+                                'stale' => false,
+                                'note' => 'Fetched from ClubKonnect',
+                            ], 200);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('ClubKonnect data plans fetch failed', ['error' => $e->getMessage()]);
+                }
+            }
+
+            // Fallback to cached/static if CK not configured or failed
             $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
             $resp = [
                 'network' => $network,
@@ -747,6 +856,63 @@ class UtilityController extends Controller
         $publicKey = config('services.vtu.public_key');
         $secretKey = config('services.vtu.secret_key');
         if (!$apiKey || (!$publicKey && !$secretKey)) {
+            // Fallback to ClubKonnect packages when VTpass is not configured
+            $ck = config('services.vtu.clubkonnect', []);
+            $ckEnabled = (bool)($ck['enabled'] ?? false);
+            $ckUser = $ck['user_id'] ?? null;
+            $ckKey = $ck['api_key'] ?? null; // not used by plans endpoint but confirm creds exist
+            $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
+            if ($ckEnabled && $ckUser && $ckKey) {
+                try {
+                    $r = \Illuminate\Support\Facades\Http::timeout(10)
+                        ->acceptJson()
+                        ->get($ckBase . '/APICableTVPackagesV2.asp', [ 'UserID' => $ckUser ]);
+                    $j = $r->json();
+                    if ($r->ok() && is_array($j)) {
+                        $map = [ 'dstv' => ['DStv','dstv'], 'gotv' => ['GOtv','gotv'], 'startimes' => ['StarTimes','startimes','Startimes','STARTIMES'] ];
+                        $keys = $map[$service] ?? [$service];
+                        $raw = null;
+                        foreach ($keys as $k) {
+                            if (isset($j[$k]) && is_array($j[$k])) { $raw = $j[$k]; break; }
+                            if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $raw = $j['data'][$k]; break; }
+                            if (isset($j['packages'][$k]) && is_array($j['packages'][$k])) { $raw = $j['packages'][$k]; break; }
+                        }
+                        if ($raw === null && isset($j['data']) && is_array($j['data'])) { $raw = $j['data']; }
+                        if ($raw === null && isset($j['packages']) && is_array($j['packages'])) { $raw = $j['packages']; }
+                        if ($raw === null && array_is_list($j)) { $raw = $j; }
+
+                        $convenience = (float) (config('services.vtu.convenience_fee', 0));
+                        $bundles = [];
+                        if (is_array($raw)) {
+                            foreach ($raw as $p) {
+                                $code = (string)($p['code'] ?? ($p['package_code'] ?? ($p['id'] ?? '')));
+                                $name = (string)($p['name'] ?? ($p['description'] ?? ''));
+                                $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
+                                if ($code === '') { continue; }
+                                $bundles[] = [
+                                    'code' => $code,
+                                    'name' => $name,
+                                    'amount' => $amount,
+                                    'fixed' => true,
+                                    'convenience_fee' => $convenience,
+                                    'total_debit' => round($amount + $convenience, 2),
+                                ];
+                            }
+                        }
+                        if (!empty($bundles)) {
+                            return response()->json([
+                                'service' => $service,
+                                'convenience_fee' => $convenience,
+                                'bundles' => $bundles,
+                                'provider_response' => $j,
+                                'note' => 'Fetched from ClubKonnect',
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('ClubKonnect TV packages fetch failed', ['error' => $e->getMessage()]);
+                }
+            }
             return response()->json(['message' => 'Provider not configured'], 500);
         }
 
@@ -861,7 +1027,8 @@ class UtilityController extends Controller
             $payload['callback_url'] = $callbackUrl;
         }
 
-        $response = $this->callVtpass($payload);
+        $response = $this->callVtuSmart('electricity', $payload);
+        $providerUsed = $response['provider_used'] ?? 'vtpass';
         if (!$response['ok']) {
             $tx->update([
                 'status' => 'failed',
@@ -884,32 +1051,45 @@ class UtilityController extends Controller
         $success = $this->isVtpassSuccess($body);
         if (!$success) {
             if ($this->isVtpassPending($body)) {
-                $requery = $this->requeryVtpass($reference);
-                if ($requery['ok']) {
-                    $rb = $requery['body'];
-                    if ($this->isVtpassSuccess($rb)) {
-                        $body = $rb;
-                    } elseif ($this->isVtpassPending($rb)) {
-                        $tx->update([
-                            'status' => 'pending',
-                            'provider_response' => $rb,
-                        ]);
-                        return response()->json([
-                            'message' => 'Electricity vend is processing with provider. Check history for final status shortly.',
-                            'status' => 'pending',
-                            'provider' => $rb,
-                            'reference' => $reference,
-                        ], 200);
+                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                    $requery = $this->requeryVtpass($reference);
+                    if ($requery['ok']) {
+                        $rb = $requery['body'];
+                        if ($this->isVtpassSuccess($rb)) {
+                            $body = $rb;
+                        } elseif ($this->isVtpassPending($rb)) {
+                            $tx->update([
+                                'status' => 'pending',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Electricity vend is processing with provider. Check history for final status shortly.',
+                                'status' => 'pending',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 200);
+                        } else {
+                            $tx->update([
+                                'status' => 'failed',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Electricity vend failed',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 400);
+                        }
                     } else {
                         $tx->update([
-                            'status' => 'failed',
-                            'provider_response' => $rb,
+                            'status' => 'pending',
+                            'provider_response' => $body,
                         ]);
                         return response()->json([
-                            'message' => 'Electricity vend failed',
-                            'provider' => $rb,
+                            'message' => 'Electricity vend is processing. Unable to confirm now; please check history soon.',
+                            'status' => 'pending',
+                            'provider' => $requery['body'] ?? $body,
                             'reference' => $reference,
-                        ], 400);
+                        ], 200);
                     }
                 } else {
                     $tx->update([
@@ -917,9 +1097,9 @@ class UtilityController extends Controller
                         'provider_response' => $body,
                     ]);
                     return response()->json([
-                        'message' => 'Electricity vend is processing. Unable to confirm now; please check history soon.',
+                        'message' => 'Electricity vend is processing with provider. Check history for final status shortly.',
                         'status' => 'pending',
-                        'provider' => $requery['body'] ?? $body,
+                        'provider' => $body,
                         'reference' => $reference,
                     ], 200);
                 }
@@ -1074,7 +1254,8 @@ class UtilityController extends Controller
             $payload['callback_url'] = $callbackUrl;
         }
 
-        $response = $this->callVtpass($payload);
+        $response = $this->callVtuSmart('cable', $payload);
+        $providerUsed = $response['provider_used'] ?? 'vtpass';
         if (!$response['ok']) {
             $tx->update([
                 'status' => 'failed',
@@ -1097,42 +1278,56 @@ class UtilityController extends Controller
         $success = $this->isVtpassSuccess($body);
         if (!$success) {
             if ($this->isVtpassPending($body)) {
-                $requery = $this->requeryVtpass($reference);
-                if ($requery['ok']) {
-                    $rb = $requery['body'];
-                    if ($this->isVtpassSuccess($rb)) {
-                        $body = $rb;
-                    } elseif ($this->isVtpassPending($rb)) {
-                        $tx->update([
-                            'status' => 'pending',
-                            'provider_response' => $rb,
-                        ]);
-                        return response()->json([
-                            'message' => 'Cable subscription is processing with provider. Check history for final status shortly.',
-                            'status' => 'pending',
-                            'provider' => $rb,
-                            'reference' => $reference,
-                        ], 200);
+                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                    $requery = $this->requeryVtpass($reference);
+                    if ($requery['ok']) {
+                        $rb = $requery['body'];
+                        if ($this->isVtpassSuccess($rb)) {
+                            $body = $rb;
+                        } elseif ($this->isVtpassPending($rb)) {
+                            $tx->update([
+                                'status' => 'pending',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Cable subscription is processing with provider. Check history for final status shortly.',
+                                'status' => 'pending',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 200);
+                        } else {
+                            $tx->update([
+                                'status' => 'failed',
+                                'provider_response' => $rb,
+                            ]);
+                            return response()->json([
+                                'message' => 'Cable subscription failed',
+                                'provider' => $rb,
+                                'reference' => $reference,
+                            ], 400);
+                        }
                     } else {
                         $tx->update([
-                            'status' => 'failed',
-                            'provider_response' => $rb,
+                            'status' => 'pending',
+                            'provider_response' => $body,
                         ]);
                         return response()->json([
-                            'message' => 'Cable subscription failed',
-                            'provider' => $rb,
+                            'message' => 'Cable subscription is processing. Unable to confirm now; please check history soon.',
+                            'status' => 'pending',
+                            'provider' => $requery['body'] ?? $body,
                             'reference' => $reference,
-                        ], 400);
+                        ], 200);
                     }
                 } else {
+                    // For non-VTpass providers, do not requery here; allow webhook or later reconciliation
                     $tx->update([
                         'status' => 'pending',
                         'provider_response' => $body,
                     ]);
                     return response()->json([
-                        'message' => 'Cable subscription is processing. Unable to confirm now; please check history soon.',
+                        'message' => 'Cable subscription is processing with provider. Check history for final status shortly.',
                         'status' => 'pending',
-                        'provider' => $requery['body'] ?? $body,
+                        'provider' => $body,
                         'reference' => $reference,
                     ], 200);
                 }
@@ -1278,6 +1473,209 @@ class UtilityController extends Controller
         return $ref;
     }
 
+    private function callVtuSmart(string $type, array $payload): array
+    {
+        // Smart router: ClubKonnect -> Shago -> VTPass
+        $order = array_filter(array_map('trim', explode(',', (string) config('services.vtu.routing_order', 'clubkonnect,shago,vtpass'))));
+        $lastError = null;
+
+        foreach ($order as $provider) {
+            $provider = strtolower($provider);
+            if ($provider === 'clubkonnect') {
+                $resp = $this->callClubKonnect($type, $payload);
+            } elseif ($provider === 'shago') {
+                $resp = $this->callShago($type, $payload);
+            } elseif ($provider === 'vtpass') {
+                $resp = $this->callVtpass($payload);
+            } else {
+                continue;
+            }
+
+            // If provider not configured, skip to next
+            if (($resp['status'] ?? null) === 0 && ($resp['error'] ?? '') === 'Provider not configured') {
+                $lastError = $resp;
+                continue;
+            }
+
+            if (!$resp['ok']) {
+                $lastError = $resp; // network or http error, try next
+                continue;
+            }
+
+            $body = $resp['body'] ?? null;
+            // If already a success, return immediately
+            if ($this->isVtpassSuccess($body)) {
+                return array_merge($resp, ['provider_used' => $provider]);
+            }
+            // If pending, do not failover; return pending so requery/webhook can finalize
+            if ($this->isVtpassPending($body)) {
+                return array_merge($resp, ['provider_used' => $provider]);
+            }
+
+            // Otherwise, treat as provider-declared failure: try next provider
+            $lastError = $resp;
+        }
+
+        return $lastError ?: [ 'ok' => false, 'error' => 'No VTU provider available', 'body' => null, 'status' => 0 ];
+    }
+
+    private function callClubKonnect(string $type, array $payload): array
+    {
+        // Nellobytes/ClubKonnect direct API integration (airtime, data, cable)
+        $cfg = config('services.vtu.clubkonnect', []);
+        $enabled = (bool)($cfg['enabled'] ?? false);
+        $userId = $cfg['user_id'] ?? null;
+        $apiKey = $cfg['api_key'] ?? null;
+        $baseUrl = rtrim((string)($cfg['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
+        if (!$enabled || !$userId || !$apiKey) {
+            return [ 'ok' => false, 'error' => 'Provider not configured', 'body' => null, 'status' => 0 ];
+        }
+
+        $cb = trim((string) config('services.vtu.webhook_url'));
+        $requestId = $payload['request_id'] ?? ($payload['RequestID'] ?? ($payload['requestId'] ?? null));
+        if ($cb !== '' && $requestId) {
+            $sep = (str_contains($cb, '?') ? '&' : '?');
+            $cb = $cb . $sep . 'ref=' . $requestId;
+        }
+
+        $endpoint = null;
+        $params = [ 'UserID' => $userId, 'APIKey' => $apiKey ];
+
+        if ($type === 'airtime') {
+            // Map network to ClubKonnect MobileNetwork codes (airtime mapping)
+            $network = strtolower((string)($payload['serviceID'] ?? $payload['network'] ?? ''));
+            if ($network === 'etisalat') { $network = '9mobile'; }
+            $mapAirtime = [ 'mtn' => '01', 'glo' => '02', 'airtel' => '03', '9mobile' => '04' ];
+            $mobileNetwork = $mapAirtime[$network] ?? null;
+
+            $amount = $payload['amount'] ?? null;
+            $mobileNumber = $payload['phone'] ?? $payload['billersCode'] ?? null;
+            if (!$mobileNetwork || !$amount || !$mobileNumber || !$requestId) {
+                return [ 'ok' => false, 'error' => 'Missing required fields', 'body' => [ 'note' => 'network/amount/phone/request_id required' ], 'status' => 0 ];
+            }
+
+            $endpoint = '/APIAirtimeV1.asp';
+            $params = array_merge($params, [
+                'MobileNetwork' => $mobileNetwork,
+                'Amount' => $amount,
+                'MobileNumber' => $mobileNumber,
+                'RequestID' => $requestId,
+            ]);
+            if ($cb !== '') { $params['CallBackURL'] = $cb; }
+            $bonus = $payload['bonus_type'] ?? ($payload['BonusType'] ?? ($payload['bonusType'] ?? null));
+            if (!empty($bonus)) { $params['BonusType'] = $bonus; }
+        } elseif ($type === 'data') {
+            // Data bundle purchase via APIDatabundleV1.asp
+            // Network codes per spec: 01 MTN, 02 Glo, 03 9mobile, 04 Airtel
+            $serviceId = strtolower((string)($payload['serviceID'] ?? ''));
+            $network = $payload['network'] ?? $serviceId;
+            if (str_contains($serviceId, '-data')) {
+                $network = explode('-data', $serviceId)[0];
+            }
+            $network = strtolower((string) $network);
+            if ($network === 'etisalat') { $network = '9mobile'; }
+            $mapData = [ 'mtn' => '01', 'glo' => '02', '9mobile' => '03', 'airtel' => '04' ];
+            $mobileNetwork = $mapData[$network] ?? null;
+
+            $dataPlan = $payload['variation_code'] ?? ($payload['DataPlan'] ?? null);
+            $mobileNumber = $payload['phone'] ?? $payload['billersCode'] ?? null;
+            if (!$mobileNetwork || !$dataPlan || !$mobileNumber || !$requestId) {
+                return [ 'ok' => false, 'error' => 'Missing required fields', 'body' => [ 'note' => 'network/dataplan/phone/request_id required' ], 'status' => 0 ];
+            }
+
+            $endpoint = '/APIDatabundleV1.asp';
+            $params = array_merge($params, [
+                'MobileNetwork' => $mobileNetwork,
+                'DataPlan' => $dataPlan,
+                'MobileNumber' => $mobileNumber,
+                'RequestID' => $requestId,
+            ]);
+            if ($cb !== '') { $params['CallBackURL'] = $cb; }
+        } elseif ($type === 'cable') {
+            // Cable subscription via APICableTVV1.asp
+            $service = strtolower((string)($payload['serviceID'] ?? ''));
+            $package = $payload['variation_code'] ?? ($payload['Package'] ?? null);
+            $smartcard = $payload['billersCode'] ?? ($payload['SmartCardNo'] ?? null);
+            $phone = $payload['phone'] ?? ($payload['PhoneNo'] ?? null);
+            if (!$service || !$package || !$smartcard || !$requestId) {
+                return [ 'ok' => false, 'error' => 'Missing required fields', 'body' => [ 'note' => 'service/package/smartcard/request_id required' ], 'status' => 0 ];
+            }
+
+            $endpoint = '/APICableTVV1.asp';
+            $params = array_merge($params, [
+                'CableTV' => $service,
+                'Package' => $package,
+                'SmartCardNo' => $smartcard,
+                'RequestID' => $requestId,
+            ]);
+            if (!empty($phone)) { $params['PhoneNo'] = $phone; }
+            if ($cb !== '') { $params['CallBackURL'] = $cb; }
+        } else {
+            return [ 'ok' => false, 'error' => 'Unsupported channel', 'body' => null, 'status' => 0 ];
+        }
+
+        $status = 0; $ok = false; $bodyOut = null; $error = null;
+        try {
+            $resp = Http::timeout(12)
+                ->acceptJson()
+                ->get($baseUrl . $endpoint, $params);
+            $status = $resp->status();
+            $json = $resp->json();
+            if (!$resp->ok()) {
+                Log::warning('ClubKonnect bad response', ['status' => $status, 'body' => $json, 'endpoint' => $endpoint]);
+                return [ 'ok' => false, 'error' => 'Bad response', 'body' => (is_array($json)?$json:['raw' => $resp->body()]), 'status' => $status ];
+            }
+            // Pass through JSON; success/pending are detected by isVtpassSuccess/isVtpassPending via statuscode/orderstatus
+            $bodyOut = is_array($json) ? $json : [ 'raw' => $resp->body() ];
+            $ok = true;
+        } catch (\Throwable $e) {
+            Log::error('ClubKonnect HTTP error', ['error' => $e->getMessage(), 'endpoint' => $endpoint]);
+            $error = 'Network error';
+        }
+        return [ 'ok' => $ok, 'error' => $error, 'body' => $bodyOut, 'status' => $status ];
+    }
+
+    private function callShago(string $type, array $payload): array
+    {
+        $cfg = config('services.vtu.shago', []);
+        if (empty($cfg['enabled']) || empty($cfg['base_url']) || empty($cfg['api_key'])) {
+            return [ 'ok' => false, 'error' => 'Provider not configured', 'body' => null, 'status' => 0 ];
+        }
+        $baseUrl = rtrim((string)$cfg['base_url'], '/');
+        $headers = [ 'Authorization' => 'Bearer '.$cfg['api_key'] ];
+        if (!empty($cfg['secret'])) {
+            $headers['X-Secret'] = $cfg['secret'];
+        }
+        $bodyOut = null; $status = 0; $ok = false; $error = null;
+        try {
+            $resp = Http::withHeaders($headers)
+                ->acceptJson()
+                ->timeout(12)
+                ->post($baseUrl . '/pay', array_merge($payload, [ 'channel' => $type ]));
+            $status = $resp->status();
+            $json = $resp->json();
+            if (!$resp->ok()) {
+                Log::warning('Shago bad response', ['status' => $status, 'body' => $json]);
+                return [ 'ok' => false, 'error' => 'Bad response', 'body' => $json, 'status' => $status ];
+            }
+            $st = strtolower((string)($json['status'] ?? ''));
+            $code = (string)($json['code'] ?? '');
+            $success = ($st === 'success' || $st === 'successful' || $code === '00' || $code === '000' || ($json['success'] ?? false) === true);
+            $bodyOut = [
+                'code' => $success ? '000' : ($code ?: 'XXX'),
+                'status' => $success ? 'success' : ($st ?: 'failed'),
+                'message' => (string)($json['message'] ?? ''),
+                'data' => $json,
+                'provider' => 'shago',
+            ];
+            $ok = true;
+        } catch (\Throwable $e) {
+            Log::error('Shago HTTP error', ['error' => $e->getMessage()]);
+            $error = 'Network error';
+        }
+        return [ 'ok' => $ok, 'error' => $error, 'body' => $bodyOut, 'status' => $status ];
+    }
+
     private function callVtpass(array $payload): array
     {
         $baseUrl = rtrim(config('services.vtu.base_url', 'https://vtpass.com/api'), '/');
@@ -1339,16 +1737,25 @@ class UtilityController extends Controller
     private function isVtpassSuccess($body): bool
     {
         if (is_array($body)) {
-            // 1. Check for the standard '000' code
+            // VTpass standard success code
             $code = (string)($body['code'] ?? ($body['data']['code'] ?? ''));
             if ($code === '000') return true;
+
+            // Nellobytes/ClubKonnect success: statuscode=200 or orderstatus=ORDER_COMPLETED
+            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
+            if ($ckCode === '200' || $ckCode === 'OK' || $ckCode === '201') { // be liberal
+                return true;
+            }
+            $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
+            if (in_array($orderStatusUp, ['ORDER_COMPLETED', 'COMPLETED', 'SUCCESS'])) {
+                return true;
+            }
 
             // 2. Check for "success" or "successful" or "delivered" strings
             $status = strtolower((string)($body['status'] ?? ''));
             $respDesc = strtolower((string)($body['response_description'] ?? ''));
             $message = strtolower((string)($body['message'] ?? ''));
 
-            // Add 'delivered' and 'successful' to the check, and also 'completed'
             if (in_array($status, ['success', 'successful', 'delivered', 'completed'])) {
                 return true;
             }
@@ -1373,9 +1780,14 @@ class UtilityController extends Controller
     {
         if (!is_array($body)) { return false; }
         $status = strtolower((string)($body['status'] ?? ''));
-        if (in_array($status, ['pending', 'processing', 'initiated', 'queued'])) { return true; }
+        if (in_array($status, ['pending', 'processing', 'initiated', 'queued', 'order_received'])) { return true; }
         $txStatus = strtolower((string)($body['data']['transactions']['status'] ?? ($body['content']['transactions']['status'] ?? ($body['transactions']['status'] ?? ''))));
         if (in_array($txStatus, ['pending', 'processing', 'initiated', 'queued'])) { return true; }
+        // Nellobytes/ClubKonnect pending fields
+        $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
+        if ($ckCode === '100') { return true; }
+        $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
+        if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'RECEIVED'])) { return true; }
         $desc = strtolower((string)($body['response_description'] ?? ($body['message'] ?? '')));
         if ($desc && (str_contains($desc, 'pending') || str_contains($desc, 'processing') || str_contains($desc, 'initiated') || str_contains($desc, 'queue'))) { return true; }
         // Some VTpass variants use non-000 codes while processing

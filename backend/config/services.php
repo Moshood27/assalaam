@@ -65,6 +65,10 @@ return [
     // VTU provider (VTpass by default)
     'vtu' => [
         'provider' => env('VTU_PROVIDER', 'vtpass'),
+        // Providers routing order for Smart VTU (comma-separated): e.g. clubkonnect,shago,vtpass
+        'routing_order' => env('VTU_ROUTING_ORDER', 'clubkonnect,shago,vtpass'),
+        'low_balance_threshold' => (float) env('VTU_LOW_BALANCE_THRESHOLD', 10000),
+
         // Auto-select sandbox base URL in local/dev unless explicitly overridden
         // You can force sandbox by setting VTU_SANDBOX=true
         // Or set VTU_BASE_URL directly to override
@@ -89,6 +93,24 @@ return [
         'default_discount' => (float) env('VTU_DEFAULT_DISCOUNT', 0.03), // 3% default
         'convenience_fee' => (float) env('VTU_CONVENIENCE_FEE', 0),      // flat fee on data
         'webhook_url' => env('VTU_WEBHOOK_URL', rtrim(env('APP_URL', ''), '/') . '/api/vtu/webhook'),
+
+        // Optional other providers for Smart VTU routing
+        'clubkonnect' => [
+            'enabled' => filter_var(env('CLUBKONNECT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            'base_url' => env('CLUBKONNECT_BASE_URL'),
+            // Nellobytes/ClubKonnect credentials
+            'user_id' => env('CLUBKONNECT_USER_ID', env('CLUBKONNECT_USERNAME')),
+            'api_key' => env('CLUBKONNECT_API_KEY'),
+            // Backward-compat/optional fields
+            'username' => env('CLUBKONNECT_USERNAME'),
+            'password' => env('CLUBKONNECT_PASSWORD'),
+        ],
+        'shago' => [
+            'enabled' => filter_var(env('SHAGO_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            'base_url' => env('SHAGO_BASE_URL'),
+            'api_key' => env('SHAGO_API_KEY'),
+            'secret' => env('SHAGO_SECRET'),
+        ],
     ],
 
     'goals' => [

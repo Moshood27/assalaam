@@ -32,6 +32,9 @@ class Kernel extends ConsoleKernel
 
         // The Hunter: hourly sweep to auto-recover overdue loan installments from wallet balances
         $schedule->command('loans:hunter-sweep')->hourly();
+
+        // VTU provider wallet health check: notify admins if balances drop below threshold
+        $schedule->command('vtu:check-balances')->hourly()->timezone('Africa/Lagos');
     }
 
     /**
