@@ -163,7 +163,7 @@ html, body, #app { height: 100%; }
 
 /* --- CUSTOM LIBRARIES --- */
 .driver-popover {
-  @apply rounded-3xl border-none shadow-2xl p-6 !important;
+  @apply rounded-3xl border-none shadow-2xl p-6;
 }
-.driver-popover-title { @apply font-black text-xl text-slate-900 !important; }
-.driver-popover-description { @apply text-slate-600 text-sm leading-relaxed !important; }
+.driver-popover-title { @apply font-black text-xl text-slate-900; }
+.driver-popover-description { @apply text-slate-600 text-sm leading-relaxed; }
