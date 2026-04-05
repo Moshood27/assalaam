@@ -1,3 +1,0 @@
-qard_id_string,user_id,membership_number,email,principal_amount,total_installments,interval,admin_fee_flat,admin_fee_pct,paid_amount,status,per_installment
-QH-2026-ABC123,,MEM-001,,5000,10,monthly,0,0,0,pending,
-,2,,jane@example.com,2000,8,weekly,50,0,0,active,
