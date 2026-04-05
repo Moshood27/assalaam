@@ -209,3 +209,48 @@ html, body, #app { height: 100%; }
 
 /* Cross-brand: ensure native form accents follow brand color when emerald utilities are used */
 .brand-attaqwa .accent-emerald-700 { accent-color: rgb(var(--brand-2)); }
+
+
+/* --- Cross-brand utilities and final touchups for fintech-consistent colors --- */
+@layer utilities {
+  /* Generic brand utility used by templates (e.g., MobileSplash) */
+  .bg-brand-800 { background-color: rgb(var(--brand-3)); }
+}
+
+/* Ensure input focus states follow brand for both input helpers */
+.brand-attaqwa .inp:focus { 
+  --tw-ring-color: rgb(var(--brand-2) / 0.1);
+  border-color: rgb(var(--brand-2));
+}
+.brand-assalam .inp:focus { 
+  --tw-ring-color: rgb(var(--brand-2) / 0.1);
+  border-color: rgb(var(--brand-2));
+}
+
+/* Map generic emerald focus helpers to current brand (when used in templates) */
+.brand-attaqwa .focus\:ring-emerald-500:focus { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-assalam .focus\:ring-emerald-500:focus { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-attaqwa .focus\:border-emerald-500:focus { border-color: rgb(var(--brand-2)); }
+.brand-assalam .focus\:border-emerald-500:focus { border-color: rgb(var(--brand-2)); }
+
+/* Hover remaps commonly used across templates */
+.brand-attaqwa .hover\:bg-emerald-700:hover { background-color: rgb(var(--brand-3)); }
+.brand-assalam .hover\:bg-emerald-700:hover { background-color: rgb(var(--brand-3)); }
+.brand-attaqwa .hover\:bg-emerald-50:hover { background-color: rgba(var(--brand-1) / 0.05); }
+.brand-assalam .hover\:bg-emerald-50:hover { background-color: rgba(var(--brand-1) / 0.07); }
+
+
+/* Additional brand remaps for deep text and ring opacity variants */
+.brand-attaqwa .text-emerald-900 { color: rgb(49 46 129); } /* indigo-900 */
+.brand-assalam .text-emerald-900 { color: rgb(19 78 74); } /* teal-900 */
+
+/* Tailwind class with opacity segment requires escaped slash */
+.brand-attaqwa .focus\:ring-emerald-500\/10:focus { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
+.brand-assalam .focus\:ring-emerald-500\/10:focus { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
+
+
+/* Non-focus ring helpers used in components (e.g., ChatWidget) */
+.brand-attaqwa .ring-emerald-500 { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-assalam .ring-emerald-500 { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-attaqwa .ring-emerald-500\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
+.brand-assalam .ring-emerald-500\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
