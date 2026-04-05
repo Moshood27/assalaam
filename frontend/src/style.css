@@ -4,124 +4,139 @@
 html, body, #app { height: 100%; }
 
 @layer base {
-    :root {
-        /* Brand Colors (Default: Emerald) */
-        --brand-1: 16 185 129; /* emerald-500 */
-        --brand-2: 5 150 105;  /* emerald-600 */
-        --brand-3: 4 120 87;   /* emerald-700 */
+  :root {
+    /* Brand Colors (Default: Emerald) */
+    --brand-1: 16 185 129; /* emerald-500 */
+    --brand-2: 5 150 105;  /* emerald-600 */
+    --brand-3: 4 120 87;   /* emerald-700 */
+    
+    /* Neutral Palette */
+    --bg-0: 248 250 252;   /* slate-50 (Much cleaner than slate-100) */
+    --text-900: 15 23 42;  /* slate-900 */
+    --text-600: 71 85 105; /* slate-600 */
+    --border-200: 226 232 240; /* slate-200 */
+  }
 
-        /* Neutral Palette */
-        --bg-0: 248 250 252;   /* slate-50 (Much cleaner than slate-100) */
-        --text-900: 15 23 42;  /* slate-900 */
-        --text-600: 71 85 105; /* slate-600 */
-        --border-200: 226 232 240; /* slate-200 */
-    }
+  html { @apply antialiased; }
+  
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Clean Fintech Background: Subtle top-glow, solid bottom */
+    background: radial-gradient(circle at 50% 0%, rgba(var(--brand-1) / 0.08) 0%, transparent 50%),
+                rgb(var(--bg-0));
+    color: rgb(var(--text-900));
+  }
 
-    html { @apply antialiased; }
-
-    body {
-        margin: 0;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        /* Clean Fintech Background: Subtle top-glow, solid bottom */
-        background: radial-gradient(circle at 50% 0%, rgba(var(--brand-1) / 0.08) 0%, transparent 50%),
-        rgb(var(--bg-0));
-        color: rgb(var(--text-900));
-    }
-
-    h1, h2, h3, h4 { @apply tracking-tight font-bold; }
+  h1, h2, h3, h4 { @apply tracking-tight font-bold; }
 }
 
 /* Components */
 @layer components {
-    .container-app { @apply mx-auto max-w-5xl px-5; }
+  .container-app { @apply mx-auto max-w-5xl px-5; }
 
-    /* Cards - Crisp and Solid for trust */
-    .card {
-        @apply bg-white rounded-3xl border border-slate-200/60 shadow-sm transition-all;
-    }
-    .card-elevated {
-        @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100;
-    }
+  /* Cards - Crisp and Solid for trust */
+  .card { 
+    @apply bg-white rounded-3xl border border-slate-200/60 shadow-sm transition-all;
+  }
+  .card-elevated { 
+    @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100; 
+  }
 
-    /* Forms - High interaction feedback */
-    .form-label { @apply block text-[13px] text-slate-600 font-semibold mb-1.5 ml-1; }
-    .input {
-        @apply w-full bg-slate-100/50 border-2 border-transparent focus:border-brand-2/30
-        focus:bg-white p-3.5 rounded-2xl outline-none transition-all placeholder:text-slate-400;
-        --brand-2: 5 150 105;
-    }
+  /* Forms - High interaction feedback */
+  .form-label { @apply block text-[13px] text-slate-600 font-semibold mb-1.5 ml-1; }
+  .input { 
+    @apply w-full bg-slate-100/50 border-2 border-transparent 
+           focus:bg-white p-3.5 rounded-2xl outline-none transition-all placeholder:text-slate-400; 
+    --brand-2: 5 150 105;
+  }
+  .input:focus {
+    border-color: rgb(var(--brand-2) / 0.3);
+  }
 
-    /* Buttons - Soft haptics */
-    .btn {
-        @apply inline-flex items-center justify-center gap-2 font-bold rounded-2xl px-5 py-3
-        transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none;
-    }
-    .btn-primary {
-        @apply bg-emerald-700 text-white shadow-lg shadow-emerald-700/20 hover:bg-emerald-800;
-        background-color: rgb(var(--brand-2));
-    }
-    .btn-secondary {
-        @apply bg-slate-200/50 text-slate-700 hover:bg-slate-200;
-    }
-    .btn-ghost {
-        @apply text-emerald-700 hover:bg-emerald-50;
-        color: rgb(var(--brand-2));
-    }
+  /* Buttons - Soft haptics */
+  .btn { 
+    @apply inline-flex items-center justify-center gap-2 font-bold rounded-2xl px-5 py-3 
+           transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none; 
+  }
+  .btn-primary { 
+    @apply bg-emerald-700 text-white shadow-lg shadow-emerald-700/20 hover:bg-emerald-800; 
+    background-color: rgb(var(--brand-2));
+  }
+  .btn-secondary { 
+    @apply bg-slate-200/50 text-slate-700 hover:bg-slate-200; 
+  }
+  .btn-ghost { 
+    @apply text-emerald-700 hover:bg-emerald-50; 
+    color: rgb(var(--brand-2));
+  }
 
-    /* Badges - Tiny and clean */
-    .badge {
-        @apply inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider;
-    }
-    .badge-success { @apply bg-emerald-100 text-emerald-700; }
-    .badge-muted { @apply bg-slate-100 text-slate-500; }
+  /* Badges - Tiny and clean */
+  .badge { 
+    @apply inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider; 
+  }
+  .badge-success { @apply bg-emerald-100 text-emerald-700; }
+  .badge-muted { @apply bg-slate-100 text-slate-500; }
 
-    .navbar { @apply w-full bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40; }
-    .navbar-inner { @apply mx-auto max-w-5xl px-5 h-16 flex items-center justify-between; }
+  .navbar { @apply w-full bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40; }
+  .navbar-inner { @apply mx-auto max-w-5xl px-5 h-16 flex items-center justify-between; }
 
-    /* Typography for Finance */
-    .money {
-        font-family: 'Inter', sans-serif;
-        font-feature-settings: "tnum"; /* Monospaced numbers for alignment */
-        @apply font-extrabold text-slate-900 tracking-tight;
-    }
-    .section-title { @apply font-extrabold text-slate-900 text-lg; }
+  /* Typography for Finance */
+  .money { 
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "tnum"; /* Monospaced numbers for alignment */
+    @apply font-extrabold text-slate-900 tracking-tight; 
+  }
+  .section-title { @apply font-extrabold text-slate-900 text-lg; }
 
-    .auth-bg { @apply bg-white; }
+  .auth-bg { @apply bg-white; }
 }
 
 /* UI Extensions */
 @layer components {
-    /* Segmented Control - Modern pill style */
-    .segmented { @apply bg-slate-100 rounded-2xl p-1 flex gap-1; }
-    .segment { @apply flex-1 text-center py-2 rounded-xl font-bold text-slate-500 text-sm transition-all cursor-pointer; }
-    .segment-active { @apply bg-white text-emerald-700 shadow-sm; }
+  /* Segmented Control - Modern pill style */
+  .segmented { @apply bg-slate-100 rounded-2xl p-1 flex gap-1; }
+  .segment { @apply flex-1 text-center py-2 rounded-xl font-bold text-slate-500 text-sm transition-all cursor-pointer; }
+  .segment-active { @apply bg-white text-emerald-700 shadow-sm; }
 
-    /* Bottom Navigation - Fixed and high-blur */
-    .bottom-nav {
-        @apply fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-100
-        px-6 py-3 flex justify-around items-center z-50 pb-safe;
-    }
-    .bottom-nav-btn { @apply text-slate-400 flex flex-col items-center gap-1 transition-colors; }
-    .bottom-nav-btn-active { @apply text-emerald-700; color: rgb(var(--brand-2)); }
+  /* Bottom Navigation - Fixed and high-blur */
+  .bottom-nav { 
+    @apply fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 
+           px-6 py-3 flex justify-around items-center z-50; 
+  }
+  .bottom-nav-btn { @apply text-slate-400 flex flex-col items-center gap-1 transition-colors; }
+  .bottom-nav-btn-active { @apply text-emerald-700; color: rgb(var(--brand-2)); }
 
-    /* Mobile Form Helpers */
-    .inp {
-        @apply w-full bg-white p-4 rounded-2xl border border-slate-200 text-base shadow-sm
-        focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none;
-    }
+  /* Mobile Form Helpers */
+  .inp { 
+    @apply w-full bg-white p-4 rounded-2xl border border-slate-200 text-base shadow-sm 
+           focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none; 
+  }
+
+  /* Header helper preserved */
+  .header-fintech { @apply w-full bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40; }
+
+  /* Admin helpers preserved */
+  .lbl { @apply block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1; }
+  .empty-state { @apply text-center text-slate-500 text-sm; }
+  .btn-muted { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300; }
 }
+
+/* Utility helpers */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* --- BRANDING OVERRIDE: ATTAQWA (Indigo) --- */
 .brand-attaqwa {
-    --brand-1: 99 102 241; /* indigo-500 */
-    --brand-2: 79 70 229;  /* indigo-600 */
-    --brand-3: 67 56 202;  /* indigo-700 */
-    --bg-0: 249 250 251;   /* gray-50 */
+  --brand-1: 99 102 241; /* indigo-500 */
+  --brand-2: 79 70 229;  /* indigo-600 */
+  --brand-3: 67 56 202;  /* indigo-700 */
+  --bg-0: 249 250 251;   /* gray-50 */
 }
 
 /* Indigo Component Remaps */
-.brand-attaqwa .btn-primary {
-    @apply bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-700;
+.brand-attaqwa .btn-primary { 
+    @apply bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-700; 
     background-color: rgb(var(--brand-2));
 }
 .brand-attaqwa .badge-success { @apply bg-indigo-100 text-indigo-700; }
@@ -131,12 +146,24 @@ html, body, #app { height: 100%; }
 
 /* Dynamic color replacement for specific utility classes */
 .brand-attaqwa .text-emerald-700, .brand-attaqwa .text-emerald-600 { color: rgb(var(--brand-2)); }
+.brand-attaqwa .text-emerald-800 { color: rgb(55 48 163); } /* indigo-800 */
+.brand-attaqwa .text-emerald-100 { color: rgb(224 231 255); } /* indigo-100 */
 .brand-attaqwa .bg-emerald-700, .brand-attaqwa .bg-emerald-600 { background-color: rgb(var(--brand-2)); }
 .brand-attaqwa .bg-emerald-50 { background-color: rgba(var(--brand-1) / 0.05); }
+.brand-attaqwa .border-emerald-100 { border-color: rgb(224 231 255); } /* indigo-100 */
+.brand-attaqwa .border-emerald-200 { border-color: rgb(199 210 254); } /* indigo-200 */
+
+/* Gradient remaps used by views (Login button, Wallet card) */
+.brand-attaqwa .from-emerald-700 { --tw-gradient-from: rgb(var(--brand-2)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-2) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.brand-attaqwa .from-emerald-800 { --tw-gradient-from: rgb(55 48 163) var(--tw-gradient-from-position); --tw-gradient-to: rgb(55 48 163 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.brand-attaqwa .to-emerald-900 { --tw-gradient-to: rgb(49 46 129) var(--tw-gradient-to-position); } /* indigo-900 */
+.brand-attaqwa .to-teal-600 { --tw-gradient-to: rgb(var(--brand-2)) var(--tw-gradient-to-position); }
+.brand-attaqwa .hover\:from-emerald-800:hover { --tw-gradient-from: rgb(55 48 163) var(--tw-gradient-from-position); --tw-gradient-to: rgb(55 48 163 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.brand-attaqwa .hover\:to-teal-700:hover { --tw-gradient-to: rgb(67 56 202) var(--tw-gradient-to-position); } /* indigo-700 */
 
 /* --- CUSTOM LIBRARIES --- */
 .driver-popover {
-    @apply rounded-3xl border-none shadow-2xl p-6 !important;
+  @apply rounded-3xl border-none shadow-2xl p-6 !important;
 }
 .driver-popover-title { @apply font-black text-xl text-slate-900 !important; }
 .driver-popover-description { @apply text-slate-600 text-sm leading-relaxed !important; }
