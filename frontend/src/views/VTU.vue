@@ -386,11 +386,12 @@ const verifyMerchant = async () => {
       type
     })
 
-    if (data?.content?.error) {
-      verification.value.error = data.content.error
-    } else if (data?.content?.Customer_Name) {
-      verification.value.customerName = data.content.Customer_Name
+    const name = data?.customer_name || data?.Customer_Name || data?.content?.Customer_Name || data?.content?.customer_name;
+    if (name) {
+      verification.value.customerName = name
       verification.value.verified = true
+    } else if (data?.content?.error) {
+      verification.value.error = data.content.error
     } else {
       verification.value.error = 'Could not verify merchant. Please check the number.'
     }

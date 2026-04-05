@@ -98,7 +98,7 @@ const statusIcon = (status) => status === 'success' ? '✓' : (status === 'faile
 const getToken = (tx) => {
   if (tx.type !== 'electricity' || !tx.provider_response) return null
   const body = tx.provider_response
-  return body.mainToken || body.token || body.purchased_code || (body.data && body.data.token) || null
+  return body.metertoken || body.mainToken || body.token || body.purchased_code || (body.data && body.data.token) || null
 }
 
 const load = async () => {

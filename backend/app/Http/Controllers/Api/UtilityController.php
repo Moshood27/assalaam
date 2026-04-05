@@ -180,14 +180,27 @@ class UtilityController extends Controller
         $result = null;
         $source = null;
         $ck = $this->requeryClubKonnectByRequestId($orderId);
-        if (($ck['ok'] ?? false) && is_array($ck['body'] ?? null)) {
+        if (($ck['ok'] ?? false) && is_array($ck['body'] ?? null) && !empty($ck['body']['statuscode'])) {
             $result = $ck['body'];
             $source = 'clubkonnect';
         } else {
-            $vt = $this->requeryVtpass($orderId);
-            if (($vt['ok'] ?? false) && is_array($vt['body'] ?? null)) {
-                $result = $vt['body'];
-                $source = 'vtpass';
+            // Try by OrderID if we have it in previous response
+            $providerResp = $tx->provider_response;
+            $orderIdFromProvider = is_array($providerResp) ? ($providerResp['orderid'] ?? ($providerResp['order_id'] ?? null)) : null;
+            if ($orderIdFromProvider) {
+                $ckOrder = $this->requeryClubKonnectByOrderId($orderIdFromProvider);
+                if (($ckOrder['ok'] ?? false) && is_array($ckOrder['body'] ?? null) && !empty($ckOrder['body']['statuscode'])) {
+                    $result = $ckOrder['body'];
+                    $source = 'clubkonnect';
+                }
+            }
+
+            if (!$result) {
+                $vt = $this->requeryVtpass($orderId);
+                if (($vt['ok'] ?? false) && is_array($vt['body'] ?? null)) {
+                    $result = $vt['body'];
+                    $source = 'vtpass';
+                }
             }
         }
 
@@ -1546,13 +1559,13 @@ class UtilityController extends Controller
         $user->refresh();
         try {
             $sms = app(\App\Services\SmsService::class);
-            $token = $body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null)));
+            $token = $body['metertoken'] ?? ($body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null))));
             $tokenMsg = $token ? " Token: $token." : "";
             $msg = 'Electricity vend: ₦'.number_format($totalDebit, 2).' to meter '.($meter).' ('.strtoupper($serviceId).').'.$tokenMsg.' Ref: '.$reference.'. Bal: ₦'.number_format((float)$user->balance, 2);
             $sms->send($user->phone ?? null, $msg);
         } catch (\Throwable $e) {}
 
-        $token = $body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null)));
+        $token = $body['metertoken'] ?? ($body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null))));
         return response()->json([
             'message' => 'Electricity token vended! ' . ($token ? "Token: $token" : ""),
             'status' => 'success',
@@ -1905,40 +1918,52 @@ class UtilityController extends Controller
         $validated = $request->validate([
             'serviceID' => 'required|string',
             'billersCode' => 'required|string',
-            'type' => 'nullable|string', // required for cable
+            'type' => 'nullable|string', // required for cable/electricity
         ]);
 
-        $baseUrl = rtrim(config('services.vtu.base_url', 'https://vtpass.com/api'), '/');
-        $apiKey = config('services.vtu.api_key');
-        $publicKey = config('services.vtu.public_key');
-        $secretKey = config('services.vtu.secret_key');
+        $type = $request->input('type', 'prepaid');
+        $serviceId = $validated['serviceID'];
+        $billersCode = $validated['billersCode'];
 
-        if (!$apiKey || (!$publicKey && !$secretKey)) {
-            return response()->json(['message' => 'Provider not configured for verification'], 503);
+        // Determine if it's cable or electricity for the router
+        $vtuType = 'verify-electricity';
+        $cableServices = ['dstv', 'gotv', 'startimes', 'showmax'];
+        if (in_array(strtolower($serviceId), $cableServices)) {
+            $vtuType = 'verify-cable';
         }
 
-        $headers = [ 'api-key' => $apiKey ];
-        if ($publicKey) { $headers['public-key'] = $publicKey; }
-        if ($secretKey) { $headers['secret-key'] = $secretKey; }
+        $payload = [
+            'serviceID' => $serviceId,
+            'billersCode' => $billersCode,
+            'type' => $type,
+        ];
 
-        try {
-            $resp = Http::withHeaders($headers)
-                ->acceptJson()
-                ->post($baseUrl . '/merchant-verify', [
-                    'serviceID' => $validated['serviceID'],
-                    'billersCode' => $validated['billersCode'],
-                    'type' => $validated['type'] ?? null,
-                ]);
+        $response = $this->callVtuSmart($vtuType, $payload);
 
-            $json = $resp->json();
-            if ($resp->ok()) {
-                return response()->json($json);
-            }
-            return response()->json(['message' => 'Verification failed', 'details' => $json], 422);
-        } catch (\Throwable $e) {
-            Log::error('VTU verification error', ['exception' => $e->getMessage()]);
-            return response()->json(['message' => 'Network error during verification'], 502);
+        if (!$response['ok']) {
+            return response()->json([
+                'message' => 'Verification failed',
+                'details' => $response['body'] ?? $response['error']
+            ], 422);
         }
+
+        $body = $response['body'];
+        // Nellobyte returns { customer_name: "..." }
+        // VTpass returns { content: { Customer_Name: "..." } }
+        $customerName = $body['customer_name'] ?? ($body['Customer_Name'] ?? ($body['content']['Customer_Name'] ?? null));
+
+        if (!$customerName || str_contains(strtoupper($customerName), 'INVALID')) {
+            return response()->json([
+                'message' => 'Verification failed',
+                'details' => $body
+            ], 422);
+        }
+
+        return response()->json([
+            'customer_name' => $customerName,
+            'status' => 'success',
+            'provider_response' => $body
+        ]);
     }
 
     private function emptyPage(int $page = 1, int $perPage = 15): array
@@ -2034,7 +2059,7 @@ class UtilityController extends Controller
             } elseif ($provider === 'shago') {
                 $resp = $this->callShago($type, $payload);
             } elseif ($provider === 'vtpass') {
-                $resp = $this->callVtpass($payload);
+                $resp = $this->callVtpass($type, $payload);
             } else {
                 continue;
             }
@@ -2093,7 +2118,7 @@ class UtilityController extends Controller
             // Map network to ClubKonnect MobileNetwork codes (airtime mapping)
             $network = strtolower((string)($payload['serviceID'] ?? $payload['network'] ?? ''));
             if ($network === 'etisalat') { $network = '9mobile'; }
-            $mapAirtime = [ 'mtn' => '01', 'glo' => '02', 'airtel' => '03', '9mobile' => '04' ];
+            $mapAirtime = [ 'mtn' => '01', 'glo' => '02', '9mobile' => '03', 'airtel' => '04' ];
             $mobileNetwork = $mapAirtime[$network] ?? null;
 
             $amount = $payload['amount'] ?? null;
@@ -2158,6 +2183,76 @@ class UtilityController extends Controller
             ]);
             if (!empty($phone)) { $params['PhoneNo'] = $phone; }
             if ($cb !== '') { $params['CallBackURL'] = $cb; }
+        } elseif ($type === 'electricity') {
+            // Electricity purchase via APIElectricityV1.asp
+            $service = strtolower((string)($payload['serviceID'] ?? ''));
+            $mapDisco = [
+                'eko-electric' => '01', 'ekedc' => '01',
+                'ikeja-electric' => '02', 'ikedc' => '02',
+                'abuja-electric' => '03', 'aedc' => '03',
+                'kano-electric' => '04', 'kedco' => '04',
+                'port-harcourt-electric' => '05', 'phed' => '05',
+                'jos-electric' => '06', 'jed' => '06',
+                'kaduna-electric' => '07', 'kaedco' => '07',
+                'ibadan-electric' => '08', 'ibedc' => '08',
+                'enugu-electric' => '09', 'eedc' => '09',
+                'benin-electric' => '10', 'bedc' => '10',
+                'yola-electric' => '11', 'yedc' => '11',
+            ];
+            $discoCode = $mapDisco[$service] ?? null;
+            $meterNo = $payload['billersCode'] ?? ($payload['MeterNo'] ?? null);
+            $meterType = strtolower((string)($payload['variation_code'] ?? 'prepaid')) === 'postpaid' ? '02' : '01';
+            $amount = $payload['amount'] ?? null;
+            $phone = $payload['phone'] ?? ($payload['PhoneNo'] ?? null);
+
+            if (!$discoCode || !$meterNo || !$amount || !$requestId) {
+                return [ 'ok' => false, 'error' => 'Missing required fields', 'body' => [ 'note' => 'disco/meterno/amount/request_id required' ], 'status' => 0 ];
+            }
+
+            $endpoint = '/APIElectricityV1.asp';
+            $params = array_merge($params, [
+                'ElectricCompany' => $discoCode,
+                'MeterType' => $meterType,
+                'MeterNo' => $meterNo,
+                'Amount' => $amount,
+                'RequestID' => $requestId,
+            ]);
+            if (!empty($phone)) { $params['PhoneNo'] = $phone; }
+            if ($cb !== '') { $params['CallBackURL'] = $cb; }
+        } elseif ($type === 'verify-cable' || $type === 'verify-electricity') {
+            $service = strtolower((string)($payload['serviceID'] ?? ''));
+            $billersCode = $payload['billersCode'] ?? null;
+
+            if ($type === 'verify-cable') {
+                $endpoint = '/APIVerifyCableTVV1.0.asp';
+                $params = array_merge($params, [
+                    'CableTV' => $service,
+                    'SmartCardNo' => $billersCode,
+                ]);
+            } else {
+                $mapDisco = [
+                    'eko-electric' => '01', 'ekedc' => '01',
+                    'ikeja-electric' => '02', 'ikedc' => '02',
+                    'abuja-electric' => '03', 'aedc' => '03',
+                    'kano-electric' => '04', 'kedco' => '04',
+                    'port-harcourt-electric' => '05', 'phed' => '05',
+                    'jos-electric' => '06', 'jed' => '06',
+                    'kaduna-electric' => '07', 'kaedco' => '07',
+                    'ibadan-electric' => '08', 'ibedc' => '08',
+                    'enugu-electric' => '09', 'eedc' => '09',
+                    'benin-electric' => '10', 'bedc' => '10',
+                    'yola-electric' => '11', 'yedc' => '11',
+                ];
+                $discoCode = $mapDisco[$service] ?? null;
+                $meterType = strtolower((string)($payload['type'] ?? 'prepaid')) === 'postpaid' ? '02' : '01';
+
+                $endpoint = '/APIVerifyElectricityV1.asp';
+                $params = array_merge($params, [
+                    'ElectricCompany' => $discoCode,
+                    'MeterNo' => $billersCode,
+                    'MeterType' => $meterType,
+                ]);
+            }
         } else {
             return [ 'ok' => false, 'error' => 'Unsupported channel', 'body' => null, 'status' => 0 ];
         }
@@ -2224,7 +2319,7 @@ class UtilityController extends Controller
         return [ 'ok' => $ok, 'error' => $error, 'body' => $bodyOut, 'status' => $status ];
     }
 
-    private function callVtpass(array $payload): array
+    private function callVtpass(string $type, array $payload): array
     {
         $baseUrl = rtrim(config('services.vtu.base_url', 'https://vtpass.com/api'), '/');
         $apiKey = config('services.vtu.api_key');
@@ -2240,46 +2335,31 @@ class UtilityController extends Controller
             ];
         }
 
-        $headers = [
-            'api-key' => $apiKey,
-        ];
-        if ($publicKey) {
-            $headers['public-key'] = $publicKey;
-        }
-        if ($secretKey) {
-            $headers['secret-key'] = $secretKey;
+        $headers = [ 'api-key' => $apiKey ];
+        if ($publicKey) { $headers['public-key'] = $publicKey; }
+        if ($secretKey) { $headers['secret-key'] = $secretKey; }
+
+        $endpoint = '/pay';
+        if ($type === 'verify-cable' || $type === 'verify-electricity') {
+            $endpoint = '/merchant-verify';
         }
 
         try {
             $resp = Http::withHeaders($headers)
                 ->acceptJson()
-                ->post($baseUrl . '/pay', $payload);
+                ->post($baseUrl . $endpoint, $payload);
         } catch (\Throwable $e) {
-            Log::error('VTU provider HTTP error', ['exception' => $e->getMessage()]);
-            return [
-                'ok' => false,
-                'error' => 'Network error',
-                'body' => null,
-                'status' => 0,
-            ];
+            Log::error('VTU provider HTTP error', ['exception' => $e->getMessage(), 'endpoint' => $endpoint]);
+            return [ 'ok' => false, 'error' => 'Network error', 'body' => null, 'status' => 0 ];
         }
 
         $json = $resp->json();
         if (!$resp->ok()) {
-            Log::error('VTU provider responded with error', ['status' => $resp->status(), 'body' => $json]);
-            return [
-                'ok' => false,
-                'error' => 'Bad response',
-                'body' => $json,
-                'status' => $resp->status(),
-            ];
+            Log::error('VTU provider responded with error', ['status' => $resp->status(), 'body' => $json, 'endpoint' => $endpoint]);
+            return [ 'ok' => false, 'error' => 'Bad response', 'body' => $json, 'status' => $resp->status() ];
         }
 
-        return [
-            'ok' => true,
-            'body' => $json,
-            'status' => $resp->status(),
-        ];
+        return [ 'ok' => true, 'body' => $json, 'status' => $resp->status() ];
     }
 
     private function isVtpassSuccess($body): bool
@@ -2382,7 +2462,7 @@ class UtilityController extends Controller
         return [ 'ok' => true, 'body' => $json, 'status' => $resp->status() ];
     }
 
-    private function requeryClubKonnectByRequestId(string $requestId): array
+    private function requeryClubKonnect(array $params): array
     {
         $cfg = config('services.vtu.clubkonnect', []);
         $enabled = (bool)($cfg['enabled'] ?? false);
@@ -2396,11 +2476,10 @@ class UtilityController extends Controller
         try {
             $resp = Http::timeout(12)
                 ->acceptJson()
-                ->get($baseUrl . '/APIQueryV1.asp', [
+                ->get($baseUrl . '/APIQueryV1.asp', array_merge([
                     'UserID' => $userId,
                     'APIKey' => $apiKey,
-                    'RequestID' => $requestId,
-                ]);
+                ], $params));
             $status = $resp->status();
             $json = $resp->json();
             if (!$resp->ok()) {
@@ -2412,6 +2491,16 @@ class UtilityController extends Controller
             Log::error('ClubKonnect requery HTTP error', ['error' => $e->getMessage()]);
             return [ 'ok' => false, 'error' => 'Network error', 'body' => null, 'status' => 0 ];
         }
+    }
+
+    private function requeryClubKonnectByRequestId(string $requestId): array
+    {
+        return $this->requeryClubKonnect(['RequestID' => $requestId]);
+    }
+
+    private function requeryClubKonnectByOrderId(string $orderId): array
+    {
+        return $this->requeryClubKonnect(['OrderID' => $orderId]);
     }
 
     // Normalize Nigerian MSISDNs to 11-digit local format (0XXXXXXXXXX)
