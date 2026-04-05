@@ -41,6 +41,7 @@ const routes = [
   { path: '/', redirect: '/dashboard' },
   { path: '/onboarding', name: 'onboarding', component: () => import('../views/Onboarding.vue'), meta: { guest: true, skipOnboarding: true } },
   { path: '/login', name: 'login', component: Login, meta: { guest: true } },
+  { path: '/forgot', name: 'forgot', component: () => import('../views/ForgotPassword.vue'), meta: { guest: true, skipOnboarding: true } },
   { path: '/register', name: 'register', component: () => import('../views/MemberRegister.vue'), meta: { guest: true, skipOnboarding: true } },
   { path: '/dashboard', name: 'dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/wallet', name: 'wallet', component: Wallet, meta: { requiresAuth: true } },

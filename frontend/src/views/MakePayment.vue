@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-40 font-sans">
+  <div class="min-h-screen bg-slate-50 pb-56 font-sans">
     <header class="header-fintech">
       <div class="navbar-inner">
         <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">⬅️</button>
@@ -37,7 +37,7 @@
           </div>
           <div class="w-1/3">
             <label class="lbl">Amount</label>
-            <input v-model.number="inputAmount" type="number" placeholder="0.00" class="inp" />
+            <input v-model.number="inputAmount" type="number" inputmode="decimal" pattern="[0-9]*" step="0.01" min="0" autocomplete="off" enterkeyhint="done" placeholder="Enter amount" class="inp text-right text-xl font-bold tracking-wide h-12 placeholder-slate-400" />
           </div>
           <button @click="addToList" class="btn-primary mt-6 w-12 h-12 rounded-xl text-2xl font-bold flex items-center justify-center">+</button>
         </div>
@@ -61,7 +61,7 @@
           </div>
           <div class="flex items-center gap-4">
             <p class="font-bold text-slate-800">₦ {{ Number(item.amount).toLocaleString() }}</p>
-            <button @click="removeFromList(index)" class="text-rose-400 text-sm">✕</button>
+            <button @click="removeFromList(index)" class="btn-muted text-rose-700 border-rose-200 hover:bg-rose-50 px-3 py-1 rounded-lg text-xs" aria-label="Remove from list">Remove</button>
           </div>
         </div>
         <div ref="summaryEnd"></div>

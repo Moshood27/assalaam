@@ -69,10 +69,12 @@
                       </select>
                     </label>
                     <label class="text-[11px] text-slate-500 font-bold">Admin Fee (Flat)
-                      <input v-model.number="createForm.admin_fee_flat" type="number" min="0" step="0.01" class="input mt-1"/>
+                      <input v-model.number="createForm.admin_fee_flat" type="number" min="0" step="0.01" class="input mt-1" :disabled="true" readonly/>
+                      <span class="text-[10px] text-slate-400">Auto-applied by policy</span>
                     </label>
                     <label class="text-[11px] text-slate-500 font-bold">Admin Fee (%)
-                      <input v-model.number="createForm.admin_fee_pct" type="number" min="0" max="2" step="0.01" class="input mt-1"/>
+                      <input v-model.number="createForm.admin_fee_pct" type="number" min="0" max="2" step="0.01" class="input mt-1" :disabled="true" readonly/>
+                      <span class="text-[10px] text-slate-400">Auto-applied by policy</span>
                     </label>
                     <label v-if="(eligibility.required_guarantors || 0) > 0" class="text-[11px] text-slate-500 font-bold">Guarantor ID 1
                       <input v-model="createForm.guarantor1" type="text" class="input mt-1" placeholder="Enter membership number (e.g., AT-TAQWA/02/005)"/>
@@ -286,6 +288,10 @@ import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
 
+// Policy defaults for admin fees (can be overridden via environment variables)
+const DEFAULT_ADMIN_FEE_FLAT = Number(import.meta.env.VITE_DEFAULT_ADMIN_FEE_FLAT ?? 0)
+const DEFAULT_ADMIN_FEE_PCT = Number(import.meta.env.VITE_DEFAULT_ADMIN_FEE_PCT ?? 0)
+
 const loans = ref([])
 const loading = ref(false)
 const error = ref('')
@@ -295,7 +301,7 @@ const { notice, showNotice, closeNotice } = useNotice()
 
 // Eligibility and create loan
 const eligibility = ref({ savings: 0, shares: 0, base: 0, eligibility: 0, eligibility_adjusted: 0, months_in_system: 0, is_first_loan: true, can_request: false, reason: '', coop_score: null, instant_approval: false, required_guarantors: 2 })
-const createForm = ref({ total_installments: 1, interval: 'monthly', admin_fee_flat: 0, admin_fee_pct: 0, guarantor1: '', guarantor2: '', guarantor3: '' })
+const createForm = ref({ total_installments: 1, interval: 'monthly', admin_fee_flat: DEFAULT_ADMIN_FEE_FLAT, admin_fee_pct: DEFAULT_ADMIN_FEE_PCT, guarantor1: '', guarantor2: '', guarantor3: '' })
 const creating = ref(false)
 const createMsg = ref('')
 const createErr = ref('')
@@ -361,6 +367,14 @@ const fetchEligibility = async () => {
       headers: { Authorization: `Bearer ${token}` }
     })
     eligibility.value = { ...eligibility.value, ...(data || {}) }
+    // Auto-apply admin fees from policy defaults and lock the inputs
+    const feeFlat = Number.isFinite(DEFAULT_ADMIN_FEE_FLAT) ? Number(DEFAULT_ADMIN_FEE_FLAT) : 0
+    let feePct = Number.isFinite(DEFAULT_ADMIN_FEE_PCT) ? Number(DEFAULT_ADMIN_FEE_PCT) : 0
+    // Clamp to policy: 0 - 2%
+    if (feePct < 0) feePct = 0
+    if (feePct > 2) feePct = 2
+    createForm.value.admin_fee_flat = feeFlat
+    createForm.value.admin_fee_pct = feePct
   } catch (e) {
     // silent; component also shows list even if eligibility fails
   }

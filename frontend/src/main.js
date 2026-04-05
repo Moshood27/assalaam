@@ -4,6 +4,40 @@ import axios from './http.js'
 import App from './App.vue'
 import router from './router/index.js'
 import VueApexCharts from 'vue3-apexcharts'
+import brand from './brand.js'
+
+// Apply brand UI details (class, title, favicon, theme-color)
+try {
+  const cls = `brand-${brand.slug}`
+  document?.body?.classList?.add(cls)
+
+  // Title
+  if (document?.title) {
+    const base = document.title.replace(/\s+—\s+.*/, '') || 'Member Portal'
+    document.title = `${base} — ${brand.name}`
+  } else {
+    document.title = `Member Portal — ${brand.name}`
+  }
+
+  // Favicon
+  let link = document.querySelector('link[rel="icon"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    link.type = 'image/svg+xml'
+    document.head.appendChild(link)
+  }
+  link.href = brand.favicon
+
+  // Theme color
+  let meta = document.querySelector('meta[name="theme-color"]')
+  if (!meta) {
+    meta = document.createElement('meta')
+    meta.name = 'theme-color'
+    document.head.appendChild(meta)
+  }
+  meta.setAttribute('content', brand.themeColor)
+} catch (_) {}
 
 // Simple global idle timer: logs out after X ms of no activity (configurable via VITE_IDLE_TIMEOUT_MS)
 function setupIdleLogout(router, timeoutMs = 120000) {

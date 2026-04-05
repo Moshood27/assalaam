@@ -15,10 +15,11 @@
           <span>Available for Withdrawal</span>
           <span class="font-bold">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.available_for_withdrawal || 0) }}</span>
         </div>
-        <div class="mt-5 flex gap-2">
+        <div class="mt-5 flex gap-2 flex-wrap">
           <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">Allocate to Schemes</button>
           <button @click="showFund = !showFund" class="bg-white text-emerald-800 px-4 py-2 rounded-xl text-xs font-bold">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
           <button @click="showTransfer = !showTransfer" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">{{ showTransfer ? 'Hide' : 'Transfer' }}</button>
+          <button @click="showWithdraw = !showWithdraw" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">{{ showWithdraw ? 'Hide' : 'Withdraw to Bank' }}</button>
         </div>
       </div>
 
@@ -31,7 +32,7 @@
             <button @click="$router.push('/merchant/pay')" class="bg-white text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold">Pay Merchant</button>
           </div>
         </div>
-        <p class="text-xs text-slate-500 mt-2">Let local shops accept Attaqwa Pay. Generate a QR to receive or pay a merchant by scanning their QR.</p>
+        <p class="text-xs text-slate-500 mt-2">Let local shops accept {{ brand.shortName }} Pay. Generate a QR to receive or pay a merchant by scanning their QR.</p>
       </div>
 
       <!-- Virtual Account Info -->
@@ -142,6 +143,27 @@
         <p class="text-[10px] text-slate-500 mt-2">You will confirm with your Transaction PIN.</p>
       </div>
 
+      <!-- Withdraw to Bank Form -->
+      <div v-if="showWithdraw" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <h3 class="font-bold text-slate-800 mb-3">Withdraw to Bank</h3>
+        <p class="text-xs text-slate-500 mb-3">Withdrawals are sent to your saved bank account (Profile › Bank Settings). You can withdraw up to your Available-for-Withdrawal amount.</p>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
+            <input v-model.number="withdrawAmount" type="number" min="1" :max="Number(wallet?.available_for_withdrawal || 0)" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="0.00" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Note (optional)</label>
+            <input v-model="withdrawNote" type="text" maxlength="200" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="e.g., Personal cash-out" />
+          </div>
+        </div>
+        <div class="mt-2 text-[10px] text-slate-500">Available for Withdrawal: ₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.available_for_withdrawal || 0) }}</div>
+        <button @click="startWithdraw" :disabled="loading || !canWithdraw" class="bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold mt-4">
+          {{ loading ? 'Submitting…' : 'Request Withdrawal' }}
+        </button>
+        <p class="text-[10px] text-slate-500 mt-2">You will confirm with your Transaction PIN.</p>
+      </div>
+
       <!-- Withdrawal Breakdown -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <h3 class="font-bold text-slate-800 mb-3">Withdrawal Breakdown</h3>
@@ -164,6 +186,33 @@
           </div>
         </div>
         <p class="text-[10px] text-slate-500 mt-2">Note: Loan disbursements are marked as restricted by default and cannot be withdrawn to bank unless enabled by Admin. You can still spend restricted funds on Airtime/Data/Store inside the app.</p>
+      </div>
+
+      <!-- Your Withdrawal Requests -->
+      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <div class="flex justify-between items-center mb-3 gap-2 flex-wrap">
+          <h3 class="font-bold text-slate-800">Your Withdrawal Requests</h3>
+          <button @click="loadMoreWithdrawals" class="text-emerald-700 text-xs font-bold px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 sm:ml-auto">Load more</button>
+        </div>
+        <div v-if="withdrawals.length" class="space-y-3">
+          <div v-for="wr in withdrawals" :key="wr.id" class="border border-slate-100 rounded-xl p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-slate-800 truncate">₦ {{ formatMoney(wr.amount) }}</p>
+                <p class="text-[10px] uppercase text-slate-400 truncate">Ref: {{ wr.reference }}</p>
+              </div>
+              <div class="shrink-0 flex items-center gap-2">
+                <span :class="statusClass(wr.status)" class="text-xs font-bold px-2 py-1 rounded-full">{{ wr.status }}</span>
+                <button v-if="wr.status === 'pending'" @click="cancelWithdrawal(wr)" class="text-rose-700 text-[10px] font-bold px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100">Cancel</button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-1 gap-3 flex-wrap">
+              <p class="text-[10px] text-slate-400 truncate">{{ new Date(wr.created_at).toLocaleString() }}</p>
+              <p v-if="wr.bank?.account_number || wr.account_number" class="text-[10px] text-slate-400 truncate">Bank: {{ wr.bank?.bank_name || wr.bank_name }} • Acct: {{ (wr.bank?.account_number || wr.account_number || '').replace(/.(?=.{4})/g, '•') }}</p>
+            </div>
+          </div>
+        </div>
+        <div v-else class="text-sm text-slate-500">No withdrawal requests yet.</div>
       </div>
 
       <!-- Recent Wallet Transactions -->
@@ -210,11 +259,11 @@
       <CustomNotice
         v-model="pinPrompt.visible"
         :type="'info'"
-        :title="'Confirm Transfer'"
-        :message="'Enter your 4-digit Transaction PIN to authorize this transfer.'"
+        :title="pinPrompt.title || 'Confirm'"
+        :message="pinPrompt.message || 'Enter your 4-digit Transaction PIN to proceed.'"
         :prompt="true"
         inputLabel="Transaction PIN (4 digits)"
-        confirmText="Send"
+        :confirmText="pinPrompt.confirmText || 'Confirm'"
         cancelText="Cancel"
         :busy="loading"
         @confirm="handlePinConfirm"
@@ -247,6 +296,7 @@ import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
+import brand from '../brand.js'
 
 const router = useRouter()
 const baseRaw = import.meta?.env?.BASE_URL || '/'
@@ -263,11 +313,22 @@ const wallet = ref({ balance: 0, virtual_account: {} })
 const transactions = ref([])
 const page = ref(1)
 const perPage = 10
+
+// Withdrawal requests listing
+const withdrawals = ref([])
+const withdrawalsPage = ref(1)
+const withdrawalsPerPage = 10
+const withdrawalsLastPage = ref(1)
 const topupAmount = ref('')
 const loading = ref(false)
 const assigning = ref(false)
 const showFund = ref(true)
 const showTransfer = ref(false)
+const showWithdraw = ref(false)
+
+// Withdraw to bank form state
+const withdrawAmount = ref('')
+const withdrawNote = ref('')
 
 // P2P transfer form state
 const toType = ref('phone') // 'phone' | 'membership'
@@ -284,7 +345,7 @@ const branchesOptions = ref([])
 // Notice modal (shared)
 
 // PIN prompt modal state
-const pinPrompt = ref({ visible: false })
+const pinPrompt = ref({ visible: false, mode: 'transfer', title: '', message: '', confirmText: '' })
 
 // Optional BVN input before generating a virtual account
 const bvn = ref('')
@@ -305,6 +366,16 @@ const canSend = computed(() => {
   }
   return true
 })
+const canWithdraw = computed(() => {
+  const amt = Number(withdrawAmount.value || 0)
+  const available = Number(wallet.value?.available_for_withdrawal || 0)
+  return amt > 0 && amt <= available
+})
+const statusClass = (status) => {
+  if (status === 'paid') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'declined') return 'bg-rose-100 text-rose-700'
+  return 'bg-amber-100 text-amber-700'
+}
 const titleFor = (tx) => {
   const src = tx?.source
   if (src === 'wallet_allocation') return 'Allocation to Schemes'
@@ -328,6 +399,27 @@ const loadWallet = async () => {
   wallet.value = data
   // Prefer server-provided recent list
   transactions.value = data.recent_transactions || []
+}
+
+const resetWithdrawals = async () => {
+  withdrawalsPage.value = 1
+  withdrawals.value = []
+  await loadWithdrawals()
+}
+
+const loadWithdrawals = async () => {
+  const { data } = await axios.get(`/api/wallet/withdrawals?page=${withdrawalsPage.value}&per_page=${withdrawalsPerPage}`)
+  const items = Array.isArray(data?.data) ? data.data : []
+  withdrawalsLastPage.value = Number(data?.last_page || 1)
+  if (withdrawalsPage.value === 1) withdrawals.value = items
+  else withdrawals.value = withdrawals.value.concat(items)
+}
+
+const loadMoreWithdrawals = async () => {
+  if (withdrawalsPage.value < withdrawalsLastPage.value) {
+    withdrawalsPage.value += 1
+    await loadWithdrawals()
+  }
 }
 
 const loadMore = async () => {
@@ -412,6 +504,44 @@ const startTransfer = async () => {
   } catch (e) {
     // If biometric check throws, allow fallback to PIN only
   }
+  pinPrompt.value.mode = 'transfer'
+  pinPrompt.value.title = 'Confirm Transfer'
+  pinPrompt.value.message = 'Enter your 4-digit Transaction PIN to authorize this transfer.'
+  pinPrompt.value.confirmText = 'Send'
+  pinPrompt.value.visible = true
+}
+
+// Start Withdraw: biometric check then prompt for PIN
+const startWithdraw = async () => {
+  const amt = Number(withdrawAmount.value || 0)
+  const available = Number(wallet.value?.available_for_withdrawal || 0)
+  if (!(amt > 0)) {
+    showNotice('Enter amount', 'Please enter a valid withdrawal amount.', 'warning')
+    return
+  }
+  if (amt > available) {
+    showNotice('Too high', 'Amount exceeds your available-for-withdrawal balance.', 'error')
+    return
+  }
+  try {
+    const bioAvailable = await isBiometricAvailable()
+    if (bioAvailable) {
+      const ok = await verifyBiometricIdentity({
+        reason: 'Authorize withdrawal',
+        description: `Withdraw ₦ ${amt.toLocaleString()} to your saved bank account`,
+      })
+      if (!ok) {
+        showNotice('Authentication required', 'Biometric verification was cancelled or failed. Unable to request withdrawal.', 'warning')
+        return
+      }
+    }
+  } catch (e) {
+    // allow fallback to PIN
+  }
+  pinPrompt.value.mode = 'withdraw'
+  pinPrompt.value.title = 'Confirm Withdrawal'
+  pinPrompt.value.message = 'Enter your 4-digit Transaction PIN to request this withdrawal.'
+  pinPrompt.value.confirmText = 'Request'
   pinPrompt.value.visible = true
 }
 
@@ -423,36 +553,57 @@ const handlePinConfirm = async (val) => {
   }
   loading.value = true
   try {
-    const payload = {
-      to_type: toType.value,
-      to: String(toValue.value || '').trim(),
-      amount: Number(transferAmount.value),
-      pin,
+    if (pinPrompt.value.mode === 'withdraw') {
+      const payload = { amount: Number(withdrawAmount.value), pin }
+      const n = String(withdrawNote.value || '').trim()
+      if (n) payload.note = n
+      const { data } = await axios.post('/api/wallet/withdraw', payload)
+      pinPrompt.value.visible = false
+      // Reset form
+      withdrawAmount.value = ''
+      withdrawNote.value = ''
+      // Refresh wallet & withdrawals
+      await loadWallet()
+      await resetWithdrawals()
+      showNotice('Success', 'Withdrawal request submitted.', 'success')
+    } else {
+      const payload = {
+        to_type: toType.value,
+        to: String(toValue.value || '').trim(),
+        amount: Number(transferAmount.value),
+        pin,
+      }
+      const n = String(note.value || '').trim()
+      if (n) payload.note = n
+      if (toType.value === 'membership' && Number(branchId.value)) payload.branch_id = Number(branchId.value)
+
+      await axios.post('/api/wallet/transfer', payload)
+
+      pinPrompt.value.visible = false
+      // Reset form
+      toValue.value = ''
+      branchId.value = ''
+      transferAmount.value = ''
+      note.value = ''
+      // Refresh wallet & transactions
+      await loadWallet()
+      showNotice('Success', 'Transfer sent successfully.', 'success')
     }
-    const n = String(note.value || '').trim()
-    if (n) payload.note = n
-    if (toType.value === 'membership' && Number(branchId.value)) payload.branch_id = Number(branchId.value)
-
-    await axios.post('/api/wallet/transfer', payload)
-
-    pinPrompt.value.visible = false
-    // Reset form
-    toValue.value = ''
-    branchId.value = ''
-    transferAmount.value = ''
-    note.value = ''
-    // Refresh wallet & transactions
-    await loadWallet()
-    showNotice('Success', 'Transfer sent successfully.', 'success')
   } catch (e) {
     pinPrompt.value.visible = false
     const status = e?.response?.status
-    const msg = e?.response?.data?.message || 'Transfer failed'
+    const defaultMsg = pinPrompt.value.mode === 'withdraw' ? 'Withdrawal failed' : 'Transfer failed'
+    const msg = e?.response?.data?.message || defaultMsg
     if (status === 409) {
       showNotice('Set PIN', 'You need to set your Transaction PIN first. Go to Profile > Transaction PIN.', 'warning')
     } else if (status === 403) {
       showNotice('Invalid PIN', 'Your Transaction PIN is incorrect. Please try again.', 'error')
-    } else if (status === 404) {
+    } else if (status === 422 && pinPrompt.value.mode === 'withdraw' && (String(msg).toLowerCase().includes('bank details'))) {
+      showNotice('Bank details required', 'Please add and verify your bank details in Profile > Bank Settings to withdraw to bank.', 'warning')
+      try {
+        if (window.confirm('Open Bank Settings now?')) router.push('/profile')
+      } catch (_) {}
+    } else if (status === 404 && pinPrompt.value.mode !== 'withdraw') {
       showNotice('Recipient not found', 'We could not find a member matching those details.', 'error')
     } else {
       showNotice('Failed', msg, 'error')
@@ -529,5 +680,27 @@ watch([toType, toValue, branchId], () => {
   branchesOptions.value = []
 })
 
-onMounted(loadWallet)
+onMounted(async () => {
+  await loadWallet()
+  await resetWithdrawals()
+})
+
+const cancelWithdrawal = async (wr) => {
+  if (!wr || !wr.id) return
+  try {
+    if (!window.confirm('Cancel this withdrawal request?')) return
+    await axios.post(`/api/wallet/withdrawals/${wr.id}/cancel`)
+    showNotice('Cancelled', 'Withdrawal request cancelled.', 'success')
+    await resetWithdrawals()
+  } catch (e) {
+    const status = e?.response?.status
+    if (status === 404) {
+      showNotice('Not found', 'This withdrawal request could not be found.', 'error')
+    } else if (status === 422) {
+      showNotice('Unable to cancel', e?.response?.data?.message || 'Only pending requests can be cancelled.', 'warning')
+    } else {
+      showNotice('Failed', e?.response?.data?.message || 'Could not cancel request. Please try again later.', 'error')
+    }
+  }
+}
 </script>

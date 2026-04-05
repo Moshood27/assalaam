@@ -589,23 +589,57 @@ class WalletController extends Controller
             return response()->json(['message' => 'Insufficient wallet balance'], 422);
         }
 
+        // Prevent multiple concurrent pending withdrawal requests
+        $hasPending = WithdrawalRequest::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
+        if ($hasPending) {
+            return response()->json([
+                'message' => 'You already have a pending withdrawal request. Please wait for it to be processed.'
+            ], 422);
+        }
+
         $reference = 'WD-'.now()->format('YmdHis').'-'.$user->id.'-'.Str::upper(Str::random(6));
 
-        $req = WithdrawalRequest::create([
-            'user_id' => $user->id,
-            'amount' => $amount,
-            'reference' => $reference,
-            'status' => 'pending',
-            'bank_code' => $user->bank_code,
-            'bank_name' => $user->bank_name,
-            'account_number' => $user->account_number,
-            'account_name' => $user->account_name,
-            'reason' => $validated['note'] ?? null,
-            'meta' => [
-                'ip' => $request->ip(),
-                'user_agent' => substr((string)$request->userAgent(), 0, 255),
-            ],
-        ]);
+        // Wrap creation in a transaction and lock the user to avoid race conditions
+        $req = null;
+        try {
+            DB::transaction(function () use ($user, $amount, $reference, $validated, $request, &$req) {
+                // Lock the user row to serialize concurrent requests
+                User::where('id', $user->id)->lockForUpdate()->first();
+
+                // Double-check for any pending request within the same transaction
+                $hasPendingAgain = WithdrawalRequest::where('user_id', $user->id)
+                    ->where('status', 'pending')
+                    ->exists();
+                if ($hasPendingAgain) {
+                    throw new \RuntimeException('PENDING_DUPLICATE');
+                }
+
+                $req = WithdrawalRequest::create([
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'reference' => $reference,
+                    'status' => 'pending',
+                    'bank_code' => $user->bank_code,
+                    'bank_name' => $user->bank_name,
+                    'account_number' => $user->account_number,
+                    'account_name' => $user->account_name,
+                    'reason' => $validated['note'] ?? null,
+                    'meta' => [
+                        'ip' => $request->ip(),
+                        'user_agent' => substr((string)$request->userAgent(), 0, 255),
+                    ],
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            if ($e->getMessage() === 'PENDING_DUPLICATE') {
+                return response()->json([
+                    'message' => 'You already have a pending withdrawal request. Please wait for it to be processed.'
+                ], 422);
+            }
+            throw $e;
+        }
 
         // Best-effort alert to admins (optional)
         try {
@@ -664,5 +698,35 @@ class WalletController extends Controller
         }
         $perPage = $validated['per_page'] ?? 15;
         return response()->json($query->paginate($perPage));
+    }
+
+    public function cancelWithdrawal(Request $request, $id)
+    {
+        $user = $request->user();
+        $wr = WithdrawalRequest::where('id', (int)$id)
+            ->where('user_id', $user->id)
+            ->first();
+        if (!$wr) {
+            return response()->json(['message' => 'Withdrawal request not found'], 404);
+        }
+        if ($wr->status !== 'pending') {
+            return response()->json(['message' => 'Only pending requests can be cancelled'], 422);
+        }
+
+        $wr->status = 'declined';
+        $wr->reason = 'Cancelled by member';
+        $wr->processed_at = now();
+        $wr->save();
+
+        try {
+            $sms = app(\App\Services\SmsService::class);
+            $sms->send($user->phone ?? null, 'Withdrawal cancelled: ₦'.number_format((float)$wr->amount, 2).'. Ref: '.$wr->reference.'.');
+        } catch (\Throwable $e) { /* ignore */ }
+
+        return response()->json([
+            'id' => $wr->id,
+            'status' => $wr->status,
+            'reference' => $wr->reference,
+        ]);
     }
 }

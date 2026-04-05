@@ -14,6 +14,75 @@ use Illuminate\Support\Facades\Http;
 class ProfileController extends Controller
 {
     /**
+     * Get a dynamic list of Nigerian banks from the configured gateway.
+     * Query params: gateway=paystack|flutterwave (default: paystack)
+     * Response: { banks: [{ code, name }] }
+     */
+    public function banks(Request $request)
+    {
+        $gateway = strtolower($request->query('gateway', 'paystack'));
+
+        try {
+            if ($gateway === 'flutterwave') {
+                $secret = config('services.flutterwave.secret_key');
+                if (!$secret) {
+                    return response()->json(['message' => 'Payment provider not configured'], 500);
+                }
+                $resp = Http::withToken($secret)
+                    ->acceptJson()
+                    ->get('https://api.flutterwave.com/v3/banks/NG');
+                if (!$resp->ok() || strtolower((string) $resp->json('status')) !== 'success') {
+                    return response()->json([
+                        'message' => 'Failed to fetch banks',
+                        'errors' => $resp->json('message') ?? 'Unknown error',
+                    ], 422);
+                }
+                $banks = collect($resp->json('data') ?? [])
+                    ->filter(fn ($b) => !empty($b['code']) && !empty($b['name']))
+                    ->map(fn ($b) => [
+                        'code' => (string) $b['code'],
+                        'name' => (string) $b['name'],
+                    ])
+                    ->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)
+                    ->values()
+                    ->all();
+                return response()->json(['banks' => $banks]);
+            }
+
+            // Default: Paystack
+            $secret = config('services.paystack.secret_key');
+            // Even if secret is missing, Paystack bank list endpoint may be public, but we keep behavior consistent
+            $req = Http::acceptJson();
+            if ($secret) {
+                $req = $req->withToken($secret);
+            }
+            $resp = $req->get('https://api.paystack.co/bank', [
+                'country' => 'nigeria',
+                'currency' => 'NGN',
+                'type' => 'nuban',
+            ]);
+            if (!$resp->ok() || !($resp->json('status') === true)) {
+                return response()->json([
+                    'message' => 'Failed to fetch banks',
+                    'errors' => $resp->json('message') ?? 'Unknown error',
+                ], 422);
+            }
+            $banks = collect($resp->json('data') ?? [])
+                ->filter(fn ($b) => !empty($b['code']) && !empty($b['name']))
+                ->map(fn ($b) => [
+                    'code' => (string) $b['code'],
+                    'name' => (string) $b['name'],
+                ])
+                ->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)
+                ->values()
+                ->all();
+
+            return response()->json(['banks' => $banks]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Unable to fetch banks at this time.'], 500);
+        }
+    }
+    /**
      * Return the authenticated member's profile in the shape expected by the mobile app.
      */
     public function show(Request $request)

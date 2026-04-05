@@ -70,12 +70,17 @@
         </p>
       </div>
 
-      <p class="mt-6 text-center text-xs text-slate-500">Having trouble?
-        <router-link to="/support" class="text-emerald-700 font-semibold hover:underline">Contact Support</router-link>
-      </p>
-      <p class="mt-2 text-center text-xs text-slate-500">New to the Cooperative?
-        <router-link to="/register" class="text-emerald-700 font-semibold hover:underline">Create your membership</router-link>
-      </p>
+      <div class="mt-6 text-center text-xs text-slate-500 space-y-1">
+        <p>
+          <router-link to="/forgot" class="text-emerald-700 font-semibold hover:underline">Forgot password?</router-link>
+        </p>
+        <p>Having trouble?
+          <router-link to="/support" class="text-emerald-700 font-semibold hover:underline">Contact Support</router-link>
+        </p>
+        <p>New to the Cooperative?
+          <router-link to="/register" class="text-emerald-700 font-semibold hover:underline">Create your membership</router-link>
+        </p>
+      </div>
     </div>
   </div>
 </template>

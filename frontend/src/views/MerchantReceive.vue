@@ -32,7 +32,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <h3 class="font-bold text-slate-800">Your QR Code</h3>
-            <p class="text-xs text-slate-500">Ask the payer to scan this with the Attaqwa app.</p>
+            <p class="text-xs text-slate-500">Ask the payer to scan this with the {{ brand.shortName }} app.</p>
           </div>
           <button @click="copy(payload)" class="text-emerald-700 text-sm font-bold">Copy Payload</button>
         </div>
@@ -78,6 +78,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import axios from '../http.js'
+import brand from '../brand.js'
 
 const amount = ref()
 const note = ref('')
@@ -120,10 +121,10 @@ async function copy(text) {
 }
 
 async function share() {
-  const text = `Pay with Attaqwa\n${payload.value}`
+  const text = `Pay with ${brand.shortName}\n${payload.value}`
   try {
     if (navigator.share) {
-      await navigator.share({ title: 'Pay with Attaqwa', text })
+      await navigator.share({ title: `Pay with ${brand.shortName}`, text })
     } else {
       await navigator.clipboard.writeText(text)
       alert('Copied to clipboard')

@@ -51,6 +51,9 @@ Route::middleware('throttle:api')->group(function () {
 });
 // Login endpoints with stricter throttle
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+// Member password reset (email or SMS code)
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:login');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:login');
 
 // Admin auth endpoints (Vue-based)
 Route::prefix('admin')->group(function () {
@@ -111,6 +114,8 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/profile/passport', [ProfileController::class, 'uploadPassport']);
     Route::post('/profile/email', [ProfileController::class, 'updateEmail']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
+    // Banks directory (dynamic list from provider)
+    Route::get('/banks', [ProfileController::class, 'banks']);
     // Bank details: resolve and save (2-step with confirm flag)
     Route::post('/profile/bank-details', [ProfileController::class, 'saveBankDetails']);
 
@@ -138,8 +143,9 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/wallet/allocate', [\App\Http\Controllers\Api\WalletController::class, 'allocateToSchemes']);
     Route::get('/wallet/transfer/resolve', [\App\Http\Controllers\Api\WalletController::class, 'resolveRecipient']);
     Route::post('/wallet/transfer', [\App\Http\Controllers\Api\WalletController::class, 'transfer']);
-    Route::post('/wallet/withdraw', [\App\Http\Controllers\Api\WalletController::class, 'withdraw']);
+    Route::post('/wallet/withdraw', [\App\Http\Controllers\Api\WalletController::class, 'withdraw'])->middleware('throttle:5,1');
     Route::get('/wallet/withdrawals', [\App\Http\Controllers\Api\WalletController::class, 'withdrawals']);
+    Route::post('/wallet/withdrawals/{id}/cancel', [\App\Http\Controllers\Api\WalletController::class, 'cancelWithdrawal'])->middleware('throttle:5,1');
 
     // Merchant Pay (QR)
     Route::get('/merchant/pay/qr', [MerchantPayController::class, 'generateQr']);
@@ -158,15 +164,6 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // Virtual Account (Paystack DVA)
     Route::get('/virtual-account', [\App\Http\Controllers\Api\VirtualAccountController::class, 'show']);
     Route::post('/virtual-account/assign', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assign']);
-
-    // Wallet
-    Route::get('/wallet', [\App\Http\Controllers\Api\WalletController::class, 'getWallet']);
-    Route::get('/wallet/transactions', [\App\Http\Controllers\Api\WalletController::class, 'transactions']);
-    Route::get('/wallet/transactions/{id}/receipt', [ExportController::class, 'downloadWalletReceipt']);
-    Route::post('/wallet/topup/initiate', [\App\Http\Controllers\Api\WalletController::class, 'initiateTopup']);
-    Route::post('/wallet/allocate', [\App\Http\Controllers\Api\WalletController::class, 'allocateToSchemes']);
-    Route::get('/wallet/transfer/resolve', [\App\Http\Controllers\Api\WalletController::class, 'resolveRecipient']);
-    Route::post('/wallet/transfer', [\App\Http\Controllers\Api\WalletController::class, 'transfer']);
 
     // VTU (Airtime, Data, Electricity, Cable TV)
     Route::get('/vtu/transactions', [\App\Http\Controllers\Api\UtilityController::class, 'transactions']);

@@ -135,10 +135,42 @@
           <div class="grid sm:grid-cols-2 gap-3">
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase">Bank</label>
-              <select v-model="bankForm.bank_code" class="mt-1 w-full border rounded-xl p-3 bg-slate-50 text-sm">
-                <option disabled value="">Select Bank</option>
-                <option v-for="b in bankOptions" :key="b.code" :value="b.code">{{ b.name }} ({{ b.code }})</option>
-              </select>
+              <!-- Searchable bank picker -->
+              <div class="mt-1 relative">
+                <div class="flex items-center gap-2 border rounded-xl bg-slate-50 px-3 py-2.5 focus-within:ring-2 focus-within:ring-emerald-200">
+                  <span class="text-slate-400">🏦</span>
+                  <input
+                    v-model="bankSearch"
+                    @focus="openBankDropdown"
+                    @input="openBankDropdown"
+                    @keydown.down.prevent="moveBankHighlight(1)"
+                    @keydown.up.prevent="moveBankHighlight(-1)"
+                    @keydown.enter.prevent="confirmBankHighlight"
+                    @keydown.esc.prevent="closeBankDropdown"
+                    type="text"
+                    class="flex-1 bg-transparent outline-none text-sm placeholder-slate-400"
+                    :placeholder="selectedBank ? selectedBank.name + ' (' + selectedBank.code + ')' : 'Search bank by name or code'"
+                  />
+                  <button v-if="selectedBank" @click="clearSelectedBank" class="text-[11px] text-emerald-700 font-bold">Change</button>
+                </div>
+                <!-- Dropdown -->
+                <div v-if="showBankDropdown" class="absolute z-20 mt-1 w-full max-h-64 overflow-auto bg-white border border-slate-200 rounded-xl shadow-lg">
+                  <template v-if="filteredBanks.length">
+                    <button
+                      v-for="(b, i) in filteredBanks"
+                      :key="b.code"
+                      @click="selectBank(b)"
+                      class="w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-emerald-50"
+                      :class="i===highlightedIndex ? 'bg-emerald-50' : ''"
+                    >
+                      <span class="truncate">{{ b.name }}</span>
+                      <span class="text-[11px] text-slate-500 ml-2">{{ b.code }}</span>
+                    </button>
+                  </template>
+                  <div v-else class="px-3 py-2 text-sm text-slate-500">No banks found</div>
+                </div>
+                <p v-if="!selectedBank && bankForm.bank_code" class="text-[11px] text-amber-700 mt-1">Unknown bank code selected. Please reselect.</p>
+              </div>
             </div>
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase">Account Number</label>
@@ -309,21 +341,61 @@ const bankBusy = ref(false)
 const bankMessage = ref('')
 const bankError = ref(false)
 const resolvedName = ref('')
-const bankOptions = ref([
-  { code: '011', name: 'First Bank of Nigeria' },
-  { code: '058', name: 'Guaranty Trust Bank (GTBank)' },
+// Dynamic list of Nigerian banks (fetched), with fallback
+const bankOptions = ref([])
+const fallbackBanks = [
   { code: '044', name: 'Access Bank' },
-  { code: '057', name: 'Zenith Bank' },
-  { code: '033', name: 'United Bank for Africa (UBA)' },
-  { code: '214', name: 'First City Monument Bank (FCMB)' },
-  { code: '070', name: 'Fidelity Bank' },
-  { code: '032', name: 'Union Bank' },
-  { code: '076', name: 'Polaris Bank' },
-  { code: '035', name: 'Wema Bank' },
-  { code: '232', name: 'Sterling Bank' },
+  { code: '023', name: 'CitiBank Nigeria' },
   { code: '050', name: 'Ecobank Nigeria' },
+  { code: '070', name: 'Fidelity Bank' },
+  { code: '011', name: 'First Bank of Nigeria' },
+  { code: '214', name: 'First City Monument Bank (FCMB)' },
+  { code: '058', name: 'Guaranty Trust Bank (GTBank)' },
+  { code: '030', name: 'Heritage Bank' },
   { code: '082', name: 'Keystone Bank' },
-])
+  { code: '076', name: 'Polaris Bank' },
+  { code: '221', name: 'Stanbic IBTC Bank' },
+  { code: '232', name: 'Sterling Bank' },
+  { code: '100', name: 'SunTrust Bank' },
+  { code: '032', name: 'Union Bank' },
+  { code: '033', name: 'United Bank for Africa (UBA)' },
+  { code: '215', name: 'Unity Bank' },
+  { code: '035', name: 'Wema Bank' },
+  { code: '057', name: 'Zenith Bank' },
+]
+// UI state for dynamic, searchable bank picker
+const bankSearch = ref('')
+const showBankDropdown = ref(false)
+const highlightedIndex = ref(0)
+const selectedBank = computed(() => bankOptions.value.find(b => b.code === bankForm.value.bank_code) || null)
+const filteredBanks = computed(() => {
+  const q = bankSearch.value.trim().toLowerCase()
+  const list = bankOptions.value && bankOptions.value.length ? bankOptions.value : fallbackBanks
+  if (!q) return list
+  return list.filter(b => b.name.toLowerCase().includes(q) || String(b.code).includes(q))
+})
+const openBankDropdown = () => { showBankDropdown.value = true; highlightedIndex.value = 0 }
+const closeBankDropdown = () => { showBankDropdown.value = false }
+const selectBank = (b) => {
+  bankForm.value.bank_code = b.code
+  bankSearch.value = ''
+  showBankDropdown.value = false
+}
+const moveBankHighlight = (dir) => {
+  if (!showBankDropdown.value) { showBankDropdown.value = true }
+  const n = filteredBanks.value.length
+  if (!n) { highlightedIndex.value = 0; return }
+  highlightedIndex.value = (highlightedIndex.value + dir + n) % n
+}
+const confirmBankHighlight = () => {
+  const b = filteredBanks.value[highlightedIndex.value]
+  if (b) selectBank(b)
+}
+const clearSelectedBank = () => {
+  bankForm.value.bank_code = ''
+  bankSearch.value = ''
+  showBankDropdown.value = true
+}
 const bankDigits = computed(() => String(bankForm.value.account_number || '').replace(/\D/g, ''))
 
 // Update Email form state
@@ -643,6 +715,7 @@ const confirmPinReset = async () => {
 }
 
 onMounted(async () => {
+  // Load profile
   try {
     const { data } = await axios.get('/api/profile')
     profile.value = data
@@ -660,6 +733,18 @@ onMounted(async () => {
     }
     emailForm.value.email = profile.value.email
     bvnAssigned.value = JSON.parse(localStorage.getItem('bvn_assigned') || 'false')
+  }
+
+  // Load banks list dynamically
+  try {
+    const { data } = await axios.get('/api/banks')
+    if (Array.isArray(data?.banks) && data.banks.length) {
+      bankOptions.value = data.banks
+    } else {
+      bankOptions.value = fallbackBanks
+    }
+  } catch (_) {
+    bankOptions.value = fallbackBanks
   }
 })
 </script>

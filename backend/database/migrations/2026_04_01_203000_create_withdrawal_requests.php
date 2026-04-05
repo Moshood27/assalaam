@@ -22,6 +22,9 @@ return new class extends Migration {
             $table->timestamp('processed_at')->nullable();
             $table->json('meta')->nullable();
             $table->timestamps();
+
+            // Helpful composite index for common queries
+            $table->index(['user_id', 'status']);
         });
     }
 
