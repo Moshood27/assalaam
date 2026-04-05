@@ -279,15 +279,23 @@ class UtilityController extends Controller
         });
 
         $fresh = $tx->fresh();
-        if ($status === 'success') {
+        if ($fresh->status === 'success') {
+            $msg = 'Delivered';
+            if ($fresh->type === 'electricity') {
+                $body = $fresh->provider_response ?? [];
+                $token = $body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null)));
+                if ($token) {
+                    $msg = "Electricity token vended! Token: $token";
+                }
+            }
             return response()->json([
-                'message' => 'Delivered',
+                'message' => $msg,
                 'status' => 'success',
                 'reference' => $orderId,
                 'transaction' => $fresh,
             ], 200);
         }
-        if ($status === 'pending') {
+        if ($fresh->status === 'pending') {
             return response()->json([
                 'message' => 'Still Processing',
                 'status' => 'pending',
@@ -490,6 +498,14 @@ class UtilityController extends Controller
                                     'provider' => $ckb,
                                     'reference' => $reference,
                                 ], 200);
+                            } else {
+                                // Provider-declared failure after requery
+                                $tx->update([
+                                    'status' => 'failed',
+                                    'provider_response' => $ckb,
+                                ]);
+                                return response()->json([
+                                    'message' => 'Airtime purchase failed',
                                     'provider' => $ckb,
                                     'reference' => $reference,
                                 ], 400);
@@ -1178,6 +1194,7 @@ class UtilityController extends Controller
                 'fixed' => $fixed,
                 'convenience_fee' => $convenience,
                 'total_debit' => round($amount + $convenience, 2),
+                'type' => $v['type'] ?? null,
             ];
         }, is_array($raw) ? $raw : []));
 
@@ -1303,6 +1320,7 @@ class UtilityController extends Controller
                 'fixed' => $fixed,
                 'convenience_fee' => $convenience,
                 'total_debit' => round($amount + $convenience, 2),
+                'type' => $v['type'] ?? null,
             ];
         }, is_array($raw) ? $raw : []));
 
@@ -1528,13 +1546,17 @@ class UtilityController extends Controller
         $user->refresh();
         try {
             $sms = app(\App\Services\SmsService::class);
-            $msg = 'Electricity vend: ₦'.number_format($totalDebit, 2).' to meter '.($meter).' ('.strtoupper($serviceId).'). Ref: '.$reference.'. Bal: ₦'.number_format((float)$user->balance, 2);
+            $token = $body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null)));
+            $tokenMsg = $token ? " Token: $token." : "";
+            $msg = 'Electricity vend: ₦'.number_format($totalDebit, 2).' to meter '.($meter).' ('.strtoupper($serviceId).').'.$tokenMsg.' Ref: '.$reference.'. Bal: ₦'.number_format((float)$user->balance, 2);
             $sms->send($user->phone ?? null, $msg);
         } catch (\Throwable $e) {}
 
+        $token = $body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null)));
         return response()->json([
-            'message' => 'Electricity token vended!',
+            'message' => 'Electricity token vended! ' . ($token ? "Token: $token" : ""),
             'status' => 'success',
+            'token' => $token,
             'reference' => $reference,
             'balance' => (float)$user->balance,
             'transaction' => $tx->fresh(),
@@ -1816,8 +1838,19 @@ class UtilityController extends Controller
             }
         }
 
-        DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $body, $convenience, $service, $smartcard, $bundleCode) {
-            $user->decrement('balance', $totalDebit);
+        $insufficient4 = false;
+        DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $body, $convenience, $service, $smartcard, $bundleCode, &$insufficient4) {
+            $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+            if ((float)$lockedUser->balance < (float)$totalDebit) {
+                $tx->update([
+                    'status' => 'pending',
+                    'provider_response' => $body,
+                ]);
+                $insufficient4 = true;
+                return;
+            }
+
+            $lockedUser->decrement('balance', $totalDebit);
             $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
             $tx->update([
                 'status' => 'success',
@@ -1825,7 +1858,7 @@ class UtilityController extends Controller
                 'provider_response' => $body,
             ]);
             WalletTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $totalDebit,
                 'reference' => $reference,
@@ -1839,6 +1872,17 @@ class UtilityController extends Controller
                 ],
             ]);
         });
+
+        if ($insufficient4) {
+            $user->refresh();
+            return response()->json([
+                'message' => 'Cable subscription is processing. Wallet will be debited when funds are available.',
+                'status' => 'pending',
+                'reference' => $reference,
+                'balance' => (float)$user->balance,
+                'transaction' => $tx->fresh(),
+            ], 202);
+        }
 
         $user->refresh();
         try {
@@ -1854,6 +1898,47 @@ class UtilityController extends Controller
             'balance' => (float)$user->balance,
             'transaction' => $tx->fresh(),
         ]);
+    }
+
+    public function verifyMerchant(Request $request)
+    {
+        $validated = $request->validate([
+            'serviceID' => 'required|string',
+            'billersCode' => 'required|string',
+            'type' => 'nullable|string', // required for cable
+        ]);
+
+        $baseUrl = rtrim(config('services.vtu.base_url', 'https://vtpass.com/api'), '/');
+        $apiKey = config('services.vtu.api_key');
+        $publicKey = config('services.vtu.public_key');
+        $secretKey = config('services.vtu.secret_key');
+
+        if (!$apiKey || (!$publicKey && !$secretKey)) {
+            return response()->json(['message' => 'Provider not configured for verification'], 503);
+        }
+
+        $headers = [ 'api-key' => $apiKey ];
+        if ($publicKey) { $headers['public-key'] = $publicKey; }
+        if ($secretKey) { $headers['secret-key'] = $secretKey; }
+
+        try {
+            $resp = Http::withHeaders($headers)
+                ->acceptJson()
+                ->post($baseUrl . '/merchant-verify', [
+                    'serviceID' => $validated['serviceID'],
+                    'billersCode' => $validated['billersCode'],
+                    'type' => $validated['type'] ?? null,
+                ]);
+
+            $json = $resp->json();
+            if ($resp->ok()) {
+                return response()->json($json);
+            }
+            return response()->json(['message' => 'Verification failed', 'details' => $json], 422);
+        } catch (\Throwable $e) {
+            Log::error('VTU verification error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Network error during verification'], 502);
+        }
     }
 
     private function emptyPage(int $page = 1, int $perPage = 15): array

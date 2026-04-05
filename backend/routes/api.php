@@ -175,6 +175,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/vtu/data', [\App\Http\Controllers\Api\UtilityController::class, 'purchaseData']);
     Route::post('/vtu/electricity', [\App\Http\Controllers\Api\UtilityController::class, 'purchaseElectricity']);
     Route::post('/vtu/cable', [\App\Http\Controllers\Api\UtilityController::class, 'purchaseCable']);
+    Route::post('/vtu/verify-merchant', [\App\Http\Controllers\Api\UtilityController::class, 'verifyMerchant']);
     // Manual status check by OrderID/RequestID (member-initiated requery)
     Route::get('/vtu/status/{orderId}', [\App\Http\Controllers\Api\UtilityController::class, 'checkStatus']);
 

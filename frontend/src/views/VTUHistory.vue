@@ -45,6 +45,9 @@
               <p class="text-sm font-bold text-slate-800 capitalize">{{ tx.type }} — {{ tx.network }}</p>
               <p class="text-[10px] text-slate-500">{{ tx.phone_number }}</p>
               <p class="text-[10px] text-slate-400">Ref: {{ tx.reference }}</p>
+              <p v-if="tx.type === 'electricity' && getToken(tx)" class="mt-1 p-2 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-mono font-bold border border-emerald-100">
+                TOKEN: {{ getToken(tx) }}
+              </p>
             </div>
           </div>
           <div class="text-right">
@@ -91,6 +94,12 @@ const filters = ref({ type: '', status: '' })
 const formatMoney = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const badgeClass = (status) => status === 'success' ? 'bg-emerald-100 text-emerald-700' : (status === 'failed' ? 'bg-rose-100 text-rose-700' : 'bg-yellow-100 text-yellow-700')
 const statusIcon = (status) => status === 'success' ? '✓' : (status === 'failed' ? '✕' : '⌛')
+
+const getToken = (tx) => {
+  if (tx.type !== 'electricity' || !tx.provider_response) return null
+  const body = tx.provider_response
+  return body.mainToken || body.token || body.purchased_code || (body.data && body.data.token) || null
+}
 
 const load = async () => {
   const params = new URLSearchParams({ page: String(page.value), per_page: String(perPage) })

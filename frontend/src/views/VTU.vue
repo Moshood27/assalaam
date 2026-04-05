@@ -113,7 +113,18 @@
         </div>
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Meter Number</label>
-          <input v-model="electricity.meter" type="text" placeholder="e.g. 1234567890" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+          <div class="flex gap-2">
+            <input v-model="electricity.meter" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+            <button @click="verifyMerchant" :disabled="verification.loading || !electricity.meter || electricity.meter.length < 6" class="bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-xs disabled:opacity-50">
+              {{ verification.loading ? '...' : 'Verify' }}
+            </button>
+          </div>
+          <p v-if="verification.verified && tab==='electricity'" class="mt-1 text-[10px] text-emerald-600 font-bold ml-1">
+            Name: {{ verification.customerName }}
+          </p>
+          <p v-if="verification.error && tab==='electricity'" class="mt-1 text-[10px] text-red-500 font-bold ml-1">
+            {{ verification.error }}
+          </p>
         </div>
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (₦)</label>
@@ -143,7 +154,18 @@
           </div>
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Smartcard Number</label>
-            <input v-model="cable.smartcard" type="text" placeholder="e.g. 1234567890" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+            <div class="flex gap-2">
+              <input v-model="cable.smartcard" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+              <button @click="verifyMerchant" :disabled="verification.loading || !cable.smartcard || cable.smartcard.length < 6" class="bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-xs disabled:opacity-50">
+                {{ verification.loading ? '...' : 'Verify' }}
+              </button>
+            </div>
+            <p v-if="verification.verified && tab==='cable'" class="mt-1 text-[10px] text-emerald-600 font-bold ml-1">
+              Name: {{ verification.customerName }}
+            </p>
+            <p v-if="verification.error && tab==='cable'" class="mt-1 text-[10px] text-red-500 font-bold ml-1">
+              {{ verification.error }}
+            </p>
           </div>
         </div>
         <div>
@@ -236,6 +258,14 @@ const dataForm = ref({ network: 'mtn', phone: '', bundleCode: '' })
 const electricity = ref({ disco: 'aedc', meterType: 'prepaid', meter: '', amount: '', phone: '' })
 const cable = ref({ service: 'dstv', smartcard: '', bundleCode: '', phone: '' })
 
+// Verification state
+const verification = ref({
+  loading: false,
+  verified: false,
+  customerName: '',
+  error: ''
+})
+
 // Custom Notice State (shared)
 const { notice, showNotice, closeNotice } = useNotice()
 // Keep backward-compatible naming inside this file
@@ -300,7 +330,8 @@ async function scheduleStatusCheck(reference, deliveredMessage = 'Delivered') {
     const { data } = await axios.get(`/api/vtu/status/${reference}`)
     if (data?.status === 'success') {
       await loadWallet()
-      showCustomNotice('Success', deliveredMessage, 'success')
+      const msg = data.message && data.message !== 'Delivered' ? data.message : deliveredMessage
+      showCustomNotice('Success', msg, 'success')
     }
   } catch (e) {
     // silent: user can still check History manually
@@ -333,6 +364,40 @@ const loadTvBundles = async () => {
     tvBundles.value = data.bundles || []
   } catch (e) {
     console.error('TV bundles load error', e)
+  }
+}
+
+const verifyMerchant = async () => {
+  const serviceID = tab.value === 'electricity' ? electricity.value.disco : cable.value.service
+  const billersCode = tab.value === 'electricity' ? electricity.value.meter : cable.value.smartcard
+  const type = tab.value === 'cable' ? (selectedTvBundle.value?.type || 'renewal') : null
+
+  if (!serviceID || !billersCode) return
+
+  verification.value.loading = true
+  verification.value.verified = false
+  verification.value.customerName = ''
+  verification.value.error = ''
+
+  try {
+    const { data } = await axios.post('/api/vtu/verify-merchant', {
+      serviceID,
+      billersCode,
+      type
+    })
+
+    if (data?.content?.error) {
+      verification.value.error = data.content.error
+    } else if (data?.content?.Customer_Name) {
+      verification.value.customerName = data.content.Customer_Name
+      verification.value.verified = true
+    } else {
+      verification.value.error = 'Could not verify merchant. Please check the number.'
+    }
+  } catch (e) {
+    verification.value.error = e.response?.data?.message || 'Verification failed. Please try again.'
+  } finally {
+    verification.value.loading = false
   }
 }
 
@@ -461,6 +526,10 @@ const buyData = async () => {
 
 const buyElectricity = async () => {
   if (!canBuyElectricity.value) return
+  if (!verification.value.verified) {
+    showCustomNotice('Verification Required', 'Please verify your meter number first.', 'warning')
+    return
+  }
   loadingElectricity.value = true
   notice.value.visible = false
   try {
@@ -509,6 +578,10 @@ const buyElectricity = async () => {
 
 const buyCable = async () => {
   if (!canBuyCable.value || !selectedTvBundle.value) return
+  if (!verification.value.verified) {
+    showCustomNotice('Verification Required', 'Please verify your smartcard number first.', 'warning')
+    return
+  }
   loadingCable.value = true
   notice.value.visible = false
   try {
@@ -564,7 +637,28 @@ onMounted(() => {
 
 // Watchers
 watch(() => dataForm.value.network, () => loadBundles())
-watch(() => cable.value.service, () => loadTvBundles())
+watch(() => cable.value.service, () => {
+  loadTvBundles()
+  verification.value.verified = false
+  verification.value.customerName = ''
+})
+watch(() => electricity.value.disco, () => {
+  verification.value.verified = false
+  verification.value.customerName = ''
+})
+watch(() => electricity.value.meter, () => {
+  verification.value.verified = false
+  verification.value.customerName = ''
+})
+watch(() => cable.value.smartcard, () => {
+  verification.value.verified = false
+  verification.value.customerName = ''
+})
+watch(tab, () => {
+  verification.value.verified = false
+  verification.value.customerName = ''
+  verification.value.error = ''
+})
 </script>
 
 <style scoped>
