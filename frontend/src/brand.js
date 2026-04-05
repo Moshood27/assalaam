@@ -11,19 +11,12 @@ const logo = `${prefix}images/${slug}-logo.svg`
 const darkLogo = `${prefix}images/${slug}-logo-dark.svg`
 const favicon = `${prefix}images/${slug}-favicon.svg`
 
-// Theme color for OS chrome (status bar, PWA address bar)
-const themeColor = slug === 'attaqwa' ? '#3730a3' /* indigo-700 */ : '#0f766e' /* teal-700 */
-
-const shortName = slug === 'attaqwa' ? 'Attaqwa' : 'Assalam'
-
 export const brand = {
   slug,
   name,
-  shortName,
   logo,
   darkLogo,
   favicon,
-  themeColor,
 }
 
 export default brand

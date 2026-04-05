@@ -1,0 +1,1 @@
+var e=`attaqwa`,t=`ATTAQWA CO-OPERATIVE`,n=`/app/`,r=n.endsWith(`/`)?n:`${n}/`,i={slug:e,name:t,logo:`${r}images/${e}-logo.svg`,darkLogo:`${r}images/${e}-logo-dark.svg`,favicon:`${r}images/${e}-favicon.svg`};export{i as t};

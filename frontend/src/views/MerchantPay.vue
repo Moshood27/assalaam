@@ -10,7 +10,7 @@
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <h3 class="font-bold text-slate-800 mb-3">Scan or Paste QR</h3>
         <p class="text-xs text-slate-500 mb-2">Paste the QR payload text here. Camera scanning will be added later.</p>
-        <textarea v-model.trim="qr" rows="3" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" :placeholder="`${brand.slug}:pay?to_type=membership&to=...&amount=...&note=...`"></textarea>
+        <textarea v-model.trim="qr" rows="3" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="attaqwa:pay?to_type=membership&to=...&amount=...&note=..."></textarea>
         <div class="mt-2 flex flex-wrap gap-2">
           <button @click="paste" class="bg-slate-100 px-4 py-2 rounded-xl font-bold text-slate-800">Paste</button>
           <button v-if="canScan" @click="scan" class="bg-white border border-emerald-200 text-emerald-700 px-4 py-2 rounded-xl font-bold">Scan QR</button>
@@ -85,7 +85,6 @@ import { ref } from 'vue'
 import axios from '../http.js'
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning'
 import { Capacitor } from '@capacitor/core'
-import brand from '../brand.js'
 
 const canScan = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
 

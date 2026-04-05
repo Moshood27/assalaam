@@ -32,7 +32,7 @@
             <button @click="$router.push('/merchant/pay')" class="bg-white text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold">Pay Merchant</button>
           </div>
         </div>
-        <p class="text-xs text-slate-500 mt-2">Let local shops accept {{ brand.shortName }} Pay. Generate a QR to receive or pay a merchant by scanning their QR.</p>
+        <p class="text-xs text-slate-500 mt-2">Let local shops accept Attaqwa Pay. Generate a QR to receive or pay a merchant by scanning their QR.</p>
       </div>
 
       <!-- Virtual Account Info -->
@@ -296,7 +296,6 @@ import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
-import brand from '../brand.js'
 
 const router = useRouter()
 const baseRaw = import.meta?.env?.BASE_URL || '/'

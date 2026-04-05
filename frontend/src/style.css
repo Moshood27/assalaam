@@ -5,295 +5,112 @@ html, body, #app { height: 100%; }
 
 @layer base {
   :root {
-    /* Brand Colors (Default: Emerald) */
     --brand-1: 16 185 129; /* emerald-500 */
     --brand-2: 5 150 105;  /* emerald-600 */
-    --brand-3: 4 120 87;   /* emerald-700 */
-    
-    /* Neutral Palette */
-    --bg-0: 248 250 252;   /* slate-50 (Much cleaner than slate-100) */
-    --text-900: 15 23 42;  /* slate-900 */
-    --text-600: 71 85 105; /* slate-600 */
-    --border-200: 226 232 240; /* slate-200 */
+    --brand-3: 15 118 110; /* teal-700-ish */
+    --bg-0: 241 245 249;   /* slate-100 */
   }
-
   html { @apply antialiased; }
-  
   body {
     margin: 0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    /* Clean Fintech Background: Subtle top-glow, solid bottom */
-    background: radial-gradient(circle at 50% 0%, rgb(var(--brand-1) / 0.08) 0%, transparent 50%),
-               rgb(var(--bg-0));
-    color: rgb(var(--text-900));
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    /* Fintech soft gradient background */
+    background: radial-gradient(1200px 500px at 80% -10%, rgba(var(--brand-1)/0.18), transparent 60%),
+                radial-gradient(800px 400px at -10% 10%, rgba(56 189 248/0.15), transparent 60%),
+                linear-gradient(180deg, rgba(255 255 255/0.9), rgba(var(--bg-0)/1));
+    color: rgb(15 23 42); /* slate-900 */
   }
-
-  h1, h2, h3, h4 { @apply tracking-tight font-bold; }
+  h1, h2, h3, h4 { @apply tracking-tight; }
 }
 
-/* Components */
+/* Components (design tokens for a fintech look) */
 @layer components {
-  .container-app { @apply mx-auto max-w-5xl px-5; }
+  .container-app { @apply mx-auto max-w-5xl px-4 sm:px-6; }
 
-  /* Cards - Crisp and Solid for trust */
-  .card { 
-    @apply bg-white rounded-3xl border border-slate-200/60 shadow-sm transition-all;
-  }
-  .card-elevated { 
-    @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100; 
-  }
+  .card { @apply bg-white/80 backdrop-blur rounded-2xl border border-slate-200 shadow-sm; }
+  .card-elevated { @apply shadow-lg border-slate-100; }
 
-  /* Forms - High interaction feedback */
-  .form-label { @apply block text-[13px] text-slate-600 font-semibold mb-1.5 ml-1; }
-  .input { 
-    @apply w-full bg-slate-100/50 border-2 border-transparent 
-           focus:bg-white p-3.5 rounded-2xl outline-none transition-all placeholder:text-slate-400; 
-    --brand-2: 5 150 105;
-  }
-  .input:focus {
-    border-color: rgb(var(--brand-2) / 0.3);
-  }
+  .form-label { @apply block text-slate-700 font-medium mb-1; }
+  .input { @apply w-full bg-slate-100 border-2 border-transparent focus:border-emerald-400 p-3 rounded-xl outline-none; }
 
-  /* Buttons - Soft haptics */
-  .btn { 
-    @apply inline-flex items-center justify-center gap-2 font-bold rounded-2xl px-5 py-3 
-           transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none; 
-  }
-  .btn-primary { 
-    @apply bg-emerald-700 text-white shadow-lg shadow-emerald-700/20 hover:bg-emerald-800; 
-    background-color: rgb(var(--brand-2));
-  }
-  .btn-secondary { 
-    @apply bg-slate-200/50 text-slate-700 hover:bg-slate-200; 
-  }
-  .btn-ghost { 
-    @apply text-emerald-700 hover:bg-emerald-50; 
-    color: rgb(var(--brand-2));
-  }
+  .btn { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-700 text-white hover:bg-emerald-800 focus:ring-emerald-600; }
+  .btn-secondary { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-emerald-700 hover:bg-emerald-50 focus:ring-emerald-600; }
 
-  /* Badges - Tiny and clean */
-  .badge { 
-    @apply inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider; 
-  }
-  .badge-success { @apply bg-emerald-100 text-emerald-700; }
-  .badge-muted { @apply bg-slate-100 text-slate-500; }
+  .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest; }
+  .badge-success { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700; }
+  .badge-muted { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-600; }
 
-  .navbar { @apply w-full bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40; }
-  .navbar-inner { @apply mx-auto max-w-5xl px-5 h-16 flex items-center justify-between; }
+  .navbar { @apply w-full bg-white/80 backdrop-blur border-b border-slate-200; }
+  .navbar-inner { @apply mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between; }
 
-  /* Typography for Finance */
-  .money { 
-    font-family: 'Inter', sans-serif;
-    font-feature-settings: "tnum"; /* Monospaced numbers for alignment */
-    @apply font-extrabold text-slate-900 tracking-tight; 
-  }
-  .section-title { @apply font-extrabold text-slate-900 text-lg; }
+  .money { @apply font-black text-slate-800 tracking-tight; }
+  .section-title { @apply font-bold text-slate-800 text-lg; }
 
-  .auth-bg { @apply bg-white; }
-}
-
-/* UI Extensions */
-@layer components {
-  /* Segmented Control - Modern pill style */
-  .segmented { @apply bg-slate-100 rounded-2xl p-1 flex gap-1; }
-  .segment { @apply flex-1 text-center py-2 rounded-xl font-bold text-slate-500 text-sm transition-all cursor-pointer; }
-  .segment-active { @apply bg-white text-emerald-700 shadow-sm; }
-
-  /* Bottom Navigation - Fixed and high-blur */
-  .bottom-nav { 
-    @apply fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 
-           px-6 py-3 flex justify-around items-center z-50; 
-  }
-  .bottom-nav-btn { @apply text-slate-400 flex flex-col items-center gap-1 transition-colors; }
-  .bottom-nav-btn-active { @apply text-emerald-700; color: rgb(var(--brand-2)); }
-
-  /* Mobile Form Helpers */
-  .inp { 
-    @apply w-full bg-white p-4 rounded-2xl border border-slate-200 text-base shadow-sm 
-           focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none; 
-  }
-
-  /* Header helper preserved */
-  .header-fintech { @apply w-full bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40; }
-
-  /* Admin helpers preserved */
-  .lbl { @apply block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1; }
-  .empty-state { @apply text-center text-slate-500 text-sm; }
-  .btn-muted { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300; }
+  .auth-bg { @apply bg-gradient-to-br from-emerald-50 via-white to-sky-50; }
 }
 
 /* Utility helpers */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* --- BRANDING OVERRIDE: ATTAQWA (Indigo) --- */
-.brand-attaqwa {
-  --brand-1: 99 102 241; /* indigo-500 */
-  --brand-2: 79 70 229;  /* indigo-600 */
-  --brand-3: 67 56 202;  /* indigo-700 */
-  --bg-0: 249 250 251;   /* gray-50 */
+
+/* Fintech UI extensions */
+@layer components {
+  .btn-muted { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-3 py-2 text-slate-600 hover:bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300; }
+
+  /* Segmented control */
+  .segmented { @apply bg-white/90 backdrop-blur border border-slate-200 rounded-2xl p-1 shadow-sm; }
+  .segment { @apply w-full text-center py-2.5 rounded-xl font-semibold text-slate-600 text-sm transition-all; }
+  .segment-active { @apply bg-emerald-700 text-white shadow; }
+
+  /* Bottom navigation */
+  .bottom-nav { @apply fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t p-3 flex justify-around items-center z-10; }
+  .bottom-nav-btn { @apply text-slate-400 flex flex-col items-center gap-1; }
+  .bottom-nav-btn-active { @apply text-emerald-700; }
+
+  /* Header */
+  .header-fintech { @apply w-full bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-20; }
+
+  /* Admin helpers used elsewhere */
+  .lbl { @apply block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1; }
+  .inp { @apply w-full bg-slate-50 p-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-emerald-500; }
+
+  /* Empty state */
+  .empty-state { @apply text-center text-slate-500 text-sm; }
 }
 
-/* Indigo Component Remaps */
-.brand-attaqwa .btn-primary { 
-    @apply bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-700; 
-    background-color: rgb(var(--brand-2));
-}
-.brand-attaqwa .badge-success { @apply bg-indigo-100 text-indigo-700; }
-.brand-attaqwa .segment-active { @apply text-indigo-700; }
-.brand-attaqwa .bottom-nav-btn-active { @apply text-indigo-700; color: rgb(var(--brand-2)); }
-.brand-attaqwa .input:focus { border-color: rgb(var(--brand-2) / 0.3); }
-
-/* Dynamic color replacement for specific utility classes */
-.brand-attaqwa .text-emerald-700, .brand-attaqwa .text-emerald-600 { color: rgb(var(--brand-2)); }
-.brand-attaqwa .text-emerald-800 { color: rgb(55 48 163); } /* indigo-800 */
-.brand-attaqwa .text-emerald-100 { color: rgb(224 231 255); } /* indigo-100 */
-.brand-attaqwa .bg-emerald-700, .brand-attaqwa .bg-emerald-600 { background-color: rgb(var(--brand-2)); }
-.brand-attaqwa .bg-emerald-50 { background-color: rgb(var(--brand-1) / 0.05); }
-.brand-attaqwa .border-emerald-100 { border-color: rgb(224 231 255); } /* indigo-100 */
-.brand-attaqwa .border-emerald-200 { border-color: rgb(199 210 254); } /* indigo-200 */
-.brand-attaqwa .bg-emerald-500 { background-color: rgb(var(--brand-2)); }
-.brand-attaqwa .bg-emerald-100 { background-color: rgb(224 231 255); } /* indigo-100 */
-
-/* Gradient remaps used by views (Login button, Wallet card) */
-.brand-attaqwa .from-emerald-700 { --tw-gradient-from: rgb(var(--brand-2)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-2) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-attaqwa .from-emerald-800 { --tw-gradient-from: rgb(55 48 163) var(--tw-gradient-from-position); --tw-gradient-to: rgb(55 48 163 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-attaqwa .to-emerald-900 { --tw-gradient-to: rgb(49 46 129) var(--tw-gradient-to-position); } /* indigo-900 */
-.brand-attaqwa .to-teal-600 { --tw-gradient-to: rgb(var(--brand-2)) var(--tw-gradient-to-position); }
-.brand-attaqwa .hover\:from-emerald-800:hover { --tw-gradient-from: rgb(55 48 163) var(--tw-gradient-from-position); --tw-gradient-to: rgb(55 48 163 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-attaqwa .hover\:to-teal-700:hover { --tw-gradient-to: rgb(67 56 202) var(--tw-gradient-to-position); } /* indigo-700 */
-/* Additional gradient/opacity remaps used by Login decorative blobs */
-.brand-attaqwa .from-emerald-400\/25 { --tw-gradient-from: rgb(var(--brand-1) / 0.25) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-1) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-attaqwa .from-emerald-300\/20 { --tw-gradient-from: rgb(var(--brand-1) / 0.20) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-1) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-attaqwa .to-sky-400\/25 { --tw-gradient-to: rgb(var(--brand-1) / 0.25) var(--tw-gradient-to-position); }
-.brand-attaqwa .to-emerald-700 { --tw-gradient-to: rgb(var(--brand-3)) var(--tw-gradient-to-position); }
-.brand-attaqwa .via-emerald-500\/40 { --tw-gradient-to: rgb(var(--brand-1) / 0); --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--brand-1) / 0.40), var(--tw-gradient-to); }
-
-/* --- CUSTOM LIBRARIES --- */
+/* Customizing the Driver.js popover for mobile */
 .driver-popover {
-  @apply rounded-3xl border-none shadow-2xl p-6;
-}
-.driver-popover-title { @apply font-black text-xl text-slate-900; }
-.driver-popover-description { @apply text-slate-600 text-sm leading-relaxed; }
-
-
-/* --- BRANDING OVERRIDE: ASSALAM (Teal) --- */
-.brand-assalam {
-  --brand-1: 20 184 166; /* teal-500 */
-  --brand-2: 13 148 136; /* teal-600 */
-  --brand-3: 15 118 110; /* teal-700 */
-  --bg-0: 248 250 252;   /* slate-50 */
+  background-color: #ffffff;
+  color: #333;
+  border-radius: 12px;
+  max-width: 280px !important; /* Keep it narrow for small screens */
+  padding: 15px;
 }
 
-/* Teal Component Remaps */
-.brand-assalam .btn-primary { 
-  @apply bg-teal-600 shadow-teal-600/20 hover:bg-teal-700; 
-  background-color: rgb(var(--brand-2));
-}
-.brand-assalam .badge-success { @apply bg-teal-100 text-teal-700; }
-.brand-assalam .segment-active { @apply text-teal-700; }
-.brand-assalam .bottom-nav-btn-active { @apply text-teal-700; color: rgb(var(--brand-2)); }
-.brand-assalam .input:focus { border-color: rgb(var(--brand-2) / 0.3); }
-
-/* Utility remaps for emerald -> teal within Assalam */
-.brand-assalam .text-emerald-700, .brand-assalam .text-emerald-600 { color: rgb(var(--brand-2)); }
-.brand-assalam .text-emerald-800 { color: rgb(19 78 74); } /* teal-900 */
-.brand-assalam .text-emerald-100 { color: rgb(204 251 241); } /* teal-100 */
-.brand-assalam .bg-emerald-700, .brand-assalam .bg-emerald-600 { background-color: rgb(var(--brand-2)); }
-.brand-assalam .bg-emerald-500 { background-color: rgb(var(--brand-2)); }
-.brand-assalam .bg-emerald-100 { background-color: rgb(204 251 241); } /* teal-100 */
-.brand-assalam .bg-emerald-50 { background-color: rgb(var(--brand-1) / 0.07); }
-.brand-assalam .border-emerald-100 { border-color: rgb(204 251 241); } /* teal-100 */
-.brand-assalam .border-emerald-200 { border-color: rgb(153 246 228); } /* teal-200 */
-.brand-assalam .accent-emerald-700 { accent-color: rgb(var(--brand-2)); }
-
-/* Gradient remaps used by views */
-.brand-assalam .from-emerald-700 { --tw-gradient-from: rgb(var(--brand-2)) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-2) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-assalam .from-emerald-800 { --tw-gradient-from: rgb(17 94 89) var(--tw-gradient-from-position); --tw-gradient-to: rgb(17 94 89 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-assalam .to-emerald-900 { --tw-gradient-to: rgb(19 78 74) var(--tw-gradient-to-position); }
-.brand-assalam .to-teal-600 { --tw-gradient-to: rgb(var(--brand-2)) var(--tw-gradient-to-position); }
-/* Additional gradient/opacity remaps used by Login decorative blobs */
-.brand-assalam .from-emerald-400\/25 { --tw-gradient-from: rgb(var(--brand-1) / 0.25) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-1) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-assalam .from-emerald-300\/20 { --tw-gradient-from: rgb(var(--brand-1) / 0.20) var(--tw-gradient-from-position); --tw-gradient-to: rgb(var(--brand-1) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-assalam .to-sky-400\/25 { --tw-gradient-to: rgb(var(--brand-1) / 0.25) var(--tw-gradient-to-position); }
-.brand-assalam .to-emerald-700 { --tw-gradient-to: rgb(var(--brand-3)) var(--tw-gradient-to-position); }
-.brand-assalam .via-emerald-500\/40 { --tw-gradient-to: rgb(var(--brand-1) / 0); --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--brand-1) / 0.40), var(--tw-gradient-to); }
-
-/* Cross-brand: ensure native form accents follow brand color when emerald utilities are used */
-.brand-attaqwa .accent-emerald-700 { accent-color: rgb(var(--brand-2)); }
-
-
-/* --- Cross-brand utilities and final touchups for fintech-consistent colors --- */
-@layer utilities {
-  /* Generic brand utility used by templates (e.g., MobileSplash) */
-  .bg-brand-800 { background-color: rgb(var(--brand-3)); }
+.driver-popover-title {
+  font-weight: bold;
+  font-size: 18px;
+  color: #2c3e50; /* Your primary color */
 }
 
-/* Ensure input focus states follow brand for both input helpers */
-.brand-attaqwa .inp:focus { 
-  --tw-ring-color: rgb(var(--brand-2) / 0.1);
-  border-color: rgb(var(--brand-2));
-}
-.brand-assalam .inp:focus { 
-  --tw-ring-color: rgb(var(--brand-2) / 0.1);
-  border-color: rgb(var(--brand-2));
+.driver-popover-description {
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-/* Map generic emerald focus helpers to current brand (when used in templates) */
-.brand-attaqwa .focus\:ring-emerald-500:focus { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-assalam .focus\:ring-emerald-500:focus { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-attaqwa .focus\:border-emerald-500:focus { border-color: rgb(var(--brand-2)); }
-.brand-assalam .focus\:border-emerald-500:focus { border-color: rgb(var(--brand-2)); }
+.driver-popover-arrow {
+  border-color: #ffffff;
+}
 
-/* Hover remaps commonly used across templates */
-.brand-attaqwa .hover\:bg-emerald-700:hover { background-color: rgb(var(--brand-3)); }
-.brand-assalam .hover\:bg-emerald-700:hover { background-color: rgb(var(--brand-3)); }
-.brand-attaqwa .hover\:bg-emerald-50:hover { background-color: rgb(var(--brand-1) / 0.05); }
-.brand-assalam .hover\:bg-emerald-50:hover { background-color: rgb(var(--brand-1) / 0.07); }
-
-
-/* Additional brand remaps for deep text and ring opacity variants */
-.brand-attaqwa .text-emerald-900 { color: rgb(49 46 129); } /* indigo-900 */
-.brand-assalam .text-emerald-900 { color: rgb(19 78 74); } /* teal-900 */
-
-/* Tailwind class with opacity segment requires escaped slash */
-.brand-attaqwa .focus\:ring-emerald-500\/10:focus { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
-.brand-assalam .focus\:ring-emerald-500\/10:focus { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
-
-
-/* Non-focus ring helpers used in components (e.g., ChatWidget) */
-.brand-attaqwa .ring-emerald-500 { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-assalam .ring-emerald-500 { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-attaqwa .ring-emerald-500\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
-.brand-assalam .ring-emerald-500\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
-
-
-/* --- Brand remaps for missing emerald-600 and opacity utilities (Login, Wallet, Balance cards) --- */
-/* Focus ring/border: emerald-600 -> current brand */
-.brand-attaqwa .focus\:ring-emerald-600:focus { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-assalam .focus\:ring-emerald-600:focus { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-attaqwa .focus\:border-emerald-600:focus { border-color: rgb(var(--brand-2)); }
-.brand-assalam .focus\:border-emerald-600:focus { border-color: rgb(var(--brand-2)); }
-
-/* Static ring helpers */
-.brand-attaqwa .ring-emerald-600 { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-assalam .ring-emerald-600 { --tw-ring-color: rgb(var(--brand-2)); }
-.brand-attaqwa .ring-emerald-600\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
-.brand-assalam .ring-emerald-600\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
-
-/* Border opacity variant used in Quick Login button */
-.brand-attaqwa .border-emerald-200\/80 { border-color: rgb(199 210 254 / 0.8); } /* indigo-200 @ 80% */
-.brand-assalam .border-emerald-200\/80 { border-color: rgb(153 246 228 / 0.8); } /* teal-200 @ 80% */
-
-/* Hover bg with opacity variant */
-.brand-attaqwa .hover\:bg-emerald-50\/50:hover { background-color: rgb(var(--brand-1) / 0.5); }
-.brand-assalam .hover\:bg-emerald-50\/50:hover { background-color: rgb(var(--brand-1) / 0.5); }
-
-/* Add missing hover gradient remaps for Assalam (used by Login CTA) */
-.brand-assalam .hover\:from-emerald-800:hover { --tw-gradient-from: rgb(17 94 89) var(--tw-gradient-from-position); --tw-gradient-to: rgb(17 94 89 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.brand-assalam .hover\:to-teal-700:hover { --tw-gradient-to: rgb(15 118 110) var(--tw-gradient-to-position); }
-
-
-/* Map solid border emerald-600 to brand for elements like spinners (Login) */
-.brand-attaqwa .border-emerald-600 { border-color: rgb(var(--brand-2)); }
-.brand-assalam .border-emerald-600 { border-color: rgb(var(--brand-2)); }
+/* Improve number input readability by removing browser spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
