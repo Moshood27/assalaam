@@ -324,6 +324,98 @@ class UtilityController extends Controller
         ], 200);
     }
 
+    public function cancelTransaction(Request $request, string $orderId)
+    {
+        $user = $request->user();
+        $tx = UtilityTransaction::where('user_id', $user->id)
+            ->where('reference', $orderId)
+            ->first();
+
+        if (!$tx) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+
+        if ($tx->status !== 'pending') {
+            return response()->json(['message' => 'Only pending transactions can be cancelled'], 422);
+        }
+
+        // We can only cancel ClubKonnect transactions if we have an OrderID
+        $providerResp = $tx->provider_response;
+        $orderIdFromProvider = is_array($providerResp) ? ($providerResp['orderid'] ?? ($providerResp['order_id'] ?? null)) : null;
+
+        if (!$orderIdFromProvider) {
+            // Requery by RequestID to find OrderID if possible
+            $ckRequery = $this->requeryClubKonnectByRequestId($orderId);
+            if ($ckRequery['ok'] && isset($ckRequery['body']['orderid'])) {
+                $orderIdFromProvider = $ckRequery['body']['orderid'];
+            }
+        }
+
+        if (!$orderIdFromProvider) {
+            return response()->json(['message' => 'Cannot cancel this transaction (OrderID unknown)'], 422);
+        }
+
+        $resp = $this->cancelClubKonnectByOrderId($orderIdFromProvider);
+        if (!$resp['ok']) {
+            return response()->json([
+                'message' => 'Failed to cancel transaction with provider',
+                'provider' => $resp['body'] ?? null,
+            ], 400);
+        }
+
+        $body = $resp['body'] ?? [];
+        $status = strtoupper((string)($body['status'] ?? ($body['orderstatus'] ?? '')));
+
+        if (in_array($status, ['ORDER_CANCELLED', 'CANCELLED'])) {
+            DB::transaction(function () use ($tx, $body) {
+                $user = $tx->user()->lockForUpdate()->first();
+                $tx->update([
+                    'status' => 'cancelled',
+                    'provider_response' => $body,
+                ]);
+
+                // Refund if debited (similar to failure)
+                $hasDebit = WalletTransaction::where('reference', $tx->reference)
+                    ->where('type', 'debit')
+                    ->exists();
+
+                if ($hasDebit) {
+                    $refundRef = $tx->reference . '-CANCEL-REFUND';
+                    $hasRefund = WalletTransaction::where('reference', $refundRef)
+                        ->where('type', 'credit')
+                        ->exists();
+                    if (!$hasRefund) {
+                        $refundAmount = (float) $tx->amount;
+                        $user->increment('balance', $refundAmount);
+                        WalletTransaction::create([
+                            'user_id' => $user->id,
+                            'type' => 'credit',
+                            'amount' => $refundAmount,
+                            'reference' => $refundRef,
+                            'source' => 'vtu_refund',
+                            'meta' => [
+                                'utility_tx_id' => $tx->id,
+                                'original_reference' => $tx->reference,
+                                'reason' => 'User cancelled',
+                            ],
+                        ]);
+                    }
+                }
+            });
+
+            return response()->json([
+                'message' => 'Transaction cancelled successfully',
+                'status' => 'cancelled',
+                'reference' => $orderId,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Cancellation not accepted by provider: ' . ($body['orderstatus'] ?? $status),
+            'provider' => $body,
+        ], 400);
+    }
+
     public function purchaseAirtime(Request $request)
     {
         $validated = $request->validate([
@@ -2253,6 +2345,15 @@ class UtilityController extends Controller
                     'MeterType' => $meterType,
                 ]);
             }
+        } elseif ($type === 'cancel') {
+            $orderId = $payload['order_id'] ?? ($payload['OrderID'] ?? null);
+            if (!$orderId) {
+                return [ 'ok' => false, 'error' => 'OrderID required for cancellation', 'body' => null, 'status' => 0 ];
+            }
+            $endpoint = '/APICancelV1.asp';
+            $params = array_merge($params, [
+                'OrderID' => $orderId,
+            ]);
         } else {
             return [ 'ok' => false, 'error' => 'Unsupported channel', 'body' => null, 'status' => 0 ];
         }
@@ -2384,7 +2485,7 @@ class UtilityController extends Controller
             $respDesc = strtolower((string)($body['response_description'] ?? ''));
             $message = strtolower((string)($body['message'] ?? ''));
 
-            if (in_array($status, ['success', 'successful', 'delivered', 'completed'])) {
+            if (in_array($status, ['success', 'successful', 'delivered', 'completed', 'order_completed'])) {
                 return true;
             }
 
@@ -2408,14 +2509,14 @@ class UtilityController extends Controller
     {
         if (!is_array($body)) { return false; }
         $status = strtolower((string)($body['status'] ?? ''));
-        if (in_array($status, ['pending', 'processing', 'initiated', 'queued', 'order_received'])) { return true; }
+        if (in_array($status, ['pending', 'processing', 'initiated', 'queued', 'order_received', 'order_onhold'])) { return true; }
         $txStatus = strtolower((string)($body['data']['transactions']['status'] ?? ($body['content']['transactions']['status'] ?? ($body['transactions']['status'] ?? ''))));
         if (in_array($txStatus, ['pending', 'processing', 'initiated', 'queued'])) { return true; }
         // Nellobytes/ClubKonnect pending fields
         $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
         if ($ckCode === '100') { return true; }
         $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
-        if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'RECEIVED'])) { return true; }
+        if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'RECEIVED', 'ORDER_ONHOLD', 'ONHOLD'])) { return true; }
         $desc = strtolower((string)($body['response_description'] ?? ($body['message'] ?? '')));
         if ($desc && (str_contains($desc, 'pending') || str_contains($desc, 'processing') || str_contains($desc, 'initiated') || str_contains($desc, 'queue'))) { return true; }
         // Some VTpass variants use non-000 codes while processing
@@ -2501,6 +2602,11 @@ class UtilityController extends Controller
     private function requeryClubKonnectByOrderId(string $orderId): array
     {
         return $this->requeryClubKonnect(['OrderID' => $orderId]);
+    }
+
+    private function cancelClubKonnectByOrderId(string $orderId): array
+    {
+        return $this->callClubKonnect('cancel', ['OrderID' => $orderId]);
     }
 
     // Normalize Nigerian MSISDNs to 11-digit local format (0XXXXXXXXXX)

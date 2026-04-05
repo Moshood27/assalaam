@@ -178,6 +178,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/vtu/verify-merchant', [\App\Http\Controllers\Api\UtilityController::class, 'verifyMerchant']);
     // Manual status check by OrderID/RequestID (member-initiated requery)
     Route::get('/vtu/status/{orderId}', [\App\Http\Controllers\Api\UtilityController::class, 'checkStatus']);
+    Route::post('/vtu/cancel/{orderId}', [\App\Http\Controllers\Api\UtilityController::class, 'cancelTransaction']);
 
     // Coop Store (member-facing)
     Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']);
