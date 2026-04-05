@@ -254,3 +254,34 @@ html, body, #app { height: 100%; }
 .brand-assalam .ring-emerald-500 { --tw-ring-color: rgb(var(--brand-2)); }
 .brand-attaqwa .ring-emerald-500\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
 .brand-assalam .ring-emerald-500\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
+
+
+/* --- Brand remaps for missing emerald-600 and opacity utilities (Login, Wallet, Balance cards) --- */
+/* Focus ring/border: emerald-600 -> current brand */
+.brand-attaqwa .focus\:ring-emerald-600:focus { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-assalam .focus\:ring-emerald-600:focus { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-attaqwa .focus\:border-emerald-600:focus { border-color: rgb(var(--brand-2)); }
+.brand-assalam .focus\:border-emerald-600:focus { border-color: rgb(var(--brand-2)); }
+
+/* Static ring helpers */
+.brand-attaqwa .ring-emerald-600 { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-assalam .ring-emerald-600 { --tw-ring-color: rgb(var(--brand-2)); }
+.brand-attaqwa .ring-emerald-600\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
+.brand-assalam .ring-emerald-600\/10 { --tw-ring-color: rgb(var(--brand-2) / 0.1); }
+
+/* Border opacity variant used in Quick Login button */
+.brand-attaqwa .border-emerald-200\/80 { border-color: rgb(199 210 254 / 0.8); } /* indigo-200 @ 80% */
+.brand-assalam .border-emerald-200\/80 { border-color: rgb(153 246 228 / 0.8); } /* teal-200 @ 80% */
+
+/* Hover bg with opacity variant */
+.brand-attaqwa .hover\:bg-emerald-50\/50:hover { background-color: rgba(var(--brand-1) / 0.5); }
+.brand-assalam .hover\:bg-emerald-50\/50:hover { background-color: rgba(var(--brand-1) / 0.5); }
+
+/* Add missing hover gradient remaps for Assalam (used by Login CTA) */
+.brand-assalam .hover\:from-emerald-800:hover { --tw-gradient-from: rgb(17 94 89) var(--tw-gradient-from-position); --tw-gradient-to: rgb(17 94 89 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.brand-assalam .hover\:to-teal-700:hover { --tw-gradient-to: rgb(15 118 110) var(--tw-gradient-to-position); }
+
+
+/* Map solid border emerald-600 to brand for elements like spinners (Login) */
+.brand-attaqwa .border-emerald-600 { border-color: rgb(var(--brand-2)); }
+.brand-assalam .border-emerald-600 { border-color: rgb(var(--brand-2)); }
