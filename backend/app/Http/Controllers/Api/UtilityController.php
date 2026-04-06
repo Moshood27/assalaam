@@ -176,26 +176,46 @@ class UtilityController extends Controller
             return response()->json(['message' => 'Transaction not found'], 404);
         }
 
-        // Try ClubKonnect (by RequestID), then VTpass
+        // Determine provider and try appropriate requery
         $result = null;
         $source = null;
-        $ck = $this->requeryClubKonnectByRequestId($orderId);
-        if (($ck['ok'] ?? false) && is_array($ck['body'] ?? null) && !empty($ck['body']['statuscode'])) {
-            $result = $ck['body'];
-            $source = 'clubkonnect';
-        } else {
-            // Try by OrderID if we have it in previous response
-            $providerResp = $tx->provider_response;
-            $orderIdFromProvider = is_array($providerResp) ? ($providerResp['orderid'] ?? ($providerResp['order_id'] ?? null)) : null;
+        $providerResp = is_array($tx->provider_response) ? $tx->provider_response : [];
+
+        $isClubKonnect = isset($providerResp['orderid']) || isset($providerResp['statuscode']) || (isset($providerResp['status']) && str_contains((string)($providerResp['status']??''), 'ORDER'));
+        $isVtpass = isset($providerResp['code']) || (isset($providerResp['content']) && isset($providerResp['content']['transactions']));
+
+        if ($isClubKonnect) {
+            // Try by OrderID if available (most reliable for ClubKonnect)
+            $orderIdFromProvider = $providerResp['orderid'] ?? ($providerResp['order_id'] ?? null);
             if ($orderIdFromProvider) {
-                $ckOrder = $this->requeryClubKonnectByOrderId($orderIdFromProvider);
+                $ckOrder = $this->requeryClubKonnectByOrderId((string)$orderIdFromProvider);
                 if (($ckOrder['ok'] ?? false) && is_array($ckOrder['body'] ?? null) && !empty($ckOrder['body']['statuscode'])) {
                     $result = $ckOrder['body'];
                     $source = 'clubkonnect';
                 }
             }
 
+            // Fallback to RequestID (using the reference column)
             if (!$result) {
+                $ck = $this->requeryClubKonnectByRequestId($orderId);
+                if (($ck['ok'] ?? false) && is_array($ck['body'] ?? null) && !empty($ck['body']['statuscode'])) {
+                    $result = $ck['body'];
+                    $source = 'clubkonnect';
+                }
+            }
+        } elseif ($isVtpass) {
+            $vt = $this->requeryVtpass($orderId);
+            if (($vt['ok'] ?? false) && is_array($vt['body'] ?? null)) {
+                $result = $vt['body'];
+                $source = 'vtpass';
+            }
+        } else {
+            // Fallback for unknown provider: try both (CK first)
+            $ck = $this->requeryClubKonnectByRequestId($orderId);
+            if (($ck['ok'] ?? false) && is_array($ck['body'] ?? null) && !empty($ck['body']['statuscode'])) {
+                $result = $ck['body'];
+                $source = 'clubkonnect';
+            } else {
                 $vt = $this->requeryVtpass($orderId);
                 if (($vt['ok'] ?? false) && is_array($vt['body'] ?? null)) {
                     $result = $vt['body'];
@@ -2666,7 +2686,7 @@ class UtilityController extends Controller
         try {
             $resp = Http::withHeaders($headers)
                 ->acceptJson()
-                ->get($baseUrl . '/requery', [ 'request_id' => $reference ]);
+                ->post($baseUrl . '/requery', [ 'request_id' => $reference ]);
         } catch (\Throwable $e) {
             Log::error('VTU requery HTTP error', ['exception' => $e->getMessage()]);
             return [ 'ok' => false, 'error' => 'Network error', 'body' => null, 'status' => 0 ];
@@ -2674,7 +2694,11 @@ class UtilityController extends Controller
 
         $json = $resp->json();
         if (!$resp->ok()) {
-            Log::error('VTU requery bad response', ['status' => $resp->status(), 'body' => $json]);
+            if ($resp->status() >= 500) {
+                Log::error('VTU requery server error', ['status' => $resp->status(), 'body' => $json]);
+            } else {
+                Log::warning('VTU requery non-success response', ['status' => $resp->status(), 'body' => $json]);
+            }
             return [ 'ok' => false, 'error' => 'Bad response', 'body' => $json, 'status' => $resp->status() ];
         }
 
