@@ -1170,7 +1170,6 @@ class UtilityController extends Controller
             $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
             try {
                 $r = Http::timeout(10)
-                    ->acceptJson()
                     ->get($ckBase . '/APIDatabundlePlansV2.asp', [ 'UserID' => $ckUser ]);
                 $j = $r->json();
                 if ($r->ok() && is_array($j)) {
@@ -1182,7 +1181,12 @@ class UtilityController extends Controller
                         if (isset($j[$k]) && is_array($j[$k])) { $plansRaw = $j[$k]; break; }
                         if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $plansRaw = $j['data'][$k]; break; }
                         if (isset($j['plans'][$k]) && is_array($j['plans'][$k])) { $plansRaw = $j['plans'][$k]; break; }
+                        if (isset($j['content'][$k]) && is_array($j['content'][$k])) { $plansRaw = $j['content'][$k]; break; }
                     }
+
+                    if ($plansRaw === null && isset($j['content']) && is_array($j['content'])) { $plansRaw = $j['content'][$network] ?? ($j['content'][strtoupper($network)] ?? null); }
+                    if ($plansRaw === null && isset($j['data']) && is_array($j['data'])) { $plansRaw = $j['data'][$network] ?? ($j['data'][strtoupper($network)] ?? null); }
+                    if ($plansRaw === null && isset($j['plans']) && is_array($j['plans'])) { $plansRaw = $j['plans'][$network] ?? ($j['plans'][strtoupper($network)] ?? null); }
                     if ($plansRaw === null && isset($j['data']) && is_array($j['data'])) { $plansRaw = $j['data']; }
                     if ($plansRaw === null && isset($j['plans']) && is_array($j['plans'])) { $plansRaw = $j['plans']; }
                     if ($plansRaw === null && array_is_list($j)) { $plansRaw = $j; }
@@ -1190,11 +1194,11 @@ class UtilityController extends Controller
                     $bundles = [];
                     if (is_array($plansRaw)) {
                         foreach ($plansRaw as $p) {
-                            $pn = strtolower((string)($p['network'] ?? $p['provider'] ?? ''));
-                            if ($pn && $pn !== $network) { continue; }
-                            $code = (string)($p['dataplan_id'] ?? ($p['id'] ?? ($p['code'] ?? '')));
-                            $name = (string)($p['name'] ?? ($p['plan'] ?? ($p['description'] ?? '')));
-                            $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
+                            $pn = strtolower((string)($p['network'] ?? $p['provider'] ?? ($p['Network'] ?? '')));
+                            if ($pn && !str_contains($pn, $network) && !str_contains($network, $pn)) { continue; }
+                            $code = (string)($p['dataplan_id'] ?? ($p['id'] ?? ($p['code'] ?? ($p['PRODUCT_ID'] ?? ($p['ID'] ?? '')))));
+                            $name = (string)($p['name'] ?? ($p['plan'] ?? ($p['description'] ?? ($p['PRODUCT_NAME'] ?? ''))));
+                            $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? ($p['PRODUCT_AMOUNT'] ?? 0))));
                             if ($code === '' || $amount <= 0) { continue; }
                             $bundles[] = [
                                 'code' => $code,
@@ -1326,7 +1330,6 @@ class UtilityController extends Controller
             $ckBase = rtrim((string)($ck['base_url'] ?? 'https://www.nellobytesystems.com'), '/');
             try {
                 $r = Http::timeout(10)
-                    ->acceptJson()
                     ->get($ckBase . '/APICableTVPackagesV2.asp', [ 'UserID' => $ckUser ]);
                 $j = $r->json();
                 if ($r->ok() && is_array($j)) {
@@ -1337,6 +1340,7 @@ class UtilityController extends Controller
                         if (isset($j[$k]) && is_array($j[$k])) { $raw = $j[$k]; break; }
                         if (isset($j['data'][$k]) && is_array($j['data'][$k])) { $raw = $j['data'][$k]; break; }
                         if (isset($j['packages'][$k]) && is_array($j['packages'][$k])) { $raw = $j['packages'][$k]; break; }
+                        if (isset($j['content'][$k]) && is_array($j['content'][$k])) { $raw = $j['content'][$k]; break; }
                     }
                     if ($raw === null && isset($j['data']) && is_array($j['data'])) { $raw = $j['data']; }
                     if ($raw === null && isset($j['packages']) && is_array($j['packages'])) { $raw = $j['packages']; }
@@ -1345,9 +1349,9 @@ class UtilityController extends Controller
                     $bundles = [];
                     if (is_array($raw)) {
                         foreach ($raw as $p) {
-                            $code = (string)($p['code'] ?? ($p['package_code'] ?? ($p['id'] ?? '')));
-                            $name = (string)($p['name'] ?? ($p['description'] ?? ''));
-                            $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? 0)));
+                            $code = (string)($p['code'] ?? ($p['package_code'] ?? ($p['id'] ?? ($p['PRODUCT_ID'] ?? ($p['ID'] ?? '')))));
+                            $name = (string)($p['name'] ?? ($p['description'] ?? ($p['PRODUCT_NAME'] ?? '')));
+                            $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? ($p['PRODUCT_AMOUNT'] ?? 0))));
                             if ($code === '') { continue; }
                             $bundles[] = [
                                 'code' => $code,
@@ -2313,16 +2317,15 @@ class UtilityController extends Controller
             // Data bundle purchase via APIDatabundleV1.asp
             // Network codes per spec: 01 MTN, 02 Glo, 03 9mobile, 04 Airtel
             $serviceId = strtolower((string)($payload['serviceID'] ?? ''));
-            $network = $payload['network'] ?? $serviceId;
-            if (str_contains($serviceId, '-data')) {
-                $network = explode('-data', $serviceId)[0];
+            $network = strtolower((string)($payload['network'] ?? ''));
+            if (!$network && $serviceId) {
+                $network = (str_contains($serviceId, '-')) ? explode('-', $serviceId)[0] : $serviceId;
             }
-            $network = strtolower((string) $network);
             if ($network === 'etisalat') { $network = '9mobile'; }
             $mapData = [ 'mtn' => '01', 'glo' => '02', '9mobile' => '03', 'airtel' => '04' ];
             $mobileNetwork = $mapData[$network] ?? null;
 
-            $dataPlan = $payload['variation_code'] ?? ($payload['DataPlan'] ?? null);
+            $dataPlan = $payload['variation_code'] ?? ($payload['DataPlan'] ?? $payload['bundle_code'] ?? null);
             $mobileNumber = $payload['phone'] ?? $payload['billersCode'] ?? null;
             if (!$mobileNetwork || !$dataPlan || !$mobileNumber || !$requestId) {
                 return [ 'ok' => false, 'error' => 'Missing required fields', 'body' => [ 'note' => 'network/dataplan/phone/request_id required' ], 'status' => 0 ];
@@ -2335,10 +2338,15 @@ class UtilityController extends Controller
                 'MobileNumber' => $mobileNumber,
                 'RequestID' => $requestId,
             ]);
+            // Amount is NOT part of the APIDatabundleV1.asp spec in the documentation.
+            // Removing it to ensure strict compliance.
             if ($cb !== '') { $params['CallBackURL'] = $cb; }
         } elseif ($type === 'cable') {
             // Cable subscription via APICableTVV1.asp
             $service = strtolower((string)($payload['serviceID'] ?? ''));
+            $mapCable = [ 'dstv' => '01', 'gotv' => '02', 'startimes' => '03' ];
+            $cableCode = $mapCable[$service] ?? $service;
+
             $package = $payload['variation_code'] ?? ($payload['Package'] ?? null);
             $smartcard = $payload['billersCode'] ?? ($payload['SmartCardNo'] ?? null);
             $phone = $payload['phone'] ?? ($payload['PhoneNo'] ?? null);
@@ -2348,11 +2356,13 @@ class UtilityController extends Controller
 
             $endpoint = '/APICableTVV1.asp';
             $params = array_merge($params, [
-                'CableTV' => $service,
+                'CableTV' => $cableCode,
                 'Package' => $package,
                 'SmartCardNo' => $smartcard,
                 'RequestID' => $requestId,
             ]);
+            // Amount is NOT part of the APICableTVV1.asp spec in the documentation.
+            // Removing it to ensure strict compliance.
             if (!empty($phone)) { $params['PhoneNo'] = $phone; }
             if ($cb !== '') { $params['CallBackURL'] = $cb; }
         } elseif ($type === 'electricity') {
@@ -2396,9 +2406,12 @@ class UtilityController extends Controller
             $billersCode = $payload['billersCode'] ?? null;
 
             if ($type === 'verify-cable') {
+                $mapCable = [ 'dstv' => '01', 'gotv' => '02', 'startimes' => '03' ];
+                $cableCode = $mapCable[$service] ?? $service;
+
                 $endpoint = '/APIVerifyCableTVV1.0.asp';
                 $params = array_merge($params, [
-                    'CableTV' => $service,
+                    'CableTV' => $cableCode,
                     'SmartCardNo' => $billersCode,
                 ]);
             } else {
@@ -2550,14 +2563,22 @@ class UtilityController extends Controller
             $code = (string)($body['code'] ?? ($body['data']['code'] ?? ''));
             if ($code === '000') return true;
 
-            // Nellobytes/ClubKonnect success: statuscode=200 or orderstatus=ORDER_COMPLETED
-            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
-            if ($ckCode === '200' || $ckCode === 'OK' || $ckCode === '201' || $ckCode === '000') { // be liberal
+            // Nellobytes/ClubKonnect success: statuscode=100 (ORDER_RECEIVED), 200 (ORDER_COMPLETED)
+            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ($body['StatusCode'] ?? '')));
+            if (in_array($ckCode, ['100', '200', 'OK', '201', '000'])) { // be liberal
                 return true;
             }
-            $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
-            if (in_array($orderStatusUp, ['ORDER_COMPLETED', 'COMPLETED', 'SUCCESS'])) {
+            $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? ($body['OrderStatus'] ?? ''))));
+            if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'ORDER_COMPLETED', 'COMPLETED', 'SUCCESS', 'RECEIVED'])) {
                 return true;
+            }
+
+            // Verification responses (electricity/cable)
+            if (isset($body['customer_name']) || isset($body['Customer_Name'])) {
+                $cname = strtoupper((string)($body['customer_name'] ?? $body['Customer_Name']));
+                if (!str_contains($cname, 'INVALID') && !str_contains($cname, 'NOT FOUND')) {
+                    return true;
+                }
             }
 
             // 2. Check for "success" or "successful" or "delivered" strings
