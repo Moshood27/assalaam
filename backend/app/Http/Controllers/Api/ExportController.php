@@ -126,6 +126,62 @@ class ExportController extends Controller
         return $pdf->download($filename);
     }
 
+    public function downloadLoanAgreement(Request $request, int $id)
+    {
+        set_time_limit(120);
+        $user = $request->user();
+
+        $q = QardHasan::query()->where('id', $id);
+
+        // If not admin, restrict to own loan
+        if (!$user->is_admin) {
+            $q->where('user_id', $user->id);
+        }
+
+        $loan = $q->firstOrFail();
+        $borrower = $loan->user;
+
+        // Generate schedule (simplified for agreement)
+        $interval = strtolower((string) $loan->interval);
+        $cursor = ($loan->approved_at ?: ($loan->created_at ?: now()))->copy();
+
+        $add = function ($date) use ($interval) {
+            return match ($interval) {
+                'weekly' => $date->copy()->addWeek(),
+                'daily' => $date->copy()->addDay(),
+                'quarterly' => $date->copy()->addQuarter(),
+                'yearly' => $date->copy()->addYear(),
+                default => $date->copy()->addMonth(),
+            };
+        };
+
+        $schedule = [];
+        $balance = (float) $loan->principal_amount;
+        $installment = (float) $loan->per_installment;
+        $totalInstallments = (int) $loan->total_installments;
+
+        for ($i = 1; $i <= $totalInstallments; $i++) {
+            $cursor = $add($cursor);
+            $applied = min($installment, $balance);
+            $schedule[] = [
+                'sequence' => $i,
+                'due_date' => $cursor->toDateString(),
+                'installment_amount' => round($applied, 2),
+            ];
+            $balance -= $applied;
+        }
+
+        $data = [
+            'user' => $borrower,
+            'loan' => $loan,
+            'schedule' => $schedule,
+        ];
+
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $data);
+        $filename = 'Loan_Agreement_' . $loan->qard_id_string . '.pdf';
+        return $pdf->download($filename);
+    }
+
     public function downloadDividend(Request $request, int $year)
     {
         try {

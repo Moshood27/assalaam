@@ -189,11 +189,16 @@ class LoanController extends Controller
             if ($defaulters->isNotEmpty()) {
                 return response()->json(['message' => 'Selected guarantors must not be in default.'], 422);
             }
-            // Guarantors must be from different branches
+            // Guarantors must be from different branches, and different from applicant's branch
             $branchIds = $guarantors->pluck('branch_id')->all();
             if (in_array(null, $branchIds, true)) {
                 return response()->json(['message' => 'All guarantors must belong to a branch.'], 422);
             }
+
+            if (in_array($user->branch_id, $branchIds)) {
+                return response()->json(['message' => 'Guarantors must be from different branches than yours.'], 422);
+            }
+
             if (count(array_unique($branchIds)) !== count($branchIds)) {
                 return response()->json(['message' => 'Guarantors must be selected from different branches.'], 422);
             }
@@ -796,5 +801,36 @@ class LoanController extends Controller
                 ],
             ]);
         });
+    }
+
+    // Member uploads the signed agreement for a loan
+    public function uploadAgreement(Request $request, int $id)
+    {
+        $user = $request->user();
+        $q = QardHasan::where('user_id', $user->id)->findOrFail($id);
+
+        if ($q->status !== 'pending') {
+            return response()->json(['message' => 'Agreement can only be uploaded for pending loans.'], 422);
+        }
+
+        if (empty($q->agreement_template)) {
+            return response()->json(['message' => 'No agreement template found for this loan.'], 422);
+        }
+
+        $request->validate([
+            'signed_agreement' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'], // 5MB limit
+        ]);
+
+        $path = $request->file('signed_agreement')->store('loan-signed', 'public');
+
+        $q->update([
+            'signed_agreement' => $path,
+            'agreement_uploaded_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Agreement uploaded successfully. Admin will verify it before disbursement.',
+            'signed_agreement' => $path,
+        ]);
     }
 }

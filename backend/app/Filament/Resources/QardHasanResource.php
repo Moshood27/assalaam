@@ -11,8 +11,14 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section as InfoSection;
+use Filament\Infolists\Components\Actions\Action as InfolistAction;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
@@ -20,6 +26,12 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use App\Mail\LoanRejectedUser;
+use App\Mail\LoanApprovedUser;
+use App\Mail\LoanAgreementVerifiedUser;
+use App\Mail\LoanAgreementRejectedUser;
+use App\Notifications\LoanApprovedNotification;
+use App\Notifications\LoanAgreementVerifiedNotification;
+use App\Notifications\LoanAgreementRejectedNotification;
 use App\Services\PayoutService;
 use Exception;
 
@@ -121,6 +133,17 @@ class QardHasanResource extends Resource
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
                     ])->required(),
+                FileUpload::make('agreement_template')
+                    ->label('Agreement Template')
+                    ->directory('loan-templates')
+                    ->visibility('public')
+                    ->helperText('Upload the agreement document for the member to download and sign.'),
+                FileUpload::make('signed_agreement')
+                    ->label('Signed Agreement (Member)')
+                    ->directory('loan-signed')
+                    ->visibility('public')
+                    ->disabled()
+                    ->helperText('This will be uploaded by the member.'),
             ])->columns(2);
     }
 
@@ -158,6 +181,11 @@ class QardHasanResource extends Resource
                     'success' => ['active', 'completed'],
                     'danger' => ['cancelled'],
                 ]),
+                IconColumn::make('agreement_verified_at')
+                    ->label('Agreement Verified')
+                    ->boolean()
+                    ->getStateUsing(fn(QardHasan $record) => !empty($record->agreement_verified_at))
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -186,15 +214,58 @@ class QardHasanResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
                     ->visible(fn (QardHasan $record) => $record->status === 'pending' && empty($record->approved_at))
-                    ->requiresConfirmation()
-                    ->action(function (QardHasan $record) {
+                    ->form([
+                        FileUpload::make('agreement_template')
+                            ->label('Agreement Template')
+                            ->directory('loan-templates')
+                            ->visibility('public')
+                            ->helperText('Upload the agreement document for the member to download and sign.')
+                            ->default(fn (QardHasan $record) => $record->agreement_template),
+                    ])
+                    ->action(function (QardHasan $record, array $data) {
                         $record->update([
                             'approved_by' => auth()->id(),
                             'approved_at' => now(),
+                            'agreement_template' => $data['agreement_template'] ?? $record->agreement_template,
                         ]);
+
+                        // Notify member
+                        try {
+                            $record->loadMissing('user');
+                            $user = $record->user;
+                            $msg = "Your loan request ({$record->qard_id_string}) was approved! Please download the agreement from your dashboard, sign, and upload it back for verification.";
+
+                            if (!empty($user?->email)) {
+                                Mail::to($user->email)->send(new LoanApprovedUser($record));
+                            }
+
+                            if ($user) {
+                                $user->notify(new LoanApprovedNotification(
+                                    title: 'Loan Approved',
+                                    message: $msg,
+                                    loanId: $record->id,
+                                    qardIdString: $record->qard_id_string,
+                                    creditedAmount: 0,
+                                    balance: (float) ($user->balance ?? 0),
+                                ));
+
+                                try {
+                                    $push = app(\App\Services\PushService::class);
+                                    $token = $user->fcm_token ?: $user->device_token;
+                                    if ($token) {
+                                        $push->send($token, 'Loan Approved', $msg, [
+                                            'type' => 'loan_approved',
+                                            'loan_id' => $record->id,
+                                            'qard_id_string' => $record->qard_id_string,
+                                        ]);
+                                    }
+                                } catch (\Throwable $e) {}
+                            }
+                        } catch (\Throwable $e) {}
+
                         Notification::make()
                             ->title('Loan approved')
-                            ->body('Loan has been approved. You may proceed to disburse once guarantors have accepted.')
+                            ->body('Loan has been approved. Member will be notified to sign the agreement.')
                             ->success()
                             ->send();
                     }),
@@ -265,6 +336,125 @@ class QardHasanResource extends Resource
                             ->success()
                             ->send();
                     }),
+                Action::make('verify_agreement')
+                    ->label('Verify Agreement')
+                    ->icon('heroicon-o-document-check')
+                    ->color('success')
+                    ->visible(fn(QardHasan $record) => $record->status === 'pending' && !empty($record->signed_agreement) && empty($record->agreement_verified_at))
+                    ->requiresConfirmation()
+                    ->action(function (QardHasan $record) {
+                        $record->update(['agreement_verified_at' => now()]);
+
+                        // Notify member
+                        try {
+                            $record->loadMissing('user');
+                            $user = $record->user;
+                            $msg = "Your signed loan agreement for {$record->qard_id_string} has been verified! Your loan is now ready for final disbursement.";
+
+                            if (!empty($user?->email)) {
+                                Mail::to($user->email)->send(new LoanAgreementVerifiedUser($record));
+                            }
+
+                            if ($user) {
+                                $user->notify(new LoanAgreementVerifiedNotification(
+                                    title: 'Agreement Verified',
+                                    message: $msg,
+                                    loanId: $record->id,
+                                    qardIdString: $record->qard_id_string
+                                ));
+
+                                try {
+                                    $push = app(\App\Services\PushService::class);
+                                    $token = $user->fcm_token ?: $user->device_token;
+                                    if ($token) {
+                                        $push->send($token, 'Agreement Verified', $msg, [
+                                            'type' => 'loan_agreement_verified',
+                                            'loan_id' => $record->id,
+                                            'qard_id_string' => $record->qard_id_string,
+                                        ]);
+                                    }
+                                } catch (\Throwable $e) {}
+                            }
+                        } catch (\Throwable $e) {}
+
+                        Notification::make()
+                            ->title('Agreement Verified')
+                            ->body('The signed agreement has been verified and the member has been notified.')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('reject_agreement')
+                    ->label('Reject Agreement')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn(QardHasan $record) => $record->status === 'pending' && !empty($record->signed_agreement) && empty($record->agreement_verified_at))
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Rejection Reason')
+                            ->required()
+                            ->placeholder('e.g. Blurry photo, missing signature on page 2, wrong file uploaded.'),
+                    ])
+                    ->action(function (QardHasan $record, array $data) {
+                        $reason = $data['reason'];
+
+                        // Clear the signed_agreement so user can re-upload
+                        $record->update([
+                            'signed_agreement' => null,
+                            'agreement_uploaded_at' => null,
+                        ]);
+
+                        // Notify member
+                        try {
+                            $record->loadMissing('user');
+                            $user = $record->user;
+                            $msg = "Your signed loan agreement for {$record->qard_id_string} was rejected: {$reason}. Please re-upload.";
+
+                            if (!empty($user?->email)) {
+                                Mail::to($user->email)->send(new LoanAgreementRejectedUser($record, $reason));
+                            }
+
+                            if ($user) {
+                                $user->notify(new LoanAgreementRejectedNotification(
+                                    title: 'Agreement Rejected',
+                                    message: $msg,
+                                    loanId: $record->id,
+                                    qardIdString: $record->qard_id_string,
+                                    reason: $reason
+                                ));
+
+                                try {
+                                    $push = app(\App\Services\PushService::class);
+                                    $token = $user->fcm_token ?: $user->device_token;
+                                    if ($token) {
+                                        $push->send($token, 'Agreement Rejected', $msg, [
+                                            'type' => 'loan_agreement_rejected',
+                                            'loan_id' => $record->id,
+                                            'qard_id_string' => $record->qard_id_string,
+                                            'reason' => $reason,
+                                        ]);
+                                    }
+                                } catch (\Throwable $e) {}
+                            }
+                        } catch (\Throwable $e) {}
+
+                        Notification::make()
+                            ->title('Agreement Rejected')
+                            ->body('The signed agreement has been rejected and the member has been notified.')
+                            ->danger()
+                            ->send();
+                    }),
+                Action::make('view_signed')
+                    ->label('View Signed Agreement')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->visible(fn(QardHasan $record) => !empty($record->signed_agreement))
+                    ->url(fn(QardHasan $record) => asset('storage/' . $record->signed_agreement), true),
+                Action::make('view_template')
+                    ->label('View Template')
+                    ->icon('heroicon-o-document')
+                    ->color('gray')
+                    ->visible(fn(QardHasan $record) => !empty($record->agreement_template))
+                    ->url(fn(QardHasan $record) => asset('storage/' . $record->agreement_template), true),
                 Action::make('disburse')
                     ->label('Disburse')
                     ->icon('heroicon-o-paper-airplane')
@@ -293,6 +483,16 @@ class QardHasanResource extends Resource
                             Notification::make()
                                 ->title('Cannot disburse')
                                 ->body('Member must be in the system for at least 6 months before loan disbursement.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        // Enforce agreement verification before disbursement
+                        if (!empty($record->agreement_template) && empty($record->agreement_verified_at)) {
+                            Notification::make()
+                                ->title('Cannot disburse')
+                                ->body('The agreement must be uploaded and verified before disbursement.')
                                 ->danger()
                                 ->send();
                             return;
@@ -487,6 +687,52 @@ class QardHasanResource extends Resource
                     }),
             ])
             ->bulkActions([
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfoSection::make('Loan Documents & Verification')
+                    ->schema([
+                        TextEntry::make('agreement_template')
+                            ->label('Template File')
+                            ->formatStateUsing(fn ($state) => $state ? 'Custom Uploaded' : 'System Generated')
+                            ->badge()
+                            ->color(fn ($state) => $state ? 'info' : 'gray')
+                            ->hintAction(
+                                InfolistAction::make('download_template')
+                                    ->label('Download')
+                                    ->icon('heroicon-o-arrow-down-tray')
+                                    ->url(fn ($record) => $record->agreement_template
+                                        ? asset('storage/' . $record->agreement_template)
+                                        : route('download-loan-agreement', $record->id))
+                                    ->openUrlInNewTab()
+                            ),
+                        TextEntry::make('signed_agreement')
+                            ->label('Member Signed Copy')
+                            ->formatStateUsing(fn ($state) => $state ? 'Uploaded' : 'Pending')
+                            ->badge()
+                            ->color(fn ($state) => $state ? 'success' : 'warning')
+                            ->hintAction(
+                                InfolistAction::make('view_signed')
+                                    ->label('View')
+                                    ->icon('heroicon-o-eye')
+                                    ->url(fn ($record) => $record->signed_agreement ? asset('storage/' . $record->signed_agreement) : null)
+                                    ->visible(fn ($record) => !empty($record->signed_agreement))
+                                    ->openUrlInNewTab()
+                            ),
+                        TextEntry::make('agreement_uploaded_at')
+                            ->label('Member Uploaded')
+                            ->dateTime(),
+                        TextEntry::make('agreement_verified_at')
+                            ->label('Verified By Admin')
+                            ->dateTime()
+                            ->placeholder('Not yet verified')
+                            ->color('success'),
+                    ])
+                    ->columns(2),
             ]);
     }
 

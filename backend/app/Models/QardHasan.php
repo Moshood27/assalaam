@@ -115,6 +115,10 @@ class QardHasan extends Model
         'rejection_reason',
         'approved_by',
         'approved_at',
+        'agreement_template',
+        'signed_agreement',
+        'agreement_uploaded_at',
+        'agreement_verified_at',
     ];
 
     protected $casts = [
@@ -123,7 +127,9 @@ class QardHasan extends Model
         'admin_fee_flat' => 'float',
         'admin_fee_pct' => 'float',
         'paid_amount' => 'float',
-                'approved_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'agreement_uploaded_at' => 'datetime',
+        'agreement_verified_at' => 'datetime',
     ];
 
     protected $appends = [

@@ -202,6 +202,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/coop-score', [\App\Http\Controllers\Api\ScoreController::class, 'show']);
     Route::post('/loans', [LoanController::class, 'store']);
     Route::post('/loans/{id}/repay', [LoanController::class, 'repay']);
+    Route::post('/loans/{id}/agreement', [LoanController::class, 'uploadAgreement']);
 
     // AGM Voting
     Route::get('/agm/sessions', [AgmController::class, 'sessions']);
@@ -225,6 +226,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // PDF export
     Route::get('/download-passbook', [ExportController::class, 'downloadPassbook']);
     Route::get('/download-loan-schedule/{id}', [ExportController::class, 'downloadLoanSchedule']);
+    Route::get('/download-loan-agreement/{id}', [ExportController::class, 'downloadLoanAgreement'])->name('download-loan-agreement');
     Route::get('/download-dividend/{year}', [ExportController::class, 'downloadDividend']);
     Route::get('/download-appropriation/{year}', [ExportController::class, 'downloadAppropriation']);
     Route::get('/download-financials/{year}', [ExportController::class, 'downloadFinancials']);

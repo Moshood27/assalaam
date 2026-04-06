@@ -88,7 +88,7 @@
                   </div>
                   <p class="mt-2 text-[10px] text-slate-500">
                     <template v-if="(eligibility.required_guarantors || 0) > 0">
-                      Select at least {{ eligibility.required_guarantors }} and at most three guarantors. They must be from different branches and not be defaulters.
+                      Select at least {{ eligibility.required_guarantors }} and at most three guarantors. They must be from different branches than yours and not be defaulters.
                     </template>
                     <template v-else>
                       No guarantors required due to Instant Approval eligibility. Proceed to create your loan — funds will be credited automatically after fees.
@@ -204,6 +204,47 @@
                 </li>
               </ul>
             </div>
+
+            <!-- Agreement Section -->
+            <div class="col-span-2 mt-2 p-3 rounded-2xl border border-amber-100 bg-amber-50" v-if="loan.status === 'pending' || loan.signed_agreement">
+              <p class="text-[10px] text-amber-600 font-black uppercase tracking-widest mb-2">Loan Agreement</p>
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                  <p class="text-[11px] text-slate-700 font-medium">1. Download Document</p>
+                  <a v-if="loan.agreement_template" :href="getImageUrl(loan.agreement_template)" target="_blank" class="text-[11px] font-bold text-emerald-700 underline">Download PDF</a>
+                  <a v-else :href="getAgreementDownloadUrl(loan.id)" target="_blank" class="text-[11px] font-bold text-emerald-700 underline">Generate Agreement PDF</a>
+                </div>
+                <div class="border-t border-amber-100 pt-2">
+                  <p class="text-[11px] text-slate-700 font-medium mb-1">2. Upload Signed Copy</p>
+                  
+                  <!-- If rejected (no file but template exists and it's pending) -->
+                  <div v-if="!loan.signed_agreement && loan.status === 'pending'" class="mb-2">
+                    <p class="text-[9px] text-red-600 font-medium italic mb-2" v-if="hasRecentRejection(loan.id)">
+                      ⚠️ Your previous upload was rejected. Please re-upload a clear signed copy.
+                    </p>
+                  </div>
+
+                  <div v-if="loan.agreement_verified_at" class="flex items-center gap-1 text-emerald-700">
+                    <span class="text-sm text-emerald-700">✅</span>
+                    <span class="text-[11px] font-bold">Verified on {{ new Date(loan.agreement_verified_at).toLocaleDateString() }}</span>
+                  </div>
+                  <div v-else-if="loan.signed_agreement" class="flex items-center justify-between">
+                    <div class="flex items-center gap-1 text-amber-700">
+                      <span class="text-sm">⏳</span>
+                      <span class="text-[11px] font-bold text-amber-700">Awaiting Admin Verification</span>
+                    </div>
+                    <button @click="triggerAgreementUpload(loan.id)" class="text-[10px] font-bold text-slate-500 underline" :disabled="uploadingAgreement[loan.id]">Change File</button>
+                  </div>
+                  <div v-else>
+                    <input :id="'agreement-input-' + loan.id" type="file" accept="application/pdf,image/*" class="hidden" @change="(e) => onAgreementFileChange(e, loan.id)" />
+                    <button @click="triggerAgreementUpload(loan.id)" class="btn-primary py-2 px-4 text-xs w-full sm:w-auto" :disabled="uploadingAgreement[loan.id]">
+                      {{ uploadingAgreement[loan.id] ? 'Uploading...' : 'Upload Signed Agreement' }}
+                    </button>
+                    <p class="text-[9px] text-slate-500 mt-1 italic">Please print, sign, and scan/photo back as PDF or Image.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="p-4 pt-0 space-y-3">
@@ -283,7 +324,8 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import axios from '../http'
+import getImageUrl from '../utils/image'
 import { openBlob } from '../utils/download'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
@@ -318,6 +360,48 @@ const paySource = ref({})
 const paying = ref({})
 const payMsg = ref({})
 const payErr = ref({})
+
+// Agreement upload
+const uploadingAgreement = ref({})
+
+const hasRecentRejection = (loanId) => {
+  // Simple check for now based on presence of a specific notification type or local state
+  // In a real app, this might come from the loan record's rejection logs
+  return false 
+}
+
+const getAgreementDownloadUrl = (loanId) => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-loan-agreement/${loanId}?token=${token}`
+}
+const triggerAgreementUpload = (loanId) => {
+  const input = document.getElementById('agreement-input-' + loanId)
+  if (input) input.click()
+}
+const onAgreementFileChange = async (e, loanId) => {
+  const file = e.target.files && e.target.files[0]
+  if (!file) return
+  const form = new FormData()
+  form.append('signed_agreement', file)
+  uploadingAgreement.value[loanId] = true
+  try {
+    const token = localStorage.getItem('token')
+    await axios.post(`/api/loans/${loanId}/agreement`, form, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    showNotice('Success', 'Agreement uploaded successfully. Admin will verify it shortly.', 'success')
+    await load()
+  } catch (err) {
+    showNotice('Error', err?.response?.data?.message || 'Failed to upload agreement.', 'error')
+  } finally {
+    uploadingAgreement.value[loanId] = false
+    e.target.value = ''
+  }
+}
 
 // Guarantor requests
 const guarantorRequests = ref([])
@@ -438,7 +522,7 @@ const createLoan = async () => {
       const credited = Number(data?.credited_amount || 0)
       createMsg.value = `Instant approval! ₦ ${n(credited)} has been credited to your wallet.`
     } else {
-      createMsg.value = 'Loan created successfully. Awaiting guarantor approvals and admin disbursement.'
+      createMsg.value = 'Loan application submitted successfully. Awaiting guarantor approvals and admin review. You will be notified when the agreement document is ready for signing.'
     }
     showNotice('Success', createMsg.value, 'success')
     await load()
