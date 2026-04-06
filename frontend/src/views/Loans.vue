@@ -219,8 +219,11 @@
                   
                   <!-- If rejected (no file but template exists and it's pending) -->
                   <div v-if="!loan.signed_agreement && loan.status === 'pending'" class="mb-2">
-                    <p class="text-[9px] text-red-600 font-medium italic mb-2" v-if="hasRecentRejection(loan.id)">
-                      ⚠️ Your previous upload was rejected. Please re-upload a clear signed copy.
+                    <p class="text-[9px] text-rose-600 font-bold italic mb-2" v-if="loan.agreement_rejection_reason">
+                      ⚠️ Rejected: {{ loan.agreement_rejection_reason }}
+                    </p>
+                    <p class="text-[9px] text-amber-600 font-medium italic mb-2" v-else-if="loan.agreement_template || loan.approved_at">
+                      Please upload a clear signed copy to proceed.
                     </p>
                   </div>
 
@@ -365,8 +368,6 @@ const payErr = ref({})
 const uploadingAgreement = ref({})
 
 const hasRecentRejection = (loanId) => {
-  // Simple check for now based on presence of a specific notification type or local state
-  // In a real app, this might come from the loan record's rejection logs
   return false 
 }
 

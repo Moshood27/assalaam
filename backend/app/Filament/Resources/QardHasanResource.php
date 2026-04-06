@@ -80,13 +80,13 @@ class QardHasanResource extends Resource
                     ->label('Loan ID')
                     ->maxLength(100)
                     ->disabled()
-                    ->dehydrated(false)
+                    ->dehydrated()
                     ->hint('Auto-generated at create time'),
                 Forms\Components\TextInput::make('principal_amount')
                     ->numeric()
                     ->prefix('₦')
                     ->disabled()
-                    ->dehydrated(false)
+                    ->dehydrated()
                     ->helperText('Auto: 5% on first loan; 2 × thereafter (Savings + Shares)'),
                 Forms\Components\TextInput::make('total_installments')
                     ->numeric()
@@ -102,7 +102,7 @@ class QardHasanResource extends Resource
                     ->numeric()
                     ->prefix('₦')
                     ->disabled()
-                    ->dehydrated(false)
+                    ->dehydrated()
                     ->helperText('Auto-calculated from principal / installments'),
                 Forms\Components\Select::make('interval')
                     ->options([
@@ -125,14 +125,16 @@ class QardHasanResource extends Resource
                     ->prefix('₦')
                     ->default(0)
                     ->disabled()
-                    ->dehydrated(false),
+                    ->dehydrated(),
                 Forms\Components\Select::make('status')
                     ->options([
                         'pending' => 'Pending',
                         'active' => 'Active',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
-                    ])->required(),
+                    ])
+                    ->default('pending')
+                    ->required(),
                 FileUpload::make('agreement_template')
                     ->label('Agreement Template')
                     ->directory('loan-templates')
@@ -343,7 +345,10 @@ class QardHasanResource extends Resource
                     ->visible(fn(QardHasan $record) => $record->status === 'pending' && !empty($record->signed_agreement) && empty($record->agreement_verified_at))
                     ->requiresConfirmation()
                     ->action(function (QardHasan $record) {
-                        $record->update(['agreement_verified_at' => now()]);
+                        $record->update([
+                            'agreement_verified_at' => now(),
+                            'agreement_rejection_reason' => null,
+                        ]);
 
                         // Notify member
                         try {
@@ -397,10 +402,11 @@ class QardHasanResource extends Resource
                     ->action(function (QardHasan $record, array $data) {
                         $reason = $data['reason'];
 
-                        // Clear the signed_agreement so user can re-upload
+                        // Clear the signed_agreement so user can re-upload, and save reason
                         $record->update([
                             'signed_agreement' => null,
                             'agreement_uploaded_at' => null,
+                            'agreement_rejection_reason' => $reason,
                         ]);
 
                         // Notify member
@@ -489,7 +495,7 @@ class QardHasanResource extends Resource
                         }
 
                         // Enforce agreement verification before disbursement
-                        if (!empty($record->agreement_template) && empty($record->agreement_verified_at)) {
+                        if (empty($record->agreement_verified_at)) {
                             Notification::make()
                                 ->title('Cannot disburse')
                                 ->body('The agreement must be uploaded and verified before disbursement.')

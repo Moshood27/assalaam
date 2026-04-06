@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('signed_agreement')->nullable();
             $table->timestamp('agreement_uploaded_at')->nullable();
             $table->timestamp('agreement_verified_at')->nullable();
+            $table->text('agreement_rejection_reason')->nullable();
         });
     }
 
@@ -25,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('qard_hasans', function (Blueprint $table) {
-            $table->dropColumn(['agreement_template', 'signed_agreement', 'agreement_uploaded_at', 'agreement_verified_at']);
+            $table->dropColumn(['agreement_template', 'signed_agreement', 'agreement_uploaded_at', 'agreement_verified_at', 'agreement_rejection_reason']);
         });
     }
 };

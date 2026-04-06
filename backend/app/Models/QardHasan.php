@@ -119,6 +119,7 @@ class QardHasan extends Model
         'signed_agreement',
         'agreement_uploaded_at',
         'agreement_verified_at',
+        'agreement_rejection_reason',
     ];
 
     protected $casts = [
