@@ -24,6 +24,7 @@ class CreateQardHasan extends CreateRecord
         if ($user) {
             // Enforce 6-month minimum membership
             if ($user->monthsInSystem() < 6) {
+                Notification::make()->title('Eligibility Error')->body('Member must be in the system for at least 6 months before taking a loan.')->danger()->send();
                 throw ValidationException::withMessages([
                     'user_id' => 'Member must be in the system for at least 6 months before taking a loan.'
                 ]);
@@ -32,6 +33,7 @@ class CreateQardHasan extends CreateRecord
             // Prevent multiple open loans
             $hasOpen = QardHasan::where('user_id', $user->id)->whereIn('status', ['pending', 'active'])->exists();
             if ($hasOpen) {
+                Notification::make()->title('Eligibility Error')->body('Member has an existing loan that is not yet completed.')->danger()->send();
                 throw ValidationException::withMessages([
                     'user_id' => 'Member has an existing loan that is not yet completed.'
                 ]);
@@ -41,6 +43,7 @@ class CreateQardHasan extends CreateRecord
             $adj = $user->adjustedLoanEligibility();
             $principal = (float) ($adj['eligibility_adjusted'] ?? 0);
             if ($principal <= 0) {
+                Notification::make()->title('Eligibility Error')->body('Selected member is not eligible for a loan at this time.')->danger()->send();
                 throw ValidationException::withMessages([
                     'user_id' => 'Selected member is not eligible for a loan at this time.'
                 ]);
@@ -70,28 +73,33 @@ class CreateQardHasan extends CreateRecord
         $state = $this->form->getRawState();
         $g = array_values(array_unique($state['guarantor_ids'] ?? []));
         if (count($g) < 2 || count($g) > 3) {
+            Notification::make()->title('Validation Error')->body('Select at least two and at most three guarantors.')->danger()->send();
             throw ValidationException::withMessages([
                 'guarantor_ids' => 'Select at least two and at most three guarantors.'
             ]);
         }
         if (!empty($data['user_id']) && in_array((int)$data['user_id'], $g, true)) {
+            Notification::make()->title('Validation Error')->body('Member cannot be their own guarantor.')->danger()->send();
             throw ValidationException::withMessages([
                 'guarantor_ids' => 'Member cannot be their own guarantor.'
             ]);
         }
         $guarantors = User::with('branch')->whereIn('id', $g)->get();
         if ($guarantors->count() !== count($g)) {
+            Notification::make()->title('Validation Error')->body('One or more guarantors are invalid.')->danger()->send();
             throw ValidationException::withMessages([
                 'guarantor_ids' => 'One or more guarantors are invalid.'
             ]);
         }
         if ($guarantors->where('is_defaulter', true)->isNotEmpty()) {
+            Notification::make()->title('Validation Error')->body('Guarantors must not be in default.')->danger()->send();
             throw ValidationException::withMessages([
                 'guarantor_ids' => 'Guarantors must not be in default.'
             ]);
         }
         $branchIds = $guarantors->pluck('branch_id')->all();
         if (in_array(null, $branchIds, true) || count(array_unique($branchIds)) !== count($branchIds)) {
+            Notification::make()->title('Validation Error')->body('Guarantors must be from different branches and have branches assigned.')->danger()->send();
             throw ValidationException::withMessages([
                 'guarantor_ids' => 'Guarantors must be from different branches.'
             ]);

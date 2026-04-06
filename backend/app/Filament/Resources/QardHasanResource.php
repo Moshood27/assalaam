@@ -53,12 +53,19 @@ class QardHasanResource extends Resource
                     ->searchable()
                     ->required()
                     ->reactive()
-                    ->afterStateUpdated(function ($state, callable $set) {
+                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
                         $user = User::find($state);
                         if ($user) {
                             $adj = $user->adjustedLoanEligibility();
-                            $set('principal_amount', $adj['eligibility_adjusted'] ?? 0);
+                            $principal = $adj['eligibility_adjusted'] ?? 0;
+                            $set('principal_amount', $principal);
                             $set('qard_id_string', 'QH-'.now()->format('Y').'-'.strtoupper(Str::random(6)));
+
+                            // Also update per_installment if total_installments is already set
+                            $ti = (int) $get('total_installments');
+                            if ($ti > 0) {
+                                $set('per_installment', round($principal / $ti, 2));
+                            }
                         }
                     }),
                 Forms\Components\MultiSelect::make('guarantor_ids')
@@ -85,6 +92,7 @@ class QardHasanResource extends Resource
                 Forms\Components\TextInput::make('principal_amount')
                     ->numeric()
                     ->prefix('₦')
+                    ->required()
                     ->disabled()
                     ->dehydrated()
                     ->helperText('Auto: 5% on first loan; 2 × thereafter (Savings + Shares)'),
@@ -101,6 +109,7 @@ class QardHasanResource extends Resource
                 Forms\Components\TextInput::make('per_installment')
                     ->numeric()
                     ->prefix('₦')
+                    ->required()
                     ->disabled()
                     ->dehydrated()
                     ->helperText('Auto-calculated from principal / installments'),
@@ -132,7 +141,9 @@ class QardHasanResource extends Resource
                         'active' => 'Active',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
-                    ])->required(),
+                    ])
+                    ->default('pending')
+                    ->required(),
                 FileUpload::make('agreement_template')
                     ->label('Agreement Template')
                     ->directory('loan-templates')
