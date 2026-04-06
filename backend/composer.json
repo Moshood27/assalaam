@@ -11,8 +11,10 @@
         "filament/filament": "^3.2",
         "kreait/laravel-firebase": "^7.1",
         "laravel/framework": "^12.0",
+        "laravel/horizon": "^5.45",
         "laravel/reverb": "^1.9",
         "laravel/sanctum": "^4.3",
+        "laravel/telescope": "^5.19",
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^2.2",
         "yabacon/paystack-php": "^2.2"
