@@ -17,7 +17,7 @@ class UtilityController extends Controller
     public function handleWebhook(Request $request)
     {
         // Log entire webhook for diagnostics
-        Log::info('VTpass Webhook Received', ['payload' => $request->all()]);
+        Log::info('VTU Webhook Received', ['payload' => $request->all()]);
 
         // Extract request_id/reference from common fields
         $payload = $request->all();
@@ -482,7 +482,7 @@ class UtilityController extends Controller
         }
 
         $response = $this->callVtuSmart('airtime', $payload);
-        $providerUsed = $response['provider_used'] ?? 'vtpass';
+        $providerUsed = $response['provider_used'] ?? 'clubkonnect';
 
         if (!$response['ok']) {
             $tx->update([
@@ -509,7 +509,7 @@ class UtilityController extends Controller
         if (!$success) {
             // If provider indicates pending/processing, perform a single requery before deciding
             if ($this->isVtpassPending($body)) {
-                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                if (($providerUsed ?? '') === 'vtpass') {
                     $requery = $this->requeryVtpass($reference);
                     if ($requery['ok']) {
                         $rb = $requery['body'];
@@ -835,7 +835,7 @@ class UtilityController extends Controller
 
         $bundleCode = $validated['bundle_code'];
         $response = $this->callVtuSmart('data', $payload);
-        $providerUsed = $response['provider_used'] ?? 'vtpass';
+        $providerUsed = $response['provider_used'] ?? 'clubkonnect';
 
         if (!$response['ok']) {
             $tx->update([
@@ -861,7 +861,7 @@ class UtilityController extends Controller
         if (!$success) {
             // If provider indicates pending/processing, perform a single requery before deciding
             if ($this->isVtpassPending($body)) {
-                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                if (($providerUsed ?? '') === 'vtpass') {
                     $requery = $this->requeryVtpass($reference);
                     if ($requery['ok']) {
                         $rb = $requery['body'];
@@ -1147,7 +1147,7 @@ class UtilityController extends Controller
         // Use routing order to decide which provider to fetch plans from first.
         // This ensures the variation codes match the provider we are most likely to use for purchase.
         $order = array_filter(array_map('trim', explode(',', (string) config('services.vtu.routing_order', 'clubkonnect,shago,vtpass'))));
-        $primaryProvider = 'vtpass';
+        $primaryProvider = 'clubkonnect';
         foreach ($order as $p) {
             $p = strtolower($p);
             if ($p === 'clubkonnect') {
@@ -1303,7 +1303,7 @@ class UtilityController extends Controller
 
         // Use routing order to decide which provider to fetch packages from first.
         $order = array_filter(array_map('trim', explode(',', (string) config('services.vtu.routing_order', 'clubkonnect,shago,vtpass'))));
-        $primaryProvider = 'vtpass';
+        $primaryProvider = 'clubkonnect';
         foreach ($order as $p) {
             $p = strtolower($p);
             if ($p === 'clubkonnect') {
@@ -1486,7 +1486,7 @@ class UtilityController extends Controller
         }
 
         $response = $this->callVtuSmart('electricity', $payload);
-        $providerUsed = $response['provider_used'] ?? 'vtpass';
+        $providerUsed = $response['provider_used'] ?? 'clubkonnect';
         if (!$response['ok']) {
             $tx->update([
                 'status' => 'failed',
@@ -1509,7 +1509,7 @@ class UtilityController extends Controller
         $success = $this->isVtpassSuccess($body);
         if (!$success) {
             if ($this->isVtpassPending($body)) {
-                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                if (($providerUsed ?? '') === 'vtpass') {
                     $requery = $this->requeryVtpass($reference);
                     if ($requery['ok']) {
                         $rb = $requery['body'];
@@ -1550,16 +1550,115 @@ class UtilityController extends Controller
                         ], 200);
                     }
                 } else {
-                    $tx->update([
-                        'status' => 'pending',
-                        'provider_response' => $body,
-                    ]);
-                    return response()->json([
-                        'message' => 'Electricity vend is processing with provider. Check history for final status shortly.',
-                        'status' => 'pending',
-                        'provider' => $body,
-                        'reference' => $reference,
-                    ], 200);
+                    // For ClubKonnect, perform a single immediate requery by RequestID to reduce false pendings
+                    if (($providerUsed ?? '') === 'clubkonnect') {
+                        $ckRequery = $this->requeryClubKonnectByRequestId($reference);
+                        if ($ckRequery['ok']) {
+                            $ckb = $ckRequery['body'];
+                            if ($this->isVtpassSuccess($ckb)) {
+                                $body = $ckb;
+                            } elseif ($this->isVtpassPending($ckb)) {
+                                DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $ckb, $convenience, $serviceId, $meter, $meterType) {
+                                    $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                    if ((float)$lockedUser->balance >= (float)$totalDebit) {
+                                        $lockedUser->decrement('balance', $totalDebit);
+                                        $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'profit' => $profit,
+                                            'provider_response' => $ckb,
+                                        ]);
+                                        WalletTransaction::create([
+                                            'user_id' => $lockedUser->id,
+                                            'type' => 'debit',
+                                            'amount' => $totalDebit,
+                                            'reference' => $reference,
+                                            'source' => 'vtu_electricity',
+                                            'meta' => [
+                                                'disco' => $serviceId,
+                                                'meter_number' => $meter,
+                                                'meter_type' => $meterType,
+                                                'utility_tx_id' => $tx->id,
+                                                'convenience_fee' => $convenience,
+                                                'status' => 'pending',
+                                            ],
+                                        ]);
+                                    } else {
+                                        $tx->update([
+                                            'status' => 'pending',
+                                            'provider_response' => $ckb,
+                                        ]);
+                                    }
+                                });
+                                return response()->json([
+                                    'message' => 'Processing! Your electricity vend is on the way. Please check your balance in 1 minute.',
+                                    'status' => 'pending',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 200);
+                            } else {
+                                $tx->update([
+                                    'status' => 'failed',
+                                    'provider_response' => $ckb,
+                                ]);
+                                return response()->json([
+                                    'message' => 'Electricity vend failed',
+                                    'provider' => $ckb,
+                                    'reference' => $reference,
+                                ], 400);
+                            }
+                        } else {
+                            DB::transaction(function () use ($user, $totalDebit, $reference, $tx, $body, $convenience, $serviceId, $meter, $meterType) {
+                                $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+                                if ((float)$lockedUser->balance >= (float)$totalDebit) {
+                                    $lockedUser->decrement('balance', $totalDebit);
+                                    $profit = round(((float)$tx->amount - (float)$tx->cost_price), 2);
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'profit' => $profit,
+                                        'provider_response' => $body,
+                                    ]);
+                                    WalletTransaction::create([
+                                        'user_id' => $lockedUser->id,
+                                        'type' => 'debit',
+                                        'amount' => $totalDebit,
+                                        'reference' => $reference,
+                                        'source' => 'vtu_electricity',
+                                        'meta' => [
+                                            'disco' => $serviceId,
+                                            'meter_number' => $meter,
+                                            'meter_type' => $meterType,
+                                            'utility_tx_id' => $tx->id,
+                                            'convenience_fee' => $convenience,
+                                            'status' => 'pending',
+                                        ],
+                                    ]);
+                                } else {
+                                    $tx->update([
+                                        'status' => 'pending',
+                                        'provider_response' => $body,
+                                    ]);
+                                }
+                            });
+                            return response()->json([
+                                'message' => 'Order received and processing.',
+                                'status' => 'pending',
+                                'provider' => $ckRequery['body'] ?? $body,
+                                'reference' => $reference,
+                            ], 200);
+                        }
+                    } else {
+                        $tx->update([
+                            'status' => 'pending',
+                            'provider_response' => $body,
+                        ]);
+                        return response()->json([
+                            'message' => 'Electricity vend is processing with provider. Check history for final status shortly.',
+                            'status' => 'pending',
+                            'provider' => $body,
+                            'reference' => $reference,
+                        ], 200);
+                    }
                 }
             } else {
                 $isSandbox = (bool) config('services.vtu.sandbox');
@@ -1717,7 +1816,7 @@ class UtilityController extends Controller
         }
 
         $response = $this->callVtuSmart('cable', $payload);
-        $providerUsed = $response['provider_used'] ?? 'vtpass';
+        $providerUsed = $response['provider_used'] ?? 'clubkonnect';
         if (!$response['ok']) {
             $tx->update([
                 'status' => 'failed',
@@ -1740,7 +1839,7 @@ class UtilityController extends Controller
         $success = $this->isVtpassSuccess($body);
         if (!$success) {
             if ($this->isVtpassPending($body)) {
-                if (($providerUsed ?? 'vtpass') === 'vtpass') {
+                if (($providerUsed ?? '') === 'vtpass') {
                     $requery = $this->requeryVtpass($reference);
                     if ($requery['ok']) {
                         $rb = $requery['body'];

@@ -64,7 +64,7 @@ return [
 
     // VTU provider (VTpass by default)
     'vtu' => [
-        'provider' => env('VTU_PROVIDER', 'vtpass'),
+        'provider' => env('VTU_PROVIDER', 'clubkonnect'),
         // Providers routing order for Smart VTU (comma-separated): e.g. clubkonnect,shago,vtpass
         'routing_order' => env('VTU_ROUTING_ORDER', 'clubkonnect,shago,vtpass'),
         'low_balance_threshold' => (float) env('VTU_LOW_BALANCE_THRESHOLD', 10000),
