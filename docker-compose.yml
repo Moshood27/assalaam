@@ -58,8 +58,7 @@ services:
       dockerfile: ../docker/php/Dockerfile
     container_name: attaqwa-worker
     restart: unless-stopped
-    command: php artisan queue:work --verbose --tries=3 --timeout=90
-    env_file: [ ".env" ]
+    command: php artisan horizon
     volumes:
       - ./backend:/var/www/html
     networks:
