@@ -574,13 +574,14 @@ class UtilityController extends Controller
                                             'status' => 'pending',
                                             'profit' => $profit,
                                             'provider_response' => $ckb,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                         ]);
 
                                         WalletTransaction::create([
                                             'user_id' => $lockedUser->id,
                                             'type' => 'debit',
                                             'amount' => $amount,
-                                            'reference' => $reference,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                             'source' => 'vtu_airtime',
                                             'meta' => [
                                                 'network' => $tx->network,
@@ -601,7 +602,7 @@ class UtilityController extends Controller
                                     'message' => 'Processing! Your airtime is on the way. Please check your balance in 1 minute.',
                                     'status' => 'pending',
                                     'provider' => $ckb,
-                                    'reference' => $reference,
+                                    'reference' => $tx->fresh()->reference,
                                 ], 200);
                             } else {
                                 // Provider-declared failure after requery
@@ -627,13 +628,14 @@ class UtilityController extends Controller
                                         'status' => 'pending',
                                         'profit' => $profit,
                                         'provider_response' => $body,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                     ]);
 
                                     WalletTransaction::create([
                                         'user_id' => $lockedUser->id,
                                         'type' => 'debit',
                                         'amount' => $amount,
-                                        'reference' => $reference,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                         'source' => 'vtu_airtime',
                                         'meta' => [
                                             'network' => $tx->network,
@@ -654,7 +656,7 @@ class UtilityController extends Controller
                                 'message' => 'Order received and processing.',
                                 'status' => 'pending',
                                 'provider' => $ckRequery['body'] ?? $body,
-                                'reference' => $reference,
+                                'reference' => $tx->fresh()->reference,
                             ], 200);
                         }
                     } else {
@@ -720,6 +722,7 @@ class UtilityController extends Controller
                 'status' => 'success',
                 'profit' => $profit,
                 'provider_response' => $body,
+                'reference' => $body['orderid'] ?? $tx->reference,
             ]);
 
             // Record wallet debit transaction
@@ -727,7 +730,7 @@ class UtilityController extends Controller
                 'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $amount,
-                'reference' => $reference,
+                'reference' => $body['orderid'] ?? $tx->reference,
                 'source' => 'vtu_airtime',
                 'meta' => [
                     'network' => $tx->network,
@@ -762,7 +765,7 @@ class UtilityController extends Controller
         return response()->json([
             'message' => 'Airtime sent!',
             'status' => 'success',
-            'reference' => $reference,
+            'reference' => $tx->fresh()->reference,
             'balance' => (float)$user->balance,
             'transaction' => $tx->fresh(),
         ]);
@@ -927,13 +930,14 @@ class UtilityController extends Controller
                                             'status' => 'pending',
                                             'profit' => $profit,
                                             'provider_response' => $ckb,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                         ]);
 
                                         WalletTransaction::create([
                                             'user_id' => $lockedUser->id,
                                             'type' => 'debit',
                                             'amount' => $debit,
-                                            'reference' => $reference,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                             'source' => 'vtu_data',
                                             'meta' => [
                                                 'network' => $tx->network,
@@ -956,7 +960,7 @@ class UtilityController extends Controller
                                     'message' => 'Processing! Your data is on the way. Please check your balance in 1 minute.',
                                     'status' => 'pending',
                                     'provider' => $ckb,
-                                    'reference' => $reference,
+                                    'reference' => $tx->fresh()->reference,
                                 ], 200);
                             } else {
                                 // Provider-declared failure after requery
@@ -983,13 +987,14 @@ class UtilityController extends Controller
                                         'status' => 'pending',
                                         'profit' => $profit,
                                         'provider_response' => $body,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                     ]);
 
                                     WalletTransaction::create([
                                         'user_id' => $lockedUser->id,
                                         'type' => 'debit',
                                         'amount' => $debit,
-                                        'reference' => $reference,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                         'source' => 'vtu_data',
                                         'meta' => [
                                             'network' => $tx->network,
@@ -1012,7 +1017,7 @@ class UtilityController extends Controller
                                 'message' => 'Order received and processing.',
                                 'status' => 'pending',
                                 'provider' => $ckRequery['body'] ?? $body,
-                                'reference' => $reference,
+                                'reference' => $tx->fresh()->reference,
                             ], 200);
                         }
                     } else {
@@ -1075,13 +1080,14 @@ class UtilityController extends Controller
                 'status' => 'success',
                 'profit' => $profit,
                 'provider_response' => $body,
+                'reference' => $body['orderid'] ?? $tx->reference,
             ]);
 
             WalletTransaction::create([
                 'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $debit,
-                'reference' => $reference,
+                'reference' => $body['orderid'] ?? $tx->reference,
                 'source' => 'vtu_data',
                 'meta' => [
                     'network' => $tx->network,
@@ -1119,7 +1125,7 @@ class UtilityController extends Controller
         return response()->json([
             'message' => 'Data purchased!',
             'status' => 'success',
-            'reference' => $reference,
+            'reference' => $tx->fresh()->reference,
             'balance' => (float)$user->balance,
             'transaction' => $tx->fresh(),
         ]);
@@ -1194,8 +1200,8 @@ class UtilityController extends Controller
                     $bundles = [];
                     if (is_array($plansRaw)) {
                         foreach ($plansRaw as $p) {
-                            $pn = strtolower((string)($p['network'] ?? $p['provider'] ?? ($p['Network'] ?? '')));
-                            if ($pn && !str_contains($pn, $network) && !str_contains($network, $pn)) { continue; }
+                            $pn = $this->normalizeNetwork((string)($p['network'] ?? $p['provider'] ?? ($p['Network'] ?? '')));
+                            if ($pn && !str_contains($pn, $network) && !str_contains($network, $pn) && !str_contains($pn, 'mobile')) { continue; }
                             $code = (string)($p['dataplan_id'] ?? ($p['id'] ?? ($p['code'] ?? ($p['PRODUCT_ID'] ?? ($p['ID'] ?? '')))));
                             $name = (string)($p['name'] ?? ($p['plan'] ?? ($p['description'] ?? ($p['PRODUCT_NAME'] ?? ''))));
                             $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? ($p['PRODUCT_AMOUNT'] ?? 0))));
@@ -1349,7 +1355,7 @@ class UtilityController extends Controller
                     $bundles = [];
                     if (is_array($raw)) {
                         foreach ($raw as $p) {
-                            $code = (string)($p['code'] ?? ($p['package_code'] ?? ($p['id'] ?? ($p['PRODUCT_ID'] ?? ($p['ID'] ?? '')))));
+                            $code = (string)($p['package_id'] ?? ($p['code'] ?? ($p['package_code'] ?? ($p['id'] ?? ($p['PRODUCT_ID'] ?? ($p['ID'] ?? ''))))));
                             $name = (string)($p['name'] ?? ($p['description'] ?? ($p['PRODUCT_NAME'] ?? '')));
                             $amount = (float)($p['amount'] ?? ($p['price'] ?? ($p['cost'] ?? ($p['PRODUCT_AMOUNT'] ?? 0))));
                             if ($code === '') { continue; }
@@ -1571,12 +1577,13 @@ class UtilityController extends Controller
                                             'status' => 'pending',
                                             'profit' => $profit,
                                             'provider_response' => $ckb,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                         ]);
                                         WalletTransaction::create([
                                             'user_id' => $lockedUser->id,
                                             'type' => 'debit',
                                             'amount' => $totalDebit,
-                                            'reference' => $reference,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                             'source' => 'vtu_electricity',
                                             'meta' => [
                                                 'disco' => $serviceId,
@@ -1598,7 +1605,7 @@ class UtilityController extends Controller
                                     'message' => 'Processing! Your electricity vend is on the way. Please check your balance in 1 minute.',
                                     'status' => 'pending',
                                     'provider' => $ckb,
-                                    'reference' => $reference,
+                                    'reference' => $tx->fresh()->reference,
                                 ], 200);
                             } else {
                                 $tx->update([
@@ -1621,12 +1628,13 @@ class UtilityController extends Controller
                                         'status' => 'pending',
                                         'profit' => $profit,
                                         'provider_response' => $body,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                     ]);
                                     WalletTransaction::create([
                                         'user_id' => $lockedUser->id,
                                         'type' => 'debit',
                                         'amount' => $totalDebit,
-                                        'reference' => $reference,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                         'source' => 'vtu_electricity',
                                         'meta' => [
                                             'disco' => $serviceId,
@@ -1648,7 +1656,7 @@ class UtilityController extends Controller
                                 'message' => 'Order received and processing.',
                                 'status' => 'pending',
                                 'provider' => $ckRequery['body'] ?? $body,
-                                'reference' => $reference,
+                                'reference' => $tx->fresh()->reference,
                             ], 200);
                         }
                     } else {
@@ -1660,7 +1668,7 @@ class UtilityController extends Controller
                             'message' => 'Electricity vend is processing with provider. Check history for final status shortly.',
                             'status' => 'pending',
                             'provider' => $body,
-                            'reference' => $reference,
+                            'reference' => $tx->fresh()->reference,
                         ], 200);
                     }
                 }
@@ -1704,12 +1712,13 @@ class UtilityController extends Controller
                 'status' => 'success',
                 'profit' => $profit,
                 'provider_response' => $body,
+                'reference' => $body['orderid'] ?? $tx->reference,
             ]);
             WalletTransaction::create([
                 'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $totalDebit,
-                'reference' => $reference,
+                'reference' => $body['orderid'] ?? $tx->reference,
                 'source' => 'vtu_electricity',
                 'meta' => [
                     'disco' => $serviceId,
@@ -1746,7 +1755,7 @@ class UtilityController extends Controller
             'message' => 'Electricity token vended! ' . ($token ? "Token: $token" : ""),
             'status' => 'success',
             'token' => $token,
-            'reference' => $reference,
+            'reference' => $tx->fresh()->reference,
             'balance' => (float)$user->balance,
             'transaction' => $tx->fresh(),
         ]);
@@ -1904,13 +1913,14 @@ class UtilityController extends Controller
                                             'status' => 'pending',
                                             'profit' => $profit,
                                             'provider_response' => $ckb,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                         ]);
 
                                         WalletTransaction::create([
                                             'user_id' => $lockedUser->id,
                                             'type' => 'debit',
                                             'amount' => $totalDebit,
-                                            'reference' => $reference,
+                                            'reference' => $ckb['orderid'] ?? $tx->reference,
                                             'source' => 'vtu_cable',
                                             'meta' => [
                                                 'service' => $service,
@@ -1933,7 +1943,7 @@ class UtilityController extends Controller
                                     'message' => 'Processing! Your cable subscription is on the way. Please check your balance in 1 minute.',
                                     'status' => 'pending',
                                     'provider' => $ckb,
-                                    'reference' => $reference,
+                                    'reference' => $tx->fresh()->reference,
                                 ], 200);
                             } else {
                                 // Provider-declared failure after requery
@@ -1959,13 +1969,14 @@ class UtilityController extends Controller
                                         'status' => 'pending',
                                         'profit' => $profit,
                                         'provider_response' => $body,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                     ]);
 
                                     WalletTransaction::create([
                                         'user_id' => $lockedUser->id,
                                         'type' => 'debit',
                                         'amount' => $totalDebit,
-                                        'reference' => $reference,
+                                        'reference' => $body['orderid'] ?? $tx->reference,
                                         'source' => 'vtu_cable',
                                         'meta' => [
                                             'service' => $service,
@@ -1988,7 +1999,7 @@ class UtilityController extends Controller
                                 'message' => 'Order received and processing.',
                                 'status' => 'pending',
                                 'provider' => $ckRequery['body'] ?? $body,
-                                'reference' => $reference,
+                                'reference' => $tx->fresh()->reference,
                             ], 200);
                         }
                     } else {
@@ -2001,7 +2012,7 @@ class UtilityController extends Controller
                             'message' => 'Cable subscription is processing with provider. Check history for final status shortly.',
                             'status' => 'pending',
                             'provider' => $body,
-                            'reference' => $reference,
+                            'reference' => $tx->fresh()->reference,
                         ], 200);
                     }
                 }
@@ -2045,12 +2056,13 @@ class UtilityController extends Controller
                 'status' => 'success',
                 'profit' => $profit,
                 'provider_response' => $body,
+                'reference' => $body['orderid'] ?? $tx->reference,
             ]);
             WalletTransaction::create([
                 'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $totalDebit,
-                'reference' => $reference,
+                'reference' => $body['orderid'] ?? $tx->reference,
                 'source' => 'vtu_cable',
                 'meta' => [
                     'service' => $service,
@@ -2083,7 +2095,7 @@ class UtilityController extends Controller
         return response()->json([
             'message' => 'Cable subscribed!',
             'status' => 'success',
-            'reference' => $reference,
+            'reference' => $tx->fresh()->reference,
             'balance' => (float)$user->balance,
             'transaction' => $tx->fresh(),
         ]);
@@ -2338,8 +2350,6 @@ class UtilityController extends Controller
                 'MobileNumber' => $mobileNumber,
                 'RequestID' => $requestId,
             ]);
-            // Amount is NOT part of the APIDatabundleV1.asp spec in the documentation.
-            // Removing it to ensure strict compliance.
             if ($cb !== '') { $params['CallBackURL'] = $cb; }
         } elseif ($type === 'cable') {
             // Cable subscription via APICableTVV1.asp
@@ -2361,8 +2371,6 @@ class UtilityController extends Controller
                 'SmartCardNo' => $smartcard,
                 'RequestID' => $requestId,
             ]);
-            // Amount is NOT part of the APICableTVV1.asp spec in the documentation.
-            // Removing it to ensure strict compliance.
             if (!empty($phone)) { $params['PhoneNo'] = $phone; }
             if ($cb !== '') { $params['CallBackURL'] = $cb; }
         } elseif ($type === 'electricity') {
@@ -2453,17 +2461,19 @@ class UtilityController extends Controller
 
         $status = 0; $ok = false; $bodyOut = null; $error = null;
         try {
-            $resp = Http::timeout(12)
-                ->acceptJson()
+            // Use GET for all ClubKonnect/Nellobytes endpoints as per documentation.
+            // Removing acceptJson() as some older endpoints might fail with standard JSON headers.
+            $resp = Http::timeout(15)
                 ->get($baseUrl . $endpoint, $params);
             $status = $resp->status();
+            $body = $resp->body();
             $json = $resp->json();
             if (!$resp->ok()) {
-                Log::warning('ClubKonnect bad response', ['status' => $status, 'body' => $json, 'endpoint' => $endpoint]);
-                return [ 'ok' => false, 'error' => 'Bad response', 'body' => (is_array($json)?$json:['raw' => $resp->body()]), 'status' => $status ];
+                Log::warning('ClubKonnect bad response', ['status' => $status, 'body' => $body, 'endpoint' => $endpoint]);
+                return [ 'ok' => false, 'error' => 'Bad response', 'body' => (is_array($json)?$json:['raw' => $body]), 'status' => $status ];
             }
             // Pass through JSON; success/pending are detected by isVtpassSuccess/isVtpassPending via statuscode/orderstatus
-            $bodyOut = is_array($json) ? $json : [ 'raw' => $resp->body() ];
+            $bodyOut = is_array($json) ? $json : [ 'raw' => $body ];
             $ok = true;
         } catch (\Throwable $e) {
             Log::error('ClubKonnect HTTP error', ['error' => $e->getMessage(), 'endpoint' => $endpoint]);
@@ -2563,13 +2573,13 @@ class UtilityController extends Controller
             $code = (string)($body['code'] ?? ($body['data']['code'] ?? ''));
             if ($code === '000') return true;
 
-            // Nellobytes/ClubKonnect success: statuscode=100 (ORDER_RECEIVED), 200 (ORDER_COMPLETED)
-            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ($body['StatusCode'] ?? '')));
-            if (in_array($ckCode, ['100', '200', 'OK', '201', '000'])) { // be liberal
+            // Nellobytes/ClubKonnect success: statuscode=200 (ORDER_COMPLETED)
+            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ($body['StatusCode'] ?? ($body['status'] ?? ''))));
+            if (in_array($ckCode, ['200', 'OK', '201', '000', 'ORDER_COMPLETED'])) { // be literal
                 return true;
             }
             $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? ($body['OrderStatus'] ?? ''))));
-            if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'ORDER_COMPLETED', 'COMPLETED', 'SUCCESS', 'RECEIVED'])) {
+            if (in_array($orderStatusUp, ['ORDER_COMPLETED', 'COMPLETED', 'SUCCESS'])) {
                 return true;
             }
 
@@ -2604,7 +2614,7 @@ class UtilityController extends Controller
             }
         } elseif (is_string($body)) {
             $b = strtoupper(trim($body));
-            return in_array($b, ['ORDER_COMPLETED', 'SUCCESS', 'OK', 'COMPLETED']);
+            return in_array($b, ['ORDER_COMPLETED', 'SUCCESS', 'OK', 'COMPLETED', 'ORDER_RECEIVED', 'RECEIVED', 'SUCCESSFUL']);
         }
         return false;
     }
@@ -2617,8 +2627,8 @@ class UtilityController extends Controller
             $txStatus = strtolower((string)($body['data']['transactions']['status'] ?? ($body['content']['transactions']['status'] ?? ($body['transactions']['status'] ?? ''))));
             if (in_array($txStatus, ['pending', 'processing', 'initiated', 'queued'])) { return true; }
             // Nellobytes/ClubKonnect pending fields
-            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ''));
-            if ($ckCode === '100') { return true; }
+            $ckCode = (string)($body['statuscode'] ?? ($body['status_code'] ?? ($body['StatusCode'] ?? ($body['status'] ?? ''))));
+            if (in_array($ckCode, ['100', 'ORDER_RECEIVED', 'RECEIVED', 'ORDER_ONHOLD', 'ONHOLD', 'PENDING', 'PROCESSING'])) { return true; }
             $orderStatusUp = strtoupper((string)($body['orderstatus'] ?? ($body['order_status'] ?? '')));
             if (in_array($orderStatusUp, ['ORDER_RECEIVED', 'RECEIVED', 'ORDER_ONHOLD', 'ONHOLD'])) { return true; }
             $desc = strtolower((string)($body['response_description'] ?? ($body['message'] ?? '')));
@@ -2683,19 +2693,20 @@ class UtilityController extends Controller
         }
 
         try {
-            $resp = Http::timeout(12)
-                ->acceptJson()
+            // Removing acceptJson() for Nellobytes compatibility
+            $resp = Http::timeout(15)
                 ->get($baseUrl . '/APIQueryV1.asp', array_merge([
                     'UserID' => $userId,
                     'APIKey' => $apiKey,
                 ], $params));
             $status = $resp->status();
+            $body = $resp->body();
             $json = $resp->json();
             if (!$resp->ok()) {
-                Log::warning('ClubKonnect requery bad response', ['status' => $status, 'body' => $json]);
-                return [ 'ok' => false, 'error' => 'Bad response', 'body' => (is_array($json)?$json:['raw'=>$resp->body()]), 'status' => $status ];
+                Log::warning('ClubKonnect requery bad response', ['status' => $status, 'body' => $body]);
+                return [ 'ok' => false, 'error' => 'Bad response', 'body' => (is_array($json)?$json:['raw'=>$body]), 'status' => $status ];
             }
-            return [ 'ok' => true, 'body' => (is_array($json)?$json:['raw'=>$resp->body()]), 'status' => $status ];
+            return [ 'ok' => true, 'body' => (is_array($json)?$json:['raw'=>$body]), 'status' => $status ];
         } catch (\Throwable $e) {
             Log::error('ClubKonnect requery HTTP error', ['error' => $e->getMessage()]);
             return [ 'ok' => false, 'error' => 'Network error', 'body' => null, 'status' => 0 ];

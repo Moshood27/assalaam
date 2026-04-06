@@ -96,11 +96,11 @@ return [
 
         // Optional other providers for Smart VTU routing
         'clubkonnect' => [
-            'enabled' => filter_var(env('CLUBKONNECT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
-            'base_url' => env('CLUBKONNECT_BASE_URL'),
+            'enabled' => filter_var(env('CLUBKONNECT_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+            'base_url' => env('CLUBKONNECT_BASE_URL', 'https://www.nellobytesystems.com'),
             // Nellobytes/ClubKonnect credentials
-            'user_id' => env('CLUBKONNECT_USER_ID', env('CLUBKONNECT_USERNAME')),
-            'api_key' => env('CLUBKONNECT_API_KEY'),
+            'user_id' => env('CLUBKONNECT_USER_ID', env('VTU_USER_ID', env('CLUBKONNECT_USERNAME'))),
+            'api_key' => env('CLUBKONNECT_API_KEY', env('VTU_API_KEY')),
             // Backward-compat/optional fields
             'username' => env('CLUBKONNECT_USERNAME'),
             'password' => env('CLUBKONNECT_PASSWORD'),
