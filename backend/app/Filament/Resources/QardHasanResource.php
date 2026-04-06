@@ -132,9 +132,7 @@ class QardHasanResource extends Resource
                         'active' => 'Active',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
-                    ])
-                    ->default('pending')
-                    ->required(),
+                    ])->required(),
                 FileUpload::make('agreement_template')
                     ->label('Agreement Template')
                     ->directory('loan-templates')

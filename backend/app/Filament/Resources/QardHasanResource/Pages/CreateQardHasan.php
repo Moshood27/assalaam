@@ -45,12 +45,14 @@ class CreateQardHasan extends CreateRecord
                     'user_id' => 'Selected member is not eligible for a loan at this time.'
                 ]);
             }
-            $data['principal_amount'] = $principal;
+            $data['principal_amount'] = $data['principal_amount'] ?? $principal;
             // Auto-generate Loan ID
-            $data['qard_id_string'] = 'QH-'.now()->format('Y').'-'.Str::upper(Str::random(6));
+            $data['qard_id_string'] = $data['qard_id_string'] ?? ('QH-'.now()->format('Y').'-'.Str::upper(Str::random(6)));
             // Auto compute per_installment if possible
             $totalInstallments = (int) ($data['total_installments'] ?? 1);
-            $data['per_installment'] = $totalInstallments > 0 ? round($principal / $totalInstallments, 2) : 0;
+            if (empty($data['per_installment'])) {
+                $data['per_installment'] = $totalInstallments > 0 ? round(((float)$data['principal_amount']) / $totalInstallments, 2) : 0;
+            }
         }
 
         // Normalize interval casing
@@ -64,8 +66,8 @@ class CreateQardHasan extends CreateRecord
         $data['paid_amount'] = $data['paid_amount'] ?? 0;
         $data['status'] = $data['status'] ?? 'pending';
 
-        // Validate guarantors from form state (not dehydratable field)
-        $state = $this->form->getState();
+        // Validate guarantors from form state
+        $state = $this->form->getRawState();
         $g = array_values(array_unique($state['guarantor_ids'] ?? []));
         if (count($g) < 2 || count($g) > 3) {
             throw ValidationException::withMessages([
