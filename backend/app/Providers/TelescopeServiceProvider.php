@@ -13,23 +13,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        // Telescope::night();
 
-        $this->hideSensitiveRequestDetails();
-
-        $isLocal = $this->app->environment('local');
-
-        Telescope::filter(function (IncomingEntry $entry) use ($isLocal) {
-            return $isLocal ||
-                   $entry->isReportableException() ||
-                   $entry->isFailedRequest() ||
-                   $entry->isFailedJob() ||
-                   $entry->isScheduledTask() ||
-                   $entry->hasMonitoredTag();
-        });
-    }
 
     /**
      * Prevent sensitive request details from being logged by Telescope.
@@ -54,12 +38,32 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      *
      * This gate determines who can access Telescope in non-local environments.
      */
+    public function register(): void
+    {
+        $this->hideSensitiveRequestDetails();
+
+        $isLocal = $this->app->environment('local');
+
+        Telescope::filter(function (IncomingEntry $entry) use ($isLocal) {
+            if ($isLocal) {
+                return true;
+            }
+
+            return $entry->isReportableException() ||
+                $entry->isFailedRequest() ||
+                $entry->isFailedJob() ||
+                $entry->isScheduledTask() ||
+                $entry->hasMonitoredTag() ||
+                $entry->type === 'log'; // <--- ADD THIS LINE
+        });
+    }
+
     protected function gate(): void
     {
         Gate::define('viewTelescope', function (User $user) {
             return in_array($user->email, [
+                'madewale5@gmail.com', // <--- Use your ACTUAL login email
                 'admin@attaqwa.com'
-                //
             ]);
         });
     }
