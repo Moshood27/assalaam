@@ -1182,27 +1182,38 @@ class UtilityController extends Controller
         if ($primaryProvider === 'clubkonnect') {
             $ckUser = config('services.vtu.clubkonnect.user_id');
             try {
-                $r = Http::timeout(10)->get('https://www.nellobytesystems.com/APIDatabundlePlansV2.asp', [
+                $r = Http::timeout(15)->get('https://www.nellobytesystems.com/APIDatabundlePlansV2.asp', [
                     'UserID' => $ckUser
                 ]);
 
                 $j = $r->json();
 
-                if ($r->ok() && isset($j['details'])) {
+                $mobileNetworkData = $j['MOBILE_NETWORK'] ?? null;
+                if ($r->ok() && $mobileNetworkData) {
                     $bundles = [];
-                    // Nellobyte V2 nests by Network Name (e.g. "MTN", "GLO")
-                    $networkKey = strtoupper($network);
-                    $plans = $j['details'][$networkKey] ?? [];
+                    // Find the specific network (e.g., "MTN", "Glo")
+                    // We search case-insensitively to match 'mtn' vs 'MTN'
+                    $networkKey = null;
+                    foreach (array_keys($mobileNetworkData) as $k) {
+                        if (strtolower($k) === strtolower($network)) {
+                            $networkKey = $k;
+                            break;
+                        }
+                    }
 
-                    foreach ($plans as $p) {
-                        $bundles[] = [
-                            'code' => (string) $p['dataplan_id'], // CRITICAL: Use Numeric ID for CK
-                            'name' => $p['name'],
-                            'amount' => (float) $p['amount'],
-                            'fixed' => true,
-                            'convenience_fee' => $convenience,
-                            'total_debit' => round((float)$p['amount'] + $convenience, 2),
-                        ];
+                    if ($networkKey && isset($mobileNetworkData[$networkKey][0]['PRODUCT'])) {
+                        $products = $mobileNetworkData[$networkKey][0]['PRODUCT'];
+
+                        foreach ($products as $p) {
+                            $bundles[] = [
+                                'code' => (string) ($p['PRODUCT_ID'] ?? $p['dataplan_id'] ?? ''),
+                                'name' => $p['PRODUCT_NAME'] ?? ($p['name'] ?? ''),
+                                'amount' => (float) ($p['PRODUCT_AMOUNT'] ?? ($p['amount'] ?? 0)),
+                                'fixed' => true,
+                                'convenience_fee' => $convenience,
+                                'total_debit' => round((float)($p['PRODUCT_AMOUNT'] ?? ($p['amount'] ?? 0)) + $convenience, 2),
+                            ];
+                        }
                     }
 
                     if (!empty($bundles)) {
