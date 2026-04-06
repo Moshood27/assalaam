@@ -254,7 +254,7 @@ const loadingElectricity = ref(false)
 const loadingCable = ref(false)
 
 const airtime = ref({ network: 'mtn', phone: '', amount: '' })
-const dataForm = ref({ network: 'mtn', phone: '', bundleCode: '' })
+const dataForm = ref({ network: 'mtn', phone: '', bundleCode: '', vtuProvider: '' })
 const electricity = ref({ disco: 'aedc', meterType: 'prepaid', meter: '', amount: '', phone: '' })
 const cable = ref({ service: 'dstv', smartcard: '', bundleCode: '', phone: '' })
 
@@ -352,6 +352,7 @@ const loadBundles = async () => {
   try {
     const { data } = await axios.get('/api/vtu/data/bundles', { params: { network: dataForm.value.network } })
     bundles.value = data.bundles || []
+    dataForm.value.vtuProvider = data.provider || ''
   } catch (e) {
     console.error('Bundles load error', e)
   }
@@ -484,6 +485,7 @@ const buyData = async () => {
       network: dataForm.value.network,
       phone_number: dataForm.value.phone,
       bundle_code: dataForm.value.bundleCode,
+      vtu_provider: dataForm.value.vtuProvider,
       amount: Number(selectedBundle.value?.amount ?? 0)
     }
     // Prompt for 4-digit Transaction PIN (custom modal)

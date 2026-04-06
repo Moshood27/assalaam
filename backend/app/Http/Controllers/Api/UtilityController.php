@@ -798,6 +798,7 @@ class UtilityController extends Controller
             'phone_number' => 'required|string|min:10|max:15',
             'bundle_code' => 'required|string', // Provider variation code
             'amount' => 'required|numeric|min:50',
+            'vtu_provider' => 'nullable|string',
             'reference' => 'nullable|string|max:100',
             'pin' => ['required','regex:/^\d{4}$/'],
         ]);
@@ -857,8 +858,18 @@ class UtilityController extends Controller
         }
 
         $bundleCode = $validated['bundle_code'];
-        $response = $this->callVtuSmart('data', $payload);
-        $providerUsed = $response['provider_used'] ?? 'clubkonnect';
+        $provider = $validated['vtu_provider'] ?? config('services.vtu.provider');
+
+        if ($provider === 'clubkonnect') {
+            $response = $this->callClubKonnect('data', $payload);
+        } elseif ($provider === 'shago') {
+            $response = $this->callShago('data', $payload);
+        } elseif ($provider === 'vtpass') {
+            $response = $this->callVtpass('data', $payload);
+        } else {
+            $response = $this->callVtuSmart('data', $payload);
+        }
+        $providerUsed = $response['provider_used'] ?? $provider;
 
         if (!$response['ok']) {
             $tx->update([
@@ -1238,10 +1249,11 @@ class UtilityController extends Controller
                     }
 
                     if (!empty($bundles)) {
-                        $payload = [ 'bundles' => $bundles, 'provider_response' => $j ];
+                        $payload = [ 'bundles' => $bundles, 'provider_response' => $j, 'provider' => 'clubkonnect' ];
                         \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, $ttl);
                         return response()->json([
                             'network' => $network,
+                            'provider' => 'clubkonnect',
                             'service_id' => $serviceId,
                             'convenience_fee' => $convenience,
                             'bundles' => $bundles,
@@ -1254,10 +1266,8 @@ class UtilityController extends Controller
             } catch (\Throwable $e) {
                 Log::warning('ClubKonnect data plans fetch failed', ['error' => $e->getMessage()]);
             }
-        }
-
-        // Try VTpass if it was primary or as fallback
-        if ($apiKey && ($publicKey || $secretKey)) {
+        } elseif ($apiKey && ($publicKey || $secretKey)) {
+            // Try VTpass if it was primary
             $headers = [ 'api-key' => $apiKey ];
             if ($publicKey) { $headers['public-key'] = $publicKey; }
             if ($secretKey) { $headers['secret-key'] = $secretKey; }
@@ -1288,10 +1298,11 @@ class UtilityController extends Controller
                     }, is_array($raw) ? $raw : []));
 
                     if (!empty($bundles)) {
-                        $payload = [ 'bundles' => $bundles, 'provider_response' => $json ];
+                        $payload = [ 'bundles' => $bundles, 'provider_response' => $json, 'provider' => 'vtpass' ];
                         \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, $ttl);
                         return response()->json([
                             'network' => $network,
+                            'provider' => 'vtpass',
                             'service_id' => $serviceId,
                             'convenience_fee' => $convenience,
                             'bundles' => $bundles,
@@ -1309,6 +1320,7 @@ class UtilityController extends Controller
         $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
         return response()->json([
             'network' => $network,
+            'provider' => $cached['provider'] ?? $primaryProvider,
             'service_id' => $serviceId,
             'convenience_fee' => $convenience,
             'bundles' => $cached['bundles'] ?? [],
@@ -2354,7 +2366,11 @@ class UtilityController extends Controller
                 $network = (str_contains($serviceId, '-')) ? explode('-', $serviceId)[0] : $serviceId;
             }
             if ($network === 'etisalat') { $network = '9mobile'; }
-            $mapData = [ 'mtn' => '01', 'glo' => '02', '9mobile' => '03', 'airtel' => '04' ];
+            $mapData = [ 'mtn' => '01',
+                'glo' => '02',
+                '9mobile' => '03',
+                'airtel' => '04'
+            ];
             $mobileNetwork = $mapData[$network] ?? null;
 
             $dataPlan = $payload['variation_code'] ?? ($payload['DataPlan'] ?? $payload['bundle_code'] ?? null);
