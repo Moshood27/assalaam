@@ -183,6 +183,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // Coop Store (member-facing)
     Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']);
     Route::get('/products/categories', [\App\Http\Controllers\Api\ProductController::class, 'categories']);
+    Route::get('/store/eligibility', [\App\Http\Controllers\Api\StoreOrderController::class, 'eligibility']);
     Route::get('/store/orders', [\App\Http\Controllers\Api\StoreOrderController::class, 'index']);
     Route::get('/store/orders/{id}', [\App\Http\Controllers\Api\StoreOrderController::class, 'show']);
     Route::post('/store/orders', [\App\Http\Controllers\Api\StoreOrderController::class, 'store']);

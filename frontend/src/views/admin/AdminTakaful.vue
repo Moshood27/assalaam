@@ -168,6 +168,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import axiosBase from '../../http.js'
+import { openBlob } from '../../utils/download'
 
 const adminToken = ref(localStorage.getItem('admin_token') || '')
 const client = axiosBase.create ? axiosBase.create() : axiosBase
@@ -250,12 +251,7 @@ const triggerCharge = async () => {
 const resetCharge = () => { Object.assign(chargeForm, { period: new Date().toISOString().slice(0,7), amount: '', user_id: '', dry_run: true }); chargeResult.value = null }
 
 const downloadBlob = (blob, filename) => {
-  const url = window.URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  window.URL.revokeObjectURL(url)
+  openBlob(blob, filename)
 }
 
 const exportLedger = async (type) => {

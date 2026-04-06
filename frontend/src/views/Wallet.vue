@@ -292,6 +292,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from '../http.js'
 import { useRouter } from 'vue-router'
+import { openBlob } from '../utils/download'
 import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
@@ -655,14 +656,7 @@ const downloadReceipt = async (tx) => {
       const m = /filename\*?=(?:UTF-8''|\")?([^\";\n]+)\"?/i.exec(cd) || /filename="?([^\";\n]+)"?/i.exec(cd)
       if (m && m[1]) filename = m[1]
     }
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
+    openBlob(blob, filename)
   } catch (e) {
     const status = e?.response?.status
     if (status === 404) {

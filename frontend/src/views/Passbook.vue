@@ -97,6 +97,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from '../http.js'
+import { openBlob } from '../utils/download'
 
 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1]
@@ -149,14 +150,7 @@ const downloadPdf = async () => {
       responseType: 'blob'
     })
     const blob = new Blob([res.data], { type: 'application/pdf' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `Coop_Statement_${selectedYear.value}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
+    openBlob(blob, `Coop_Statement_${selectedYear.value}.pdf`)
   } catch (e) {
     console.error('Failed to download PDF', e)
     alert(e?.response?.data?.message || e.message || 'Failed to download')

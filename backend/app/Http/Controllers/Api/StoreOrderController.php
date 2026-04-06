@@ -37,6 +37,20 @@ class StoreOrderController extends Controller
         return response()->json($order);
     }
 
+    public function eligibility(Request $request)
+    {
+        $user = $request->user();
+        $calc = $user->savingsSharesEligibility();
+
+        return response()->json([
+            'limit' => (float) ($calc['base'] ?? 0),
+            'has_active_financing' => $user->hasActiveStoreFinancing(),
+            'has_active_loan' => $user->hasActiveLoan(),
+            'savings' => (float) ($calc['savings'] ?? 0),
+            'shares' => (float) ($calc['shares'] ?? 0),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -118,6 +132,30 @@ class StoreOrderController extends Controller
         $isFinancing = is_array($fin) && !empty($fin['enabled']);
 
         if ($isFinancing) {
+            // Check for existing active Murabaha/Mudarabah financing
+            if ($user->hasActiveStoreFinancing()) {
+                return response()->json([
+                    'message' => 'You already have an active store financing order. Please complete it first.'
+                ], 422);
+            }
+
+            // Check for any other active loan (QardHasan)
+            if ($user->hasActiveLoan()) {
+                return response()->json([
+                    'message' => 'You have an active loan. Please complete all pending loans before taking store financing.'
+                ], 422);
+            }
+
+            // Check borrowing limit: Savings + Shares (returned as 'base' in eligibility calc)
+            $calc = $user->savingsSharesEligibility();
+            $limit = (float) ($calc['base'] ?? 0);
+
+            if ($grandTotal > $limit) {
+                return response()->json([
+                    'message' => "Your borrowing limit is ₦ " . number_format($limit, 2) . ". Please choose a lower priced product or more savings/shares."
+                ], 422);
+            }
+
             $months = (int) ($fin['months'] ?? 0);
             $profitRate = (float) ($fin['profit_rate'] ?? 0); // e.g. 0.10 => 10%
 

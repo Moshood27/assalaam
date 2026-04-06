@@ -122,30 +122,40 @@
             </div>
             <div class="p-2 bg-white border border-amber-200 rounded text-slate-700">
               <div class="text-[11px] font-black uppercase tracking-widest text-amber-700 mb-2">Buy on Credit (Murabaha)</div>
-              <div class="grid grid-cols-2 gap-2 items-end">
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Tenor (months)</label>
-                  <select v-model.number="creditMonths" class="w-full bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
-                    <option v-for="m in [6,7,8,9,10,11,12]" :key="m" :value="m">{{ m }} months</option>
-                  </select>
+              
+              <div v-if="!canUseFinancing" class="p-2 bg-rose-50 border border-rose-200 rounded text-rose-700 text-[11px] font-bold">
+                {{ financingReason }} Please complete your existing obligations first.
+              </div>
+              <template v-else>
+                <div class="grid grid-cols-2 gap-2 items-end">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Tenor (months)</label>
+                    <select v-model.number="creditMonths" class="w-full bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
+                      <option v-for="m in [6,7,8,9,10,11,12]" :key="m" :value="m">{{ m }} months</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Profit Rate</label>
+                    <select v-model.number="creditProfit" class="w-full bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
+                      <option :value="0.10">10%</option>
+                      <option :value="0.12">12%</option>
+                      <option :value="0.15">15%</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Profit Rate</label>
-                  <select v-model.number="creditProfit" class="w-full bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
-                    <option :value="0.10">10%</option>
-                    <option :value="0.12">12%</option>
-                    <option :value="0.15">15%</option>
-                  </select>
+                <div class="mt-2 text-[11px] text-slate-500">
+                  Est. total on credit: ₦ {{ money(creditEstimateTotal) }} • Est. monthly: ₦ {{ money(creditMonthly) }}
+                  <div class="mt-1 font-bold text-emerald-700" v-if="eligData">Borrowing Limit: ₦ {{ money(eligData.limit) }}</div>
                 </div>
-              </div>
-              <div class="mt-2 text-[11px] text-slate-500">
-                Est. total on credit: ₦ {{ money(creditEstimateTotal) }} • Est. monthly: ₦ {{ money(creditMonthly) }}
-              </div>
-              <div class="mt-2">
-                <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="placing || !totalQty || !creditValid" @click="creditCheckout()">
-                  Apply & Buy on Credit
-                </button>
-              </div>
+                <div class="mt-2">
+                  <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="placing || !totalQty || !creditValid || exceedsLimit" @click="creditCheckout()">
+                    Apply & Buy on Credit
+                  </button>
+                  <div v-if="exceedsLimit" class="mt-1 text-rose-600 text-[10px] font-black uppercase">
+                    Cart total exceeds your borrowing limit (₦ {{ money(eligData?.limit) }})
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
 
@@ -247,6 +257,7 @@ const categories = ref([])
 const sortBy = ref('newest')
 
 const walletBalance = ref(0)
+const eligData = ref(null)
 
 const showCart = ref(false)
 const cart = ref({}) // { [id]: { id, name, selling_price, qty } }
@@ -306,6 +317,13 @@ const loadWallet = async () => {
   } catch (_) {}
 }
 
+const loadStoreEligibility = async () => {
+  try {
+    const { data } = await axios.get('/api/store/eligibility')
+    eligData.value = data
+  } catch (_) {}
+}
+
 const CART_KEY = 'coop_store_cart_v1'
 const persistCart = () => {
   try { localStorage.setItem(CART_KEY, JSON.stringify(cart.value)) } catch (_) {}
@@ -344,6 +362,23 @@ const totalQty = computed(() => cartList.value.reduce((s, it) => s + (it.qty || 
 const subtotal = computed(() => cartList.value.reduce((s, it) => s + (Number(it.selling_price || 0) * (it.qty || 0)), 0))
 const shortfall = computed(() => Math.max(0, Number(subtotal.value) - Number(walletBalance.value)))
 const hasInsufficient = computed(() => shortfall.value > 0)
+
+const canUseFinancing = computed(() => {
+  if (!eligData.value) return true
+  return !eligData.value.has_active_financing && !eligData.value.has_active_loan
+})
+
+const financingReason = computed(() => {
+  if (!eligData.value) return ''
+  if (eligData.value.has_active_financing) return 'You have an active store financing order.'
+  if (eligData.value.has_active_loan) return 'You have an active loan (Qard Hasan).'
+  return ''
+})
+
+const exceedsLimit = computed(() => {
+  if (!eligData.value) return false
+  return Number(subtotal.value) > Number(eligData.value.limit)
+})
 
 // Murabaha (credit) controls
 const creditMonths = ref(12)
@@ -458,7 +493,7 @@ const routerPush = (path) => {
   try { window.location.href = `${import.meta.env.BASE_URL || '/'}${path.replace(/^\//,'')}` } catch (_) {}
 }
 
-onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories() })
+onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories(); loadStoreEligibility() })
 </script>
 
 <style scoped>

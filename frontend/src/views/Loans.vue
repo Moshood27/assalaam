@@ -284,6 +284,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { openBlob } from '../utils/download'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
@@ -523,14 +524,7 @@ const downloadSchedule = async (loan) => {
       responseType: 'blob'
     })
     const blob = new Blob([res.data], { type: 'application/pdf' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `Loan_Schedule_${loan.qard_id_string || loan.id}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
+    openBlob(blob, `Loan_Schedule_${loan.qard_id_string || loan.id}.pdf`)
   } catch (e) {
     const msg = e?.response?.data?.message || e.message || 'Failed to download'
     showNotice('Error', msg, 'error')

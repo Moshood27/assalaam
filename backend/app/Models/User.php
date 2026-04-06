@@ -228,6 +228,27 @@ class User extends Authenticatable implements FilamentUser
             'eligibility_adjusted' => $adjusted,
         ]);
     }
+
+    /**
+     * Check if user has an active store financing (Murabaha/Mudarabah) order.
+     */
+    public function hasActiveStoreFinancing(): bool
+    {
+        return \App\Models\StoreOrder::where('user_id', $this->id)
+            ->whereIn('status', ['murabaha_pending', 'murabaha_active'])
+            ->exists();
+    }
+
+    /**
+     * Check if user has an active loan (QardHasan).
+     */
+    public function hasActiveLoan(): bool
+    {
+        return $this->qardHasans()
+            ->whereIn('status', ['active', 'pending'])
+            ->exists();
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         // In production, you likely want to check an 'is_admin' column
