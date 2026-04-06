@@ -18,6 +18,8 @@ class UtilityTransaction extends Model
         'cost_price',
         'profit',
         'reference',
+        'order_id',
+        'provider',
         'status',
         'provider_response',
     ];

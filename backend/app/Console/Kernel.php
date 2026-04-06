@@ -35,6 +35,9 @@ class Kernel extends ConsoleKernel
 
         // VTU provider wallet health check: notify admins if balances drop below threshold
         $schedule->command('vtu:check-balances')->hourly()->timezone('Africa/Lagos');
+
+        // Reconcile pending VTU transactions every 5 minutes and refund failures
+        $schedule->job(new \App\Jobs\ReconcileUtilityTransactions)->everyFiveMinutes();
     }
 
     /**

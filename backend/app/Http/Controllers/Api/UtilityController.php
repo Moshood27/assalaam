@@ -595,7 +595,8 @@ class UtilityController extends Controller
                                             'status' => 'pending',
                                             'profit' => $profit,
                                             'provider_response' => $ckb,
-                                            'reference' => $ckb['orderid'] ?? $tx->reference,
+                                            'order_id' => $ckb['orderid'] ?? null,
+                                            'provider' => 'clubkonnect',
                                         ]);
 
                                         WalletTransaction::create([
@@ -608,6 +609,7 @@ class UtilityController extends Controller
                                                 'network' => $tx->network,
                                                 'phone_number' => $tx->phone_number,
                                                 'utility_tx_id' => $tx->id,
+                                                'provider' => 'clubkonnect',
                                                 'status' => 'pending',
                                             ],
                                         ]);
@@ -743,7 +745,8 @@ class UtilityController extends Controller
                 'status' => 'success',
                 'profit' => $profit,
                 'provider_response' => $body,
-                'reference' => $body['orderid'] ?? $tx->reference,
+                'order_id' => $body['orderid'] ?? ($body['order_id'] ?? ($body['content']['transactions']['order_id'] ?? ($body['content']['transactions']['transactionId'] ?? null))),
+                'provider' => $providerUsed ?? 'clubkonnect',
             ]);
 
             // Record wallet debit transaction
@@ -751,12 +754,13 @@ class UtilityController extends Controller
                 'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $amount,
-                'reference' => $body['orderid'] ?? $tx->reference,
+                'reference' => $body['orderid'] ?? ($body['requestId'] ?? $tx->reference),
                 'source' => 'vtu_airtime',
                 'meta' => [
                     'network' => $tx->network,
                     'phone_number' => $tx->phone_number,
                     'utility_tx_id' => $tx->id,
+                    'provider' => $providerUsed ?? 'clubkonnect',
                 ],
             ]);
         });
@@ -962,7 +966,8 @@ class UtilityController extends Controller
                                             'status' => 'pending',
                                             'profit' => $profit,
                                             'provider_response' => $ckb,
-                                            'reference' => $ckb['orderid'] ?? $tx->reference,
+                                            'order_id' => $ckb['orderid'] ?? null,
+                                            'provider' => 'clubkonnect',
                                         ]);
 
                                         WalletTransaction::create([
@@ -976,6 +981,7 @@ class UtilityController extends Controller
                                                 'phone_number' => $tx->phone_number,
                                                 'bundle_code' => $bundleCode,
                                                 'utility_tx_id' => $tx->id,
+                                                'provider' => 'clubkonnect',
                                                 'convenience_fee' => $convenience,
                                                 'status' => 'pending',
                                             ],
@@ -1112,20 +1118,22 @@ class UtilityController extends Controller
                 'status' => 'success',
                 'profit' => $profit,
                 'provider_response' => $body,
-                'reference' => $body['orderid'] ?? $tx->reference,
+                'order_id' => $body['orderid'] ?? ($body['order_id'] ?? ($body['content']['transactions']['order_id'] ?? ($body['content']['transactions']['transactionId'] ?? null))),
+                'provider' => $providerUsed ?? 'clubkonnect',
             ]);
 
             WalletTransaction::create([
                 'user_id' => $lockedUser->id,
                 'type' => 'debit',
                 'amount' => $debit,
-                'reference' => $body['orderid'] ?? $tx->reference,
+                'reference' => $body['orderid'] ?? ($body['requestId'] ?? $tx->reference),
                 'source' => 'vtu_data',
                 'meta' => [
                     'network' => $tx->network,
                     'phone_number' => $tx->phone_number,
                     'bundle_code' => $bundleCode,
                     'utility_tx_id' => $tx->id,
+                    'provider' => $providerUsed ?? 'clubkonnect',
                     'convenience_fee' => $convenience,
                 ],
             ]);

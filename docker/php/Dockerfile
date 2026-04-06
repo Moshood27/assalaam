@@ -1,7 +1,6 @@
-
 FROM php:8.4-fpm-alpine
 
-# Install system dependencies
+# 1. Install system dependencies
 RUN apk add --no-cache \
     bash \
     libpng-dev \
@@ -13,13 +12,20 @@ RUN apk add --no-cache \
     icu-dev \
     icu-libs
 
-# Configure and install PHP extensions
+# 2. Configure and install PHP extensions
+# Cleaned up redundancy and added pcntl for Laravel Reverb
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pdo_mysql bcmath gd zip intl \
-    && docker-php-ext-enable opcache \
-    && docker-php-ext-install pdo_mysql gd zip pcntl \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        bcmath \
+        gd \
+        zip \
+        intl \
+        pcntl \
+    && docker-php-ext-enable opcache
 
-# Install Composer
+# 3. Install Composer
+# Note: No backslash on the line above this. COPY must be its own command.
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
