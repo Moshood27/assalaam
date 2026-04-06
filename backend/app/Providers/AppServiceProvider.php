@@ -25,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \App\Models\StoreOrder::observe(\App\Observers\StoreOrderObserver::class);
+
         // Global API rate limiter
         RateLimiter::for('api', function (Request $request) {
             $key = optional($request->user())->id ?: $request->ip();

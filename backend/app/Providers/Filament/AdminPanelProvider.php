@@ -49,6 +49,8 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Resources\GoalBookingResource::class,
                 \App\Filament\Resources\IncomeEntryResource::class,
                 \App\Filament\Resources\ProductResource::class,
+                \App\Filament\Resources\CategoryResource::class,
+                \App\Filament\Resources\StoreOrderResource::class,
                 \App\Filament\Resources\ProjectResource::class,
                 \App\Filament\Resources\ProjectInvestmentResource::class,
                 \App\Filament\Resources\ProjectProfitResource::class,
@@ -63,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                \App\Filament\Widgets\StoreOverview::class,
                 \App\Filament\Widgets\FinanceSnapshot::class,
                 \App\Filament\Widgets\RecentPayouts::class,
                 \App\Filament\Widgets\TotalCollectionsToday::class,

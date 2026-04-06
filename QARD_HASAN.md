@@ -96,6 +96,17 @@ Endpoint to view member‑specific eligibility summary: GET /api/loans/eligibili
     - Email validation is required for online gateway flows; wallet flow does not require email.
 
 
+### Automated Repayment Hunters (Auto Recovery)
+To ensure high repayment rates, the system includes an automated background worker that monitors members with overdue loans.
+
+- **Trigger**: When a member’s wallet balance increases (e.g., via a card top-up or bank transfer to their Virtual Account), the system may dispatch the `AutoRecoverOverdueLoans` job.
+- **Behavior**: 
+  - The job calculates the member’s total overdue amount across all active loans.
+  - If the member has a positive wallet balance, the system automatically debits the wallet and applies the funds to the oldest overdue installments first.
+  - **Locks**: The process uses row-level database locks (`lockForUpdate`) on both the User and Loan records to prevent double-charging or race conditions.
+  - **Notification**: Upon successful auto-recovery, the member receives a push notification and email acknowledging the automatic payment.
+  - **Transparency**: These transactions are tagged in the wallet history with `auto_hunter: true` in the metadata.
+
 ## 5) Guarantors (Digital Acceptance)
 - For non‑instant loans, selected guarantors are attached to the loan with pivot status=pending and a unique token; SMS/Push notify them to review and accept/decline in the app.
 - Disbursement requires that all guarantors have accepted (status=accepted) and that at least two guarantors are present.

@@ -9,17 +9,20 @@ Start here
 - MOBILE_BUILD_SYNC.md – Capacitor mobile projects: syncing and assets.
 
 Feature guides
+- STORE_ECOMMERCE.md – Coop Store & E-Commerce (member catalog, cart, Murabaha financing, and admin order management).
 - MERCHANT_API.md – Backend API for “Pay with Attaqwa” Merchant QR payments (QR payload format, resolve and pay endpoints).
 - FRONTEND_MERCHANT_QR.md – Frontend/mobile guide for Merchant QR (camera scanner, flows, routes, permissions).
 - TAKAFUL.md – Mutual protection pool (member and admin flows).
 - MUDARABAH.md – Pooled investment projects (models, flows, profit booking and distribution).
-- QARD_HASAN.md – Benevolent loan logic and flows.
+- QARD_HASAN.md – Benevolent loan logic, flows, and automated recovery hunters.
+- KYC_SYSTEM.md – KYC/Identity verification via BVN and face matching (Dojah/Mock).
 - USER_NOTIFICATIONS.md – In‑app notifications and push integration.
 - PUSH_NOTIFICATIONS.md – Mobile push notifications and FCM.
 - AGM_VOTING.md – AGM sessions, candidates, voting and results.
 - VIRTUAL_ACCOUNT.md – Dedicated virtual accounts (Paystack DVA) for wallet top‑ups.
 - WEBHOOKS.md – General webhook handling patterns.
 - VTPASS_WEBHOOK.md – VTU provider webhook specifics.
+- TELESCOPE_HORIZON.md – Monitoring jobs, webhooks, and debugging.
 
 APIs and backend
 - backend/routes/api.php – Authenticated and public API routes map.

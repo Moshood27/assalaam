@@ -26,6 +26,13 @@
             <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold" @click="load(1)">Search</button>
           </div>
           <div class="flex items-center gap-2">
+            <label class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Category</label>
+            <select v-model="selectedCategory" @change="load(1)" class="bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm max-w-[120px]">
+              <option :value="0">All</option>
+              <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
             <label class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Sort</label>
             <select v-model="sortBy" @change="load(1)" class="bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
               <option value="newest">Newest</option>
@@ -52,14 +59,19 @@
                   </div>
                   <div class="text-emerald-700 font-black text-sm whitespace-nowrap">₦ {{ money(p.selling_price) }}</div>
                 </div>
+                <div v-if="p.track_stock" class="mb-1">
+                  <span v-if="p.stock_quantity > 0" class="text-[10px] text-slate-500 font-bold">In Stock: {{ p.stock_quantity }}</span>
+                  <span v-else class="text-[10px] text-rose-600 font-black uppercase tracking-widest">Out of Stock</span>
+                </div>
                 <p class="text-[12px] text-slate-600 line-clamp-2 mb-2">{{ p.description || '—' }}</p>
                 <div class="flex items-center justify-end gap-2">
                   <template v-if="cart[p.id]">
                     <button class="px-2 py-1 rounded-lg border border-slate-200" @click="decQty(p.id)">-</button>
                     <span class="text-sm font-bold">{{ cart[p.id].qty }}</span>
-                    <button class="px-2 py-1 rounded-lg bg-emerald-600 text-white" @click="incQty(p.id)">+</button>
+                    <button class="px-2 py-1 rounded-lg bg-emerald-600 text-white disabled:opacity-50" @click="incQty(p.id)" :disabled="p.track_stock && cart[p.id].qty >= p.stock_quantity">+</button>
                   </template>
-                  <button v-else class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold" @click="addToCart(p)">Add to Cart</button>
+                  <button v-else-if="!p.track_stock || p.stock_quantity > 0" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold" @click="addToCart(p)">Add to Cart</button>
+                  <button v-else disabled class="px-3 py-2 rounded-lg bg-slate-200 text-slate-500 text-xs font-bold">Sold Out</button>
                   <button class="px-3 py-2 rounded-lg border border-slate-200 text-xs" @click="openQuick(p)">Quick View</button>
                 </div>
               </div>
@@ -160,20 +172,27 @@
           <div class="flex-1 min-w-0">
             <div class="font-bold text-slate-800 truncate">{{ selectedProduct.name }}</div>
             <div class="text-emerald-700 font-black text-sm">₦ {{ money(selectedProduct.selling_price) }}</div>
+            <div v-if="selectedProduct.track_stock" class="mt-1">
+              <span v-if="selectedProduct.stock_quantity > 0" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">In Stock: {{ selectedProduct.stock_quantity }}</span>
+              <span v-else class="text-[10px] text-rose-600 font-black uppercase tracking-widest">Sold Out</span>
+            </div>
             <p class="text-[12px] text-slate-600 mt-1">{{ selectedProduct.description || '—' }}</p>
           </div>
           <button class="text-slate-400 hover:text-slate-600" @click="closeQuick()">✕</button>
         </div>
-        <div class="mt-4 flex items-center justify-between">
+        <div class="mt-4 flex items-center justify-between" v-if="!selectedProduct.track_stock || selectedProduct.stock_quantity > 0">
           <div class="flex items-center gap-2">
             <button class="px-3 py-2 rounded-lg border border-slate-200" @click="quickQty = Math.max(1, (Number(quickQty)||1)-1)">-</button>
-            <input v-model.number="quickQty" type="number" min="1" class="w-16 text-center bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm" />
-            <button class="px-3 py-2 rounded-lg border border-slate-200" @click="quickQty = (Number(quickQty)||1)+1">+</button>
+            <input v-model.number="quickQty" type="number" min="1" :max="selectedProduct.track_stock ? selectedProduct.stock_quantity : undefined" class="w-16 text-center bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm" />
+            <button class="px-3 py-2 rounded-lg border border-slate-200" @click="quickQty = Math.min((selectedProduct.track_stock ? selectedProduct.stock_quantity : 999), (Number(quickQty)||1)+1)">+</button>
           </div>
           <div class="flex items-center gap-2">
             <button class="px-4 py-2 rounded-lg border border-slate-200 bg-white" @click="closeQuick()">Cancel</button>
             <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold" @click="addQuickToCart()">Add to Cart</button>
           </div>
+        </div>
+        <div class="mt-4 flex items-center justify-center" v-else>
+          <button class="w-full px-4 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold text-sm uppercase tracking-widest cursor-not-allowed">Product Out of Stock</button>
         </div>
       </div>
     </div>
@@ -223,6 +242,8 @@ const error = ref('')
 const page = ref(1)
 const lastPage = ref(1)
 const q = ref('')
+const selectedCategory = ref(0)
+const categories = ref([])
 const sortBy = ref('newest')
 
 const walletBalance = ref(0)
@@ -259,7 +280,7 @@ const load = async (p = 1) => {
   try {
     page.value = p
     const { data } = await axios.get('/api/products', {
-      params: { page: p, q: q.value || '', sort: sortBy.value }
+      params: { page: p, q: q.value || '', category_id: selectedCategory.value, sort: sortBy.value }
     })
     const list = Array.isArray(data) ? data : (data?.data || [])
     items.value = list
@@ -269,6 +290,13 @@ const load = async (p = 1) => {
   } finally {
     loading.value = false
   }
+}
+
+const loadCategories = async () => {
+  try {
+    const { data } = await axios.get('/api/products/categories')
+    categories.value = data
+  } catch (_) {}
 }
 
 const loadWallet = async () => {
@@ -430,7 +458,7 @@ const routerPush = (path) => {
   try { window.location.href = `${import.meta.env.BASE_URL || '/'}${path.replace(/^\//,'')}` } catch (_) {}
 }
 
-onMounted(() => { restoreCart(); load(1); loadWallet() })
+onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories() })
 </script>
 
 <style scoped>

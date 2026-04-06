@@ -24,6 +24,10 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('category_id')
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -44,6 +48,16 @@ class ProductResource extends Resource
                     ->maxValue(100)
                     ->step('0.01')
                     ->default(10),
+                Forms\Components\Group::make([
+                    Forms\Components\Toggle::make('track_stock')
+                        ->label('Track Stock')
+                        ->live(),
+                    Forms\Components\TextInput::make('stock_quantity')
+                        ->label('Stock Quantity')
+                        ->numeric()
+                        ->default(0)
+                        ->visible(fn ($get) => $get('track_stock')),
+                ])->columns(2),
                 Forms\Components\FileUpload::make('image_url')
                     ->label('Image')
                     ->image()
@@ -72,7 +86,9 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('category.name')->sortable()->toggleable(),
                 TextColumn::make('name')->searchable()->wrap()->limit(40),
+                TextColumn::make('stock_quantity')->label('Stock')->numeric()->sortable()->toggleable(),
                 TextColumn::make('cost_price')->label('Cost')->money('ngn', true)->sortable(),
                 TextColumn::make('markup_percent')->label('Markup %')->formatStateUsing(fn ($state) => number_format((float)$state, 2) . '%')->sortable(),
                 TextColumn::make('selling_price')->label('Selling')->money('ngn', true)->sortable(),

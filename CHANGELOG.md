@@ -2,6 +2,16 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
+2026-04-06
+- Added and configured Laravel Telescope and Horizon for production monitoring.
+  - Dashboards available at /app/telescope and /app/horizon.
+  - Configured webhook tagging and sensitive header filtering.
+- Improved documentation for core features:
+  - Added TELESCOPE_HORIZON.md (monitoring and debugging).
+  - Added KYC_SYSTEM.md (identity verification logic).
+  - Updated QARD_HASAN.md with Auto Recovery (loan hunter) details.
+- Updated composer.json to auto-publish monitoring assets on update.
+
 2026-04-04
 - Merchant QR payments ("Pay with Attaqwa") documented and integrated front and back.
   - Backend

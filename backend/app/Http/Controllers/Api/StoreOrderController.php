@@ -79,6 +79,12 @@ class StoreOrderController extends Controller
             $p = $products[$it['product_id']] ?? null;
             if (!$p) continue;
             $qty = (int) $it['quantity'];
+
+            // Check stock
+            if ($p->track_stock && $p->stock_quantity < $qty) {
+                return response()->json(['message' => "Insufficient stock for product: {$p->name}"], 422);
+            }
+
             $unitPrice = (float) $p->selling_price;
             $unitCost = (float) $p->cost_price;
             $lineTotal = round($unitPrice * $qty, 2);
@@ -177,6 +183,11 @@ class StoreOrderController extends Controller
                     StoreOrderItem::create(array_merge($li, [
                         'store_order_id' => $order->id,
                     ]));
+
+                    // Decrement stock if tracking
+                    Product::where('id', $li['product_id'])
+                        ->where('track_stock', true)
+                        ->decrement('stock_quantity', $li['quantity']);
                 }
 
                 return $order;
@@ -219,6 +230,11 @@ class StoreOrderController extends Controller
                 StoreOrderItem::create(array_merge($li, [
                     'store_order_id' => $order->id,
                 ]));
+
+                // Decrement stock if tracking
+                Product::where('id', $li['product_id'])
+                    ->where('track_stock', true)
+                    ->decrement('stock_quantity', $li['quantity']);
             }
 
             // Record wallet debit transaction

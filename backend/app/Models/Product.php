@@ -12,19 +12,33 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
+        'category_id',
         'name',
         'description',
         'cost_price',
         'markup_percent',
+        'stock_quantity',
+        'track_stock',
         'image_url',
         'is_active',
     ];
 
     protected $casts = [
+        'category_id' => 'integer',
         'cost_price' => 'decimal:2',
         'markup_percent' => 'decimal:2',
+        'stock_quantity' => 'integer',
+        'track_stock' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Relationship with Category model.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     /**
      * Computed selling price based on cost and markup percent.
