@@ -30,6 +30,8 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             'cookie',
             'x-csrf-token',
             'x-xsrf-token',
+            'x-paystack-signature',
+            'x-flutterwave-signature',
         ]);
     }
 
@@ -54,17 +56,25 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 $entry->isFailedJob() ||
                 $entry->isScheduledTask() ||
                 $entry->hasMonitoredTag() ||
-                $entry->type === 'log'; // <--- ADD THIS LINE
+                $entry->type === 'log' ||
+                $entry->type === 'job' ||
+                ($entry->type === 'request' && (str_contains($entry->content['uri'] ?? '', 'webhook') || str_contains($entry->content['uri'] ?? '', 'callback')));
+        });
+
+        Telescope::tag(function (IncomingEntry $entry) {
+            if ($entry->type === 'request' && (str_contains($entry->content['uri'] ?? '', 'webhook') || str_contains($entry->content['uri'] ?? '', 'callback'))) {
+                return ['webhook'];
+            }
+
+            return [];
         });
     }
 
     protected function gate(): void
     {
         Gate::define('viewTelescope', function (User $user) {
-            return in_array($user->email, [
-                'madewale5@gmail.com', // <--- Use your ACTUAL login email
-                'admin@attaqwa.com'
-            ]);
+            $emails = explode(',', env('TELESCOPE_EMAILS', 'admin@attaqwa.com'));
+            return in_array($user->email, $emails);
         });
     }
 }

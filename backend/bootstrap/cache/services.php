@@ -52,7 +52,8 @@
     48 => 'RyanChandler\\BladeCaptureDirective\\BladeCaptureDirectiveServiceProvider',
     49 => 'App\\Providers\\AppServiceProvider',
     50 => 'App\\Providers\\Filament\\AdminPanelProvider',
-    51 => 'App\\Providers\\TelescopeServiceProvider',
+    51 => 'App\\Providers\\HorizonServiceProvider',
+    52 => 'App\\Providers\\TelescopeServiceProvider',
   ),
   'eager' => 
   array (
@@ -91,7 +92,8 @@
     32 => 'RyanChandler\\BladeCaptureDirective\\BladeCaptureDirectiveServiceProvider',
     33 => 'App\\Providers\\AppServiceProvider',
     34 => 'App\\Providers\\Filament\\AdminPanelProvider',
-    35 => 'App\\Providers\\TelescopeServiceProvider',
+    35 => 'App\\Providers\\HorizonServiceProvider',
+    36 => 'App\\Providers\\TelescopeServiceProvider',
   ),
   'deferred' => 
   array (
