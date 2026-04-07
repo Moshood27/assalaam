@@ -29,7 +29,7 @@ class User extends Authenticatable implements FilamentUser
         return LogOptions::defaults()
             ->logFillable()
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontLogEmptyChanges();
     }
 
     /**

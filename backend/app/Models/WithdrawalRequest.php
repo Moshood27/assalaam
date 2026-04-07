@@ -16,7 +16,7 @@ class WithdrawalRequest extends Model
         return LogOptions::defaults()
             ->logOnly(['status', 'amount', 'reason', 'processed_at'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontLogEmptyChanges();
     }
 
     protected $fillable = [

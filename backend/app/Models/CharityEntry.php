@@ -16,7 +16,7 @@ class CharityEntry extends Model
         return LogOptions::defaults()
             ->logOnly(['type', 'amount', 'source', 'description', 'reference'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontLogEmptyChanges();
     }
 
     protected $table = 'charity_ledger';

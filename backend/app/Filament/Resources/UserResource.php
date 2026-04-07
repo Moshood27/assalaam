@@ -16,6 +16,7 @@ use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -135,12 +136,12 @@ class UserResource extends Resource
                             ->label('Administrator')
                             ->helperText('Grants access to this admin panel')
                             ->visible(fn () => auth()->user()->can('manage_admins')),
-                        Forms\Components\Select::make('roles')
+                        // Add this Role Selector
+                        Select::make('roles')
                             ->relationship('roles', 'name')
-                            ->multiple()
+                            ->multiple() // Allow a user to have multiple roles if needed
                             ->preload()
-                            ->searchable()
-                            ->visible(fn () => auth()->user()->can('manage_admins')),
+                            ->searchable(),
                         Forms\Components\Toggle::make('is_defaulter')
                             ->label('Defaulter')
                             ->helperText('Restricts certain features for the member'),
@@ -297,6 +298,8 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 Action::make('creditWallet')
                     ->label('Credit Wallet')
                     ->icon('heroicon-o-banknotes')
@@ -533,7 +536,7 @@ class UserResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()->can('delete_records')),
+                        ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 ]),
             ]);
     }
@@ -560,11 +563,15 @@ class UserResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->when(
-                auth()->user()->hasRole('Branch Manager'),
-                fn (Builder $query) => $query->where('branch_id', auth()->user()->branch_id)
-            );
+        $user = auth()->user();
+
+        // If the user is a Super Admin, let them see everything
+        if ($user->hasRole('super_admin')) {
+            return parent::getEloquentQuery();
+        }
+
+        // Otherwise, only show records belonging to the user's branch
+        return parent::getEloquentQuery()->where('branch_id', $user->branch_id);
     }
 
     public static function getRelations(): array

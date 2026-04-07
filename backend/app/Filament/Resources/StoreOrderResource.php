@@ -256,11 +256,14 @@ class StoreOrderResource extends Resource
                         });
                     }),
 
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 ]),
             ]);
     }
@@ -287,11 +290,17 @@ class StoreOrderResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
-            ->when(
-                auth()->user()->hasRole('Branch Manager'),
-                fn ($query) => $query->whereHas('user', fn ($q) => $q->where('branch_id', auth()->user()->branch_id))
-            );
+        $user = auth()->user();
+
+        // If the user is a Super Admin, let them see everything
+        if ($user->hasRole('super_admin')) {
+            return parent::getEloquentQuery();
+        }
+
+        // Otherwise, only show records belonging to the user's branch
+        return parent::getEloquentQuery()->whereHas('user', function ($query) use ($user) {
+            $query->where('branch_id', $user->branch_id);
+        });
     }
 
     public static function getPages(): array

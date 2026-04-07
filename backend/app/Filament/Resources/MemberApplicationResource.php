@@ -72,6 +72,8 @@ class MemberApplicationResource extends Resource
                     ->query(fn ($query) => $query->whereNull('finalized_at')),
             ])
             ->actions([
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
@@ -139,7 +141,8 @@ class MemberApplicationResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 ]),
             ]);
     }
@@ -173,10 +176,14 @@ class MemberApplicationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->when(
-                auth()->user()->hasRole('Branch Manager'),
-                fn (Builder $query) => $query->where('branch_id', auth()->user()->branch_id)
-            );
+        $user = auth()->user();
+
+        // If the user is a Super Admin, let them see everything
+        if ($user->hasRole('super_admin')) {
+            return parent::getEloquentQuery();
+        }
+
+        // Otherwise, only show records belonging to the user's branch
+        return parent::getEloquentQuery()->where('branch_id', $user->branch_id);
     }
 }
