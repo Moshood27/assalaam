@@ -6,16 +6,15 @@ use App\Filament\Resources\MemberApplicationResource\Pages;
 use App\Models\MemberApplication;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
-use Filament\Notifications\Notification;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class MemberApplicationResource extends Resource
 {

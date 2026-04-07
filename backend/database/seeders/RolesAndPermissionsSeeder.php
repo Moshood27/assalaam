@@ -103,6 +103,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_any_product', 'view_product',
             'view_any_project', 'view_project',
             'view_any_scheme', 'view_scheme',
+            'view_any_agm_session', 'view_agm_session',
+            'view_any_agm_candidate', 'view_agm_candidate',
             'approve_loans', // Specific custom permission
             'view_own_branch_members', // Legacy/custom
             'record_contributions', // Legacy/custom

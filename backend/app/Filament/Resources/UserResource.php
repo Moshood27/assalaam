@@ -384,11 +384,12 @@ class UserResource extends Resource
                                 return;
                             }
 
-                            if ((float)$record->balance < $amount) {
+                            if ((float) $record->balance < $amount) {
                                 Notification::make()
                                     ->title('Insufficient balance')
                                     ->danger()
                                     ->send();
+
                                 return;
                             }
 
@@ -408,7 +409,8 @@ class UserResource extends Resource
                                     $sms = app(SmsService::class);
                                     $msg = 'Wallet debited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
                                     $sms->send($record->phone ?? null, $msg);
-                                } catch (\Throwable $e) {}
+                                } catch (\Throwable $e) {
+                                }
                             });
                         });
                     })
@@ -478,6 +480,25 @@ class UserResource extends Resource
                     ])
                     ->url(fn (User $record, array $data) => route('admin.print.passbook', ['user' => $record->id, 'year' => $data['year'] ?? now()->year]))
                     ->openUrlInNewTab(),
+                Action::make('reset2fa')
+                    ->label('Reset 2FA')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->visible(fn (User $record) => $record->hasEnabledTwoFactor())
+                    ->requiresConfirmation()
+                    ->action(function (User $record) {
+                        $record->disableTwoFactorAuthentication();
+
+                        ShariahAudit::log(auth()->user(), 'reset_user_2fa', [
+                            'user_id' => $record->id,
+                            'email' => $record->email,
+                        ]);
+
+                        Notification::make()
+                            ->title('2FA Reset Successfully')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('verifyKyc')
                     ->label('Verify KYC')
                     ->icon('heroicon-o-shield-check')

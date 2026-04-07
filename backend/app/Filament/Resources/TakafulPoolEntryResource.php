@@ -3,11 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TakafulPoolEntryResource\Pages;
-use App\Models\TakafulPoolEntry;
 use App\Models\ShariahAuditLog as ShariahAudit;
+use App\Models\TakafulPoolEntry;
 use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
@@ -16,8 +16,6 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use App\Services\TakafulService;
-use Filament\Notifications\Notification;
 
 class TakafulPoolEntryResource extends Resource
 {
@@ -75,7 +73,7 @@ class TakafulPoolEntryResource extends Resource
                         'debit' => 'Debit',
                     ])
                     ->query(function (Builder $query, array $data) {
-                        if (!empty($data['value'])) {
+                        if (! empty($data['value'])) {
                             $query->where('direction', $data['value']);
                         }
                     }),
@@ -85,10 +83,10 @@ class TakafulPoolEntryResource extends Resource
                         Forms\Components\DatePicker::make('to')->label('To'),
                     ])
                     ->query(function (Builder $query, array $data) {
-                        if (!empty($data['from'])) {
+                        if (! empty($data['from'])) {
                             $query->whereDate('created_at', '>=', $data['from']);
                         }
-                        if (!empty($data['to'])) {
+                        if (! empty($data['to'])) {
                             $query->whereDate('created_at', '<=', $data['to']);
                         }
                     }),
@@ -100,7 +98,7 @@ class TakafulPoolEntryResource extends Resource
                             ->options(User::orderBy('name')->pluck('name', 'id')),
                     ])
                     ->query(function (Builder $query, array $data) {
-                        if (!empty($data['user_id'])) {
+                        if (! empty($data['user_id'])) {
                             $query->where('meta->user_id', (int) $data['user_id']);
                         }
                     }),
@@ -139,7 +137,7 @@ class TakafulPoolEntryResource extends Resource
                         $entry = TakafulPoolEntry::create([
                             'direction' => $direction,
                             'amount' => $amount,
-                            'reference' => 'MANUAL-' . strtoupper(uniqid()),
+                            'reference' => 'MANUAL-'.strtoupper(uniqid()),
                             'meta' => [
                                 'reason' => $reason,
                                 'user_id' => $userId,

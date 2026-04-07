@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\WalletTransaction;
 use App\Models\Contribution;
+use App\Models\User;
+use App\Models\UtilityTransaction;
+use App\Models\WalletTransaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class PrintController extends Controller
 {
@@ -60,15 +60,15 @@ class PrintController extends Controller
         // Contribution has amount, reference, scheme, etc.
 
         // Create a temporary object that looks like $tx
-        $tx = (object)[
+        $tx = (object) [
             'type' => 'credit',
             'amount' => $contribution->amount,
             'reference' => $contribution->reference,
             'created_at' => $contribution->created_at,
-            'source' => 'Manual Contribution (' . ($contribution->scheme?->name ?? 'Scheme') . ')',
+            'source' => 'Manual Contribution ('.($contribution->scheme?->name ?? 'Scheme').')',
             'meta' => [
-                'note' => $contribution->status === 'success' ? 'Payment confirmed' : 'Status: ' . $contribution->status
-            ]
+                'note' => $contribution->status === 'success' ? 'Payment confirmed' : 'Status: '.$contribution->status,
+            ],
         ];
 
         $pdf = Pdf::loadView('pdfs.wallet_receipt', [
@@ -78,5 +78,32 @@ class PrintController extends Controller
         ]);
 
         return $pdf->stream("contribution-receipt-{$contribution->reference}.pdf");
+    }
+
+    public function utilityReceipt(Request $request, UtilityTransaction $transaction)
+    {
+        $user = $transaction->user;
+        $branchName = $user->branch?->name;
+
+        // Adapt for utility
+        $tx = (object) [
+            'type' => 'debit',
+            'amount' => $transaction->amount,
+            'reference' => $transaction->reference,
+            'created_at' => $transaction->created_at,
+            'source' => 'Utility: '.ucfirst((string) $transaction->type).' ('.($transaction->network ?? '—').')',
+            'meta' => array_merge(
+                is_array($transaction->provider_response) ? $transaction->provider_response : [],
+                ['note' => 'Phone: '.$transaction->phone_number]
+            ),
+        ];
+
+        $pdf = Pdf::loadView('pdfs.wallet_receipt', [
+            'user' => $user,
+            'tx' => $tx,
+            'branch' => $branchName,
+        ]);
+
+        return $pdf->stream("utility-receipt-{$transaction->reference}.pdf");
     }
 }

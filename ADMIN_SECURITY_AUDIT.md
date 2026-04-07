@@ -77,6 +77,15 @@ To improve oversight, the `UserResource` (Member view) includes comprehensive **
 
 ---
 
+## 6. Manual Controls & Printing
+To ensure financial oversight, the admin panel provides controlled manual actions with mandatory auditing:
+- **Wallet Adjustments**: Admins can manually credit or debit member wallets, with each adjustment requiring a note and being logged in both Activity and Shariah Audit logs.
+- **2FA Resets**: If a member loses access to their authenticator device, an authorized admin can reset their 2FA, with the action strictly audited.
+- **Member Application Onboarding**: Full workflow for approving or rejecting new member applications, including automatic user creation and auditing.
+- **Financial Printing**: Generating secure, read-only PDF receipts and passbooks for members, ensuring that physical or digital proof of transactions is always available.
+
+---
+
 ## Security Best Practices for Admins
 1. **Always use 2FA**: Mandatory for all accounts with financial access.
 2. **Review Sessions Weekly**: Logout from public or shared devices immediately.

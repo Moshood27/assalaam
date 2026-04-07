@@ -10,6 +10,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class UtilityTransactionResource extends Resource
 {
@@ -63,15 +65,16 @@ class UtilityTransactionResource extends Resource
                             ->maxLength(20),
                         Forms\Components\KeyValue::make('provider_response')
                             ->formatStateUsing(function ($state) {
-                                if (auth()->user()->hasRole('super_admin') || !is_array($state)) {
+                                if (auth()->user()->hasRole('super_admin') || ! is_array($state)) {
                                     return $state;
                                 }
                                 $sensitive = ['bvn', 'membership_number', 'account_number', 'password', 'token', 'pin'];
                                 foreach ($sensitive as $key) {
                                     if (isset($state[$key]) && is_string($state[$key])) {
-                                        $state[$key] = \Illuminate\Support\Str::mask($state[$key], '*', 2, -2);
+                                        $state[$key] = Str::mask($state[$key], '*', 2, -2);
                                     }
                                 }
+
                                 return $state;
                             })
                             ->columnSpanFull(),
@@ -119,6 +122,13 @@ class UtilityTransactionResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('printReceipt')
+                    ->label('Print Receipt')
+                    ->icon('heroicon-o-printer')
+                    ->color('info')
+                    ->url(fn (UtilityTransaction $record) => route('admin.print.utility-receipt', $record))
+                    ->openUrlInNewTab()
+                    ->visible(fn (UtilityTransaction $record) => $record->status === 'success'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -147,7 +157,7 @@ class UtilityTransactionResource extends Resource
         return auth()->user()->can('delete_utility_transaction');
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->when(

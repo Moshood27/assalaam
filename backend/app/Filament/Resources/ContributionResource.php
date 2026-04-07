@@ -15,6 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class ContributionResource extends Resource
 {
@@ -107,7 +108,8 @@ class ContributionResource extends Resource
                         if (auth()->user()->hasRole('super_admin')) {
                             return $state;
                         }
-                        return \Illuminate\Support\Str::mask($state, '*', 2, -2);
+
+                        return Str::mask($state, '*', 2, -2);
                     }),
                 TextColumn::make('scheme.name')->label('Scheme')->searchable(),
                 TextColumn::make('project.name')->label('Project')->toggleable(isToggledHiddenByDefault: true),

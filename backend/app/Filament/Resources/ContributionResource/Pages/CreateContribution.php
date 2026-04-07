@@ -26,7 +26,7 @@ class CreateContribution extends CreateRecord
         $userId = $data['user_id'] ?? null;
         $status = $data['status'] ?? 'pending';
 
-        if (!$userId) {
+        if (! $userId) {
             throw ValidationException::withMessages([
                 'user_id' => 'Please select a member.',
             ]);
@@ -40,7 +40,7 @@ class CreateContribution extends CreateRecord
             $amount = isset($item['amount']) ? (float) $item['amount'] : null;
             $projectId = $item['project_id'] ?? null;
 
-            if (!$scheme) {
+            if (! $scheme) {
                 throw ValidationException::withMessages([
                     "items.$index.scheme_id" => 'Please choose a scheme.',
                 ]);
@@ -60,7 +60,7 @@ class CreateContribution extends CreateRecord
                 'scheme_id' => $scheme,
                 'amount' => $amount,
             ];
-            if (!empty($projectId)) {
+            if (! empty($projectId)) {
                 $row['project_id'] = (int) $projectId;
             }
             $normalizedItems[] = $row;
@@ -77,7 +77,7 @@ class CreateContribution extends CreateRecord
                     'status' => $status,
                     // Intentionally skip 'reference' to let the model auto-generate unique references
                 ];
-                if (!empty($item['project_id'])) {
+                if (! empty($item['project_id'])) {
                     $row['project_id'] = (int) $item['project_id'];
                 }
 

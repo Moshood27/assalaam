@@ -5,13 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\WalletTransactionResource\Pages;
 use App\Models\User;
 use App\Models\WalletTransaction;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class WalletTransactionResource extends Resource
 {
@@ -55,15 +56,16 @@ class WalletTransactionResource extends Resource
                             ->default(true),
                         Forms\Components\KeyValue::make('meta')
                             ->formatStateUsing(function ($state) {
-                                if (auth()->user()->hasRole('super_admin') || !is_array($state)) {
+                                if (auth()->user()->hasRole('super_admin') || ! is_array($state)) {
                                     return $state;
                                 }
                                 $sensitive = ['bvn', 'membership_number', 'account_number', 'password'];
                                 foreach ($sensitive as $key) {
                                     if (isset($state[$key]) && is_string($state[$key])) {
-                                        $state[$key] = \Illuminate\Support\Str::mask($state[$key], '*', 2, -2);
+                                        $state[$key] = Str::mask($state[$key], '*', 2, -2);
                                     }
                                 }
+
                                 return $state;
                             })
                             ->columnSpanFull(),
