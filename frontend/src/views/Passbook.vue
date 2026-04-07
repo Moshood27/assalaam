@@ -143,7 +143,7 @@ const fetchPassbook = async () => {
 const getDownloadUrl = () => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
-  return `${baseUrl}/api/download-passbook?year=${selectedYear.value}&token=${token}`
+  return `${baseUrl}/api/download-passbook?year=${selectedYear.value}&token=${encodeURIComponent(token)}`
 }
 onMounted(fetchPassbook)
 </script>

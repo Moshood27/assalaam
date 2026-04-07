@@ -644,7 +644,7 @@ const getReceiptDownloadUrl = (tx) => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
   const id = tx?.id ?? tx
-  return `${baseUrl}/api/wallet/transactions/${id}/receipt?token=${token}`
+  return `${baseUrl}/api/wallet/transactions/${id}/receipt?token=${encodeURIComponent(token)}`
 }
 
 watch([toType, toValue, branchId], () => {

@@ -374,7 +374,7 @@ const hasRecentRejection = (loanId) => {
 const getAgreementDownloadUrl = (loanId) => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
-  return `${baseUrl}/api/download-loan-agreement/${loanId}?token=${token}`
+  return `${baseUrl}/api/download-loan-agreement/${loanId}?token=${encodeURIComponent(token)}`
 }
 const triggerAgreementUpload = (loanId) => {
   const input = document.getElementById('agreement-input-' + loanId)
@@ -604,7 +604,7 @@ const pay = async (loan) => {
 const getScheduleDownloadUrl = (loan) => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
-  return `${baseUrl}/api/download-loan-schedule/${loan.id}?token=${token}`
+  return `${baseUrl}/api/download-loan-schedule/${loan.id}?token=${encodeURIComponent(token)}`
 }
 
 // Guarantor request APIs

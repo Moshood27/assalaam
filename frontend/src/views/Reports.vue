@@ -174,19 +174,19 @@ const loadDividend = async () => {
 const getDividendUrl = () => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
-  return `${baseUrl}/api/download-dividend/${divYear.value}?token=${token}`
+  return `${baseUrl}/api/download-dividend/${divYear.value}?token=${encodeURIComponent(token)}`
 }
 
 const getAppropriationUrl = () => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
-  return `${baseUrl}/api/download-appropriation/${divYear.value}?token=${token}`
+  return `${baseUrl}/api/download-appropriation/${divYear.value}?token=${encodeURIComponent(token)}`
 }
 
 const getFinancialsUrl = () => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
-  return `${baseUrl}/api/download-financials/${divYear.value}?token=${token}`
+  return `${baseUrl}/api/download-financials/${divYear.value}?token=${encodeURIComponent(token)}`
 }
 
 onMounted(() => { loadMix(); loadDividend() })

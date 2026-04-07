@@ -16,10 +16,20 @@ class QueryTokenToBearer
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // If the Authorization header is missing but a 'token' query parameter exists,
-        // use it as the Bearer token for authentication (common for file downloads).
-        if (!$request->bearerToken() && $request->filled('token')) {
-            $request->headers->set('Authorization', 'Bearer ' . $request->query('token'));
+        // If the 'token' query parameter exists, use it as the Bearer token for authentication.
+        // We also force the 'Accept' header to 'application/json' to ensure that if
+        // authentication fails, the framework returns a JSON 401 response instead of
+        // redirecting to a login page (which causes "Unauthenticated" text messages in browsers).
+        if ($request->filled('token')) {
+            $token = $request->query('token');
+
+            if (!$request->bearerToken()) {
+                 $request->headers->set('Authorization', 'Bearer ' . $token);
+            }
+
+            // Ensure the request is treated as an AJAX/API request to avoid redirects
+            $request->headers->set('Accept', 'application/json');
+            $request->headers->set('X-Requested-With', 'XMLHttpRequest');
         }
 
         return $next($request);
