@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TakafulPoolEntryResource\Pages;
 use App\Models\TakafulPoolEntry;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -105,6 +106,61 @@ class TakafulPoolEntryResource extends Resource
                     }),
             ])
             ->headerActions([
+                Tables\Actions\Action::make('recordAdjustment')
+                    ->label('Manual Entry')
+                    ->icon('heroicon-o-plus-circle')
+                    ->form([
+                        Forms\Components\Select::make('direction')
+                            ->options([
+                                'credit' => 'Credit (Inflow)',
+                                'debit' => 'Debit (Outflow)',
+                            ])
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->required()
+                            ->prefix('₦'),
+                        Forms\Components\TextInput::make('reason')
+                            ->label('Reason/Description')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Select::make('user_id')
+                            ->label('Related Member (optional)')
+                            ->searchable()
+                            ->options(User::orderBy('name')->pluck('name', 'id')),
+                    ])
+                    ->action(function (array $data) {
+                        $direction = $data['direction'];
+                        $amount = (float) $data['amount'];
+                        $reason = $data['reason'];
+                        $userId = $data['user_id'] ?? null;
+
+                        $entry = TakafulPoolEntry::create([
+                            'direction' => $direction,
+                            'amount' => $amount,
+                            'reference' => 'MANUAL-' . strtoupper(uniqid()),
+                            'meta' => [
+                                'reason' => $reason,
+                                'user_id' => $userId,
+                                'admin_id' => auth()->id(),
+                            ],
+                        ]);
+
+                        ShariahAudit::log(auth()->user(), 'takaful_pool_manual_adjustment', [
+                            'entry_id' => $entry->id,
+                            'direction' => $direction,
+                            'amount' => $amount,
+                            'reason' => $reason,
+                            'user_id' => $userId,
+                        ]);
+
+                        Notification::make()
+                            ->title('Manual entry recorded')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
                 Tables\Actions\Action::make('exportCsv')
                     ->label('Export CSV')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -118,6 +174,35 @@ class TakafulPoolEntryResource extends Resource
             ])
             ->actions([])
             ->bulkActions([]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_takaful_pool_entry');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_takaful_pool_entry');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_takaful_pool_entry');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn (Builder $query) => $query->whereHas('user', fn (Builder $q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
     }
 
     public static function getPages(): array

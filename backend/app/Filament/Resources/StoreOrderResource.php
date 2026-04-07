@@ -3,7 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StoreOrderResource\Pages;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\StoreOrder;
+use App\Models\Product;
+use App\Models\WalletTransaction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -157,7 +160,14 @@ class StoreOrderResource extends Resource
                     ->color('success')
                     ->visible(fn ($record) => $record->status === 'murabaha_pending')
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->update(['status' => 'murabaha_active'])),
+                    ->action(function ($record) {
+                        $record->update(['status' => 'murabaha_active']);
+                        ShariahAudit::log(auth()->user(), 'approve_store_financing', [
+                            'order_id' => $record->id,
+                            'member_id' => $record->user_id,
+                            'total_amount' => $record->total_amount,
+                        ]);
+                    }),
 
                 Tables\Actions\Action::make('mark_processing')
                     ->label('Processing')
@@ -165,7 +175,13 @@ class StoreOrderResource extends Resource
                     ->color('info')
                     ->visible(fn ($record) => in_array($record->status, ['paid', 'murabaha_active']))
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->update(['status' => 'processing'])),
+                    ->action(function ($record) {
+                        $record->update(['status' => 'processing']);
+                        ShariahAudit::log(auth()->user(), 'mark_store_order_processing', [
+                            'order_id' => $record->id,
+                            'status' => 'processing',
+                        ]);
+                    }),
 
                 Tables\Actions\Action::make('mark_completed')
                     ->label('Complete/Deliver')
@@ -173,7 +189,13 @@ class StoreOrderResource extends Resource
                     ->color('success')
                     ->visible(fn ($record) => in_array($record->status, ['paid', 'murabaha_active', 'processing']))
                     ->requiresConfirmation()
-                    ->action(fn ($record) => $record->update(['status' => 'completed'])),
+                    ->action(function ($record) {
+                        $record->update(['status' => 'completed']);
+                        ShariahAudit::log(auth()->user(), 'complete_store_order', [
+                            'order_id' => $record->id,
+                            'status' => 'completed',
+                        ]);
+                    }),
 
                 Tables\Actions\Action::make('cancel_order')
                     ->label('Cancel')
@@ -225,6 +247,12 @@ class StoreOrderResource extends Resource
                             }
 
                             $record->update(['status' => 'cancelled']);
+
+                            ShariahAudit::log(auth()->user(), 'cancel_store_order', [
+                                'order_id' => $record->id,
+                                'status' => 'cancelled',
+                                'total_amount' => $record->total_amount,
+                            ]);
                         });
                     }),
 
@@ -235,6 +263,35 @@ class StoreOrderResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_store_order');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_store_order');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_store_order');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_store_order');
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn ($query) => $query->whereHas('user', fn ($q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
     }
 
     public static function getPages(): array

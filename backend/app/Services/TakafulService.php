@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\QardHasan;
+use App\Models\QardHasanRepayment;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\TakafulContribution;
 use App\Models\TakafulPoolEntry;
 use App\Models\User;
 use App\Models\WalletTransaction;
-use App\Models\QardHasan;
-use App\Models\QardHasanRepayment;
-use App\Models\ShariahAuditLog as ShariahAudit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -38,7 +38,9 @@ class TakafulService
         }
 
         foreach ($pending as $row) {
-            if ($max !== null && $result['attempted'] >= $max) break;
+            if ($max !== null && $result['attempted'] >= $max) {
+                break;
+            }
             $result['attempted']++;
 
             DB::transaction(function () use ($row, &$result) {
@@ -56,11 +58,12 @@ class TakafulService
                 if ((float) $member->balance < $amt) {
                     // stop further processing; mark flag; return from this txn
                     $result['stopped_insufficient'] = true;
+
                     return;
                 }
 
                 // Debit wallet
-                $reference = 'TAKAFUL_RETRY_' . now()->format('YmdHis') . '_' . $member->id . '_' . bin2hex(random_bytes(3));
+                $reference = 'TAKAFUL_RETRY_'.now()->format('YmdHis').'_'.$member->id.'_'.bin2hex(random_bytes(3));
                 $member->decrement('balance', $amt);
                 WalletTransaction::create([
                     'user_id' => $member->id,
@@ -78,10 +81,11 @@ class TakafulService
 
                 // Credit pool
                 TakafulPoolEntry::create([
+                    'user_id' => $member->id,
                     'direction' => 'credit',
                     'amount' => $amt,
                     'reference' => $reference,
-                    'meta' => ['user_id' => $member->id, 'period' => $fresh->period, 'initiated_by' => 'auto_retry'],
+                    'meta' => ['period' => $fresh->period, 'initiated_by' => 'auto_retry'],
                 ]);
 
                 $result['succeeded']++;
@@ -92,6 +96,7 @@ class TakafulService
 
         return $result;
     }
+
     public function monthlyAmount(): float
     {
         return (float) config('services.takaful.monthly_amount', 200.00);
@@ -141,6 +146,7 @@ class TakafulService
                 ->first();
             if ($existing) {
                 $totals['skipped_existing']++;
+
                 continue;
             }
 
@@ -154,6 +160,7 @@ class TakafulService
                 } else {
                     $totals['insufficient_funds']++;
                 }
+
                 continue;
             }
 
@@ -169,6 +176,7 @@ class TakafulService
                     ->exists();
                 if ($exists) {
                     $totals['skipped_existing']++;
+
                     return;
                 }
 
@@ -185,11 +193,12 @@ class TakafulService
                         ]
                     );
                     $totals['insufficient_funds']++;
+
                     return;
                 }
 
                 // Deduct wallet
-                $reference = 'TAKAFUL_CONTR_' . now()->format('YmdHis') . '_' . $locked->id . '_' . bin2hex(random_bytes(3));
+                $reference = 'TAKAFUL_CONTR_'.now()->format('YmdHis').'_'.$locked->id.'_'.bin2hex(random_bytes(3));
                 $locked->decrement('balance', $amount);
 
                 WalletTransaction::create([
@@ -215,11 +224,11 @@ class TakafulService
 
                 // Credit pool
                 TakafulPoolEntry::create([
+                    'user_id' => $locked->id,
                     'direction' => 'credit',
                     'amount' => $amount,
                     'reference' => $reference,
                     'meta' => [
-                        'user_id' => $locked->id,
                         'period' => $period,
                     ],
                 ]);
@@ -230,6 +239,7 @@ class TakafulService
         }
 
         $totals['balance'] = TakafulPoolEntry::balance();
+
         return $totals;
     }
 
@@ -283,6 +293,7 @@ class TakafulService
                 $result['amount'] = (float) ($paid?->amount ?? $amount);
                 $result['reference'] = $paid?->reference;
                 $result['balance'] = (float) $locked->balance;
+
                 return;
             }
 
@@ -298,11 +309,12 @@ class TakafulService
                 );
                 $result['status'] = 'insufficient_funds';
                 $result['balance'] = (float) $locked->balance;
+
                 return;
             }
 
             // Proceed to debit wallet and credit pool
-            $reference = 'TAKAFUL_CONTR_' . now()->format('YmdHis') . '_' . $locked->id . '_' . bin2hex(random_bytes(3));
+            $reference = 'TAKAFUL_CONTR_'.now()->format('YmdHis').'_'.$locked->id.'_'.bin2hex(random_bytes(3));
             $locked->decrement('balance', $amount);
 
             WalletTransaction::create([
@@ -324,10 +336,11 @@ class TakafulService
             );
 
             TakafulPoolEntry::create([
+                'user_id' => $locked->id,
                 'direction' => 'credit',
                 'amount' => $amount,
                 'reference' => $reference,
-                'meta' => ['user_id' => $locked->id, 'period' => $period, 'initiated_by' => 'member_manual'],
+                'meta' => ['period' => $period, 'initiated_by' => 'member_manual'],
             ]);
 
             $result['status'] = 'success';
@@ -336,6 +349,7 @@ class TakafulService
         });
 
         $result['pool_balance'] = TakafulPoolEntry::balance();
+
         return $result;
     }
 
@@ -375,10 +389,11 @@ class TakafulService
                     'remaining' => $remaining,
                     'status' => 'skipped_insufficient_pool',
                 ];
+
                 continue;
             }
 
-            DB::transaction(function () use ($loan, $remaining, $user, $reason, &$summary) {
+            DB::transaction(function () use ($loan, $user, $reason, &$summary) {
                 /** @var QardHasan $locked */
                 $locked = QardHasan::whereKey($loan->id)->lockForUpdate()->first();
                 $stillRemaining = max(0.0, (float) $locked->principal_amount - (float) $locked->paid_amount);
@@ -386,7 +401,7 @@ class TakafulService
                     return;
                 }
 
-                $reference = 'TAKAFUL_PAYOUT_' . $locked->id . '_' . Str::upper(Str::random(6));
+                $reference = 'TAKAFUL_PAYOUT_'.$locked->id.'_'.Str::upper(Str::random(6));
 
                 // Create repayment record (mark success)
                 QardHasanRepayment::create([
@@ -406,11 +421,11 @@ class TakafulService
 
                 // Debit pool
                 TakafulPoolEntry::create([
+                    'user_id' => $user->id,
                     'direction' => 'debit',
                     'amount' => $stillRemaining,
                     'reference' => $reference,
                     'meta' => [
-                        'user_id' => $user->id,
                         'qard_id' => $locked->id,
                         'qard_code' => $locked->qard_id_string,
                         'reason' => $reason,
@@ -434,20 +449,22 @@ class TakafulService
                         foreach ($guarantors as $g) {
                             // Push notification if possible
                             try {
-                                $push = app(\App\Services\PushService::class);
+                                $push = app(PushService::class);
                                 $token = $g->fcm_token ?: ($g->device_token ?? null);
                                 $push->send($token, 'Takaful Settlement', 'Loan '.$locked->qard_id_string.' was settled from the welfare pool due to '.$reason.'.', [
                                     'type' => 'takaful_settlement',
                                     'qard_code' => $locked->qard_id_string,
                                     'amount' => (float) $stillRemaining,
                                 ]);
-                            } catch (\Throwable $e) {}
+                            } catch (\Throwable $e) {
+                            }
                             // Best-effort SMS
                             try {
-                                $sms = app(\App\Services\SmsService::class);
+                                $sms = app(SmsService::class);
                                 $msg = 'Notice: Loan '.$locked->qard_id_string.' settled from Takaful ('.$reason.'). Amount: ₦'.number_format($stillRemaining, 2);
                                 $sms->send($g->phone ?? null, $msg);
-                            } catch (\Throwable $e) {}
+                            } catch (\Throwable $e) {
+                            }
                         }
                     }
                 } catch (\Throwable $e) {
@@ -464,6 +481,7 @@ class TakafulService
         }
 
         $summary['pool_after'] = TakafulPoolEntry::balance();
+
         return $summary;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ContributionResource\Pages;
 
 use App\Filament\Resources\ContributionResource;
 use App\Models\Contribution;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +82,14 @@ class CreateContribution extends CreateRecord
                 }
 
                 $created = Contribution::create($row);
+
+                ShariahAudit::log(auth()->user(), 'manual_contribution_created', [
+                    'contribution_id' => $created->id,
+                    'user_id' => $created->user_id,
+                    'scheme_id' => $created->scheme_id,
+                    'amount' => $created->amount,
+                    'reference' => $created->reference,
+                ]);
 
                 if ($firstRecord === null) {
                     $firstRecord = $created;

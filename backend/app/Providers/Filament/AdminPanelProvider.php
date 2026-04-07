@@ -2,6 +2,44 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\ActivityLogResource;
+use App\Filament\Resources\WhitelistedIpResource;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use App\Filament\Resources\AgmCandidateResource;
+use App\Filament\Resources\AgmSessionResource;
+use App\Filament\Resources\BranchResource;
+use App\Filament\Resources\CategoryResource;
+use App\Filament\Resources\CharityEntryResource;
+use App\Filament\Resources\ContributionResource;
+use App\Filament\Resources\ExpenseEntryResource;
+use App\Filament\Resources\GoalBookingResource;
+use App\Filament\Resources\IncomeEntryResource;
+use App\Filament\Resources\MemberApplicationResource;
+use App\Filament\Resources\ProductResource;
+use App\Filament\Resources\ProjectInvestmentResource;
+use App\Filament\Resources\ProjectProfitResource;
+use App\Filament\Resources\ProjectResource;
+use App\Filament\Resources\QardHasanResource;
+use App\Filament\Resources\SavingsGoalResource;
+use App\Filament\Resources\SchemeResource;
+use App\Filament\Resources\ShariahAuditLogResource;
+use App\Filament\Resources\StoreOrderResource;
+use App\Filament\Resources\SupportMessageResource;
+use App\Filament\Resources\TakafulContributionResource;
+use App\Filament\Resources\TakafulPoolEntryResource;
+use App\Filament\Resources\UserResource;
+use App\Filament\Resources\UtilityTransactionResource;
+use App\Filament\Resources\WalletTransactionResource;
+use App\Filament\Resources\WithdrawalRequestResource;
+use App\Filament\Widgets\FinanceSnapshot;
+use App\Filament\Widgets\MemberGrowthChart;
+use App\Filament\Widgets\RecentPayouts;
+use App\Filament\Widgets\RecentWalletActivity;
+use App\Filament\Widgets\StoreOverview;
+use App\Filament\Widgets\SystemHealthChart;
+use App\Filament\Widgets\TotalCollectionsToday;
+use App\Filament\Widgets\UserGrowthChart;
+use App\Http\Middleware\IpWhitelistMiddleware;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -17,6 +55,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Jeffgreco13\FilamentBreezy\BreezyCore;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -31,33 +70,44 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->profile()
             ->brandName(config('brand.name'))
-            ->brandLogo(asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg'))
+            ->brandLogo(asset('images/'.config('brand.slug', 'attaqwa').'-logo.svg'))
             ->brandLogoHeight('3rem')
-            ->darkModeBrandLogo(asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg'))
-            ->favicon(asset('images/' . config('brand.slug', 'attaqwa') . '-favicon.svg'))
+            ->darkModeBrandLogo(asset('images/'.config('brand.slug', 'attaqwa').'-logo-dark.svg'))
+            ->favicon(asset('images/'.config('brand.slug', 'attaqwa').'-favicon.svg'))
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             // Explicitly register key resources to ensure they appear in navigation
             ->resources([
-                \App\Filament\Resources\AgmCandidateResource::class,
-                \App\Filament\Resources\AgmSessionResource::class,
-                \App\Filament\Resources\BranchResource::class,
-                \App\Filament\Resources\ContributionResource::class,
-                \App\Filament\Resources\ExpenseEntryResource::class,
-                \App\Filament\Resources\GoalBookingResource::class,
-                \App\Filament\Resources\IncomeEntryResource::class,
-                \App\Filament\Resources\ProductResource::class,
-                \App\Filament\Resources\CategoryResource::class,
-                \App\Filament\Resources\StoreOrderResource::class,
-                \App\Filament\Resources\ProjectResource::class,
-                \App\Filament\Resources\ProjectInvestmentResource::class,
-                \App\Filament\Resources\ProjectProfitResource::class,
-                \App\Filament\Resources\QardHasanResource::class,
-                \App\Filament\Resources\SavingsGoalResource::class,
-                \App\Filament\Resources\SchemeResource::class,
-                \App\Filament\Resources\UserResource::class,
+                AgmCandidateResource::class,
+                AgmSessionResource::class,
+                BranchResource::class,
+                ContributionResource::class,
+                ExpenseEntryResource::class,
+                GoalBookingResource::class,
+                IncomeEntryResource::class,
+                ProductResource::class,
+                CategoryResource::class,
+                StoreOrderResource::class,
+                ProjectResource::class,
+                ProjectInvestmentResource::class,
+                ProjectProfitResource::class,
+                QardHasanResource::class,
+                SavingsGoalResource::class,
+                SchemeResource::class,
+                ShariahAuditLogResource::class,
+                TakafulContributionResource::class,
+                TakafulPoolEntryResource::class,
+                UserResource::class,
+                WithdrawalRequestResource::class,
+                MemberApplicationResource::class,
+                CharityEntryResource::class,
+                SupportMessageResource::class,
+                WalletTransactionResource::class,
+                UtilityTransactionResource::class,
+                ActivityLogResource::class,
+                WhitelistedIpResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
@@ -65,18 +115,33 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                \App\Filament\Widgets\StoreOverview::class,
-                \App\Filament\Widgets\FinanceSnapshot::class,
-                \App\Filament\Widgets\RecentPayouts::class,
-                \App\Filament\Widgets\TotalCollectionsToday::class,
-                \App\Filament\Widgets\SystemHealthChart::class,
-                \App\Filament\Widgets\UserGrowthChart::class,
-                \App\Filament\Widgets\MemberGrowthChart::class,
+                StoreOverview::class,
+                FinanceSnapshot::class,
+                RecentPayouts::class,
+                TotalCollectionsToday::class,
+                SystemHealthChart::class,
+                UserGrowthChart::class,
+                MemberGrowthChart::class,
+                RecentWalletActivity::class,
                 Widgets\AccountWidget::class,
+            ])
+            ->plugins([
+                FilamentShieldPlugin::make(),
+                BreezyCore::make()
+                    ->myProfile(
+                        shouldRegisterUserMenu: true,
+                        shouldRegisterNavigation: false,
+                        hasAvatars: true,
+                        slug: 'my-profile'
+                    )
+                    ->enableTwoFactorAuthentication()
+                    ->enableBrowserSessions(),
             ])
             ->renderHook('panels::head.end', fn () => view('filament.print-styles'))
             ->renderHook('panels::body.start', fn () => view('filament.print-header'))
+            ->renderHook('panels::body.end', fn () => view('filament.inactivity-handler'))
             ->middleware([
+                IpWhitelistMiddleware::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

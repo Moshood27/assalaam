@@ -3,8 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProjectProfitResource\Pages;
+use App\Filament\Resources\ProjectProfitResource\RelationManagers;
+use App\Jobs\DistributeProjectProfit;
 use App\Models\Project;
 use App\Models\ProjectProfit;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -17,9 +20,13 @@ class ProjectProfitResource extends Resource
     protected static ?string $model = ProjectProfit::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
+
     protected static ?string $navigationGroup = 'Investments';
+
     protected static ?int $navigationSort = 30;
+
     protected static ?string $modelLabel = 'Project Profit';
+
     protected static ?string $pluralModelLabel = 'Project Profits';
 
     public static function form(Form $form): Form
@@ -113,7 +120,12 @@ class ProjectProfitResource extends Resource
                     ->requiresConfirmation()
                     ->visible(fn (ProjectProfit $record) => $record->payouts()->count() === 0)
                     ->action(function (ProjectProfit $record) {
-                        \App\Jobs\DistributeProjectProfit::dispatch($record->id);
+                        ShariahAudit::log(auth()->user(), 'distribute_project_profit', [
+                            'project_profit_id' => $record->id,
+                            'project_id' => $record->project_id,
+                            'net_distributable' => $record->net_distributable,
+                        ]);
+                        DistributeProjectProfit::dispatch($record->id);
                     }),
                 Tables\Actions\EditAction::make(),
             ])
@@ -122,6 +134,33 @@ class ProjectProfitResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_project_profit');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_project_profit');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_project_profit');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_project_profit');
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\PayoutsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

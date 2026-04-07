@@ -2,6 +2,17 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
+2026-04-07
+- Implemented "Bank-Grade" Security and Auditing for the Admin Panel.
+  - Added Multi-Factor Authentication (MFA/2FA) and Browser Session management via `filament-breezy`.
+  - Implemented full Activity Logging (Audit Trail) using `spatie/laravel-activitylog` across all critical financial models.
+  - Created reusable `ActivitiesRelationManager` for record-level audit visibility in User, Loan, and Contribution resources.
+  - Enhanced `UserResource` with 360-degree financial relation managers (Wallet, Contributions, Loans, Investments, Takaful).
+  - Integrated Shariah Audit logging for sensitive compliance actions (profit distribution, KYC verification, charity entries).
+  - Added new administrative resources: `MemberApplicationResource`, `CharityEntryResource`, and `SupportMessageResource`.
+  - Global financial monitoring via `WalletTransactionResource` and `UtilityTransactionResource`.
+  - Documentation: ADMIN_SECURITY_AUDIT.md
+
 2026-04-06
 - Added and configured Laravel Telescope and Horizon for production monitoring.
   - Dashboards available at /app/telescope and /app/horizon.

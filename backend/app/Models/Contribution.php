@@ -4,11 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Contribution extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'user_id',
@@ -31,8 +43,8 @@ class Contribution extends Model
             // If created already successful and linked to a project (e.g., wallet allocation), create investment
             try {
                 if ($model->project_id && $model->status === 'success') {
-                    if (!\App\Models\ProjectInvestment::where('contribution_id', $model->id)->exists()) {
-                        \App\Models\ProjectInvestment::create([
+                    if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
+                        ProjectInvestment::create([
                             'user_id' => $model->user_id,
                             'project_id' => $model->project_id,
                             'contribution_id' => $model->id,
@@ -51,8 +63,8 @@ class Contribution extends Model
             try {
                 if ($model->project_id && $model->status === 'success' && $model->wasChanged('status')) {
                     // Avoid duplicates if re-updated
-                    if (!\App\Models\ProjectInvestment::where('contribution_id', $model->id)->exists()) {
-                        \App\Models\ProjectInvestment::create([
+                    if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
+                        ProjectInvestment::create([
                             'user_id' => $model->user_id,
                             'project_id' => $model->project_id,
                             'contribution_id' => $model->id,
@@ -69,12 +81,17 @@ class Contribution extends Model
 
     public static function generateReference(): string
     {
-        return 'CNTRB-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(6));
+        return 'CNTRB-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject');
     }
 
     public function scheme()

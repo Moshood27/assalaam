@@ -4,11 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class QardHasan extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     /**
      * Compute the next due date for this loan based on interval, total installments, and progress.
@@ -17,17 +29,17 @@ class QardHasan extends Model
     public function getNextDueAtAttribute(): ?string
     {
         // If not active (not yet disbursed) or already completed, next due is not applicable
-        if (!in_array($this->status, ['active'], true)) {
+        if (! in_array($this->status, ['active'], true)) {
             return null;
         }
-        if ((float)$this->principal_amount <= 0 || (int)$this->total_installments <= 0) {
+        if ((float) $this->principal_amount <= 0 || (int) $this->total_installments <= 0) {
             return null;
         }
 
         $per = (float) $this->per_installment;
         if ($per <= 0) {
             // Derive per installment if not stored or invalid
-            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
+            $per = round(((float) $this->principal_amount) / max((int) $this->total_installments, 1), 2);
         }
 
         $paid = (float) $this->paid_amount;
@@ -37,11 +49,14 @@ class QardHasan extends Model
         }
 
         $schedule = $this->generateInstallmentSchedule();
-        if (empty($schedule)) return null;
+        if (empty($schedule)) {
+            return null;
+        }
 
         // Next installment index is installmentsPaid (0-based)
         $idx = max(0, min($installmentsPaid, count($schedule) - 1));
         $next = $schedule[$idx]['due_at'] ?? null;
+
         return $next instanceof Carbon ? $next->toISOString() : (is_string($next) ? $next : null);
     }
 
@@ -52,11 +67,13 @@ class QardHasan extends Model
     public function generateInstallmentSchedule(?Carbon $startAt = null): array
     {
         $total = (int) $this->total_installments;
-        if ($total <= 0) return [];
+        if ($total <= 0) {
+            return [];
+        }
 
         $per = (float) $this->per_installment;
         if ($per <= 0) {
-            $per = round(((float)$this->principal_amount) / max($total, 1), 2);
+            $per = round(((float) $this->principal_amount) / max($total, 1), 2);
         }
 
         $interval = strtolower((string) $this->interval ?: 'monthly');
@@ -73,6 +90,7 @@ class QardHasan extends Model
                 'amount' => $per,
             ];
         }
+
         return $items;
     }
 
@@ -83,6 +101,7 @@ class QardHasan extends Model
     {
         $d = $date->copy();
         $key = strtolower(trim($interval));
+
         return match ($key) {
             'daily' => $d->addDay(),
             'weekly' => $d->addWeek(),
@@ -156,6 +175,11 @@ class QardHasan extends Model
         return $this->hasMany(QardHasanRepayment::class)->orderByDesc('paid_at');
     }
 
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject');
+    }
+
     public function guarantors()
     {
         return $this->belongsToMany(User::class, 'qard_hasan_guarantors', 'qard_hasan_id', 'guarantor_id')
@@ -166,20 +190,24 @@ class QardHasan extends Model
     public function allGuarantorsAccepted(): bool
     {
         $g = $this->guarantors;
-        if (!$g || $g->isEmpty()) return false;
+        if (! $g || $g->isEmpty()) {
+            return false;
+        }
+
         // Require at least 2 guarantors and all must be accepted
-        return $g->count() >= 2 && $g->every(fn($u) => ($u->pivot?->status) === 'accepted');
+        return $g->count() >= 2 && $g->every(fn ($u) => ($u->pivot?->status) === 'accepted');
     }
 
     public function pendingGuarantorCount(): int
     {
-        return (int) ($this->guarantors?->filter(fn($u) => ($u->pivot?->status) === 'pending')->count() ?? 0);
+        return (int) ($this->guarantors?->filter(fn ($u) => ($u->pivot?->status) === 'pending')->count() ?? 0);
     }
 
     // Accessors for transparency
     public function getRemainingPrincipalAttribute(): float
     {
         $remaining = (float) $this->principal_amount - (float) $this->paid_amount;
+
         return $remaining > 0 ? round($remaining, 2) : 0.0;
     }
 
@@ -189,8 +217,13 @@ class QardHasan extends Model
             return 0.0;
         }
         $pct = ((float) $this->paid_amount / (float) $this->principal_amount) * 100;
-        if ($pct > 100) $pct = 100;
-        if ($pct < 0) $pct = 0;
+        if ($pct > 100) {
+            $pct = 100;
+        }
+        if ($pct < 0) {
+            $pct = 0;
+        }
+
         return round($pct, 2);
     }
 
@@ -204,6 +237,7 @@ class QardHasan extends Model
         $p = (float) $this->principal_amount;
         $fee = (float) $this->admin_fee_flat + ($p * ((float) $this->admin_fee_pct / 100));
         $credit = $p - $fee;
+
         return $credit > 0 ? round($credit, 2) : 0.0;
     }
 }

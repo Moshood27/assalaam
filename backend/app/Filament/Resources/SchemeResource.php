@@ -66,6 +66,26 @@ class SchemeResource extends Resource
             ]);
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_scheme');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_scheme');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_scheme');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_scheme');
+    }
+
     public static function getPages(): array
     {
         return [

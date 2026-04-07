@@ -19,6 +19,11 @@ class ShariahAuditLog extends Model
         'payload' => 'array',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public static function log(?User $user, string $action, array $payload = []): void
     {
         static::create([

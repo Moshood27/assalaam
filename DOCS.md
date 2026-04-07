@@ -19,6 +19,7 @@ Feature guides
 - USER_NOTIFICATIONS.md – In‑app notifications and push integration.
 - PUSH_NOTIFICATIONS.md – Mobile push notifications and FCM.
 - AGM_VOTING.md – AGM sessions, candidates, voting and results.
+- ADMIN_SECURITY_AUDIT.md – Admin panel bank-grade security and full auditing.
 - VIRTUAL_ACCOUNT.md – Dedicated virtual accounts (Paystack DVA) for wallet top‑ups.
 - WEBHOOKS.md – General webhook handling patterns.
 - VTPASS_WEBHOOK.md – VTU provider webhook specifics.

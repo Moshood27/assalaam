@@ -2,26 +2,34 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\RelationManagers\ActivitiesRelationManager;
 use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers;
+use App\Mail\WalletCredited;
 use App\Models\Branch;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
+use App\Services\PushService;
+use App\Services\SmsService;
+use App\Services\TakafulService;
 use Filament\Forms;
+use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rules\Unique;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\WalletCredited;
-use App\Services\TakafulService;
-use Filament\Notifications\Notification;
-use App\Services\SmsService;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserResource extends Resource
 {
@@ -56,7 +64,7 @@ class UserResource extends Resource
                             // Don't let Filament filter out existing values just because they are on another disk
                             ->fetchFileInformation(false)
                             // Build a correct preview URL whether the file lives in public/ or storage/app/public
-                            ->getUploadedFileUsing(function (\Filament\Forms\Components\BaseFileUpload $component, string $file, string|array|null $storedFileNames) {
+                            ->getUploadedFileUsing(function (BaseFileUpload $component, string $file, string|array|null $storedFileNames) {
                                 $raw = (string) $file;
                                 $path = ltrim($raw, '/');
                                 $wasStoragePrefixed = false;
@@ -68,16 +76,16 @@ class UserResource extends Resource
                                 $url = null;
                                 $publicFull = public_path($path);
                                 if (is_file($publicFull)) {
-                                    $url = '/' . ltrim($path, '/');
+                                    $url = '/'.ltrim($path, '/');
                                 } else {
                                     // If original value started with `storage/`, avoid creating `/storage/storage/...`
                                     $url = $wasStoragePrefixed
-                                        ? ('/storage/' . ltrim($path, '/'))
+                                        ? ('/storage/'.ltrim($path, '/'))
                                         : Storage::disk('public')->url($path);
 
                                     if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
                                         $parsed = parse_url($url);
-                                        $url = ($parsed['path'] ?? '/') . (isset($parsed['query']) ? ('?' . $parsed['query']) : '');
+                                        $url = ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
                                     }
                                 }
 
@@ -97,9 +105,11 @@ class UserResource extends Resource
                             ->maxDate(now())
                             ->rule('before_or_equal:today')
                             ->dehydrateStateUsing(function ($state) {
-                                if (empty($state)) return null;
+                                if (empty($state)) {
+                                    return null;
+                                }
                                 try {
-                                    return \Illuminate\Support\Carbon::parse($state)->startOfDay();
+                                    return Carbon::parse($state)->startOfDay();
                                 } catch (\Throwable $e) {
                                     return $state;
                                 }
@@ -111,6 +121,30 @@ class UserResource extends Resource
                             ->dehydrated(fn ($state) => filled($state))
                             ->maxLength(255),
                     ])->columns(3),
+                Forms\Components\Section::make('Identity & KYC')
+                    ->schema([
+                        Forms\Components\TextInput::make('bvn')
+                            ->label('BVN')
+                            ->maxLength(11)
+                            ->password()
+                            ->revealable(fn () => auth()->user()->hasRole('super_admin')),
+                        Forms\Components\DateTimePicker::make('bvn_verified_at')
+                            ->label('BVN Verified At')
+                            ->disabled(),
+                        Forms\Components\Toggle::make('is_admin')
+                            ->label('Administrator')
+                            ->helperText('Grants access to this admin panel')
+                            ->visible(fn () => auth()->user()->can('manage_admins')),
+                        Forms\Components\Select::make('roles')
+                            ->relationship('roles', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->searchable()
+                            ->visible(fn () => auth()->user()->can('manage_admins')),
+                        Forms\Components\Toggle::make('is_defaulter')
+                            ->label('Defaulter')
+                            ->helperText('Restricts certain features for the member'),
+                    ])->columns(2),
                 Forms\Components\Section::make('Membership')
                     ->schema([
                         Forms\Components\Select::make('branch_id')
@@ -119,18 +153,21 @@ class UserResource extends Resource
                             ->searchable()
                             ->required(),
                         Forms\Components\TextInput::make('membership_number')
+                            ->password()
+                            ->revealable(fn () => auth()->user()->hasRole('super_admin'))
                             ->maxLength(255)
-                            ->rule(function (\Filament\Forms\Get $get, ?User $record) {
+                            ->rule(function (Get $get, ?User $record) {
                                 $branchId = $get('branch_id');
                                 $number = $get('membership_number');
                                 if (blank($branchId) || blank($number)) {
                                     return null;
                                 }
-                                $rule = \Illuminate\Validation\Rule::unique('users', 'membership_number')
-                                    ->where(fn($q) => $q->where('branch_id', $branchId));
+                                $rule = Rule::unique('users', 'membership_number')
+                                    ->where(fn ($q) => $q->where('branch_id', $branchId));
                                 if ($record) {
                                     $rule = $rule->ignore($record->id);
                                 }
+
                                 return $rule;
                             }),
                         Forms\Components\TextInput::make('balance')
@@ -151,6 +188,8 @@ class UserResource extends Resource
                             ->disabled(),
                         Forms\Components\TextInput::make('account_number')
                             ->label('Account Number')
+                            ->password()
+                            ->revealable(fn () => auth()->user()->hasRole('super_admin'))
                             ->maxLength(20)
                             ->disabled(),
                         Forms\Components\TextInput::make('account_name')
@@ -176,13 +215,16 @@ class UserResource extends Resource
                     ->label('Photo')
                     ->circular()
                     ->getStateUsing(function ($record) {
-                        if (empty($record->passport_path)) return null;
+                        if (empty($record->passport_path)) {
+                            return null;
+                        }
 
                         $raw = (string) $record->passport_path;
                         // If a full URL was stored, normalize to a relative URL (same-origin)
                         if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
                             $parsed = parse_url($raw);
-                            return ($parsed['path'] ?? '/') . (isset($parsed['query']) ? ('?' . $parsed['query']) : '');
+
+                            return ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
                         }
 
                         $path = ltrim($raw, '/');
@@ -194,17 +236,17 @@ class UserResource extends Resource
 
                         $publicPath = public_path($path);
                         if (is_file($publicPath)) {
-                            return '/' . ltrim($path, '/');
+                            return '/'.ltrim($path, '/');
                         }
 
                         // Fallback to storage URL. If originally storage-prefixed, avoid double storage.
                         $url = $wasStoragePrefixed
-                            ? ('/storage/' . ltrim($path, '/'))
+                            ? ('/storage/'.ltrim($path, '/'))
                             : Storage::disk('public')->url($path);
 
                         if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
                             $parsed = parse_url($url);
-                            $url = ($parsed['path'] ?? '/') . (isset($parsed['query']) ? ('?' . $parsed['query']) : '');
+                            $url = ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
                         }
 
                         return $url;
@@ -215,15 +257,40 @@ class UserResource extends Resource
                 TextColumn::make('phone')->label('Phone')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('address')->label('Address')->limit(30)->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('branch.name')->label('Branch')->sortable(),
-                TextColumn::make('membership_number')->label('Member #')->searchable(),
+                TextColumn::make('membership_number')
+                    ->label('Member #')
+                    ->searchable()
+                    ->formatStateUsing(function ($state) {
+                        if (auth()->user()->hasRole('super_admin')) {
+                            return $state;
+                        }
+
+                        return Str::mask($state, '*', 2, -2);
+                    }),
+                Tables\Columns\IconColumn::make('is_admin')->label('Admin')->boolean()->sortable(),
+                Tables\Columns\IconColumn::make('is_defaulter')->label('Defaulter')->boolean()->sortable()->color('danger'),
+                Tables\Columns\IconColumn::make('bvn_verified_at')
+                    ->label('KYC Verified')
+                    ->boolean()
+                    ->getStateUsing(fn (User $record) => $record->bvn_verified_at !== null)
+                    ->sortable(),
                 TextColumn::make('balance')->money('ngn', true)->sortable(),
                 TextColumn::make('created_at')->label('Date Joined')->date(),
-                TextColumn::make('account_number')->label('Bank Acct #')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('account_number')
+                    ->label('Bank Acct #')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->formatStateUsing(function ($state) {
+                        if (auth()->user()->hasRole('super_admin')) {
+                            return $state;
+                        }
+
+                        return Str::mask($state, '*', 2, -2);
+                    }),
                 TextColumn::make('account_name')->label('Bank Acct Name')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([])
             ->headerActions([
-                Tables\Actions\Action::make('print')
+                Action::make('print')
                     ->label('Print')
                     ->icon('heroicon-o-printer')
                     ->extraAttributes(['onclick' => 'window.print()']),
@@ -256,7 +323,13 @@ class UserResource extends Resource
                             $newBalance = (float) $record->fresh()->balance;
 
                             DB::afterCommit(function () use ($record, $amount, $data, $newBalance) {
-                                if (!empty($record->email)) {
+                                ShariahAudit::log(auth()->user(), 'credit_wallet_manual', [
+                                    'user_id' => $record->id,
+                                    'amount' => $amount,
+                                    'note' => $data['note'] ?? null,
+                                    'new_balance' => $newBalance,
+                                ]);
+                                if (! empty($record->email)) {
                                     try {
                                         Mail::to($record->email)->send(new WalletCredited($record, $amount, $data['note'] ?? null, $newBalance));
                                     } catch (\Throwable $e) {
@@ -265,8 +338,8 @@ class UserResource extends Resource
                                 }
                                 // Best-effort SMS notification
                                 try {
-                                    $sms = app(\App\Services\SmsService::class);
-                                    $msg = 'Wallet credited: ₦'.number_format($amount, 2).". New bal: ₦".number_format($newBalance, 2).'.';
+                                    $sms = app(SmsService::class);
+                                    $msg = 'Wallet credited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
                                     $sms->send($record->phone ?? null, $msg);
                                 } catch (\Throwable $e) {
                                     // ignore SMS errors
@@ -274,7 +347,7 @@ class UserResource extends Resource
 
                                 // Best-effort Push notification to the member's device
                                 try {
-                                    $push = app(\App\Services\PushService::class);
+                                    $push = app(PushService::class);
                                     $token = $record->fcm_token ?: ($record->device_token ?? null);
                                     $push->send($token, 'Wallet Credited', 'Your wallet has been credited successfully.', [
                                         'type' => 'wallet_credit',
@@ -289,6 +362,58 @@ class UserResource extends Resource
                     })
                     ->color('success')
                     ->requiresConfirmation(),
+                Action::make('debitWallet')
+                    ->label('Debit Wallet')
+                    ->icon('heroicon-o-minus-circle')
+                    ->form([
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Amount to debit')
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->required()
+                            ->prefix('₦'),
+                        Forms\Components\TextInput::make('note')
+                            ->label('Note')
+                            ->maxLength(255)
+                            ->placeholder('Reason for manual debit'),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        DB::transaction(function () use ($record, $data) {
+                            $amount = (float) ($data['amount'] ?? 0);
+                            if ($amount <= 0) {
+                                return;
+                            }
+
+                            if ((float)$record->balance < $amount) {
+                                Notification::make()
+                                    ->title('Insufficient balance')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            $record->decrement('balance', $amount);
+                            $newBalance = (float) $record->fresh()->balance;
+
+                            DB::afterCommit(function () use ($record, $amount, $data, $newBalance) {
+                                ShariahAudit::log(auth()->user(), 'debit_wallet_manual', [
+                                    'user_id' => $record->id,
+                                    'amount' => $amount,
+                                    'note' => $data['note'] ?? null,
+                                    'new_balance' => $newBalance,
+                                ]);
+
+                                // Best-effort SMS/Push/Email notifications can be added here if needed
+                                try {
+                                    $sms = app(SmsService::class);
+                                    $msg = 'Wallet debited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
+                                    $sms->send($record->phone ?? null, $msg);
+                                } catch (\Throwable $e) {}
+                            });
+                        });
+                    })
+                    ->color('danger')
+                    ->requiresConfirmation(),
                 Action::make('markDeceased')
                     ->label('Mark Deceased')
                     ->icon('heroicon-o-user-minus')
@@ -301,11 +426,17 @@ class UserResource extends Resource
                         $date = $data['date'] ?? null;
                         $record->deceased_at = $date ?: now();
                         $record->save();
+
+                        ShariahAudit::log(auth()->user(), 'mark_member_deceased', [
+                            'user_id' => $record->id,
+                            'deceased_at' => $record->deceased_at,
+                        ]);
+
                         $svc = app(TakafulService::class);
                         $summary = $svc->settleMemberLoans($record, 'deceased');
                         Notification::make()
                             ->title('Member marked deceased; settlement attempted')
-                            ->body('Total settled: ₦'.number_format((float)($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float)($summary['pool_after'] ?? 0), 2))
+                            ->body('Total settled: ₦'.number_format((float) ($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float) ($summary['pool_after'] ?? 0), 2))
                             ->success()
                             ->send();
                     }),
@@ -321,20 +452,116 @@ class UserResource extends Resource
                         $date = $data['date'] ?? null;
                         $record->major_loss_at = $date ?: now();
                         $record->save();
+
+                        ShariahAudit::log(auth()->user(), 'mark_member_major_loss', [
+                            'user_id' => $record->id,
+                            'major_loss_at' => $record->major_loss_at,
+                        ]);
+
                         $svc = app(TakafulService::class);
                         $summary = $svc->settleMemberLoans($record, 'major_loss');
                         Notification::make()
                             ->title('Member marked major loss; settlement attempted')
-                            ->body('Total settled: ₦'.number_format((float)($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float)($summary['pool_after'] ?? 0), 2))
+                            ->body('Total settled: ₦'.number_format((float) ($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float) ($summary['pool_after'] ?? 0), 2))
                             ->success()
                             ->send();
                     }),
+                Action::make('printPassbook')
+                    ->label('Print Passbook')
+                    ->icon('heroicon-o-printer')
+                    ->color('info')
+                    ->form([
+                        Forms\Components\Select::make('year')
+                            ->options(array_combine(range(now()->year, now()->year - 5), range(now()->year, now()->year - 5)))
+                            ->default(now()->year)
+                            ->required(),
+                    ])
+                    ->url(fn (User $record, array $data) => route('admin.print.passbook', ['user' => $record->id, 'year' => $data['year'] ?? now()->year]))
+                    ->openUrlInNewTab(),
+                Action::make('verifyKyc')
+                    ->label('Verify KYC')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('success')
+                    ->visible(fn (User $record) => $record->bvn_verified_at === null)
+                    ->form([
+                        Forms\Components\TextInput::make('bvn')
+                            ->label('BVN')
+                            ->length(11)
+                            ->numeric()
+                            ->password()
+                            ->revealable(fn () => auth()->user()->hasRole('super_admin'))
+                            ->default(fn (User $record) => $record->bvn),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        $record->bvn = $data['bvn'];
+                        $record->bvn_verified_at = now();
+                        $record->save();
+
+                        ShariahAudit::log(auth()->user(), 'manual_kyc_verify', [
+                            'user_id' => $record->id,
+                            'bvn' => $record->bvn,
+                        ]);
+
+                        Notification::make()
+                            ->title('KYC Verified')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('delete_records')),
                 ]),
             ]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_user');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_user');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_user');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_user');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn (Builder $query) => $query->where('branch_id', auth()->user()->branch_id)
+            );
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\QardHasansRelationManager::class,
+            RelationManagers\QardHasanRepaymentsRelationManager::class,
+            RelationManagers\ContributionsRelationManager::class,
+            RelationManagers\TakafulContributionsRelationManager::class,
+            RelationManagers\TakafulPoolEntriesRelationManager::class,
+            RelationManagers\WithdrawalRequestsRelationManager::class,
+            RelationManagers\SavingsGoalsRelationManager::class,
+            RelationManagers\ProjectInvestmentsRelationManager::class,
+            RelationManagers\ProjectProfitPayoutsRelationManager::class,
+            RelationManagers\WalletTransactionsRelationManager::class,
+            RelationManagers\StoreOrdersRelationManager::class,
+            ActivitiesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

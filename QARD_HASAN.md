@@ -7,7 +7,7 @@ Applicable date: 2026-04-01
 
 ## 1) Concept Overview
 - Qard Hasan is an interest‑free loan facility for members.
-- Members can request a loan; depending on their Coop Score and policy rules, they may need 2–3 guarantors from different branches.
+- Members can request a loan; depending on their Coop Score and policy rules, they may need 2–3 guarantors.
 - Admins review in Filament: Approve/Reject, optionally accept guarantors on behalf of members, and Disburse to the member’s in‑app wallet.
 - Repayment is strictly blocked until the loan is disbursed and becomes Active.
 
@@ -75,7 +75,7 @@ Endpoint to view member‑specific eligibility summary: GET /api/loans/eligibili
   - Validation & policy:
     - Must be in system for ≥ 6 months.
     - Only one open loan at a time (cannot have pending/active loan).
-    - If guarantors required: 2–3 guarantors, from different branches, none are defaulters, and member cannot select self.
+    - If guarantors required: 2–3 guarantors, none are defaulters, and member cannot select self.
     - When membership numbers are supplied, each must resolve to exactly one user.
 
   - Outcomes:
@@ -147,7 +147,7 @@ All outbound notifications are best‑effort and do not block core flows.
   - Disbursement runs in a DB transaction.
   - Repayment uses SELECT … FOR UPDATE on the loan row to prevent races.
 - Policy enforcement:
-  - Six‑month membership, single open loan at a time, guarantor branch diversity and non‑defaulter checks, self‑guarantee blocked.
+  - Six‑month membership, single open loan at a time, non‑defaulter checks, self‑guarantee blocked.
 - Gateway safeguards:
   - Paystack/Flutterwave init requires valid member email; webhook handlers verify signatures and/or re‑verify with providers, check currency/amount, and tolerate duplicates idempotently.
 - Auditing:
@@ -182,7 +182,7 @@ Notes:
 ## 11) Testing Tips
 - Member request:
   - Ensure the test member has ≥ 6 months in the system and no open loans.
-  - For guarantor path: pick 2–3 non‑defaulter users from distinct branches.
+  - For guarantor path: pick 2–3 non‑defaulter users.
 - Instant approval test:
   - Temporarily set a high Coop Score for the member (or use a fixture) to trigger 0 guarantors and instant activation/disbursement.
 - Repayment (wallet):

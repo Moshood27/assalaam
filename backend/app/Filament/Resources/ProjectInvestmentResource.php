@@ -53,6 +53,35 @@ class ProjectInvestmentResource extends Resource
             ->bulkActions([]);
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_project_investment');
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_project_investment');
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn ($query) => $query->whereHas('user', fn ($q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
+    }
+
     public static function getPages(): array
     {
         return [

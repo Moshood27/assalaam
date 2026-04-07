@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SavingsGoalResource\Pages;
 use App\Filament\Resources\SavingsGoalResource\RelationManagers\BookingsRelationManager;
 use App\Models\SavingsGoal;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -128,5 +129,34 @@ class SavingsGoalResource extends Resource
             'create' => Pages\CreateSavingsGoal::route('/create'),
             'edit' => Pages\EditSavingsGoal::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_savings_goal');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_savings_goal');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_savings_goal');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_savings_goal');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn (Builder $query) => $query->whereHas('user', fn (Builder $q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
     }
 }

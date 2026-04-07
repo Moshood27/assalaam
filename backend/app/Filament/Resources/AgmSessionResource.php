@@ -6,6 +6,7 @@ use App\Filament\Resources\AgmSessionResource\Pages;
 use App\Filament\Resources\AgmSessionResource\RelationManagers\CandidatesRelationManager;
 use App\Filament\Resources\AgmSessionResource\RelationManagers\VotesRelationManager;
 use App\Models\AgmSession;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -65,6 +66,32 @@ class AgmSessionResource extends Resource
                 Tables\Actions\CreateAction::make(),
             ])
             ->actions([
+                Tables\Actions\Action::make('open_session')
+                    ->label('Open Session')
+                    ->icon('heroicon-o-play')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->status === 'draft')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['status' => 'open', 'start_at' => now()]);
+                        ShariahAudit::log(auth()->user(), 'open_agm_session', [
+                            'session_id' => $record->id,
+                            'name' => $record->name,
+                        ]);
+                    }),
+                Tables\Actions\Action::make('close_session')
+                    ->label('Close Session')
+                    ->icon('heroicon-o-stop')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->status === 'open')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['status' => 'closed', 'end_at' => now()]);
+                        ShariahAudit::log(auth()->user(), 'close_agm_session', [
+                            'session_id' => $record->id,
+                            'name' => $record->name,
+                        ]);
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -90,5 +117,24 @@ class AgmSessionResource extends Resource
             'create' => Pages\CreateAgmSession::route('/create'),
             'edit' => Pages\EditAgmSession::route('/{record}/edit'),
         ];
+    }
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_agm_session');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_agm_session');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_agm_session');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_records'); // Or delete_agm_session
     }
 }

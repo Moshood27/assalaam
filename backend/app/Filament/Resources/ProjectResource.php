@@ -3,21 +3,24 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProjectResource\Pages;
+use App\Filament\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class ProjectResource extends Resource
 {
     protected static ?string $model = Project::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+
     protected static ?string $navigationGroup = 'Investments';
+
     protected static ?int $navigationSort = 10;
 
     public static function shouldRegisterNavigation(): bool
@@ -96,6 +99,34 @@ class ProjectResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_project');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_project');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_project');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_project');
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\InvestmentsRelationManager::class,
+            RelationManagers\ProfitsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -2,38 +2,44 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\RelationManagers\ActivitiesRelationManager;
 use App\Filament\Resources\QardHasanResource\Pages;
+use App\Filament\Resources\QardHasanResource\RelationManagers;
+use App\Mail\LoanAgreementRejectedUser;
+use App\Mail\LoanAgreementVerifiedUser;
+use App\Mail\LoanApprovedUser;
 use App\Mail\LoanDisbursedAdminNotification;
 use App\Mail\LoanDisbursedUser;
+use App\Mail\LoanRejectedUser;
 use App\Models\QardHasan;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
+use App\Models\WalletTransaction;
+use App\Notifications\LoanAgreementRejectedNotification;
+use App\Notifications\LoanAgreementVerifiedNotification;
+use App\Notifications\LoanApprovedNotification;
+use App\Services\PayoutService;
+use App\Services\PushService;
+use App\Services\SmsService;
+use Exception;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Actions\Action as InfolistAction;
+use Filament\Infolists\Components\Section as InfoSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\Section as InfoSection;
-use Filament\Infolists\Components\Actions\Action as InfolistAction;
-use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\DB;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Builder;
-use App\Mail\LoanRejectedUser;
-use App\Mail\LoanApprovedUser;
-use App\Mail\LoanAgreementVerifiedUser;
-use App\Mail\LoanAgreementRejectedUser;
-use App\Notifications\LoanApprovedNotification;
-use App\Notifications\LoanAgreementVerifiedNotification;
-use App\Notifications\LoanAgreementRejectedNotification;
-use App\Services\PayoutService;
-use Exception;
 
 class QardHasanResource extends Resource
 {
@@ -69,11 +75,12 @@ class QardHasanResource extends Resource
                         }
                     }),
                 Forms\Components\MultiSelect::make('guarantor_ids')
-                    ->label('Guarantors (2–3, different branches, not in default)')
+                    ->label('Guarantors (2–3, not in default)')
                     ->options(function (callable $get) {
                         $selectedUserId = $get('user_id');
+
                         return User::query()
-                            ->when($selectedUserId, fn($q) => $q->where('id', '!=', $selectedUserId))
+                            ->when($selectedUserId, fn ($q) => $q->where('id', '!=', $selectedUserId))
                             ->where('is_defaulter', false)
                             ->pluck('name', 'id');
                     })
@@ -81,7 +88,7 @@ class QardHasanResource extends Resource
                     ->required()
                     ->minItems(2)
                     ->maxItems(3)
-                    ->helperText('Select at least two guarantors from different branches. Guarantors must not be in default.')
+                    ->helperText('Select at least two guarantors. Guarantors must not be in default.')
                     ->dehydrated(false),
                 Forms\Components\TextInput::make('qard_id_string')
                     ->label('Loan ID')
@@ -165,6 +172,15 @@ class QardHasanResource extends Resource
             ->columns([
                 TextColumn::make('created_at')->label('Created')->since()->sortable(),
                 TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.membership_number')
+                    ->label('Member #')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->formatStateUsing(function ($state) {
+                        if (auth()->user()->hasRole('super_admin')) {
+                            return $state;
+                        }
+                        return \Illuminate\Support\Str::mask($state, '*', 2, -2);
+                    }),
                 TextColumn::make('guarantors_list')
                     ->label('Guarantors')
                     ->wrap()
@@ -177,15 +193,16 @@ class QardHasanResource extends Resource
                     ->sortable(
                         query: function (Builder $query, string $direction): Builder {
                             $dir = strtolower($direction) === 'asc' ? 'asc' : 'desc';
+
                             // credited_amount = principal_amount - (admin_fee_flat + principal_amount * admin_fee_pct/100)
-                            return $query->orderByRaw('(' .
-                                'COALESCE(principal_amount,0) - (' .
-                                'COALESCE(admin_fee_flat,0) + COALESCE(principal_amount,0) * (COALESCE(admin_fee_pct,0) / 100)' .
-                                ')) ' . $dir);
+                            return $query->orderByRaw('('.
+                                'COALESCE(principal_amount,0) - ('.
+                                'COALESCE(admin_fee_flat,0) + COALESCE(principal_amount,0) * (COALESCE(admin_fee_pct,0) / 100)'.
+                                ')) '.$dir);
                         }
                     ),
                 TextColumn::make('paid_amount')->money('ngn', true)->label('Paid')->sortable(),
-                TextColumn::make('approvedBy.name')->label('Approved By')->formatStateUsing(fn($state) => $state ?: '-')->toggleable(),
+                TextColumn::make('approvedBy.name')->label('Approved By')->formatStateUsing(fn ($state) => $state ?: '-')->toggleable(),
                 TextColumn::make('approved_at')->label('Approved At')->dateTime()->sortable()->toggleable(),
                 TextColumn::make('status')->badge()->colors([
                     'warning' => ['pending'],
@@ -195,7 +212,7 @@ class QardHasanResource extends Resource
                 IconColumn::make('agreement_verified_at')
                     ->label('Agreement Verified')
                     ->boolean()
-                    ->getStateUsing(fn(QardHasan $record) => !empty($record->agreement_verified_at))
+                    ->getStateUsing(fn (QardHasan $record) => ! empty($record->agreement_verified_at))
                     ->sortable(),
             ])
             ->filters([
@@ -208,7 +225,7 @@ class QardHasanResource extends Resource
                     ]),
             ])
             ->headerActions([
-                Tables\Actions\Action::make('print')
+                Action::make('print')
                     ->label('Print')
                     ->icon('heroicon-o-printer')
                     ->extraAttributes(['onclick' => 'window.print()']),
@@ -217,14 +234,15 @@ class QardHasanResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn (QardHasan $record) => (float) $record->paid_amount <= 0
-                        && ! $record->repayments()->exists())
+                        && ! $record->repayments()->exists()
+                        && auth()->user()->can('delete_records'))
                     ->requiresConfirmation()
                     ->successNotificationTitle('Loan deleted successfully'),
                 Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
-                    ->visible(fn (QardHasan $record) => $record->status === 'pending' && empty($record->approved_at))
+                    ->visible(fn (QardHasan $record) => $record->status === 'pending' && empty($record->approved_at) && auth()->user()->can('approve_loans'))
                     ->form([
                         FileUpload::make('agreement_template')
                             ->label('Agreement Template')
@@ -240,13 +258,20 @@ class QardHasanResource extends Resource
                             'agreement_template' => $data['agreement_template'] ?? $record->agreement_template,
                         ]);
 
+                        ShariahAudit::log(auth()->user(), 'approve_qard_hasan', [
+                            'qard_id' => $record->id,
+                            'qard_id_string' => $record->qard_id_string,
+                            'member_id' => $record->user_id,
+                            'principal' => $record->principal_amount,
+                        ]);
+
                         // Notify member
                         try {
                             $record->loadMissing('user');
                             $user = $record->user;
                             $msg = "Your loan request ({$record->qard_id_string}) was approved! Please download the agreement from your dashboard, sign, and upload it back for verification.";
 
-                            if (!empty($user?->email)) {
+                            if (! empty($user?->email)) {
                                 Mail::to($user->email)->send(new LoanApprovedUser($record));
                             }
 
@@ -261,7 +286,7 @@ class QardHasanResource extends Resource
                                 ));
 
                                 try {
-                                    $push = app(\App\Services\PushService::class);
+                                    $push = app(PushService::class);
                                     $token = $user->fcm_token ?: $user->device_token;
                                     if ($token) {
                                         $push->send($token, 'Loan Approved', $msg, [
@@ -270,9 +295,11 @@ class QardHasanResource extends Resource
                                             'qard_id_string' => $record->qard_id_string,
                                         ]);
                                     }
-                                } catch (\Throwable $e) {}
+                                } catch (\Throwable $e) {
+                                }
                             }
-                        } catch (\Throwable $e) {}
+                        } catch (\Throwable $e) {
+                        }
 
                         Notification::make()
                             ->title('Loan approved')
@@ -298,22 +325,31 @@ class QardHasanResource extends Resource
                             'status' => 'cancelled',
                             'rejection_reason' => $reason,
                         ]);
+
+                        ShariahAudit::log(auth()->user(), 'reject_qard_hasan', [
+                            'qard_id' => $record->id,
+                            'qard_id_string' => $record->qard_id_string,
+                            'member_id' => $record->user_id,
+                            'reason' => $reason,
+                        ]);
+
                         // Notify member by email (best-effort)
                         try {
                             $record->loadMissing('user');
-                            if (!empty($record->user?->email)) {
+                            if (! empty($record->user?->email)) {
                                 Mail::to($record->user->email)->send(new LoanRejectedUser($record, $reason));
                             }
                             // Optional: Push notification
                             try {
-                                $push = app(\App\Services\PushService::class);
+                                $push = app(PushService::class);
                                 $token = $record->user?->fcm_token ?: ($record->user?->device_token ?? null);
                                 $push->send($token, 'Loan Rejected', 'Your loan request '.($record->qard_id_string).' was rejected. Reason: '.$reason, [
                                     'type' => 'loan_rejected',
                                     'loan_id' => $record->id,
                                     'qard_id_string' => $record->qard_id_string,
                                 ]);
-                            } catch (\Throwable $e) { /* ignore push errors */ }
+                            } catch (\Throwable $e) { /* ignore push errors */
+                            }
                         } catch (\Throwable $e) {
                             // ignore mail errors
                         }
@@ -351,12 +387,18 @@ class QardHasanResource extends Resource
                     ->label('Verify Agreement')
                     ->icon('heroicon-o-document-check')
                     ->color('success')
-                    ->visible(fn(QardHasan $record) => $record->status === 'pending' && !empty($record->signed_agreement) && empty($record->agreement_verified_at))
+                    ->visible(fn (QardHasan $record) => $record->status === 'pending' && ! empty($record->signed_agreement) && empty($record->agreement_verified_at))
                     ->requiresConfirmation()
                     ->action(function (QardHasan $record) {
                         $record->update([
                             'agreement_verified_at' => now(),
                             'agreement_rejection_reason' => null,
+                        ]);
+
+                        ShariahAudit::log(auth()->user(), 'verify_qard_hasan_agreement', [
+                            'qard_id' => $record->id,
+                            'qard_id_string' => $record->qard_id_string,
+                            'member_id' => $record->user_id,
                         ]);
 
                         // Notify member
@@ -365,7 +407,7 @@ class QardHasanResource extends Resource
                             $user = $record->user;
                             $msg = "Your signed loan agreement for {$record->qard_id_string} has been verified! Your loan is now ready for final disbursement.";
 
-                            if (!empty($user?->email)) {
+                            if (! empty($user?->email)) {
                                 Mail::to($user->email)->send(new LoanAgreementVerifiedUser($record));
                             }
 
@@ -378,7 +420,7 @@ class QardHasanResource extends Resource
                                 ));
 
                                 try {
-                                    $push = app(\App\Services\PushService::class);
+                                    $push = app(PushService::class);
                                     $token = $user->fcm_token ?: $user->device_token;
                                     if ($token) {
                                         $push->send($token, 'Agreement Verified', $msg, [
@@ -387,9 +429,11 @@ class QardHasanResource extends Resource
                                             'qard_id_string' => $record->qard_id_string,
                                         ]);
                                     }
-                                } catch (\Throwable $e) {}
+                                } catch (\Throwable $e) {
+                                }
                             }
-                        } catch (\Throwable $e) {}
+                        } catch (\Throwable $e) {
+                        }
 
                         Notification::make()
                             ->title('Agreement Verified')
@@ -401,7 +445,7 @@ class QardHasanResource extends Resource
                     ->label('Reject Agreement')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn(QardHasan $record) => $record->status === 'pending' && !empty($record->signed_agreement) && empty($record->agreement_verified_at))
+                    ->visible(fn (QardHasan $record) => $record->status === 'pending' && ! empty($record->signed_agreement) && empty($record->agreement_verified_at))
                     ->form([
                         Forms\Components\Textarea::make('reason')
                             ->label('Rejection Reason')
@@ -418,13 +462,20 @@ class QardHasanResource extends Resource
                             'agreement_rejection_reason' => $reason,
                         ]);
 
+                        ShariahAudit::log(auth()->user(), 'reject_qard_hasan_agreement', [
+                            'qard_id' => $record->id,
+                            'qard_id_string' => $record->qard_id_string,
+                            'member_id' => $record->user_id,
+                            'reason' => $reason,
+                        ]);
+
                         // Notify member
                         try {
                             $record->loadMissing('user');
                             $user = $record->user;
                             $msg = "Your signed loan agreement for {$record->qard_id_string} was rejected: {$reason}. Please re-upload.";
 
-                            if (!empty($user?->email)) {
+                            if (! empty($user?->email)) {
                                 Mail::to($user->email)->send(new LoanAgreementRejectedUser($record, $reason));
                             }
 
@@ -438,7 +489,7 @@ class QardHasanResource extends Resource
                                 ));
 
                                 try {
-                                    $push = app(\App\Services\PushService::class);
+                                    $push = app(PushService::class);
                                     $token = $user->fcm_token ?: $user->device_token;
                                     if ($token) {
                                         $push->send($token, 'Agreement Rejected', $msg, [
@@ -448,9 +499,11 @@ class QardHasanResource extends Resource
                                             'reason' => $reason,
                                         ]);
                                     }
-                                } catch (\Throwable $e) {}
+                                } catch (\Throwable $e) {
+                                }
                             }
-                        } catch (\Throwable $e) {}
+                        } catch (\Throwable $e) {
+                        }
 
                         Notification::make()
                             ->title('Agreement Rejected')
@@ -462,14 +515,14 @@ class QardHasanResource extends Resource
                     ->label('View Signed Agreement')
                     ->icon('heroicon-o-document-text')
                     ->color('gray')
-                    ->visible(fn(QardHasan $record) => !empty($record->signed_agreement))
-                    ->url(fn(QardHasan $record) => asset('storage/' . $record->signed_agreement), true),
+                    ->visible(fn (QardHasan $record) => ! empty($record->signed_agreement))
+                    ->url(fn (QardHasan $record) => asset('storage/'.$record->signed_agreement), true),
                 Action::make('view_template')
                     ->label('View Template')
                     ->icon('heroicon-o-document')
                     ->color('gray')
-                    ->visible(fn(QardHasan $record) => !empty($record->agreement_template))
-                    ->url(fn(QardHasan $record) => asset('storage/' . $record->agreement_template), true),
+                    ->visible(fn (QardHasan $record) => ! empty($record->agreement_template))
+                    ->url(fn (QardHasan $record) => asset('storage/'.$record->agreement_template), true),
                 Action::make('disburse')
                     ->label('Disburse')
                     ->icon('heroicon-o-paper-airplane')
@@ -500,6 +553,7 @@ class QardHasanResource extends Resource
                                 ->body('Member must be in the system for at least 6 months before loan disbursement.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
@@ -510,12 +564,13 @@ class QardHasanResource extends Resource
                                 ->body('The agreement must be uploaded and verified before disbursement.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
                         // Require all guarantors to accept before disbursement
                         $record->loadMissing('guarantors');
-                        if (!method_exists($record, 'allGuarantorsAccepted') || !$record->allGuarantorsAccepted()) {
+                        if (! method_exists($record, 'allGuarantorsAccepted') || ! $record->allGuarantorsAccepted()) {
                             $pending = method_exists($record, 'pendingGuarantorCount') ? (int) $record->pendingGuarantorCount() : null;
                             $body = 'All selected guarantors must accept digitally before disbursement.';
                             if ($pending !== null) {
@@ -526,6 +581,7 @@ class QardHasanResource extends Resource
                                 ->body($body)
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
@@ -540,13 +596,14 @@ class QardHasanResource extends Resource
                         // If admin selected Cash-Out, ensure member has verified bank details
                         if ($withdrawable) {
                             $member = $record->user?->fresh();
-                            $hasBank = $member && !empty($member->bank_code) && !empty($member->account_number) && !empty($member->account_name);
-                            if (!$hasBank) {
+                            $hasBank = $member && ! empty($member->bank_code) && ! empty($member->account_number) && ! empty($member->account_name);
+                            if (! $hasBank) {
                                 Notification::make()
                                     ->title('Bank details required')
                                     ->body('Member has no verified bank details. Only Internal Credit is allowed. Ask the member to add bank details in Profile > Bank Settings.')
                                     ->danger()
                                     ->send();
+
                                 return;
                             }
                         }
@@ -568,6 +625,7 @@ class QardHasanResource extends Resource
                                     ->body($e->getMessage())
                                     ->danger()
                                     ->send();
+
                                 return;
                             }
                         }
@@ -578,7 +636,7 @@ class QardHasanResource extends Resource
                             $record->user->increment('balance', $credit);
 
                             // Record wallet transaction with loan_disbursement source and withdrawable flag
-                            \App\Models\WalletTransaction::create([
+                            WalletTransaction::create([
                                 'user_id' => $record->user_id,
                                 'type' => 'credit',
                                 'amount' => $credit,
@@ -597,12 +655,21 @@ class QardHasanResource extends Resource
                             $record->update(['status' => 'active']);
                         });
 
+                        ShariahAudit::log(auth()->user(), 'disburse_qard_hasan', [
+                            'qard_id' => $record->id,
+                            'qard_id_string' => $record->qard_id_string,
+                            'member_id' => $record->user_id,
+                            'credit' => $credit,
+                            'mode' => $mode,
+                            'reference' => $reference,
+                        ]);
+
                         // Refresh the record to get latest relations/status
                         $record->refresh();
                         $record->loadMissing('user');
 
                         // Send email to member if email exists
-                        if (!empty($record->user?->email)) {
+                        if (! empty($record->user?->email)) {
                             Mail::to($record->user->email)->send(new LoanDisbursedUser($record, $credit));
                         }
 
@@ -612,7 +679,7 @@ class QardHasanResource extends Resource
                             ->whereNotNull('email')
                             ->pluck('email')
                             ->all();
-                        if (!empty($adminEmails)) {
+                        if (! empty($adminEmails)) {
                             Mail::to($adminEmails)->send(new LoanDisbursedAdminNotification($record, $credit));
                         }
 
@@ -620,8 +687,8 @@ class QardHasanResource extends Resource
                         try {
                             $fresh = $record->user?->fresh();
                             if ($fresh) {
-                                $sms = app(\App\Services\SmsService::class);
-                                $push = app(\App\Services\PushService::class);
+                                $sms = app(SmsService::class);
+                                $push = app(PushService::class);
                                 $modeText = $withdrawable ? 'Cash-out enabled' : 'Internal use only';
                                 $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($fresh->balance ?? 0), 2);
                                 $sms->send($fresh->phone ?? null, $msg);
@@ -662,18 +729,19 @@ class QardHasanResource extends Resource
                     ->action(function (QardHasan $record, array $data) {
                         $enable = (bool) ($data['enable_cash_out'] ?? false);
                         // Find the wallet transaction for this loan disbursement
-                        $txn = \App\Models\WalletTransaction::query()
+                        $txn = WalletTransaction::query()
                             ->where('user_id', $record->user_id)
                             ->where('source', 'loan_disbursement')
                             ->where('meta->qard_hasan_id', $record->id)
                             ->orderByDesc('id')
                             ->first();
-                        if (!$txn) {
+                        if (! $txn) {
                             Notification::make()
                                 ->title('No disbursement record found')
                                 ->body('Could not find the wallet transaction for this loan disbursement.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
                         $txn->withdrawable = $enable;
@@ -687,12 +755,13 @@ class QardHasanResource extends Resource
                         // Best-effort notify member via SMS
                         try {
                             $record->loadMissing('user');
-                            $sms = app(\App\Services\SmsService::class);
+                            $sms = app(SmsService::class);
                             $msg = $enable
                                 ? ('Cash-out ENABLED for loan '.($record->qard_id_string).'. You can now withdraw the funds to your bank.')
                                 : ('Cash-out DISABLED for loan '.($record->qard_id_string).'. Withdrawal to bank is restricted; you can still spend inside the app.');
                             $sms->send($record->user?->phone ?? null, $msg);
-                        } catch (\Throwable $e) {}
+                        } catch (\Throwable $e) {
+                        }
 
                         Notification::make()
                             ->title('Cash-out permission updated')
@@ -721,7 +790,7 @@ class QardHasanResource extends Resource
                                     ->label('Download')
                                     ->icon('heroicon-o-arrow-down-tray')
                                     ->url(fn ($record) => $record->agreement_template
-                                        ? asset('storage/' . $record->agreement_template)
+                                        ? asset('storage/'.$record->agreement_template)
                                         : route('download-loan-agreement', $record->id))
                                     ->openUrlInNewTab()
                             ),
@@ -734,8 +803,8 @@ class QardHasanResource extends Resource
                                 InfolistAction::make('view_signed')
                                     ->label('View')
                                     ->icon('heroicon-o-eye')
-                                    ->url(fn ($record) => $record->signed_agreement ? asset('storage/' . $record->signed_agreement) : null)
-                                    ->visible(fn ($record) => !empty($record->signed_agreement))
+                                    ->url(fn ($record) => $record->signed_agreement ? asset('storage/'.$record->signed_agreement) : null)
+                                    ->visible(fn ($record) => ! empty($record->signed_agreement))
                                     ->openUrlInNewTab()
                             ),
                         TextEntry::make('agreement_uploaded_at')
@@ -751,6 +820,14 @@ class QardHasanResource extends Resource
             ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\RepaymentsRelationManager::class,
+            ActivitiesRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
@@ -758,5 +835,34 @@ class QardHasanResource extends Resource
             'create' => Pages\CreateQardHasan::route('/create'),
             'edit' => Pages\EditQardHasan::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_qard_hasan');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_qard_hasan');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_qard_hasan');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_qard_hasan');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn (Builder $query) => $query->whereHas('user', fn (Builder $q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
     }
 }

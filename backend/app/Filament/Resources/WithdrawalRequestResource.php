@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\WithdrawalRequestResource\Pages;
 use App\Models\WithdrawalRequest;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use Filament\Forms;
@@ -39,11 +41,28 @@ class WithdrawalRequestResource extends Resource
             ->columns([
                 TextColumn::make('created_at')->label('Requested')->since()->sortable(),
                 TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.membership_number')
+                    ->label('Member #')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->formatStateUsing(function ($state) {
+                        if (auth()->user()->hasRole('super_admin')) {
+                            return $state;
+                        }
+                        return \Illuminate\Support\Str::mask($state, '*', 2, -2);
+                    }),
                 TextColumn::make('reference')->label('Ref')->copyable()->searchable(),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
                 TextColumn::make('bank_name')->label('Bank')->toggleable(),
                 TextColumn::make('bank_code')->label('Code')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('account_number')->label('Acct #')->toggleable(),
+                TextColumn::make('account_number')
+                    ->label('Acct #')
+                    ->toggleable()
+                    ->formatStateUsing(function ($state) {
+                        if (auth()->user()->hasRole('super_admin')) {
+                            return $state;
+                        }
+                        return \Illuminate\Support\Str::mask($state, '*', 2, -2);
+                    }),
                 TextColumn::make('account_name')->label('Acct Name')->toggleable(),
                 TextColumn::make('status')->badge()->colors([
                     'warning' => ['pending'],
@@ -101,6 +120,12 @@ class WithdrawalRequestResource extends Resource
                             $record->status = 'paid';
                             $record->processed_at = now();
                             $record->save();
+                            ShariahAudit::log(auth()->user(), 'approve_withdrawal', [
+                                'withdrawal_request_id' => $record->id,
+                                'user_id' => $record->user_id,
+                                'amount' => $record->amount,
+                                'reference' => $record->reference,
+                            ]);
                         });
 
                         // Best-effort notify member via SMS
@@ -137,6 +162,13 @@ class WithdrawalRequestResource extends Resource
                         $record->processed_at = now();
                         $record->save();
 
+                        ShariahAudit::log(auth()->user(), 'decline_withdrawal', [
+                            'withdrawal_request_id' => $record->id,
+                            'user_id' => $record->user_id,
+                            'amount' => $record->amount,
+                            'reason' => $reason,
+                        ]);
+
                         // Best-effort notify member via SMS
                         try {
                             $user = $record->user?->fresh();
@@ -160,5 +192,34 @@ class WithdrawalRequestResource extends Resource
         return [
             'index' => Pages\ListWithdrawalRequests::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_withdrawal_request');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_withdrawal_request');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_withdrawal_request');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_withdrawal_request');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn (Builder $query) => $query->whereHas('user', fn (Builder $q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
     }
 }

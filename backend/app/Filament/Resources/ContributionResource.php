@@ -2,17 +2,19 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\RelationManagers\ActivitiesRelationManager;
 use App\Filament\Resources\ContributionResource\Pages;
 use App\Models\Contribution;
+use App\Models\Project;
 use App\Models\Scheme;
 use App\Models\User;
-use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ContributionResource extends Resource
 {
@@ -46,7 +48,7 @@ class ContributionResource extends Resource
                             ->rule('distinct'),
                         Forms\Components\Select::make('project_id')
                             ->label('Project (optional)')
-                            ->options(\App\Models\Project::query()->where('active', true)->pluck('name', 'id'))
+                            ->options(Project::query()->where('active', true)->pluck('name', 'id'))
                             ->searchable()
                             ->native(false)
                             ->helperText('Link this payment to a pooled project (Mudarabah)')
@@ -98,6 +100,15 @@ class ContributionResource extends Resource
             ->columns([
                 TextColumn::make('created_at')->label('Time')->since()->sortable(),
                 TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.membership_number')
+                    ->label('Member #')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->formatStateUsing(function ($state) {
+                        if (auth()->user()->hasRole('super_admin')) {
+                            return $state;
+                        }
+                        return \Illuminate\Support\Str::mask($state, '*', 2, -2);
+                    }),
                 TextColumn::make('scheme.name')->label('Scheme')->searchable(),
                 TextColumn::make('project.name')->label('Project')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
@@ -130,12 +141,56 @@ class ContributionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('printReceipt')
+                    ->label('Print Receipt')
+                    ->icon('heroicon-o-printer')
+                    ->color('info')
+                    ->url(fn (Contribution $record) => route('admin.print.contribution-receipt', $record))
+                    ->openUrlInNewTab()
+                    ->visible(fn (Contribution $record) => $record->status === 'success'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()->can('delete_records')),
                 ]),
             ]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_contribution');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_contribution');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_contribution');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_contribution');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn (Builder $query) => $query->whereHas('user', fn (Builder $q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            ActivitiesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

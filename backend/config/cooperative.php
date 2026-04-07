@@ -13,4 +13,5 @@ return [
         // Whether to include Shares in the balance calculation
         'include_shares' => env('COOP_ZAKAT_INCLUDE_SHARES', false),
     ],
+    'admin_ip_whitelist' => array_filter(array_map('trim', explode(',', env('ADMIN_IP_WHITELIST', '')))),
 ];

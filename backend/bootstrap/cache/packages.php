@@ -18,6 +18,17 @@
       0 => 'Barryvdh\\DomPDF\\ServiceProvider',
     ),
   ),
+  'bezhansalleh/filament-shield' => 
+  array (
+    'aliases' => 
+    array (
+      'FilamentShield' => 'BezhanSalleh\\FilamentShield\\Facades\\FilamentShield',
+    ),
+    'providers' => 
+    array (
+      0 => 'BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider',
+    ),
+  ),
   'blade-ui-kit/blade-heroicons' => 
   array (
     'providers' => 
@@ -86,6 +97,28 @@
     'providers' => 
     array (
       0 => 'Filament\\Widgets\\WidgetsServiceProvider',
+    ),
+  ),
+  'jeffgreco13/filament-breezy' => 
+  array (
+    'aliases' => 
+    array (
+      'FilamentBreezy' => 'Jeffgreco13\\FilamentBreezy\\Facades\\FilamentBreezy',
+    ),
+    'providers' => 
+    array (
+      0 => 'Jeffgreco13\\FilamentBreezy\\FilamentBreezyServiceProvider',
+    ),
+  ),
+  'jenssegers/agent' => 
+  array (
+    'aliases' => 
+    array (
+      'Agent' => 'Jenssegers\\Agent\\Facades\\Agent',
+    ),
+    'providers' => 
+    array (
+      0 => 'Jenssegers\\Agent\\AgentServiceProvider',
     ),
   ),
   'kirschbaum-development/eloquent-power-joins' => 
@@ -201,6 +234,20 @@
     'providers' => 
     array (
       0 => 'RyanChandler\\BladeCaptureDirective\\BladeCaptureDirectiveServiceProvider',
+    ),
+  ),
+  'spatie/laravel-activitylog' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
+    ),
+  ),
+  'spatie/laravel-permission' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Spatie\\Permission\\PermissionServiceProvider',
     ),
   ),
 );

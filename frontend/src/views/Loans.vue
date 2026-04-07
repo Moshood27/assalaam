@@ -88,7 +88,7 @@
                   </div>
                   <p class="mt-2 text-[10px] text-slate-500">
                     <template v-if="(eligibility.required_guarantors || 0) > 0">
-                      Select at least {{ eligibility.required_guarantors }} and at most three guarantors. They must be from different branches than yours and not be defaulters.
+                      Select at least {{ eligibility.required_guarantors }} and at most three guarantors. Guarantors must not be defaulters.
                     </template>
                     <template v-else>
                       No guarantors required due to Instant Approval eligibility. Proceed to create your loan — funds will be credited automatically after fees.

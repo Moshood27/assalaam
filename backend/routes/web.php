@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Api\AdminTakafulController;
+use App\Http\Controllers\Admin\PrintController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -92,4 +93,9 @@ Route::middleware(['auth'])->prefix('admin/takaful/export')->group(function () {
     Route::get('/ledger.pdf', [AdminTakafulController::class, 'exportLedgerPdf'])->name('takaful.web.export.ledger.pdf');
     Route::get('/summary.csv', [AdminTakafulController::class, 'exportSummaryCsv'])->name('takaful.web.export.summary.csv');
     Route::get('/summary.pdf', [AdminTakafulController::class, 'exportSummaryPdf'])->name('takaful.web.export.summary.pdf');
+
+    // Printing (Passbooks & Receipts)
+    Route::get('/print/passbook/{user}', [PrintController::class, 'passbook'])->name('admin.print.passbook');
+    Route::get('/print/wallet-receipt/{transaction}', [PrintController::class, 'walletReceipt'])->name('admin.print.wallet-receipt');
+    Route::get('/print/contribution-receipt/{contribution}', [PrintController::class, 'contributionReceipt'])->name('admin.print.contribution-receipt');
 });

@@ -4,10 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class ProjectProfit extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['gross_profit', 'management_fee_percent', 'management_fee_amount', 'net_distributable'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'project_id',
@@ -51,6 +61,6 @@ class ProjectProfit extends Model
 
     public function payouts()
     {
-        return $this->hasMany(\App\Models\ProjectProfitPayout::class, 'project_profit_id');
+        return $this->hasMany(ProjectProfitPayout::class, 'project_profit_id');
     }
 }

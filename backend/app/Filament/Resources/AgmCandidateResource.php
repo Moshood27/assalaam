@@ -85,6 +85,26 @@ class AgmCandidateResource extends Resource
             ]);
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_agm_candidate');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_agm_candidate');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_agm_candidate');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_agm_candidate');
+    }
+
     public static function getPages(): array
     {
         return [

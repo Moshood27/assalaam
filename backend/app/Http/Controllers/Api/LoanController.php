@@ -189,19 +189,6 @@ class LoanController extends Controller
             if ($defaulters->isNotEmpty()) {
                 return response()->json(['message' => 'Selected guarantors must not be in default.'], 422);
             }
-            // Guarantors must be from different branches, and different from applicant's branch
-            $branchIds = $guarantors->pluck('branch_id')->all();
-            if (in_array(null, $branchIds, true)) {
-                return response()->json(['message' => 'All guarantors must belong to a branch.'], 422);
-            }
-
-            if (in_array($user->branch_id, $branchIds)) {
-                return response()->json(['message' => 'Guarantors must be from different branches than yours.'], 422);
-            }
-
-            if (count(array_unique($branchIds)) !== count($branchIds)) {
-                return response()->json(['message' => 'Guarantors must be selected from different branches.'], 422);
-            }
         } else {
             // Instant approval path: guarantors optional, ignore if provided
             $guarantors = collect();

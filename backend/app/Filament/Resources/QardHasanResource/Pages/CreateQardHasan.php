@@ -98,13 +98,6 @@ class CreateQardHasan extends CreateRecord
                 'guarantor_ids' => 'Guarantors must not be in default.'
             ]);
         }
-        $branchIds = $guarantors->pluck('branch_id')->all();
-        if (in_array(null, $branchIds, true) || count(array_unique($branchIds)) !== count($branchIds)) {
-            Notification::make()->title('Validation Error')->body('Guarantors must be from different branches and have branches assigned.')->danger()->send();
-            throw ValidationException::withMessages([
-                'guarantor_ids' => 'Guarantors must be from different branches.'
-            ]);
-        }
         $this->guarantorIds = $g;
 
         return $data;

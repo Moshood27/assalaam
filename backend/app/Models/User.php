@@ -2,22 +2,35 @@
 
 namespace App\Models;
 
-use App\Models\Scheme;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Filament\Panel;
+use Carbon\Carbon;
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    /** @use HasFactory<UserFactory> */
+    use HasApiTokens, HasFactory, HasRoles, LogsActivity, Notifiable, TwoFactorAuthenticatable;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -116,7 +129,17 @@ class User extends Authenticatable implements FilamentUser
 
     public function qardHasans()
     {
-        return $this->hasMany(\App\Models\QardHasan::class);
+        return $this->hasMany(QardHasan::class);
+    }
+
+    public function qardHasanRepayments()
+    {
+        return $this->hasManyThrough(QardHasanRepayment::class, QardHasan::class);
+    }
+
+    public function storeOrders()
+    {
+        return $this->hasMany(StoreOrder::class);
     }
 
     public function utilityTransactions()
@@ -126,24 +149,50 @@ class User extends Authenticatable implements FilamentUser
 
     public function savingsGoals()
     {
-        return $this->hasMany(\App\Models\SavingsGoal::class);
+        return $this->hasMany(SavingsGoal::class);
     }
 
     public function goalBookings()
     {
-        return $this->hasMany(\App\Models\GoalBooking::class);
+        return $this->hasMany(GoalBooking::class);
+    }
+
+    public function takafulContributions()
+    {
+        return $this->hasMany(TakafulContribution::class);
+    }
+
+    public function withdrawalRequests()
+    {
+        return $this->hasMany(WithdrawalRequest::class);
+    }
+
+    public function projectInvestments()
+    {
+        return $this->hasMany(ProjectInvestment::class);
+    }
+
+    public function projectProfitPayouts()
+    {
+        return $this->hasMany(ProjectProfitPayout::class);
+    }
+
+    public function takafulPoolEntries()
+    {
+        return $this->hasMany(TakafulPoolEntry::class);
     }
 
     public function hasTransactionPin(): bool
     {
-        return !empty($this->transaction_pin_hash);
+        return ! empty($this->transaction_pin_hash);
     }
 
     public function verifyTransactionPin(?string $pin): bool
     {
-        if (!$pin || empty($this->transaction_pin_hash)) {
+        if (! $pin || empty($this->transaction_pin_hash)) {
             return false;
         }
+
         return Hash::check($pin, $this->transaction_pin_hash);
     }
 
@@ -188,9 +237,10 @@ class User extends Authenticatable implements FilamentUser
      */
     public function monthsInSystem(): int
     {
-        if (!$this->created_at) {
+        if (! $this->created_at) {
             return 0;
         }
+
         return Carbon::parse($this->created_at)->diffInMonths(now());
     }
 
@@ -202,7 +252,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->qardHasans()
             ->where(function ($q) {
                 $q->where('status', 'completed')
-                  ->orWhereColumn('paid_amount', '>=', 'principal_amount');
+                    ->orWhereColumn('paid_amount', '>=', 'principal_amount');
             })
             ->exists();
     }
@@ -218,7 +268,7 @@ class User extends Authenticatable implements FilamentUser
         $base = (float) ($calc['base'] ?? 0);
         $months = $this->monthsInSystem();
         $hasCompleted = $this->hasCompletedLoan();
-        $isFirstLoan = !$hasCompleted;
+        $isFirstLoan = ! $hasCompleted;
 
         $adjusted = $isFirstLoan ? round($base * 0.05, 2) : round($base * 2, 2);
 
@@ -234,7 +284,7 @@ class User extends Authenticatable implements FilamentUser
      */
     public function hasActiveStoreFinancing(): bool
     {
-        return \App\Models\StoreOrder::where('user_id', $this->id)
+        return StoreOrder::where('user_id', $this->id)
             ->whereIn('status', ['murabaha_pending', 'murabaha_active'])
             ->exists();
     }
@@ -249,13 +299,14 @@ class User extends Authenticatable implements FilamentUser
             ->exists();
     }
 
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject');
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
-        // In production, you likely want to check an 'is_admin' column
-        // For now, let's allow everyone to make sure it works:
-        return true;
-
-        // Later change to: return $this->is_admin === true;
+        return $this->is_admin === true || $this->hasAnyRole(['super_admin', 'Branch Manager', 'Clerk']);
     }
 
     /**
@@ -317,6 +368,7 @@ class User extends Authenticatable implements FilamentUser
     public function availableForWithdrawal(): float
     {
         $b = $this->withdrawableBreakdown();
+
         return (float) ($b['available_for_withdrawal'] ?? 0.0);
     }
 }

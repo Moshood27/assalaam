@@ -8,7 +8,9 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "bezhansalleh/filament-shield": "*",
         "filament/filament": "^3.2",
+        "jeffgreco13/filament-breezy": "^2.0",
         "kreait/laravel-firebase": "^7.1",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.45",
@@ -17,6 +19,8 @@
         "laravel/telescope": "^5.19",
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^2.2",
+        "spatie/laravel-activitylog": "^5.0",
+        "spatie/laravel-permission": "*",
         "yabacon/paystack-php": "^2.2"
     },
     "require-dev": {

@@ -5,10 +5,20 @@ namespace App\Models;
 use App\Jobs\AutoRecoverOverdueLoans;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class WalletTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['type', 'amount', 'reference', 'source', 'meta', 'processed_at'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'user_id',
@@ -30,7 +40,7 @@ class WalletTransaction extends Model
     {
         static::created(function (WalletTransaction $tx) {
             // Trigger The Hunter on any wallet credit after the surrounding DB transaction commits
-            if (strtolower((string) $tx->type) === 'credit' && !empty($tx->user_id)) {
+            if (strtolower((string) $tx->type) === 'credit' && ! empty($tx->user_id)) {
                 AutoRecoverOverdueLoans::dispatch((int) $tx->user_id)->afterCommit();
             }
         });

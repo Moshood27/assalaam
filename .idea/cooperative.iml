@@ -290,6 +290,17 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/var-dumper" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/tijsverkoyen/css-to-inline-styles" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/vlucas/phpdotenv" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/bacon/bacon-qr-code" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/dasprid/enum" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/jaybizzle/crawler-detect" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/jeffgreco13/filament-breezy" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/jenssegers/agent" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/mobiledetect/mobiledetectlib" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/paragonie/constant_time_encoding" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/pragmarx/google2fa" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/bezhansalleh/filament-shield" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/spatie/laravel-activitylog" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/spatie/laravel-permission" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

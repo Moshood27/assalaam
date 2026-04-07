@@ -110,6 +110,26 @@ class ProductResource extends Resource
             ]);
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_product');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_product');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_product');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_product');
+    }
+
     public static function getPages(): array
     {
         return [

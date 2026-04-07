@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TakafulContributionResource\Pages;
 use App\Models\TakafulContribution;
+use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
 use App\Services\TakafulService;
 use Filament\Forms;
@@ -41,7 +42,13 @@ class TakafulContributionResource extends Resource
                     ->sortable(),
                 TextColumn::make('user.membership_number')
                     ->label('Member #')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->formatStateUsing(function ($state) {
+                        if (auth()->user()->hasRole('super_admin')) {
+                            return $state;
+                        }
+                        return \Illuminate\Support\Str::mask($state, '*', 2, -2);
+                    }),
                 TextColumn::make('period')
                     ->sortable()
                     ->searchable(),
@@ -122,6 +129,16 @@ class TakafulContributionResource extends Resource
                         $userId = isset($data['user_id']) && $data['user_id'] !== '' ? (int) $data['user_id'] : null;
                         $dry = (bool) ($data['dry_run'] ?? false);
                         $result = $service->chargeMonthly($period, $amount, $userId, $dry);
+                        if (!$dry) {
+                            ShariahAudit::log(auth()->user(), 'charge_takaful_monthly', [
+                                'period' => $period,
+                                'amount' => $amount,
+                                'user_id' => $userId,
+                                'processed' => $result['processed'],
+                                'created' => $result['created'],
+                                'charged' => $result['charged'],
+                            ]);
+                        }
                         Notification::make()
                             ->title('Takaful charge '.($dry ? '(dry-run)' : 'completed'))
                             ->body("Processed: {$result['processed']} | Created: {$result['created']} | Charged: ₦".number_format((float)$result['charged'], 2)." | Insufficient: {$result['insufficient_funds']} | Balance: ₦".number_format((float)$result['balance'], 2))
@@ -149,5 +166,34 @@ class TakafulContributionResource extends Resource
         return [
             'index' => Pages\ListTakafulContributions::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_takaful_contribution');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_takaful_contribution');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_takaful_contribution');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_takaful_contribution');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                auth()->user()->hasRole('Branch Manager'),
+                fn (Builder $query) => $query->whereHas('user', fn (Builder $q) => $q->where('branch_id', auth()->user()->branch_id))
+            );
     }
 }
