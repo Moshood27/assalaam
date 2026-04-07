@@ -28,7 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Append security headers to all web and API responses
         $middleware->appendToGroup('web', [\App\Http\Middleware\SecurityHeaders::class]);
-        $middleware->appendToGroup('api', [\App\Http\Middleware\SecurityHeaders::class]);
+        $middleware->appendToGroup('api', [
+            \App\Http\Middleware\QueryTokenToBearer::class,
+            \App\Http\Middleware\SecurityHeaders::class
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

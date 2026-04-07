@@ -813,6 +813,7 @@ class LoanController extends Controller
         $q->update([
             'signed_agreement' => $path,
             'agreement_uploaded_at' => now(),
+            'agreement_rejection_reason' => null,
         ]);
 
         return response()->json([

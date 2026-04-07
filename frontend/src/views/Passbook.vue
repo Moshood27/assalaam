@@ -4,7 +4,7 @@
       <div class="navbar-inner">
         <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">⬅️</button>
         <h1 class="text-lg sm:text-xl font-bold text-slate-800">Passbook</h1>
-        <button @click="downloadPdf" class="btn-ghost text-xs">PDF</button>
+        <a :href="getDownloadUrl()" target="_blank" class="btn-ghost text-xs">PDF</a>
       </div>
     </header>
 
@@ -140,23 +140,11 @@ const fetchPassbook = async () => {
   }
 }
 
-const downloadPdf = async () => {
+const getDownloadUrl = () => {
   const token = localStorage.getItem('token')
-  try {
-    const res = await axios.get('/api/download-passbook', {
-      // Authorization header is added by axios interceptor; keep explicit header as a safeguard
-      headers: { Authorization: `Bearer ${token}` },
-      params: { year: selectedYear.value },
-      responseType: 'blob'
-    })
-    const blob = new Blob([res.data], { type: 'application/pdf' })
-    openBlob(blob, `Coop_Statement_${selectedYear.value}.pdf`)
-  } catch (e) {
-    console.error('Failed to download PDF', e)
-    alert(e?.response?.data?.message || e.message || 'Failed to download')
-  }
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-passbook?year=${selectedYear.value}&token=${token}`
 }
-
 onMounted(fetchPassbook)
 </script>
 

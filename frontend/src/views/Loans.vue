@@ -157,7 +157,7 @@
               <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">ID: {{ loan.qard_id_string }}</p>
             </div>
             <div class="flex items-center gap-2">
-              <button class="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50" @click="downloadSchedule(loan)">Download Schedule</button>
+              <a :href="getScheduleDownloadUrl(loan)" target="_blank" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs">Download Schedule</a>
               <span :class="loan.status === 'active' ? 'badge-success' : 'badge-muted'" class="badge">{{ loan.is_completed ? 'completed' : loan.status }}</span>
             </div>
           </div>
@@ -601,19 +601,10 @@ const pay = async (loan) => {
   }
 }
 
-const downloadSchedule = async (loan) => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await axios.get(`/api/download-loan-schedule/${loan.id}` , {
-      headers: { Authorization: `Bearer ${token}` },
-      responseType: 'blob'
-    })
-    const blob = new Blob([res.data], { type: 'application/pdf' })
-    openBlob(blob, `Loan_Schedule_${loan.qard_id_string || loan.id}.pdf`)
-  } catch (e) {
-    const msg = e?.response?.data?.message || e.message || 'Failed to download'
-    showNotice('Error', msg, 'error')
-  }
+const getScheduleDownloadUrl = (loan) => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-loan-schedule/${loan.id}?token=${token}`
 }
 
 // Guarantor request APIs

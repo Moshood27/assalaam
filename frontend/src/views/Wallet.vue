@@ -237,7 +237,7 @@
             <div class="flex items-center justify-between mt-1 gap-3 flex-wrap">
               <p class="text-[10px] uppercase text-slate-400 truncate">Ref: {{ tx.reference }}</p>
               <div class="flex items-center gap-2 ml-auto">
-                <button @click="downloadReceipt(tx)" class="text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100">Receipt</button>
+                <a :href="getReceiptDownloadUrl(tx)" target="_blank" class="text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100">Receipt</a>
                 <p class="text-[10px] text-slate-400 shrink-0">{{ new Date(tx.created_at).toLocaleString() }}</p>
               </div>
             </div>
@@ -640,31 +640,11 @@ const checkRecipient = async () => {
   }
 }
 
-const downloadReceipt = async (tx) => {
-  try {
-    const id = tx?.id ?? tx
-    if (!id) {
-      showNotice('Unavailable', 'Missing transaction ID for this receipt.', 'warning')
-      return
-    }
-    const res = await axios.get(`/api/wallet/transactions/${id}/receipt`, { responseType: 'blob' })
-    const contentType = res?.headers?.['content-type'] || 'application/pdf'
-    const blob = new Blob([res.data], { type: contentType })
-    let filename = `Wallet_Receipt_${tx?.reference || id}.pdf`
-    const cd = res?.headers?.['content-disposition'] || res?.headers?.['Content-Disposition']
-    if (cd) {
-      const m = /filename\*?=(?:UTF-8''|\")?([^\";\n]+)\"?/i.exec(cd) || /filename="?([^\";\n]+)"?/i.exec(cd)
-      if (m && m[1]) filename = m[1]
-    }
-    openBlob(blob, filename)
-  } catch (e) {
-    const status = e?.response?.status
-    if (status === 404) {
-      showNotice('Not found', 'Receipt not found for this transaction.', 'error')
-    } else {
-      showNotice('Download failed', e?.response?.data?.message || 'Unable to download receipt. Please try again later.', 'error')
-    }
-  }
+const getReceiptDownloadUrl = (tx) => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  const id = tx?.id ?? tx
+  return `${baseUrl}/api/wallet/transactions/${id}/receipt?token=${token}`
 }
 
 watch([toType, toValue, branchId], () => {

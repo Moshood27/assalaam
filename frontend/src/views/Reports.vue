@@ -50,9 +50,9 @@
             <select v-model.number="divYear" @change="loadDividend" class="inp text-xs font-bold">
               <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
             </select>
-            <button class="btn-ghost text-xs" @click="downloadDividendPdf">
+            <a :href="getDividendUrl()" target="_blank" class="btn-ghost text-xs">
               Download PDF
-            </button>
+            </a>
           </div>
         </div>
         <div v-if="divLoading" class="text-slate-500 text-sm">Loading…</div>
@@ -81,12 +81,12 @@
             <select v-model.number="divYear" class="inp text-xs font-bold">
               <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
             </select>
-            <button class="btn-ghost text-xs" @click="downloadAppropriationPdf">
+            <a :href="getAppropriationUrl()" target="_blank" class="btn-ghost text-xs">
               Appropriation Account
-            </button>
-            <button class="btn-ghost text-xs" @click="downloadFinancialsPdf">
+            </a>
+            <a :href="getFinancialsUrl()" target="_blank" class="btn-ghost text-xs">
               Financial Statements
-            </button>
+            </a>
           </div>
         </div>
         <p class="text-[12px] text-slate-500">Download your cooperative's Appropriation Account and full Financial Statements for the selected year.</p>
@@ -171,36 +171,22 @@ const loadDividend = async () => {
 // Robust blob opener that works in web and most mobile webviews
 // (Moved to utils/download.js)
 
-const downloadDividendPdf = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await axios.get(`/api/download-dividend/${divYear.value}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      responseType: 'blob'
-    })
-    const blob = new Blob([res.data], { type: 'application/pdf' })
-    openBlob(blob, `Dividend_${divYear.value}.pdf`)
-  } catch (e) {
-    alert(e?.response?.data?.message || e.message || 'Failed to download')
-  }
+const getDividendUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-dividend/${divYear.value}?token=${token}`
 }
 
-const downloadFile = async (url, filename) => {
-  try {
-    const token = localStorage.getItem('token')
-    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' })
-    const blob = new Blob([res.data], { type: 'application/pdf' })
-    openBlob(blob, filename)
-  } catch (e) {
-    alert(e?.response?.data?.message || e.message || 'Failed to download')
-  }
+const getAppropriationUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-appropriation/${divYear.value}?token=${token}`
 }
 
-const downloadAppropriationPdf = async () => {
-  await downloadFile(`/api/download-appropriation/${divYear.value}`, `Appropriation_${divYear.value}.pdf`)
-}
-const downloadFinancialsPdf = async () => {
-  await downloadFile(`/api/download-financials/${divYear.value}`, `Financials_${divYear.value}.pdf`)
+const getFinancialsUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-financials/${divYear.value}?token=${token}`
 }
 
 onMounted(() => { loadMix(); loadDividend() })
