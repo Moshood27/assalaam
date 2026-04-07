@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -90,7 +91,7 @@ class WalletTransactionResource extends Resource
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
                 TextColumn::make('reference')->searchable(),
                 TextColumn::make('source')->searchable(),
-                TextColumn::make('withdrawable')->boolean()->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('withdrawable')->boolean()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
