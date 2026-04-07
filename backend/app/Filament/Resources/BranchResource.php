@@ -3,7 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BranchResource\Pages;
+use App\Jobs\SendBulkCommunication;
 use App\Models\Branch;
+use Filament\Notifications\Notification;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -25,6 +27,16 @@ class BranchResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('latitude')
+                    ->numeric()
+                    ->step(0.00000001)
+                    ->minValue(-90)
+                    ->maxValue(90),
+                Forms\Components\TextInput::make('longitude')
+                    ->numeric()
+                    ->step(0.00000001)
+                    ->minValue(-180)
+                    ->maxValue(180),
             ]);
     }
 
@@ -38,6 +50,12 @@ class BranchResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
+                    ->sortable(),
+                TextColumn::make('latitude')
+                    ->label('Lat')
+                    ->sortable(),
+                TextColumn::make('longitude')
+                    ->label('Long')
                     ->sortable(),
                 TextColumn::make('users_count')
                     ->label('Total Members')
@@ -65,6 +83,42 @@ class BranchResource extends Resource
                     ->extraAttributes(['onclick' => 'window.print()']),
             ])
             ->actions([
+                Tables\Actions\Action::make('communicate')
+                    ->label('Bulk Communicate')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->form([
+                        Forms\Components\TextInput::make('title')
+                            ->label('Title (Optional)')
+                            ->placeholder('Coop Notice')
+                            ->maxLength(100),
+                        Forms\Components\Textarea::make('message')
+                            ->label('Message')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\CheckboxList::make('channels')
+                            ->label('Channels')
+                            ->options([
+                                'sms' => 'SMS',
+                                'push' => 'Push Notification',
+                            ])
+                            ->required()
+                            ->columns(2),
+                    ])
+                    ->action(function (Branch $record, array $data) {
+                        SendBulkCommunication::dispatch(
+                            $record->id,
+                            $data['title'] ?: 'Coop Notice',
+                            $data['message'],
+                            $data['channels'],
+                            auth()->id()
+                        );
+
+                        Notification::make()
+                            ->title('Bulk communication queued for ' . $record->name)
+                            ->body("The messages are being sent in the background.")
+                            ->info()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

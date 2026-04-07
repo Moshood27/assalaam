@@ -6,6 +6,7 @@ use App\Filament\RelationManagers\ActivitiesRelationManager;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Mail\WalletCredited;
+use App\Jobs\SendBulkCommunication;
 use App\Models\Branch;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
@@ -295,6 +296,47 @@ class UserResource extends Resource
                     ->label('Print')
                     ->icon('heroicon-o-printer')
                     ->extraAttributes(['onclick' => 'window.print()']),
+                Action::make('bulkCommunicate')
+                    ->label('Bulk Communicate')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->form([
+                        Forms\Components\Select::make('branch_id')
+                            ->label('Branch')
+                            ->options(Branch::all()->pluck('name', 'id'))
+                            ->required()
+                            ->searchable(),
+                        Forms\Components\TextInput::make('title')
+                            ->label('Title (Optional)')
+                            ->placeholder('Coop Notice')
+                            ->maxLength(100),
+                        Forms\Components\Textarea::make('message')
+                            ->label('Message')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\CheckboxList::make('channels')
+                            ->label('Channels')
+                            ->options([
+                                'sms' => 'SMS',
+                                'push' => 'Push Notification',
+                            ])
+                            ->required()
+                            ->columns(2),
+                    ])
+                    ->action(function (array $data) {
+                        SendBulkCommunication::dispatch(
+                            (int) $data['branch_id'],
+                            $data['title'] ?: 'Coop Notice',
+                            $data['message'],
+                            $data['channels'],
+                            auth()->id()
+                        );
+
+                        Notification::make()
+                            ->title('Bulk communication queued.')
+                            ->body("The messages are being sent in the background.")
+                            ->info()
+                            ->send();
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -19,7 +19,9 @@
         "laravel/telescope": "^5.19",
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^2.2",
+        "sentry/sentry-laravel": "^4.25",
         "spatie/laravel-activitylog": "^5.0",
+        "spatie/laravel-backup": "^10.2",
         "spatie/laravel-permission": "*",
         "yabacon/paystack-php": "^2.2"
     },

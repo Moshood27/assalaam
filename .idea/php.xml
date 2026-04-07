@@ -304,6 +304,16 @@
       <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-activitylog" />
       <path value="$PROJECT_DIR$/backend/vendor/bezhansalleh/filament-shield" />
       <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-permission" />
+      <path value="$PROJECT_DIR$/backend/vendor/nyholm/psr7" />
+      <path value="$PROJECT_DIR$/backend/vendor/jean85/pretty-package-versions" />
+      <path value="$PROJECT_DIR$/backend/vendor/spatie/temporary-directory" />
+      <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-signal-aware-command" />
+      <path value="$PROJECT_DIR$/backend/vendor/sentry/sentry-laravel" />
+      <path value="$PROJECT_DIR$/backend/vendor/sentry/sentry" />
+      <path value="$PROJECT_DIR$/backend/vendor/spatie/laravel-backup" />
+      <path value="$PROJECT_DIR$/backend/vendor/spatie/db-dumper" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/options-resolver" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/psr-http-message-bridge" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2">
