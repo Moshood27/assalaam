@@ -1,43 +1,41 @@
-<div class="w-full">
-    <x-filament-panels::page>
-        <div class="space-y-4">
-            {{-- Map Legend --}}
-            <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
-                    <span class="text-sm font-medium">Low Default (< 10%)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-4 h-4 bg-orange-500 rounded-full"></span>
-                    <span class="text-sm font-medium">Medium Default (10% - 20%)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
-                    <span class="text-sm font-medium">High Default (> 20%)</span>
-                </div>
-                <div class="flex-1 text-sm text-gray-500 italic">
-                    Marker size reflects Savings Total
-                </div>
-                <div>
-                    <button onclick="window.location.reload()" class="px-3 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">Refresh Data</button>
-                </div>
+<x-filament-panels::page>
+    <div class="w-full space-y-4">
+        {{-- Map Legend --}}
+        <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
+                <span class="text-sm font-medium">Low Default (< 10%)</span>
             </div>
-
-            {{-- Aggregate Totals --}}
-            <div id="agg" class="flex flex-wrap items-center gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <div class="text-sm"><span class="text-gray-500">Branches:</span> <span id="agg-branches" class="font-semibold">0</span></div>
-                <div class="text-sm"><span class="text-gray-500">Total Savings:</span> <span id="agg-savings" class="font-semibold">₦0.00</span></div>
-                <div class="text-sm"><span class="text-gray-500">Avg Default Rate:</span> <span id="agg-default" class="font-semibold">0%</span></div>
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-4 h-4 bg-orange-500 rounded-full"></span>
+                <span class="text-sm font-medium">Medium Default (10% - 20%)</span>
             </div>
-
-            {{-- Map Container --}}
-            <div wire:ignore
-                 id="map"
-                 style="height: 600px; width: 100%; border-radius: 12px; z-index: 1;"
-                 class="border border-gray-300 dark:border-gray-700 shadow-lg">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
+                <span class="text-sm font-medium">High Default (> 20%)</span>
+            </div>
+            <div class="flex-1 text-sm text-gray-500 italic">
+                Marker size reflects Savings Total
+            </div>
+            <div>
+                <button onclick="window.location.reload()" class="px-3 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">Refresh Data</button>
             </div>
         </div>
-    </x-filament-panels::page>
+
+        {{-- Aggregate Totals --}}
+        <div id="agg" class="flex flex-wrap items-center gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div class="text-sm"><span class="text-gray-500">Branches:</span> <span id="agg-branches" class="font-semibold">0</span></div>
+            <div class="text-sm"><span class="text-gray-500">Total Savings:</span> <span id="agg-savings" class="font-semibold">₦0.00</span></div>
+            <div class="text-sm"><span class="text-gray-500">Avg Default Rate:</span> <span id="agg-default" class="font-semibold">0%</span></div>
+        </div>
+
+        {{-- Map Container --}}
+        <div wire:ignore
+             id="map"
+             style="height: 600px; width: 100%; border-radius: 12px; z-index: 1;"
+             class="border border-gray-300 dark:border-gray-700 shadow-lg">
+        </div>
+    </div>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -112,4 +110,4 @@
         .leaflet-popup-content { margin: 12px !important; width: auto !important; }
         .leaflet-container { font-family: inherit; }
     </style>
-</div>
+</x-filament-panels::page>
