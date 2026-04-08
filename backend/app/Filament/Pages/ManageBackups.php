@@ -9,6 +9,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
@@ -57,7 +60,7 @@ class ManageBackups extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->records($this->getBackupRecords())
+            ->query(fn () => \App\Models\User::query()->whereRaw('1=0'))
             ->columns([
                 TextColumn::make('disk')
                     ->label('Disk')
@@ -92,23 +95,40 @@ class ManageBackups extends Page implements HasTable
             ->emptyStateIcon('heroicon-o-circle-stack');
     }
 
-    protected function getBackupRecords(): Collection
+    public function getTableRecords(): EloquentCollection
     {
-        return BackupDestinationFactory::createFromArray(app(Config::class))
-            ->flatMap(function (BackupDestination $backupDestination) {
-                return $backupDestination->backups()
-                    ->map(function ($backup) use ($backupDestination) {
-                        return (object) [
-                            'id' => $backupDestination->diskName() . ':' . $backup->path(),
-                            'disk' => $backupDestination->diskName(),
-                            'path' => $backup->path(),
-                            'filename' => basename($backup->path()),
-                            'date' => $backup->date(),
-                            'size' => $this->formatBytes($backup->sizeInBytes()),
-                        ];
-                    });
-            })
-            ->sortByDesc('date');
+        return $this->getBackupRecords();
+    }
+
+    public function getTableRecord(?string $key): ?Model
+    {
+        return $this->getTableRecords()->firstWhere('id', $key);
+    }
+
+    public function getTableRecordKey(Model $record): string
+    {
+        return $record->id;
+    }
+
+    protected function getBackupRecords(): EloquentCollection
+    {
+        return new EloquentCollection(
+            BackupDestinationFactory::createFromArray(app(Config::class))
+                ->flatMap(function (BackupDestination $backupDestination) {
+                    return $backupDestination->backups()
+                        ->map(function ($backup) use ($backupDestination) {
+                            return new BackupRecord([
+                                'id' => $backupDestination->diskName() . ':' . $backup->path(),
+                                'disk' => $backupDestination->diskName(),
+                                'path' => $backup->path(),
+                                'filename' => basename($backup->path()),
+                                'date' => $backup->date(),
+                                'size' => $this->formatBytes($backup->sizeInBytes()),
+                            ]);
+                        });
+                })
+                ->sortByDesc('date')
+        );
     }
 
     public function createBackup(string $option = ''): void
@@ -196,4 +216,17 @@ class ManageBackups extends Page implements HasTable
 
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
+}
+
+/**
+ * @property string $id
+ * @property string $disk
+ * @property string $path
+ * @property string $filename
+ * @property string $date
+ * @property string $size
+ */
+class BackupRecord extends Model
+{
+    protected $guarded = [];
 }
