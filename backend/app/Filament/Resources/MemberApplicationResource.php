@@ -6,6 +6,8 @@ use App\Filament\Resources\MemberApplicationResource\Pages;
 use App\Models\MemberApplication;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
+use App\Mail\NewMemberWelcome;
+use App\Mail\MemberApplicationRejected;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -15,6 +17,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MemberApplicationResource extends Resource
 {
@@ -82,7 +86,10 @@ class MemberApplicationResource extends Resource
                     ->visible(fn (MemberApplication $record) => $record->finalized_at === null && $record->submitted_at !== null)
                     ->requiresConfirmation()
                     ->action(function (MemberApplication $record) {
-                        DB::transaction(function () use ($record) {
+                        $user = DB::transaction(function () use ($record) {
+                            // Generate a unique membership number within the branch (6 digits)
+                            $membership = User::generateMembershipNumber((int) $record->branch_id);
+
                             // Create the user
                             $user = User::create([
                                 'name' => $record->name,
@@ -90,6 +97,7 @@ class MemberApplicationResource extends Resource
                                 'phone' => $record->phone,
                                 'address' => $record->address,
                                 'branch_id' => $record->branch_id,
+                                'membership_number' => $membership,
                                 'password' => $record->password_hash, // Already hashed during app submission
                                 'email_verified_at' => $record->email_verified_at,
                                 'passport_path' => $record->passport_path,
@@ -104,11 +112,20 @@ class MemberApplicationResource extends Resource
                                 'user_id' => $user->id,
                                 'email' => $user->email,
                             ]);
+
+                            return $user;
                         });
+
+                        // Send welcome email
+                        try {
+                            Mail::to($user->email)->send(new NewMemberWelcome($user));
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send welcome email', ['error' => $e->getMessage()]);
+                        }
 
                         Notification::make()
                             ->title('Application Approved')
-                            ->body('A new member account has been created.')
+                            ->body('A new member account has been created and a welcome email has been sent.')
                             ->success()
                             ->send();
                     }),
@@ -133,8 +150,16 @@ class MemberApplicationResource extends Resource
                             'reason' => $data['reason'],
                         ]);
 
+                        // Send rejection email
+                        try {
+                            Mail::to($record->email)->send(new MemberApplicationRejected($record, $data['reason']));
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send rejection email', ['error' => $e->getMessage()]);
+                        }
+
                         Notification::make()
                             ->title('Application Rejected')
+                            ->body('The application has been rejected and the applicant has been notified.')
                             ->danger()
                             ->send();
                     }),
@@ -176,14 +201,19 @@ class MemberApplicationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
+        $authUser = auth()->user();
 
-        // If the user is a Super Admin, let them see everything
-        if ($user->hasRole('super_admin')) {
+        // If not authenticated or unexpected guard result, return no records for safety
+        if (!($authUser instanceof \App\Models\User)) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        // If the user is a Super Admin or platform admin, let them see everything
+        if ($authUser->hasRole('super_admin') || ($authUser->is_admin === true)) {
             return parent::getEloquentQuery();
         }
 
         // Otherwise, only show records belonging to the user's branch
-        return parent::getEloquentQuery()->where('branch_id', $user->branch_id);
+        return parent::getEloquentQuery()->where('branch_id', $authUser->branch_id);
     }
 }

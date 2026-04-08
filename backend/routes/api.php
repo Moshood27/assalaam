@@ -99,8 +99,8 @@ Route::match(['get', 'post'], '/vtu/webhook', [\App\Http\Controllers\Api\Utility
 // Alias for ClubKonnect/Nellobytes callback URL
 Route::match(['get', 'post'], '/vtu/callback', [\App\Http\Controllers\Api\UtilityController::class, 'handleWebhook']);
 
-// Protected endpoints
-Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
+// Protected endpoints (rate limited)
+Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(function () {
     // Takaful (member-facing)
     Route::get('/takaful/summary', [TakafulController::class, 'summary']);
     Route::get('/takaful/contributions', [TakafulController::class, 'contributions']);

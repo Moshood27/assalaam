@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\WalletTransaction;
+use App\Models\QardHasan;
+use App\Models\Contribution;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -28,16 +32,16 @@ class DashboardController extends Controller
             }
         }
 
-        // Guard against missing tables on fresh environments
-        $transactions = collect();
-        if (Schema::hasTable('contributions')) {
-            $transactions = $user->contributions()
-                ->with('scheme')
+        // Recent Wallet Transactions (Holistic activity)
+        $walletTransactions = collect();
+        if (Schema::hasTable('wallet_transactions')) {
+            $walletTransactions = $user->walletTransactions()
                 ->orderByDesc('created_at')
-                ->take(5)
+                ->take(10)
                 ->get();
         }
 
+        // Recent Utility Transactions
         $utility = collect();
         if (Schema::hasTable('utility_transactions')) {
             $utility = $user->utilityTransactions()
@@ -46,6 +50,27 @@ class DashboardController extends Controller
                 ->get();
         }
 
+        // Aggregates for KPIs
+        $totalContributions = 0;
+        if (Schema::hasTable('contributions')) {
+            $totalContributions = (float) $user->contributions()->where('status', 'success')->sum('amount');
+        }
+
+        $outstandingLoans = 0;
+        if (Schema::hasTable('qard_hasans')) {
+            $outstandingLoans = (float) $user->qardHasans()
+                ->where('status', 'approved')
+                ->sum('balance');
+        }
+
+        $kpis = [
+            'contributions' => $totalContributions,
+            'loans' => $outstandingLoans,
+            'wallet_balance' => (float) $user->balance,
+            'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,
+            'has_pin' => !empty($user->transaction_pin_hash),
+        ];
+
         return response()->json([
             'full_name' => $user->name,
             'email' => $user->email,
@@ -53,6 +78,10 @@ class DashboardController extends Controller
             'passport_url' => $passportUrl,
             'balance' => (float) $user->balance,
             'joined_at' => optional($user->created_at)->toISOString(),
+            'branch' => $user->branch ? [
+                'id' => $user->branch->id,
+                'name' => $user->branch->name,
+            ] : null,
             'virtual_account' => [
                 'account_number' => $user->dva_account_number,
                 'bank_name' => $user->dva_bank_name,
@@ -64,7 +93,8 @@ class DashboardController extends Controller
                     ))
                     : null,
             ],
-            'transactions' => $transactions,
+            'kpis' => $kpis,
+            'transactions' => $walletTransactions,
             'utility_transactions' => $utility,
         ]);
     }

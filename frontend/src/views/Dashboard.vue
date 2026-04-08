@@ -38,6 +38,18 @@
         </div>
       </div>
 
+      <!-- PIN Warning -->
+      <div v-if="dashboardData.kpis && !dashboardData.kpis.has_pin"
+           class="mt-4 p-4 rounded-3xl bg-amber-50 border border-amber-200 flex items-center gap-3"
+           @click="$router.push('/profile')">
+        <div class="text-2xl">🔑</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-amber-900">Transaction PIN not set</p>
+          <p class="text-xs text-amber-700">You need a PIN to transfer or withdraw funds.</p>
+        </div>
+        <div class="text-amber-400">➡️</div>
+      </div>
+
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
@@ -87,6 +99,14 @@
         <div class="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center text-2xl">🛒</div>
         <span class="text-sm font-bold text-slate-700">Store</span>
       </button>
+      <button @click="$router.push('/merchant/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">📸</div>
+        <span class="text-sm font-bold text-slate-700">Pay Merchant</span>
+      </button>
+      <button @click="$router.push('/merchant/receive')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">🔲</div>
+        <span class="text-sm font-bold text-slate-700">Receive QR</span>
+      </button>
       <button @click="$router.push('/agm')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-fuchsia-50 rounded-2xl flex items-center justify-center text-2xl">🗳️</div>
         <span class="text-sm font-bold text-slate-700">AGM & Voting</span>
@@ -122,15 +142,14 @@
         <div v-for="tx in dashboardData.transactions" :key="tx.id"
              class="bg-white p-4 rounded-2xl flex items-center justify-between gap-3 overflow-hidden border border-slate-100 shadow-sm">
           <div class="flex items-center gap-3 min-w-0 flex-1">
-            <div :class="tx.status === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-yellow-100 text-yellow-600'"
+            <div :class="tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'"
                  class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
-              {{ tx.status === 'success' ? '✓' : '⌛' }}
+              {{ tx.type === 'credit' ? '+' : '−' }}
             </div>
             <div class="min-w-0 overflow-hidden">
               <div class="flex items-center gap-2 flex-wrap">
-                <p class="font-bold text-slate-800 text-sm truncate max-w-[160px] sm:max-w-none">{{ tx.scheme?.name || (isFine(tx) ? 'Lateness/Apology Fine' : 'Contribution') }}</p>
+                <p class="font-bold text-slate-800 text-sm truncate max-w-[160px] sm:max-w-none">{{ txTitle(tx) }}</p>
                 <span v-if="isFine(tx)" class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-black uppercase">Fine</span>
-                <span v-if="tx.status === 'success'" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase">Approved</span>
               </div>
               <p class="text-[10px] text-gray-500 uppercase font-medium">{{ formatDate(tx.created_at) }}</p>
               <p class="text-[10px] text-slate-400 font-mono truncate">{{ txPrefix(tx) }}</p>
@@ -232,6 +251,8 @@ const copy = async (text) => {
 
 const kpis = computed(() => {
   const d = dashboardData.value || {}
+  if (d.kpis) return d.kpis
+
   const txs = Array.isArray(d.transactions) ? d.transactions : []
   const utils = Array.isArray(d.utility_transactions) ? d.utility_transactions : []
   const totalContrib = txs.reduce((sum, t) => sum + Number(t.amount || 0), 0)
@@ -251,17 +272,32 @@ const chart = computed(() => {
   return { categories, series }
 })
 
+const txTitle = (tx) => {
+  const src = tx?.source
+  if (src === 'wallet_allocation') return 'Allocation to Schemes'
+  if (src === 'paystack_dva') return 'Bank Transfer (DVA)'
+  if (src === 'vtu_airtime') return 'Airtime Purchase'
+  if (src === 'vtu_data') return 'Data Purchase'
+  if (src === 'p2p_transfer') {
+    if (tx.type === 'debit') {
+      const name = tx?.meta?.to_name || tx?.meta?.to_membership
+      return name ? `Transfer to ${name}` : 'Transfer Sent'
+    } else {
+      const name = tx?.meta?.from_name || tx?.meta?.from_membership
+      return name ? `Transfer from ${name}` : 'Transfer Received'
+    }
+  }
+  if (src === 'contribution' || (tx.meta && tx.meta.scheme_name)) return tx.meta.scheme_name || 'Contribution'
+  return 'Wallet Transaction'
+}
 const txPrefix = (tx) => {
-  const ref = tx.reference || tx.tx_ref || ''
-  if (ref) return ref
-  const schemeName = (tx.scheme?.name || '').toLowerCase()
-  if (tx.type === 'loan' || schemeName.includes('loan')) return `lnref_${tx.id}`
-  if (tx.type === 'fine' || schemeName.includes('fine') || schemeName.includes('lateness') || schemeName.includes('apology')) return `fine_${tx.id}`
-  return `dpref_${tx.id}`
+  return tx.reference || tx.tx_ref || `tx_${tx.id}`
 }
 const isFine = (tx) => {
-  const schemeName = (tx.scheme?.name || '').toLowerCase()
-  return tx.type === 'fine' || schemeName.includes('fine') || schemeName.includes('lateness') || schemeName.includes('apology')
+  const src = (tx.source || '').toLowerCase()
+  const meta = tx.meta || {}
+  const schemeName = (meta.scheme_name || '').toLowerCase()
+  return src.includes('fine') || schemeName.includes('fine') || schemeName.includes('lateness') || schemeName.includes('apology')
 }
 
 const utilLabel = (ux) => {

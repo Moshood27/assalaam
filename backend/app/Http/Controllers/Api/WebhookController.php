@@ -55,6 +55,11 @@ class WebhookController extends Controller
                 if (!$user && isset($meta['user_id'])) { $uid = is_numeric($meta['user_id']) ? (int)$meta['user_id'] : null; if ($uid) { $user = \App\Models\User::find($uid); } }
             }
             if ($user) {
+                // Capture to Sentry to notify admin immediately
+                if (app()->bound('sentry')) {
+                    app('sentry')->captureMessage('Payment Failure: Paystack ' . $reason, \Sentry\Severity::error());
+                }
+
                 try {
                     if (!empty($user->email)) {
                         Mail::to($user->email)->send(new PaymentStatusMail(
@@ -570,6 +575,12 @@ class WebhookController extends Controller
                     }
                     if ($user) {
                         $reason = $vd['processor_response'] ?? ($vd['status'] ?? 'Payment failed');
+
+                        // Capture to Sentry to notify admin immediately
+                        if (app()->bound('sentry')) {
+                            app('sentry')->captureMessage('Payment Failure: Flutterwave ' . $reason, \Sentry\Severity::error());
+                        }
+
                         if (!empty($user->email)) {
                             Mail::to($user->email)->send(new PaymentStatusMail(
                                 status: 'failed',

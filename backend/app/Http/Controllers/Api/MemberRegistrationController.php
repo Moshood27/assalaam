@@ -289,12 +289,12 @@ class MemberRegistrationController extends Controller
             $verifier = app(\App\Services\Kyc\KycVerifier::class);
             $kyc = $verifier->verifyBvnWithFace($bvn, $app->passport_path, $app->id_card_path);
         } catch (\Throwable $e) {
-            \Log::error('KYC verification exception', ['error' => $e->getMessage()]);
+            Log::error('KYC verification exception', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Unable to perform KYC verification. Please try again later.'], 503);
         }
         if (empty($kyc['success'])) {
             $reason = $kyc['status'] ?? 'failed';
-            \Log::warning('KYC verification failed', [
+            Log::warning('KYC verification failed', [
                 'provider' => $kyc['provider'] ?? null,
                 'status' => $kyc['status'] ?? null,
                 'score' => $kyc['score'] ?? null,
@@ -310,7 +310,7 @@ class MemberRegistrationController extends Controller
         }
 
         // KYC passed — log minimal observability fields for support
-        \Log::info('KYC verification passed', [
+        Log::info('KYC verification passed', [
             'provider' => $kyc['provider'] ?? null,
             'status' => $kyc['status'] ?? null,
             'score' => $kyc['score'] ?? null,
@@ -321,7 +321,7 @@ class MemberRegistrationController extends Controller
         ]);
 
         // Generate a unique membership number within the branch (6 digits)
-        $membership = $this->generateMembershipNumber((int) $app->branch_id);
+        $membership = User::generateMembershipNumber((int) $app->branch_id);
 
         // Create the user
         $user = new User();
@@ -393,17 +393,6 @@ class MemberRegistrationController extends Controller
         ]);
     }
 
-    protected function generateMembershipNumber(int $branchId): string
-    {
-        // Try up to 20 attempts to avoid rare collisions
-        for ($i = 0; $i < 20; $i++) {
-            $num = (string) random_int(100000, 999999);
-            $exists = User::where('branch_id', $branchId)->where('membership_number', $num)->exists();
-            if (!$exists) return $num;
-        }
-        // Fallback to timestamp-based unique suffix
-        return substr((string) (time() . random_int(10, 99)), -6);
-    }
 
     protected function maskPhone(string $phone): string
     {

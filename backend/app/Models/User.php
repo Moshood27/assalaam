@@ -304,6 +304,21 @@ class User extends Authenticatable implements FilamentUser
         return $this->morphMany(Activity::class, 'subject');
     }
 
+    /**
+     * Generate a unique 6-digit membership number for a branch.
+     */
+    public static function generateMembershipNumber(int $branchId): string
+    {
+        // Try up to 20 attempts to avoid rare collisions
+        for ($i = 0; $i < 20; $i++) {
+            $num = (string) random_int(100000, 999999);
+            $exists = self::where('branch_id', $branchId)->where('membership_number', $num)->exists();
+            if (!$exists) return $num;
+        }
+        // Fallback to timestamp-based unique suffix
+        return substr((string) (time() . random_int(10, 99)), -6);
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->is_admin === true || $this->hasAnyRole(['super_admin', 'Branch Manager', 'Clerk']);
