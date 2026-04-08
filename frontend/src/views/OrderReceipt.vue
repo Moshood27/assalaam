@@ -66,7 +66,7 @@
         </div>
 
         <div class="flex items-center justify-end">
-          <button class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm" @click="print()">Print</button>
+          <a :href="getDownloadUrl()" target="_blank" class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm">Print / Download PDF</a>
         </div>
       </section>
     </div>
@@ -239,8 +239,10 @@ const load = async () => {
   }
 }
 
-const print = () => {
-  try { window.print() } catch (_) {}
+const getDownloadUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-order-receipt/${id}?token=${encodeURIComponent(token)}`
 }
 
 onMounted(load)

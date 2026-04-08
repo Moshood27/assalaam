@@ -2538,12 +2538,18 @@ class UtilityController extends Controller
                 ->post($baseUrl . $endpoint, $payload);
         } catch (\Throwable $e) {
             Log::error('VTU provider HTTP error', ['exception' => $e->getMessage(), 'endpoint' => $endpoint]);
+            if (app()->bound('sentry')) {
+                app('sentry')->captureException($e);
+            }
             return [ 'ok' => false, 'error' => 'Network error', 'body' => null, 'status' => 0 ];
         }
 
         $json = $resp->json();
         if (!$resp->ok()) {
             Log::error('VTU provider responded with error', ['status' => $resp->status(), 'body' => $json, 'endpoint' => $endpoint]);
+            if (app()->bound('sentry')) {
+                app('sentry')->captureMessage('VTPass API Error: ' . ($json['message'] ?? 'Unknown'), \Sentry\Severity::error());
+            }
             return [ 'ok' => false, 'error' => 'Bad response', 'body' => $json, 'status' => $resp->status() ];
         }
 

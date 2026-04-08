@@ -230,6 +230,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::get('/download-dividend/{year}', [ExportController::class, 'downloadDividend']);
     Route::get('/download-appropriation/{year}', [ExportController::class, 'downloadAppropriation']);
     Route::get('/download-financials/{year}', [ExportController::class, 'downloadFinancials']);
+    Route::get('/download-order-receipt/{id}', [ExportController::class, 'downloadOrderReceipt']);
 
     // Zakat
     Route::get('/zakat/estimate', [ZakatController::class, 'estimate']);

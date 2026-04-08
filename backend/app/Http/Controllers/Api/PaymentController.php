@@ -97,97 +97,114 @@ class PaymentController extends Controller
         // Choose payment gateway: paystack (default) or flutterwave
         $gateway = strtolower($request->input('gateway', 'paystack'));
 
-        if ($gateway === 'flutterwave') {
-            $flwSecret = config('services.flutterwave.secret_key');
-            if (!$flwSecret) {
-                Log::warning('Flutterwave secret key is not set');
+        try {
+            if ($gateway === 'flutterwave') {
+                $flwSecret = config('services.flutterwave.secret_key');
+                if (!$flwSecret) {
+                    Log::warning('Flutterwave secret key is not set');
+                    return response()->json(['message' => 'Payment provider not configured'], 500);
+                }
+
+                $payload = [
+                    'tx_ref' => $reference,
+                    'amount' => round($totalAmount, 2),
+                    'currency' => 'NGN',
+                    'redirect_url' => $validated['callback_url'] ?? null,
+                    'customer' => [
+                        'email' => $user->email,
+                        'name' => $user->name,
+                        'phonenumber' => $user->phone,
+                    ],
+                    'meta' => [
+                        'user_id' => $user->id,
+                        // Include only scheme ids and server-sanctioned amounts
+                        'distribution' => $sanitized,
+                    ],
+                ];
+                if (empty($validated['callback_url'])) {
+                    unset($payload['redirect_url']);
+                }
+
+                $resp = Http::withToken($flwSecret)
+                    ->acceptJson()
+                    ->post('https://api.flutterwave.com/v3/payments', $payload);
+
+                if (!$resp->ok() || ($resp->json('status') !== 'success')) {
+                    Log::error('Flutterwave initialize failed', ['reference' => $reference, 'body' => $resp->json()]);
+
+                    if (app()->bound('sentry')) {
+                        app('sentry')->captureMessage('Payment Failure: Flutterwave Initialize Failed', \Sentry\Severity::error());
+                    }
+
+                    return response()->json([
+                        'message' => 'Failed to initialize payment',
+                        'errors' => $resp->json('message') ?? 'Unknown error',
+                    ], 502);
+                }
+
+                $data = $resp->json('data');
+                return response()->json([
+                    'authorization_url' => $data['link'] ?? null,
+                    'checkout_url' => $data['link'] ?? null,
+                    'reference' => $reference,
+                    'total' => $totalAmount,
+                ]);
+            }
+
+            // Default: Paystack
+            $secret = config('services.paystack.secret_key');
+            if (! $secret) {
+                Log::warning('Paystack secret key is not set');
                 return response()->json(['message' => 'Payment provider not configured'], 500);
             }
 
             $payload = [
-                'tx_ref' => $reference,
-                'amount' => round($totalAmount, 2),
+                'email' => $user->email,
+                'amount' => (int) round($totalAmount * 100), // Kobo
+                'reference' => $reference,
                 'currency' => 'NGN',
-                'redirect_url' => $validated['callback_url'] ?? null,
-                'customer' => [
-                    'email' => $user->email,
-                    'name' => $user->name,
-                    'phonenumber' => $user->phone,
-                ],
-                'meta' => [
+                'metadata' => [
                     'user_id' => $user->id,
                     // Include only scheme ids and server-sanctioned amounts
                     'distribution' => $sanitized,
                 ],
             ];
-            if (empty($validated['callback_url'])) {
-                unset($payload['redirect_url']);
+            if (!empty($validated['callback_url'])) {
+                $payload['callback_url'] = $validated['callback_url'];
             }
 
-            $resp = Http::withToken($flwSecret)
+            $response = Http::withToken($secret)
                 ->acceptJson()
-                ->post('https://api.flutterwave.com/v3/payments', $payload);
+                ->post('https://api.paystack.co/transaction/initialize', $payload);
 
-            if (!$resp->ok() || ($resp->json('status') !== 'success')) {
-                Log::error('Flutterwave initialize failed', ['reference' => $reference, 'body' => $resp->json()]);
+            if (! $response->ok() || ! ($response->json('status') === true)) {
+                Log::error('Paystack initialize failed', ['reference' => $reference, 'body' => $response->json()]);
+
+                if (app()->bound('sentry')) {
+                    app('sentry')->captureMessage('Payment Failure: Paystack Initialize Failed', \Sentry\Severity::error());
+                }
+
                 return response()->json([
                     'message' => 'Failed to initialize payment',
-                    'errors' => $resp->json('message') ?? 'Unknown error',
+                    'errors' => $response->json('message') ?? 'Unknown error',
                 ], 502);
             }
 
-            $data = $resp->json('data');
+            $data = $response->json('data');
+
             return response()->json([
-                'authorization_url' => $data['link'] ?? null,
-                'checkout_url' => $data['link'] ?? null,
-                'reference' => $reference,
+                'authorization_url' => $data['authorization_url'] ?? null,
+                'checkout_url' => $data['authorization_url'] ?? null, // backward-compatible alias for frontend
+                'access_code' => $data['access_code'] ?? null,
+                'reference' => $data['reference'] ?? $reference,
                 'total' => $totalAmount,
             ]);
+        } catch (\Exception $e) {
+            if (app()->bound('sentry')) {
+                app('sentry')->captureException($e);
+            }
+            throw $e;
         }
-
-        // Default: Paystack
-        $secret = config('services.paystack.secret_key');
-        if (! $secret) {
-            Log::warning('Paystack secret key is not set');
-            return response()->json(['message' => 'Payment provider not configured'], 500);
-        }
-
-        $payload = [
-            'email' => $user->email,
-            'amount' => (int) round($totalAmount * 100), // Kobo
-            'reference' => $reference,
-            'currency' => 'NGN',
-            'metadata' => [
-                'user_id' => $user->id,
-                // Include only scheme ids and server-sanctioned amounts
-                'distribution' => $sanitized,
-            ],
-        ];
-        if (!empty($validated['callback_url'])) {
-            $payload['callback_url'] = $validated['callback_url'];
-        }
-
-        $response = Http::withToken($secret)
-            ->acceptJson()
-            ->post('https://api.paystack.co/transaction/initialize', $payload);
-
-        if (! $response->ok() || ! ($response->json('status') === true)) {
-            Log::error('Paystack initialize failed', ['reference' => $reference, 'body' => $response->json()]);
-            return response()->json([
-                'message' => 'Failed to initialize payment',
-                'errors' => $response->json('message') ?? 'Unknown error',
-            ], 502);
-        }
-
-        $data = $response->json('data');
-
-        return response()->json([
-            'authorization_url' => $data['authorization_url'] ?? null,
-            'checkout_url' => $data['authorization_url'] ?? null, // backward-compatible alias for frontend
-            'access_code' => $data['access_code'] ?? null,
-            'reference' => $data['reference'] ?? $reference,
-            'total' => $totalAmount,
-        ]);
     }
 
     // Server-side verification endpoint for redirect callbacks (prevents spoofing "success" URLs)

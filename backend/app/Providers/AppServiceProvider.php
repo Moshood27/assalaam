@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
         // Stricter limiter for login endpoints to mitigate brute force
         RateLimiter::for('login', function (Request $request) {
             return [
-                Limit::perMinute(10)->by($request->ip()),
+                Limit::perMinute(5)->by($request->ip()),
             ];
         });
     }

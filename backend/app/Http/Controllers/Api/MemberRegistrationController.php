@@ -164,6 +164,9 @@ class MemberRegistrationController extends Controller
                 $sentTo['email'] = $this->maskEmail($app->email);
             } catch (\Throwable $e) {
                 Log::warning('Registration email OTP send failed', ['error' => $e->getMessage()]);
+                if (app()->bound('sentry')) {
+                    app('sentry')->captureException($e);
+                }
             }
         }
 
@@ -175,6 +178,9 @@ class MemberRegistrationController extends Controller
                 $sentTo['phone'] = $this->maskPhone($app->phone);
             } catch (\Throwable $e) {
                 Log::warning('Registration SMS OTP send failed', ['error' => $e->getMessage()]);
+                if (app()->bound('sentry')) {
+                    app('sentry')->captureException($e);
+                }
             }
         }
 

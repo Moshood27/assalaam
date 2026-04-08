@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
+use App\Models\StoreOrder;
 use App\Models\WalletTransaction;
 use App\Services\AccountingReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -269,6 +270,33 @@ class ExportController extends Controller
             return $pdf->download($filename);
         } catch (\Throwable $e) {
             \Log::error('downloadWalletReceipt error', ['exception' => $e->getMessage(), 'tx_id' => $id]);
+            return response()->json(['message' => 'Unable to generate receipt at the moment. Please try again later.'], 422);
+        }
+    }
+
+    public function downloadOrderReceipt(Request $request, int $id)
+    {
+        $user = $request->user();
+        // Only allow member to download their own receipts
+        $order = StoreOrder::with('items')->where('id', $id)->where('user_id', $user->id)->first();
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        // Build data for receipt
+        $branch = optional($user->branch)->name;
+        $data = [
+            'user' => $user,
+            'branch' => $branch,
+            'order' => $order,
+        ];
+
+        try {
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.order_receipt', $data);
+            $filename = 'Order_Receipt_' . ($order->reference ?: ('ORD'.$order->id)) . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadOrderReceipt error', ['exception' => $e->getMessage(), 'order_id' => $id]);
             return response()->json(['message' => 'Unable to generate receipt at the moment. Please try again later.'], 422);
         }
     }
