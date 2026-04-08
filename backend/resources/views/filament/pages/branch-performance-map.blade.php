@@ -1,36 +1,42 @@
 <x-filament-panels::page>
-<div>
-    <div class="w-full space-y-4">
-        {{-- 1. Only ONE root element inside the page component --}}
+    <div class="w-full"> {{-- THE ONLY ROOT ELEMENT --}}
 
-        {{-- Map Legend --}}
-        <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800">
-            <div class="flex items-center gap-2">
-                <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
-                <span class="text-sm">Low Default (< 10%)</span>
+        <div class="space-y-4">
+            {{-- Legend Section --}}
+            <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
+                    <span class="text-sm font-medium">Low Default (< 10%)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-4 h-4 bg-orange-500 rounded-full"></span>
+                    <span class="text-sm font-medium">Medium Default (10% - 20%)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
+                    <span class="text-sm font-medium">High Default (> 20%)</span>
+                </div>
+                <div class="text-sm text-gray-500 italic">
+                    Marker size reflects Savings Rate
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="inline-block w-4 h-4 bg-orange-500 rounded-full"></span>
-                <span class="text-sm">Medium Default (10% - 20%)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
-                <span class="text-sm">High Default (> 20%)</span>
-            </div>
-            <div class="text-sm text-gray-500 italic">
-                Marker size reflects Savings Rate
+
+            {{-- Map Container --}}
+            <div wire:ignore
+                 id="map"
+                 style="height: 600px; width: 100%; border-radius: 12px; z-index: 1;"
+                 class="border border-gray-300 dark:border-gray-700 shadow-lg">
             </div>
         </div>
 
-        {{-- Map Container --}}
-        <div wire:ignore
-             id="map"
-             style="height: 600px; width: 100%; border-radius: 12px; z-index: 1;"
-             class="border border-gray-300 dark:border-gray-700 shadow-lg">
-        </div>
-
-        {{-- CSS and JS specifically for this page --}}
+        {{-- ALL Assets and Scripts MUST be inside the parent div --}}
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <style>
+            .leaflet-popup-content-wrapper { border-radius: 8px; padding: 0; }
+            .leaflet-popup-content { margin: 12px; width: 220px !important; }
+            .leaflet-container { font-family: inherit; }
+        </style>
+
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
         <script>
@@ -45,11 +51,12 @@
 
                 const validBranches = branches.filter(b => b.latitude && b.longitude);
 
-                // Initialize Map
+                if (validBranches.length === 0) return;
+
                 const map = L.map('map').setView([validBranches[0].latitude, validBranches[0].longitude], 6);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap'
+                    attribution: '&copy; OpenStreetMap'
                 }).addTo(map);
 
                 const markers = [];
@@ -69,10 +76,10 @@
                     }).addTo(map);
 
                     marker.bindPopup(`
-                        <div style="min-width: 200px">
-                            <h3 style="font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 5px;">${branch.name}</h3>
-                            <p>Savings: ₦${branch.savings_rate.toLocaleString()}</p>
-                            <p>Default Rate: <span style="color: ${color}">${branch.default_rate}%</span></p>
+                        <div class="text-sm">
+                            <h3 class="font-bold text-base border-b border-gray-200 mb-2 pb-1">${branch.name}</h3>
+                            <p class="mb-1"><strong>Savings:</strong> ₦${branch.savings_rate.toLocaleString()}</p>
+                            <p><strong>Default Rate:</strong> <span style="color: ${color}; font-weight: bold;">${branch.default_rate}%</span></p>
                         </div>
                     `);
 
@@ -84,11 +91,5 @@
                 }
             });
         </script>
-
-        <style>
-            .leaflet-popup-content-wrapper { border-radius: 8px; }
-            .leaflet-container { font-family: inherit; }
-        </style>
-    </div>
-</div>
+    </div> {{-- END OF ROOT ELEMENT --}}
 </x-filament-panels::page>
