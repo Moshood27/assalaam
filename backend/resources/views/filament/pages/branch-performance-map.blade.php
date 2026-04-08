@@ -1,6 +1,9 @@
 <x-filament-panels::page>
-    <div class="space-y-4">
-        <div class="flex items-center justify-between">
+    {{-- 1. Only ONE root element inside the page component --}}
+    <div class="w-full space-y-4">
+
+        {{-- Map Legend --}}
+        <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800">
             <div class="flex items-center gap-2">
                 <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
                 <span class="text-sm">Low Default (< 10%)</span>
@@ -13,45 +16,45 @@
                 <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
                 <span class="text-sm">High Default (> 20%)</span>
             </div>
-            <div class="flex items-center gap-2 ml-4">
-                <span class="text-sm text-gray-500 italic">Marker size reflects Savings Rate</span>
+            <div class="text-sm text-gray-500 italic">
+                Marker size reflects Savings Rate
             </div>
         </div>
 
-        <div wire:ignore id="map" style="height: 600px; width: 100%; border-radius: 10px; z-index: 1;" class="border border-gray-300 dark:border-gray-700 shadow-sm"></div>
+        {{-- Map Container --}}
+        <div wire:ignore
+             id="map"
+             style="height: 600px; width: 100%; border-radius: 12px; z-index: 1;"
+             class="border border-gray-300 dark:border-gray-700 shadow-lg">
+        </div>
 
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        {{-- CSS and JS specifically for this page --}}
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
         <script>
             document.addEventListener('livewire:initialized', function () {
                 const branches = @json($branches);
-
                 const mapContainer = document.getElementById('map');
+
                 if (!branches || branches.length === 0) {
-                    mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No branches with coordinates found. Please set coordinates in Branch Management.</div>';
+                    mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No branches found.</div>';
                     return;
                 }
 
-                // Find a valid starting point
                 const validBranches = branches.filter(b => b.latitude && b.longitude);
-                if (validBranches.length === 0) {
-                    mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No valid branch coordinates.</div>';
-                    return;
-                }
 
+                // Initialize Map
                 const map = L.map('map').setView([validBranches[0].latitude, validBranches[0].longitude], 6);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    attribution: '© OpenStreetMap'
                 }).addTo(map);
 
                 const markers = [];
 
                 validBranches.forEach(branch => {
                     const color = branch.default_rate > 20 ? '#ef4444' : (branch.default_rate > 10 ? '#f97316' : '#22c55e');
-
-                    // Scale radius between 5 and 30 based on savings rate relative to max
                     const maxSavings = Math.max(...validBranches.map(b => b.savings_rate)) || 1;
                     const radius = 5 + (branch.savings_rate / maxSavings) * 25;
 
@@ -65,12 +68,10 @@
                     }).addTo(map);
 
                     marker.bindPopup(`
-                        <div class="p-2">
-                            <h3 class="font-bold text-lg border-b mb-2 pb-1">${branch.name}</h3>
-                            <div class="space-y-1">
-                                <p><span class="text-gray-600 font-medium">Savings Rate:</span> ₦${branch.savings_rate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                                <p><span class="text-gray-600 font-medium">Default Rate:</span> <span class="${branch.default_rate > 20 ? 'text-red-600' : 'text-gray-900'} font-bold">${branch.default_rate}%</span></p>
-                            </div>
+                        <div style="min-width: 200px">
+                            <h3 style="font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 5px;">${branch.name}</h3>
+                            <p>Savings: ₦${branch.savings_rate.toLocaleString()}</p>
+                            <p>Default Rate: <span style="color: ${color}">${branch.default_rate}%</span></p>
                         </div>
                     `);
 
@@ -78,21 +79,14 @@
                 });
 
                 if (markers.length > 0) {
-                    const bounds = L.latLngBounds(markers);
-                    map.fitBounds(bounds, { padding: [50, 50] });
+                    map.fitBounds(L.latLngBounds(markers), { padding: [50, 50] });
                 }
             });
         </script>
 
         <style>
-            .leaflet-popup-content-wrapper {
-                border-radius: 8px;
-                padding: 0;
-            }
-            .leaflet-popup-content {
-                margin: 0;
-                width: 250px !important;
-            }
+            .leaflet-popup-content-wrapper { border-radius: 8px; }
+            .leaflet-container { font-family: inherit; }
         </style>
     </div>
 </x-filament-panels::page>
