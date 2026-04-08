@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Backup\BackupDestination\BackupDestination;
 use Spatie\Backup\BackupDestination\BackupDestinationFactory;
+use Spatie\Backup\Config\Config;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ManageBackups extends Page implements HasTable
@@ -93,7 +94,7 @@ class ManageBackups extends Page implements HasTable
 
     protected function getBackupRecords(): Collection
     {
-        return collect(BackupDestinationFactory::createFromArray(config('backup.backup')))
+        return BackupDestinationFactory::createFromArray(app(Config::class))
             ->flatMap(function (BackupDestination $backupDestination) {
                 return $backupDestination->backups()
                     ->map(function ($backup) use ($backupDestination) {
