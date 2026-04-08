@@ -160,7 +160,7 @@ class AuditTrailResource extends Resource
                             ->label('Before')
                             ->keyLabel('Field')
                             ->valueLabel('Value')
-                            ->formatStateUsing(function ($state) {
+                            ->state(function ($state) {
                                 if (auth()->user()->hasRole('super_admin') || !is_array($state)) {
                                     return $state;
                                 }
@@ -176,7 +176,7 @@ class AuditTrailResource extends Resource
                             ->label('After')
                             ->keyLabel('Field')
                             ->valueLabel('Value')
-                            ->formatStateUsing(function ($state) {
+                            ->state(function ($state) {
                                 if (auth()->user()->hasRole('super_admin') || !is_array($state)) {
                                     return $state;
                                 }

@@ -1,32 +1,30 @@
 <x-filament-panels::page>
-    <div>
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
-                    <span class="text-sm">Low Default (< 10%)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-4 h-4 bg-orange-500 rounded-full"></span>
-                    <span class="text-sm">Medium Default (10% - 20%)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
-                    <span class="text-sm">High Default (> 20%)</span>
-                </div>
-                <div class="flex items-center gap-2 ml-4">
-                    <span class="text-sm text-gray-500 italic">Marker size reflects Savings Rate</span>
-                </div>
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-4 h-4 bg-green-500 rounded-full"></span>
+                <span class="text-sm">Low Default (< 10%)</span>
             </div>
-
-            <div wire:ignore id="map" style="height: 600px; width: 100%; border-radius: 10px; z-index: 1;" class="border border-gray-300 dark:border-gray-700 shadow-sm"></div>
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-4 h-4 bg-orange-500 rounded-full"></span>
+                <span class="text-sm">Medium Default (10% - 20%)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-4 h-4 bg-red-500 rounded-full"></span>
+                <span class="text-sm">High Default (> 20%)</span>
+            </div>
+            <div class="flex items-center gap-2 ml-4">
+                <span class="text-sm text-gray-500 italic">Marker size reflects Savings Rate</span>
+            </div>
         </div>
+
+        <div wire:ignore id="map" style="height: 600px; width: 100%; border-radius: 10px; z-index: 1;" class="border border-gray-300 dark:border-gray-700 shadow-sm"></div>
 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('livewire:initialized', function () {
                 const branches = @json($branches);
 
                 const mapContainer = document.getElementById('map');
