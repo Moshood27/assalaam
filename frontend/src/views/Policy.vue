@@ -1,77 +1,134 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-20">
-    <header class="p-4 bg-white border-b flex items-center justify-between">
-      <h1 class="text-xl font-bold">Member Terms & Policy</h1>
-      <button @click="$router.back()" class="text-slate-600">Close</button>
+  <div class="min-h-screen bg-slate-50 pb-20 font-sans">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Member Terms</h1>
+        <div class="w-6"></div>
+      </div>
     </header>
 
-    <main class="p-4 space-y-5 max-w-3xl mx-auto">
-      <p class="text-xs text-slate-500">Effective date: 2026-03-21</p>
+    <main class="p-4 space-y-6 max-w-3xl mx-auto">
+      <div class="flex items-center justify-between px-2">
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Effective: 2026-03-21</p>
+        <span class="badge bg-emerald-100 text-emerald-700">v1.2</span>
+      </div>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 space-y-3">
-        <p class="text-slate-700">
-          These Terms govern your use of the {{ brand.name }} member portal and mobile app. By accessing or using
+      <section class="card card-elevated p-6 bg-gradient-to-br from-white to-slate-50">
+        <p class="text-slate-700 leading-relaxed">
+          These Terms govern your use of the <span class="font-bold">{{ brand.name }}</span> member portal and mobile app. By accessing or using
           these services, you agree to be bound by the Terms below.
         </p>
       </section>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <h2 class="font-bold text-slate-900 mb-2">1. Eligibility and Account</h2>
-        <ul class="list-disc pl-5 text-slate-700 space-y-1">
-          <li>You must be a registered member of Assalam Co‑operative to access member features.</li>
-          <li>You are responsible for maintaining the confidentiality of your login credentials.</li>
-          <li>Notify Support immediately if you suspect unauthorized access to your account.</li>
-        </ul>
-      </section>
+      <div class="space-y-4">
+        <section class="card p-6">
+          <h2 class="font-black text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">01</span>
+            Eligibility and Account
+          </h2>
+          <ul class="space-y-3">
+            <li class="flex gap-3 items-start text-sm text-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              You must be a registered member of Assalam Co‑operative to access member features.
+            </li>
+            <li class="flex gap-3 items-start text-sm text-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              You are responsible for maintaining the confidentiality of your login credentials.
+            </li>
+            <li class="flex gap-3 items-start text-sm text-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Notify Support immediately if you suspect unauthorized access to your account.
+            </li>
+          </ul>
+        </section>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <h2 class="font-bold text-slate-900 mb-2">2. Services</h2>
-        <p class="text-slate-700">
-          Available services may include wallet funding, payments, VTU purchases, savings goals, loans, and AGM voting.
-          Features may change from time to time and may be subject to additional policies or guidelines.
-        </p>
-      </section>
+        <section class="card p-6">
+          <h2 class="font-black text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">02</span>
+            Services
+          </h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Available services may include wallet funding, payments, VTU purchases, savings goals, loans, and AGM voting.
+            Features may change from time to time and may be subject to additional policies or guidelines.
+          </p>
+        </section>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <h2 class="font-bold text-slate-900 mb-2">3. Acceptable Use</h2>
-        <ul class="list-disc pl-5 text-slate-700 space-y-1">
-          <li>Use the services only for lawful purposes and in accordance with co‑operative rules.</li>
-          <li>Do not attempt to interfere with the security or integrity of the platform.</li>
-          <li>Provide accurate information when requested and keep your profile up to date.</li>
-        </ul>
-      </section>
+        <section class="card p-6">
+          <h2 class="font-black text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">03</span>
+            Acceptable Use
+          </h2>
+          <ul class="space-y-3">
+            <li class="flex gap-3 items-start text-sm text-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Use the services only for lawful purposes and in accordance with co‑operative rules.
+            </li>
+            <li class="flex gap-3 items-start text-sm text-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Do not attempt to interfere with the security or integrity of the platform.
+            </li>
+          </ul>
+        </section>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <h2 class="font-bold text-slate-900 mb-2">4. Fees and Transactions</h2>
-        <p class="text-slate-700">
-          Certain transactions may attract fees as displayed within the app or communicated prior to completion. You
-          authorize us and our partners to process transactions you initiate.
-        </p>
-      </section>
+        <section class="card p-6">
+          <h2 class="font-black text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">04</span>
+            Fees and Transactions
+          </h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Certain transactions may attract fees as displayed within the app or communicated prior to completion. You
+            authorize us and our partners to process transactions you initiate.
+          </p>
+        </section>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <h2 class="font-bold text-slate-900 mb-2">5. Privacy</h2>
-        <p class="text-slate-700">
-          Our handling of personal data is described in our
-          <router-link to="/privacy" class="text-emerald-700 font-semibold hover:underline">Privacy Policy</router-link>.
-        </p>
-      </section>
+        <section class="card p-6">
+          <h2 class="font-black text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">05</span>
+            Privacy
+          </h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Our handling of personal data is described in our
+            <router-link to="/privacy" class="text-emerald-700 font-bold hover:underline">Privacy Policy</router-link>.
+          </p>
+        </section>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <h2 class="font-bold text-slate-900 mb-2">6. Changes</h2>
-        <p class="text-slate-700">
-          We may update these Terms from time to time. Material changes will be communicated within the app or via
-          registered contact channels.
-        </p>
-      </section>
+        <section class="card p-6">
+          <h2 class="font-black text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">06</span>
+            Changes
+          </h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            We may update these Terms from time to time. Material changes will be communicated within the app or via
+            registered contact channels.
+          </p>
+        </section>
 
-      <section class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <h2 class="font-bold text-slate-900 mb-2">7. Support</h2>
-        <p class="text-slate-700">
-          For questions or concerns, visit the <router-link to="/support" class="text-emerald-700 font-semibold hover:underline">Support</router-link>
-          page or email <a href="mailto:support@example.com" class="text-emerald-700 font-semibold hover:underline">support@example.com</a>.
-        </p>
-      </section>
+        <section class="card p-6">
+          <h2 class="font-black text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500">07</span>
+            Support
+          </h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            For questions or concerns, visit the <router-link to="/support" class="text-emerald-700 font-bold hover:underline">Support</router-link>
+            page or email <a href="mailto:support@example.com" class="text-emerald-700 font-bold hover:underline">support@example.com</a>.
+          </p>
+        </section>
+      </div>
     </main>
   </div>
 </template>

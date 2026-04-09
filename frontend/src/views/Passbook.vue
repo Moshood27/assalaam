@@ -2,15 +2,22 @@
   <div class="min-h-screen bg-slate-50 pb-24 font-sans">
     <header class="header-fintech">
       <div class="navbar-inner">
-        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">⬅️</button>
+        <button @click="$router.back()" aria-label="Back" class="hover:opacity-80 transition rounded-xl p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
         <h1 class="text-lg sm:text-xl font-bold text-slate-800">Passbook</h1>
         <a :href="getDownloadUrl()" target="_blank" class="btn-ghost text-xs">PDF</a>
       </div>
     </header>
 
     <div class="p-4 space-y-6">
+      <div v-if="loadError" class="card p-4 border border-rose-200 bg-rose-50 text-rose-700 text-sm">
+        {{ loadError }}
+      </div>
       <!-- Yearly summary -->
-      <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-6 text-white shadow-xl">
+      <div v-if="!isLoading" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-6 text-white shadow-xl">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-emerald-100 text-[10px] font-bold uppercase tracking-widest">Yearly Cumulative (₦)</p>
@@ -28,9 +35,10 @@
           <span class="font-black text-white">₦ {{ Number(dividendAmount).toLocaleString() }}</span>
         </p>
       </div>
+      <div v-else class="rounded-[2rem] p-6 shadow-xl bg-slate-200/60 animate-pulse h-28"></div>
 
       <!-- Grid -->
-      <div class="card card-elevated overflow-hidden">
+      <div v-if="!isLoading" class="card card-elevated overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -60,9 +68,15 @@
           </table>
         </div>
       </div>
+      <div v-else class="card card-elevated p-6 animate-pulse space-y-3">
+        <div class="h-4 bg-slate-200 rounded"></div>
+        <div class="h-4 bg-slate-200 rounded"></div>
+        <div class="h-4 bg-slate-200 rounded"></div>
+      </div>
+
       <p class="text-[10px] text-gray-400 mt-4 px-2 italic text-center">Swipe left/right to view all months</p>
 
-      <div v-if="showAgm" class="card p-4 border-emerald-200 bg-emerald-50">
+      <div v-if="!isLoading && showAgm" class="card p-4 border-emerald-200 bg-emerald-50">
         <div class="flex items-center justify-between mb-2">
           <p class="text-[10px] text-emerald-700 font-black uppercase tracking-widest">{{ selectedYear }} AGM Fee</p>
           <span :class="agmPaid ? 'bg-emerald-200 text-emerald-800' : 'bg-yellow-200 text-yellow-800'"
@@ -75,6 +89,8 @@
           <p class="text-slate-900 font-black">₦ {{ Number(agmAmount).toLocaleString() }}</p>
         </div>
       </div>
+      <div v-else-if="!isLoading && !showAgm" class="hidden"></div>
+      <div v-else class="card p-4 animate-pulse h-20"></div>
     </div>
 
     <nav class="bottom-nav">
@@ -97,7 +113,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from '../http.js'
-import { openBlob } from '../utils/download'
 
 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1]
@@ -107,12 +122,16 @@ const grandTotal = ref(0)
 const agmAmount = ref(0)
 const agmPaid = ref(false)
 const dividendAmount = ref(null)
+const isLoading = ref(true)
+const loadError = ref('')
 
 // Only show the AGM card if backend provided data (amount > 0) or payment status is true
 const showAgm = computed(() => Number(agmAmount.value) > 0 || Boolean(agmPaid.value))
 
 const fetchPassbook = async () => {
   const token = localStorage.getItem('token')
+  isLoading.value = true
+  loadError.value = ''
   try {
     const { data } = await axios.get(`/api/passbook/${selectedYear.value}`, { headers: { Authorization: `Bearer ${token}` } })
     matrix.value = data.matrix
@@ -133,10 +152,13 @@ const fetchPassbook = async () => {
     }
   } catch (e) {
     console.error('Failed to load passbook', e)
+    loadError.value = e?.response?.data?.message || 'Failed to load passbook'
     // Provide safe defaults when API fails
     agmAmount.value = 0
     agmPaid.value = false
     dividendAmount.value = null
+  } finally {
+    isLoading.value = false
   }
 }
 

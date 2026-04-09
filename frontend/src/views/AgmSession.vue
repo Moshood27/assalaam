@@ -1,49 +1,65 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="p-4 bg-white border-b flex items-center justify-between">
-      <button class="text-sm font-bold text-emerald-700" @click="$router.back()">Back</button>
-      <h1 class="text-lg sm:text-xl font-bold text-slate-800">AGM Session</h1>
-      <div />
+  <div class="min-h-screen bg-slate-50 pb-24 font-sans">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <h1 class="text-lg sm:text-xl font-bold text-slate-800">AGM Session</h1>
+        <div class="w-6"></div>
+      </div>
     </header>
 
-    <div class="p-4 space-y-6">
-      <section class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="section-title">Positions & Candidates</h2>
-          <button class="text-xs font-bold text-emerald-700" @click="load" :disabled="loading">Refresh</button>
+    <div class="p-4 space-y-6 max-w-2xl mx-auto">
+      <section class="card card-elevated p-5">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-black text-slate-800 tracking-tight text-lg">Positions & Candidates</h2>
+          <button class="text-xs font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl hover:bg-emerald-100 transition-colors" @click="load" :disabled="loading">
+            {{ loading ? '...' : 'Refresh' }}
+          </button>
         </div>
-        <div v-if="loading" class="text-slate-500 text-sm">Loading…</div>
-        <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
+
+        <div v-if="loading" class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-700"></div>
+        </div>
+        <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
         <div v-else>
-          <div v-if="!positions.length" class="text-slate-500 text-sm">No candidates available.</div>
-          <div v-else class="space-y-6">
-            <div v-for="pos in positions" :key="pos.position" class="bg-white border rounded-xl shadow-sm">
-              <div class="p-4 border-b flex items-center justify-between">
+          <div v-if="!positions.length" class="text-slate-400 text-sm text-center py-12 italic">No candidates available at this time.</div>
+          <div v-else class="space-y-8">
+            <div v-for="pos in positions" :key="pos.position" class="bg-slate-50 border border-slate-100 rounded-[2rem] overflow-hidden">
+              <div class="p-5 bg-white border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <div class="font-black text-slate-800">{{ pos.position }}</div>
-                  <div class="text-[11px] text-slate-500" v-if="pos.voted_candidate_id">
-                    You voted: <strong>{{ votedName(pos) }}</strong>
+                  <div class="font-black text-slate-800 tracking-tight">{{ pos.position }}</div>
+                  <div class="text-[11px] text-emerald-600 font-bold mt-0.5" v-if="pos.voted_candidate_id">
+                    You voted: <span class="uppercase tracking-tighter">{{ votedName(pos) }}</span>
                   </div>
                 </div>
                 <div>
-                  <span v-if="pos.voted_candidate_id" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase">Voted</span>
+                  <span v-if="pos.voted_candidate_id" class="px-3 py-1 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow-sm">Voted</span>
                 </div>
               </div>
-              <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div v-for="c in pos.candidates" :key="c.id" class="p-3 border rounded-lg flex gap-3 items-start">
-                  <img v-if="c.photo_url" :src="getImageUrl(c.photo_url)" alt="photo" class="w-12 h-12 rounded object-cover" />
-                  <div class="flex-1">
-                    <div class="font-bold text-slate-800">{{ c.name }}</div>
-                    <p class="text-[12px] text-slate-600 whitespace-pre-line">{{ c.manifesto || '—' }}</p>
-                    <div class="mt-2">
-                      <button
-                        class="px-3 py-2 rounded-lg text-xs font-bold"
-                        :class="canVote(pos, c) ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                        :disabled="!canVote(pos, c) || voting"
-                        @click="cast(c)">
-                        Vote {{ c.name }}
-                      </button>
+              <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-for="c in pos.candidates" :key="c.id" class="p-4 bg-white border border-slate-100 rounded-2xl flex gap-4 items-start shadow-sm hover:border-emerald-200 transition-colors">
+                  <div class="relative">
+                    <img v-if="c.photo_url" :src="getImageUrl(c.photo_url)" alt="photo" class="w-16 h-16 rounded-2xl object-cover border-2 border-slate-50 shadow-sm" />
+                    <div v-else class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border-2 border-slate-50">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                      </svg>
                     </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-black text-slate-800 truncate mb-1">{{ c.name }}</div>
+                    <p class="text-[11px] text-slate-500 line-clamp-3 leading-relaxed mb-3">{{ c.manifesto || 'No manifesto available' }}</p>
+                    <button
+                      class="w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                      :class="canVote(pos, c) ? 'bg-emerald-600 text-white shadow-md shadow-emerald-100 active:scale-95' : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                      :disabled="!canVote(pos, c) || voting"
+                      @click="cast(c)">
+                      Vote
+                    </button>
                   </div>
                 </div>
               </div>
@@ -52,27 +68,29 @@
         </div>
       </section>
 
-      <section class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="section-title">Live Results</h2>
-          <div class="flex items-center gap-2">
-            <button class="bg-white hover:bg-slate-50 px-3 py-2 rounded-lg text-xs font-bold border border-slate-200 shadow-sm" @click="loadResults" :disabled="resLoading">
-              Refresh Results
-            </button>
-          </div>
+      <section class="card card-elevated p-5">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-black text-slate-800 tracking-tight text-lg">Live Results</h2>
+          <button class="text-xs font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl hover:bg-emerald-100 transition-colors" @click="loadResults" :disabled="resLoading">
+            {{ resLoading ? '...' : 'Refresh' }}
+          </button>
         </div>
-        <div v-if="resLoading" class="text-slate-500 text-sm">Loading…</div>
-        <div v-else-if="resError" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ resError }}</div>
+
+        <div v-if="resLoading" class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-700"></div>
+        </div>
+        <div v-else-if="resError" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ resError }}</div>
         <div v-else>
-          <div v-if="!Object.keys(results).length" class="text-slate-500 text-sm">No results yet.</div>
-          <div v-else class="space-y-4">
-            <div v-for="(list, pos) in results" :key="pos" class="bg-white border rounded-xl">
-              <div class="p-3 font-black text-slate-800 border-b">{{ pos }}</div>
-              <ul class="divide-y">
-                <li v-for="row in list" :key="row.candidate_id" class="p-3 flex items-center justify-between">
-                  <div class="font-medium text-slate-700">{{ row.candidate_name }}</div>
-                  <div class="text-xs">
-                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-black">{{ row.votes }} vote{{ row.votes === 1 ? '' : 's' }}</span>
+          <div v-if="!Object.keys(results).length" class="text-slate-400 text-sm text-center py-12 italic">No results recorded yet.</div>
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div v-for="(list, pos) in results" :key="pos" class="bg-slate-50 border border-slate-100 rounded-3xl overflow-hidden">
+              <div class="p-4 bg-white border-b border-slate-100 font-black text-slate-800 text-sm uppercase tracking-tight">{{ pos }}</div>
+              <ul class="divide-y divide-slate-100">
+                <li v-for="row in list" :key="row.candidate_id" class="p-4 flex items-center justify-between hover:bg-white transition-colors">
+                  <div class="font-bold text-slate-700 text-sm">{{ row.candidate_name }}</div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-emerald-700 font-black text-[10px] shadow-sm">{{ row.votes }}</span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">votes</span>
                   </div>
                 </li>
               </ul>
@@ -82,20 +100,28 @@
       </section>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="text-emerald-700 flex flex-col items-center gap-1" @click="$router.push('/agm')">
-        <span class="text-xl">🗳️</span>
-        <span class="text-[10px] font-bold">AGM</span>
-      </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/reports')">
-        <span class="text-xl">📈</span>
-        <span class="text-[10px] font-bold">Reports</span>
-      </button>
-    </nav>
+    <div class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item group" @click="$router.push('/dashboard')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-item group active" @click="$router.push('/agm')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25v3.375c0 .621.504 1.125 1.125 1.125h3.375M9 15l2.25 2.25L15 12" />
+          </svg>
+          <span>AGM</span>
+        </button>
+        <button class="nav-item group" @click="$router.push('/reports')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0017.25 3.75H6.75A2.25 2.25 0 004.5 6v12A2.25 2.25 0 006.75 20.25z" />
+          </svg>
+          <span>Reports</span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -181,6 +207,4 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 1rem; }
-.section-title { font-weight: 800; color: #0f172a; }
 </style>

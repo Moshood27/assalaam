@@ -1,8 +1,13 @@
 <template>
-  <div class="min-h-screen pb-24">
-    <header class="p-4 flex justify-between items-center bg-white/80 backdrop-blur border-b">
-      <h1 class="font-bold text-slate-800 text-lg">Member Welfare Pool (Takaful)</h1>
-      <button class="text-emerald-700 font-bold" @click="$router.back()">Back</button>
+  <div class="min-h-screen bg-slate-50/50 pb-24">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.back()" class="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors" aria-label="Go back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h1 class="font-bold text-slate-800 text-lg">Member Welfare Pool (Takaful)</h1>
+        <div class="w-10"></div>
+      </div>
     </header>
 
     <div class="p-4 space-y-4">
@@ -19,13 +24,15 @@
         </div>
         <div class="mt-3 flex items-center gap-2 flex-wrap">
           <span v-if="summary.paid_this_period" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">
-            ✅ Paid this month
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Paid this month
           </span>
           <template v-else>
             <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-full">
-              ⏳ Pending this month
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Pending this month
             </span>
-            <button @click="payNow" :disabled="payLoading" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 px-3 py-1 rounded-full">
+            <button @click="payNow" :disabled="payLoading" class="btn-primary text-xs">
               <span v-if="!payLoading">Pay now</span>
               <span v-else>Processing…</span>
             </button>

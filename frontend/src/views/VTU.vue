@@ -3,7 +3,11 @@
     <!-- Header -->
     <header class="header-fintech">
       <div class="navbar-inner">
-        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">⬅️</button>
+        <button @click="$router.back()" aria-label="Back" class="hover:opacity-80 transition rounded-xl p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
         <h1 class="text-lg sm:text-xl font-bold text-slate-800">Airtime, Data & Bills</h1>
         <router-link to="/vtu/history" class="btn-ghost text-xs">History</router-link>
       </div>
@@ -43,7 +47,7 @@
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (₦)</label>
           <input v-model.number="airtime.amount" type="number" min="50" placeholder="e.g. 100" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-emerald-500" />
         </div>
-        <button @click="buyAirtime" :disabled="loadingAirtime || !canBuyAirtime" class="w-full bg-emerald-700 disabled:bg-slate-300 text-white px-5 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95">
+        <button @click="buyAirtime" :disabled="loadingAirtime || !canBuyAirtime" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
           <span v-if="loadingAirtime" class="flex items-center justify-center gap-2">
              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
              Processing...
@@ -81,7 +85,7 @@
             Total to be debited: <span class="font-bold text-emerald-700">₦ {{ formatMoney(selectedBundle.total_debit) }}</span>
           </p>
         </div>
-        <button @click="buyData" :disabled="loadingData || !canBuyData" class="w-full bg-emerald-700 disabled:bg-slate-300 text-white px-5 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95">
+        <button @click="buyData" :disabled="loadingData || !canBuyData" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
           <span v-if="loadingData">Processing...</span>
           <span v-else>Buy Data Bundle</span>
         </button>
@@ -115,7 +119,7 @@
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Meter Number</label>
           <div class="flex gap-2">
             <input v-model="electricity.meter" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
-            <button @click="verifyMerchant" :disabled="verification.loading || !electricity.meter || electricity.meter.length < 6" class="bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-xs disabled:opacity-50">
+            <button @click="verifyMerchant" :disabled="verification.loading || !electricity.meter || electricity.meter.length < 6" class="btn-muted text-xs">
               {{ verification.loading ? '...' : 'Verify' }}
             </button>
           </div>
@@ -135,7 +139,7 @@
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Phone (Optional)</label>
           <input v-model="electricity.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
         </div>
-        <button @click="buyElectricity" :disabled="loadingElectricity || !canBuyElectricity" class="w-full bg-emerald-700 disabled:bg-slate-300 text-white px-5 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95">
+        <button @click="buyElectricity" :disabled="loadingElectricity || !canBuyElectricity" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
           <span v-if="loadingElectricity">Processing...</span>
           <span v-else>Vend Electricity</span>
         </button>
@@ -156,7 +160,7 @@
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Smartcard Number</label>
             <div class="flex gap-2">
               <input v-model="cable.smartcard" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
-              <button @click="verifyMerchant" :disabled="verification.loading || !cable.smartcard || cable.smartcard.length < 6" class="bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-xs disabled:opacity-50">
+              <button @click="verifyMerchant" :disabled="verification.loading || !cable.smartcard || cable.smartcard.length < 6" class="btn-muted text-xs">
                 {{ verification.loading ? '...' : 'Verify' }}
               </button>
             </div>
@@ -184,7 +188,7 @@
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Phone (Optional)</label>
           <input v-model="cable.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
         </div>
-        <button @click="buyCable" :disabled="loadingCable || !canBuyCable" class="w-full bg-emerald-700 disabled:bg-slate-300 text-white px-5 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95">
+        <button @click="buyCable" :disabled="loadingCable || !canBuyCable" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
           <span v-if="loadingCable">Processing...</span>
           <span v-else>Subscribe</span>
         </button>

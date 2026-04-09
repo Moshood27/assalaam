@@ -1,16 +1,20 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-32">
-    <header class="p-4 bg-white border-b flex items-center justify-between sticky top-0 z-10">
-      <h1 class="text-lg sm:text-xl font-bold text-slate-800">Coop Store</h1>
-      <div class="flex items-center gap-3">
-        <span class="hidden sm:inline text-xs font-bold text-slate-600">Balance: <span class="text-slate-800">₦ {{ money(walletBalance) }}</span></span>
-        <button class="relative text-sm font-bold text-emerald-700 flex items-center gap-2" @click="toggleCart()">
-          <span>Cart</span>
-          <span v-if="subtotal" class="hidden sm:inline text-[11px] px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">₦ {{ money(subtotal) }}</span>
-          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white text-[10px] font-black">{{ totalQty }}</span>
-        </button>
-        <button class="text-sm font-bold text-emerald-700" @click="$router.push('/store/orders')">Orders</button>
-        <button class="text-sm font-bold text-slate-500" @click="$router.back()">Back</button>
+  <div class="min-h-screen bg-slate-50/50 pb-32">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <h1 class="text-lg font-bold text-slate-800">Coop Store</h1>
+        <div class="flex items-center gap-2">
+          <button class="relative p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="toggleCart()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-700"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span v-if="totalQty" class="absolute top-0 right-0 w-5 h-5 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ totalQty }}</span>
+          </button>
+          <button class="p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="$router.push('/store/orders')" title="Orders">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+          </button>
+          <button @click="$router.back()" class="p-2 hover:bg-slate-100 rounded-xl transition-colors" aria-label="Go back">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -20,26 +24,23 @@
           <h2 class="section-title">Available Products</h2>
           <span class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Buy & Checkout</span>
         </div>
-        <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
-          <div class="flex-1 flex items-center gap-2">
-            <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search products…" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm w-full" />
-            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold" @click="load(1)">Search</button>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          <div class="flex-1 relative">
+            <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search products…" class="inp pl-10" />
+            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
           </div>
           <div class="flex items-center gap-2">
-            <label class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Category</label>
-            <select v-model="selectedCategory" @change="load(1)" class="bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm max-w-[120px]">
-              <option :value="0">All</option>
+            <select v-model="selectedCategory" @change="load(1)" class="inp py-2 text-xs font-bold min-w-[120px]">
+              <option :value="0">All Categories</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
-          </div>
-          <div class="flex items-center gap-2">
-            <label class="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Sort</label>
-            <select v-model="sortBy" @change="load(1)" class="bg-white border border-slate-200 rounded-lg px-2 py-2 text-sm">
+            <select v-model="sortBy" @change="load(1)" class="inp py-2 text-xs font-bold">
               <option value="newest">Newest</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="name_asc">Name: A–Z</option>
-              <option value="name_desc">Name: Z–A</option>
+              <option value="price_asc">Price: Low-High</option>
+              <option value="price_desc">Price: High-Low</option>
+              <option value="name_asc">A–Z</option>
             </select>
           </div>
         </div>

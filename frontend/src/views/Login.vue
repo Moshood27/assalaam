@@ -17,7 +17,7 @@
           <div class="mb-4 transform hover:scale-105 transition-transform duration-300">
             <img :src="brand.logo" :alt="brand.name" class="h-20 sm:h-24 w-auto drop-shadow-sm" />
           </div>
-          <p class="text-[10px] font-bold tracking-[0.2em] text-emerald-800 uppercase opacity-80 mb-1">{{ brand.name }}</p>
+<!--          <p class="text-[10px] font-bold tracking-[0.2em] text-emerald-800 uppercase opacity-80 mb-1">{{ brand.name }}</p>-->
           <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Welcome Back</h1>
           <p class="text-slate-500 text-sm mt-2 font-medium">Securely access your membership account</p>
         </div>

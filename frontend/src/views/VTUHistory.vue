@@ -2,7 +2,11 @@
   <div class="min-h-screen bg-slate-50 pb-24 font-sans">
     <header class="header-fintech">
       <div class="navbar-inner">
-        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">⬅️</button>
+        <button @click="$router.back()" aria-label="Back" class="hover:opacity-80 transition rounded-xl p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
         <h1 class="text-lg sm:text-xl font-bold text-slate-800">VTU History</h1>
         <router-link to="/vtu" class="btn-ghost text-xs">Buy</router-link>
       </div>

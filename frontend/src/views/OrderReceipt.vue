@@ -1,14 +1,23 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="p-4 bg-white border-b flex items-center justify-between">
-      <h1 class="text-lg sm:text-xl font-bold text-slate-800">Order Receipt</h1>
-      <button class="text-sm font-bold text-emerald-700" @click="$router.push('/store')">Back to Store</button>
+  <div class="min-h-screen bg-slate-50 pb-24 font-sans">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.push('/store')" class="text-2xl hover:opacity-70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Order Receipt</h1>
+        <div class="w-6"></div>
+      </div>
     </header>
 
-    <div class="p-4">
-      <div v-if="loading" class="text-slate-500 text-sm">Loading…</div>
-      <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
-      <section v-else class="card p-5 space-y-3">
+    <div class="p-4 max-w-2xl mx-auto">
+      <div v-if="loading" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-700"></div>
+      </div>
+      <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
+      <section v-else class="card card-elevated p-6 space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <div class="text-xs text-slate-500">Reference</div>
@@ -86,20 +95,28 @@
       @cancel="handlePinCancel"
     />
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="text-emerald-700 flex flex-col items-center gap-1" @click="$router.push('/store')">
-        <span class="text-xl">🛒</span>
-        <span class="text-[10px] font-bold">Store</span>
-      </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/reports')">
-        <span class="text-xl">📈</span>
-        <span class="text-[10px] font-bold">Reports</span>
-      </button>
-    </nav>
+    <div class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item group" @click="$router.push('/dashboard')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-item group active" @click="$router.push('/store')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          <span>Store</span>
+        </button>
+        <button class="nav-item group" @click="$router.push('/reports')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0017.25 3.75H6.75A2.25 2.25 0 004.5 6v12A2.25 2.25 0 006.75 20.25z" />
+          </svg>
+          <span>Reports</span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 

@@ -2,7 +2,11 @@
   <div class="min-h-screen bg-slate-50 pb-56 font-sans">
     <header class="header-fintech">
       <div class="navbar-inner">
-        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">⬅️</button>
+        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
         <h1 class="text-lg sm:text-xl font-bold text-slate-800">Make Payment</h1>
         <span></span>
       </div>

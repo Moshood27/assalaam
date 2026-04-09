@@ -1,78 +1,111 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="p-4 flex justify-between items-center bg-white border-b">
-      <button @click="$router.back()" class="text-2xl">⬅️</button>
-      <h1 class="text-xl font-bold">Pay Merchant</h1>
-      <div />
+  <div class="min-h-screen bg-slate-50 pb-24 font-sans">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Pay Merchant</h1>
+        <div class="w-6"></div>
+      </div>
     </header>
 
-    <div class="p-4 space-y-6">
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 class="font-bold text-slate-800 mb-3">Scan or Paste QR</h3>
-        <p class="text-xs text-slate-500 mb-2">Paste the QR payload text here. Camera scanning will be added later.</p>
-        <textarea v-model.trim="qr" rows="3" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="attaqwa:pay?to_type=membership&to=...&amount=...&note=..."></textarea>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <button @click="paste" class="bg-slate-100 px-4 py-2 rounded-xl font-bold text-slate-800">Paste</button>
-          <button v-if="canScan" @click="scan" class="bg-white border border-emerald-200 text-emerald-700 px-4 py-2 rounded-xl font-bold">Scan QR</button>
-          <button @click="resolve" :disabled="!qr || loading" class="bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold">{{ loading ? 'Resolving…' : 'Resolve' }}</button>
+    <div class="p-4 space-y-6 max-w-md mx-auto">
+      <div class="card card-elevated p-6">
+        <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-600">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+          </svg>
+          Scan or Paste QR
+        </h3>
+        <p class="text-xs text-slate-500 mb-3">Paste the QR payload text here. Camera scanning will be added later.</p>
+        <textarea v-model.trim="qr" rows="3" class="inp text-sm mb-4" placeholder="attaqwa:pay?to_type=membership&to=...&amount=...&note=..."></textarea>
+        <div class="flex flex-wrap gap-2">
+          <button @click="paste" class="btn-muted px-4 py-2">Paste</button>
+          <button v-if="canScan" @click="scan" class="bg-white border border-emerald-200 text-emerald-700 px-4 py-2 rounded-xl font-bold hover:bg-emerald-50 transition">Scan QR</button>
+          <button @click="resolve" :disabled="!qr || loading" class="btn-primary flex-1 py-2">{{ loading ? 'Resolving…' : 'Resolve' }}</button>
         </div>
-        <p v-if="scanError" class="mt-2 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-sm">{{ scanError }}</p>
-        <p v-if="error" class="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-sm">{{ error }}</p>
+        <p v-if="scanError" class="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-sm">{{ scanError }}</p>
+        <p v-if="error" class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-sm">{{ error }}</p>
       </div>
 
-
-      <div v-if="multiple" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 class="font-bold text-slate-800 mb-3">Select Merchant Branch</h3>
-        <p class="text-xs text-slate-500">This Member ID exists in multiple branches. Please select one.</p>
-        <select v-model.number="branchId" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none mt-2">
+      <div v-if="multiple" class="card card-elevated p-6">
+        <h3 class="font-bold text-slate-800 mb-2">Select Merchant Branch</h3>
+        <p class="text-xs text-slate-500 mb-3">This Member ID exists in multiple branches. Please select one.</p>
+        <select v-model.number="branchId" class="inp mb-4">
           <option v-for="b in branches" :key="b.id" :value="b.id">{{ b.name }}</option>
         </select>
-        <div class="mt-3 flex gap-2">
-          <button @click="previewRecipient" :disabled="!branchId || loading" class="bg-slate-100 px-4 py-2 rounded-xl font-bold text-slate-800">Preview</button>
-          <button @click="proceedAfterBranch" :disabled="!branchId" class="bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold">Continue</button>
+        <div class="flex gap-2">
+          <button @click="previewRecipient" :disabled="!branchId || loading" class="btn-muted flex-1 py-2">Preview</button>
+          <button @click="proceedAfterBranch" :disabled="!branchId" class="btn-primary flex-1 py-2">Continue</button>
         </div>
       </div>
 
-      <div v-if="recipient" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 class="font-bold text-slate-800 mb-3">Confirm Details</h3>
-        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm">
-          Pay to: <span class="font-bold">{{ recipient.name }}</span>
-          <span v-if="recipient.membership_number" class="text-emerald-700">({{ recipient.membership_number }})</span>
-          <span v-if="recipient.branch_name" class="ml-1">— {{ recipient.branch_name }}</span>
+      <div v-if="recipient" class="card card-elevated p-6">
+        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-600">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Confirm Details
+        </h3>
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-900 text-sm mb-6">
+          <div class="flex flex-col">
+            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-0.5">Pay to</span>
+            <span class="font-black text-base">{{ recipient.name }}</span>
+            <div class="flex items-center gap-2 mt-1">
+              <span v-if="recipient.membership_number" class="text-emerald-700 font-bold">{{ recipient.membership_number }}</span>
+              <span v-if="recipient.branch_name" class="text-emerald-500 text-xs font-medium">| {{ recipient.branch_name }}</span>
+            </div>
+          </div>
         </div>
-        <div class="grid sm:grid-cols-2 gap-3 mt-4 items-end">
+
+        <div class="space-y-4">
           <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
-            <input v-model.number="amount" type="number" min="1" placeholder="0.00" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" />
+            <label class="lbl">Amount</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+              <input v-model.number="amount" type="number" min="1" placeholder="0.00" class="inp pl-8 font-bold text-lg" />
+            </div>
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Note</label>
-            <input v-model.trim="note" type="text" maxlength="120" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" />
+            <label class="lbl">Note</label>
+            <input v-model.trim="note" type="text" maxlength="120" placeholder="What's this for?" class="inp" />
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Transaction PIN</label>
-            <input v-model="pin" type="password" inputmode="numeric" pattern="\\d{4}" maxlength="4" placeholder="4-digit PIN" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none tracking-widest" />
+            <label class="lbl">Transaction PIN</label>
+            <input v-model="pin" type="password" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4-digit PIN" class="inp tracking-[1em] text-center font-black" />
           </div>
-          <div class="sm:col-span-2 flex gap-2">
-            <button @click="pay" :disabled="loading || !amount || !pin || pin.length !== 4" class="bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold">{{ loading ? 'Paying…' : 'Pay Now' }}</button>
-            <button @click="reset" class="bg-slate-100 px-4 py-3 rounded-xl font-bold text-slate-700">Clear</button>
+          <div class="flex gap-3 pt-2">
+            <button @click="pay" :disabled="loading || !amount || !pin || pin.length !== 4" class="btn-primary flex-1 py-4 text-lg">
+              {{ loading ? 'Paying…' : 'Pay Now' }}
+            </button>
+            <button @click="reset" class="btn-muted px-6 py-4">Clear</button>
           </div>
         </div>
       </div>
 
-      <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-3">
-        <div class="grid grid-cols-3 text-center">
-          <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
-            <span class="text-lg">🏠</span>
-            <span class="text-[10px]">Home</span>
+      <div class="bottom-nav">
+        <div class="bottom-nav-inner">
+          <button class="nav-item group" @click="$router.push('/dashboard')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            <span>Home</span>
           </button>
-          <button class="text-emerald-700 flex flex-col items-center gap-1" @click="$router.push('/wallet')">
-            <span class="text-lg">👛</span>
-            <span class="text-[10px] font-bold">Wallet</span>
+          <button class="nav-item group" @click="$router.push('/wallet')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+            </svg>
+            <span>Wallet</span>
           </button>
-          <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/pay')">
-            <span class="text-lg">💳</span>
-            <span class="text-[10px]">Pay</span>
+          <button class="nav-item group active" @click="$router.push('/pay')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+            </svg>
+            <span>Pay</span>
           </button>
         </div>
       </div>
@@ -84,7 +117,6 @@
 import { ref } from 'vue'
 import axios from '../http.js'
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning'
-import { Capacitor } from '@capacitor/core'
 
 const canScan = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
 
@@ -215,7 +247,7 @@ async function pay() {
     if (note.value) body.note = note.value
     if (branchId.value) body.branch_id = Number(branchId.value)
 
-    const { data } = await axios.post('/api/merchant/pay', body)
+    await axios.post('/api/merchant/pay', body)
     alert('Payment successful')
     // Go to wallet to see updated balance
     try { await refreshWalletCache() } catch {}

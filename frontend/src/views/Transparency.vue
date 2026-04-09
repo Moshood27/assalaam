@@ -1,61 +1,85 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-24">
+  <div class="min-h-screen bg-slate-50 pb-24 font-sans">
     <header class="header-fintech">
       <div class="navbar-inner">
-        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">⬅️</button>
+        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
         <h1 class="text-lg sm:text-xl font-bold text-slate-800">Transparency Dashboard</h1>
-        <div />
+        <div class="w-6"></div>
       </div>
     </header>
 
     <div class="p-4 max-w-3xl mx-auto space-y-6">
-      <section class="card card-elevated p-5">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="section-title">Total Assets</h2>
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400" v-if="data.as_of">As of {{ formatDateTime(data.as_of) }}</span>
+      <section class="card card-elevated p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-black text-slate-800 tracking-tight text-lg">Total Assets</h2>
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded" v-if="data.as_of">As of {{ formatDateTime(data.as_of) }}</span>
         </div>
-        <div v-if="loading" class="text-slate-500 text-sm">Loading…</div>
-        <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
-        <div v-else class="space-y-2">
-          <div class="text-3xl font-black text-slate-900">₦ {{ money(data.total_assets) }}</div>
-          <div class="text-xs text-slate-500">Projects: ₦ {{ money(data.projects_total) }} • Cash: ₦ {{ money(data.cash_total) }}</div>
+        <div v-if="loading" class="flex justify-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700"></div>
+        </div>
+        <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
+        <div v-else class="space-y-3">
+          <div class="text-4xl font-black text-slate-900 tracking-tighter">₦ {{ money(data.total_assets) }}</div>
+          <div class="flex gap-4">
+            <div class="flex flex-col">
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Projects</span>
+              <span class="font-bold text-emerald-700 text-sm">₦ {{ money(data.projects_total) }}</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Cash</span>
+              <span class="font-bold text-slate-700 text-sm">₦ {{ money(data.cash_total) }}</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="card card-elevated p-5">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="section-title">Breakdown</h2>
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Portfolio</span>
+      <section class="card card-elevated p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-black text-slate-800 tracking-tight text-lg">Breakdown</h2>
+          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Portfolio</span>
         </div>
 
-        <div v-if="loading" class="text-slate-500 text-sm">Loading…</div>
-        <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
+        <div v-if="loading" class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-700"></div>
+        </div>
+        <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
         <div v-else>
           <ul class="space-y-4">
-            <li v-for="row in breakdownWithCash" :key="row.key" class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
-              <div class="flex items-center justify-between mb-1">
-                <div class="flex items-center gap-2">
-                  <span v-if="row.type==='project'" class="text-xl">🏗️</span>
-                  <span v-else class="text-xl">💵</span>
+            <li v-for="row in breakdownWithCash" :key="row.key" class="bg-slate-50 border border-slate-100 rounded-3xl p-5 hover:border-emerald-200 transition-colors">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xl shadow-sm">
+                    <span v-if="row.type==='project'">🏗️</span>
+                    <span v-else>💵</span>
+                  </div>
                   <div>
-                    <div class="font-bold text-slate-800">{{ row.name }}</div>
-                    <div class="text-[11px] text-slate-500">{{ row.status }} • ₦ {{ money(row.amount) }}</div>
+                    <div class="font-black text-slate-800 text-sm tracking-tight">{{ row.name }}</div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ row.status }} • ₦ {{ money(row.amount) }}</div>
                   </div>
                 </div>
-                <div class="text-xs text-slate-500">{{ row.percent.toFixed(2) }}%</div>
+                <div class="text-xs font-black text-emerald-700 bg-white px-2 py-1 rounded-lg border border-slate-100">{{ row.percent.toFixed(2) }}%</div>
               </div>
-              <div class="h-2 bg-slate-200 rounded overflow-hidden">
-                <div class="h-2 bg-emerald-500" :style="{ width: Math.min(100, Math.max(0, row.percent)).toFixed(2) + '%' }"></div>
+              <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-3">
+                <div class="h-full bg-emerald-500 rounded-full" :style="{ width: Math.min(100, Math.max(0, row.percent)).toFixed(2) + '%' }"></div>
               </div>
 
               <!-- Attachments for project rows -->
-              <div v-if="row.type==='project'" class="mt-3 flex flex-col gap-2">
-                <div v-if="row.attachments?.report_url" class="text-sm">
-                  <a class="text-emerald-700 font-semibold underline" :href="row.attachments.report_url" target="_blank" rel="noopener">View PDF Report</a>
+              <div v-if="row.type==='project'" class="mt-4 flex flex-col gap-3">
+                <div v-if="row.attachments?.report_url" class="text-xs">
+                  <a class="inline-flex items-center gap-1 text-emerald-700 font-bold hover:underline" :href="row.attachments.report_url" target="_blank" rel="noopener">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    View PDF Report
+                  </a>
                 </div>
-                <div v-if="(row.attachments?.media_urls || []).length" class="flex items-center gap-2 overflow-x-auto">
-                  <a v-for="(u, i) in row.attachments.media_urls" :key="i" :href="u" target="_blank" rel="noopener" class="block w-20 h-14 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
-                    <img :src="u" class="w-full h-full object-cover" loading="lazy" @error="onImgError" />
+                <div v-if="(row.attachments?.media_urls || []).length" class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  <a v-for="(u, i) in row.attachments.media_urls" :key="i" :href="u" target="_blank" rel="noopener" class="block flex-shrink-0 w-24 h-16 rounded-2xl overflow-hidden border border-slate-200 bg-white p-0.5">
+                    <img :src="u" class="w-full h-full object-cover rounded-xl" loading="lazy" @error="onImgError" />
                   </a>
                 </div>
               </div>
@@ -65,20 +89,28 @@
       </section>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="bottom-nav-btn bottom-nav-btn-active">
-        <span class="text-xl">🧾</span>
-        <span class="text-[10px] font-bold">Transparency</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/projects')">
-        <span class="text-xl">📦</span>
-        <span class="text-[10px] font-bold">Projects</span>
-      </button>
-    </nav>
+    <div class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item group" @click="$router.push('/dashboard')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-item group active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+          <span>Transparency</span>
+        </button>
+        <button class="nav-item group" @click="$router.push('/projects')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+          </svg>
+          <span>Projects</span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -120,14 +152,4 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.header-fintech { position: sticky; top: 0; z-index: 40; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(15, 23, 42, 0.08); }
-.navbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
-.card { background: white; border-radius: 16px; border: 1px solid rgba(15, 23, 42, 0.06); }
-.card-elevated { box-shadow: 0 10px 16px -12px rgba(15, 23, 42, 0.3); }
-.section-title { font-weight: 800; color: #0f172a; }
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid rgba(15, 23, 42, 0.08); display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 8px 12px; }
-.bottom-nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; color: #334155; }
-.bottom-nav-btn-active { background: #ecfeff; color: #0369a1; }
-.inp { border: 1px solid rgba(15,23,42,0.12); border-radius: 8px; padding: 6px 8px; }
-.btn-ghost { color: #047857; }
 </style>
