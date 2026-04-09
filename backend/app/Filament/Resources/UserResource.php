@@ -199,10 +199,15 @@ class UserResource extends Resource
                             ->maxLength(255)
                             ->disabled(),
                     ])->columns(2),
-                Forms\Components\Section::make('Takaful Policy')
+                Forms\Components\Section::make('Takaful & Notifications')
                     ->schema([
                         Forms\Components\Toggle::make('takaful_exempt')->label('Exempt from Takaful charges'),
                         Forms\Components\Toggle::make('takaful_notify_contacts')->label('Notify guarantors/next-of-kin on settlement')->default(true),
+                        Forms\Components\Group::make([
+                            Forms\Components\Toggle::make('notify_email')->label('Email Notifications')->default(true),
+                            Forms\Components\Toggle::make('notify_sms')->label('SMS Notifications')->default(true),
+                            Forms\Components\Toggle::make('notify_push')->label('Push Notifications')->default(true),
+                        ])->columns(3)->columnSpanFull(),
                         Forms\Components\DateTimePicker::make('deceased_at')->label('Deceased At')->native(false)->seconds(false),
                         Forms\Components\DateTimePicker::make('major_loss_at')->label('Major Loss At')->native(false)->seconds(false),
                     ])->columns(2),
@@ -318,9 +323,10 @@ class UserResource extends Resource
                             ->options([
                                 'sms' => 'SMS',
                                 'push' => 'Push Notification',
+                                'mail' => 'Email',
                             ])
                             ->required()
-                            ->columns(2),
+                            ->columns(3),
                     ])
                     ->action(function (array $data) {
                         SendBulkCommunication::dispatch(
@@ -374,7 +380,7 @@ class UserResource extends Resource
                                     'note' => $data['note'] ?? null,
                                     'new_balance' => $newBalance,
                                 ]);
-                                if (! empty($record->email)) {
+                                if ($record->notify_email && ! empty($record->email)) {
                                     try {
                                         Mail::to($record->email)->send(new WalletCredited($record, $amount, $data['note'] ?? null, $newBalance));
                                     } catch (\Throwable $e) {
@@ -382,25 +388,29 @@ class UserResource extends Resource
                                     }
                                 }
                                 // Best-effort SMS notification
-                                try {
-                                    $sms = app(SmsService::class);
-                                    $msg = 'Wallet credited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
-                                    $sms->send($record->phone ?? null, $msg);
-                                } catch (\Throwable $e) {
-                                    // ignore SMS errors
+                                if ($record->notify_sms) {
+                                    try {
+                                        $sms = app(SmsService::class);
+                                        $msg = 'Wallet credited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
+                                        $sms->send($record->phone ?? null, $msg);
+                                    } catch (\Throwable $e) {
+                                        // ignore SMS errors
+                                    }
                                 }
 
                                 // Best-effort Push notification to the member's device
-                                try {
-                                    $push = app(PushService::class);
-                                    $token = $record->fcm_token ?: ($record->device_token ?? null);
-                                    $push->send($token, 'Wallet Credited', 'Your wallet has been credited successfully.', [
-                                        'type' => 'wallet_credit',
-                                        'amount' => (float) $amount,
-                                        'balance' => (float) $newBalance,
-                                    ]);
-                                } catch (\Throwable $e) {
-                                    // ignore push errors
+                                if ($record->notify_push) {
+                                    try {
+                                        $push = app(PushService::class);
+                                        $token = $record->fcm_token ?: ($record->device_token ?? null);
+                                        $push->send($token, 'Wallet Credited', 'Your wallet has been credited successfully.', [
+                                            'type' => 'wallet_credit',
+                                            'amount' => (float) $amount,
+                                            'balance' => (float) $newBalance,
+                                        ]);
+                                    } catch (\Throwable $e) {
+                                        // ignore push errors
+                                    }
                                 }
                             });
                         });
@@ -449,12 +459,27 @@ class UserResource extends Resource
                                     'new_balance' => $newBalance,
                                 ]);
 
-                                // Best-effort SMS/Push/Email notifications can be added here if needed
-                                try {
-                                    $sms = app(SmsService::class);
-                                    $msg = 'Wallet debited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
-                                    $sms->send($record->phone ?? null, $msg);
-                                } catch (\Throwable $e) {
+                                // Best-effort notifications
+                                if ($record->notify_sms) {
+                                    try {
+                                        $sms = app(SmsService::class);
+                                        $msg = 'Wallet debited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
+                                        $sms->send($record->phone ?? null, $msg);
+                                    } catch (\Throwable $e) {
+                                    }
+                                }
+
+                                if ($record->notify_push) {
+                                    try {
+                                        $push = app(PushService::class);
+                                        $token = $record->fcm_token ?: ($record->device_token ?? null);
+                                        $push->send($token, 'Wallet Debited', 'Your wallet has been debited successfully.', [
+                                            'type' => 'wallet_debit',
+                                            'amount' => (float) $amount,
+                                            'balance' => (float) $newBalance,
+                                        ]);
+                                    } catch (\Throwable $e) {
+                                    }
                                 }
                             });
                         });

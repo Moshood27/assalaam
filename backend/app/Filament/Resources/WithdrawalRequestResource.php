@@ -130,15 +130,18 @@ class WithdrawalRequestResource extends Resource
                             ]);
                         });
 
-                        // Best-effort notify member via SMS
-                        try {
-                            $user = $record->user?->fresh();
-                            if ($user) {
-                                $sms = app(\App\Services\SmsService::class);
-                                $msg = 'Withdrawal paid: ₦'.number_format((float)$record->amount, 2).' to bank '.$record->bank_name.' (Acct '.$record->account_number.'). Ref: '.$record->reference;
-                                $sms->send($user->phone ?? null, $msg);
-                            }
-                        } catch (\Throwable $e) {}
+                        // Notify member via preferences
+                        $user = $record->user?->fresh();
+                        if ($user) {
+                            $msg = 'Withdrawal paid: ₦'.number_format((float)$record->amount, 2).' to bank '.$record->bank_name.' (Acct '.$record->account_number.'). Ref: '.$record->reference;
+                            $user->notifyMember('Withdrawal Paid', $msg, [
+                                'type' => 'withdrawal_paid',
+                                'amount' => (float)$record->amount,
+                                'reference' => $record->reference,
+                                'bank_name' => $record->bank_name,
+                                'account_number' => $record->account_number,
+                            ]);
+                        }
 
                         Notification::make()
                             ->title('Withdrawal marked as paid')
@@ -171,15 +174,17 @@ class WithdrawalRequestResource extends Resource
                             'reason' => $reason,
                         ]);
 
-                        // Best-effort notify member via SMS
-                        try {
-                            $user = $record->user?->fresh();
-                            if ($user) {
-                                $sms = app(\App\Services\SmsService::class);
-                                $msg = 'Withdrawal declined: ₦'.number_format((float)$record->amount, 2).'. Reason: '.$reason.' Ref: '.$record->reference;
-                                $sms->send($user->phone ?? null, $msg);
-                            }
-                        } catch (\Throwable $e) {}
+                        // Notify member via preferences
+                        $user = $record->user?->fresh();
+                        if ($user) {
+                            $msg = 'Withdrawal declined: ₦'.number_format((float)$record->amount, 2).'. Reason: '.$reason.' Ref: '.$record->reference;
+                            $user->notifyMember('Withdrawal Declined', $msg, [
+                                'type' => 'withdrawal_declined',
+                                'amount' => (float)$record->amount,
+                                'reference' => $record->reference,
+                                'reason' => $reason,
+                            ]);
+                        }
 
                         Notification::make()
                             ->title('Withdrawal declined')

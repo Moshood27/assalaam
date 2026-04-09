@@ -263,40 +263,14 @@ class QardHasanResource extends Resource
                             'principal' => $record->principal_amount,
                         ]);
 
-                        // Notify member
-                        try {
-                            $record->loadMissing('user');
-                            $user = $record->user;
-                            $msg = "Your loan request ({$record->qard_id_string}) was approved! Please download the agreement from your dashboard, sign, and upload it back for verification.";
-
-                            if (! empty($user?->email)) {
-                                Mail::to($user->email)->send(new LoanApprovedUser($record));
-                            }
-
-                            if ($user) {
-                                $user->notify(new LoanApprovedNotification(
-                                    title: 'Loan Approved',
-                                    message: $msg,
-                                    loanId: $record->id,
-                                    qardIdString: $record->qard_id_string,
-                                    creditedAmount: 0,
-                                    balance: (float) ($user->balance ?? 0),
-                                ));
-
-                                try {
-                                    $push = app(PushService::class);
-                                    $token = $user->fcm_token ?: $user->device_token;
-                                    if ($token) {
-                                        $push->send($token, 'Loan Approved', $msg, [
-                                            'type' => 'loan_approved',
-                                            'loan_id' => $record->id,
-                                            'qard_id_string' => $record->qard_id_string,
-                                        ]);
-                                    }
-                                } catch (\Throwable $e) {
-                                }
-                            }
-                        } catch (\Throwable $e) {
+                        $msg = "Your loan request ({$record->qard_id_string}) was approved! Please download the agreement from your dashboard, sign, and upload it back for verification.";
+                        // Notify member via preferences
+                        if ($record->user) {
+                            $record->user->notifyMember('Loan Approved', $msg, [
+                                'type' => 'loan_approved',
+                                'loan_id' => $record->id,
+                                'qard_id_string' => $record->qard_id_string,
+                            ]);
                         }
 
                         Notification::make()
@@ -331,25 +305,15 @@ class QardHasanResource extends Resource
                             'reason' => $reason,
                         ]);
 
-                        // Notify member by email (best-effort)
-                        try {
-                            $record->loadMissing('user');
-                            if (! empty($record->user?->email)) {
-                                Mail::to($record->user->email)->send(new LoanRejectedUser($record, $reason));
-                            }
-                            // Optional: Push notification
-                            try {
-                                $push = app(PushService::class);
-                                $token = $record->user?->fcm_token ?: ($record->user?->device_token ?? null);
-                                $push->send($token, 'Loan Rejected', 'Your loan request '.($record->qard_id_string).' was rejected. Reason: '.$reason, [
-                                    'type' => 'loan_rejected',
-                                    'loan_id' => $record->id,
-                                    'qard_id_string' => $record->qard_id_string,
-                                ]);
-                            } catch (\Throwable $e) { /* ignore push errors */
-                            }
-                        } catch (\Throwable $e) {
-                            // ignore mail errors
+                        // Notify member via preferences
+                        if ($record->user) {
+                            $msg = 'Your loan request '.($record->qard_id_string).' was rejected. Reason: '.$reason;
+                            $record->user->notifyMember('Loan Rejected', $msg, [
+                                'type' => 'loan_rejected',
+                                'loan_id' => $record->id,
+                                'qard_id_string' => $record->qard_id_string,
+                                'reason' => $reason,
+                            ]);
                         }
 
                         Notification::make()
@@ -399,38 +363,14 @@ class QardHasanResource extends Resource
                             'member_id' => $record->user_id,
                         ]);
 
-                        // Notify member
-                        try {
-                            $record->loadMissing('user');
-                            $user = $record->user;
-                            $msg = "Your signed loan agreement for {$record->qard_id_string} has been verified! Your loan is now ready for final disbursement.";
-
-                            if (! empty($user?->email)) {
-                                Mail::to($user->email)->send(new LoanAgreementVerifiedUser($record));
-                            }
-
-                            if ($user) {
-                                $user->notify(new LoanAgreementVerifiedNotification(
-                                    title: 'Agreement Verified',
-                                    message: $msg,
-                                    loanId: $record->id,
-                                    qardIdString: $record->qard_id_string
-                                ));
-
-                                try {
-                                    $push = app(PushService::class);
-                                    $token = $user->fcm_token ?: $user->device_token;
-                                    if ($token) {
-                                        $push->send($token, 'Agreement Verified', $msg, [
-                                            'type' => 'loan_agreement_verified',
-                                            'loan_id' => $record->id,
-                                            'qard_id_string' => $record->qard_id_string,
-                                        ]);
-                                    }
-                                } catch (\Throwable $e) {
-                                }
-                            }
-                        } catch (\Throwable $e) {
+                        $msg = "Your signed loan agreement for {$record->qard_id_string} has been verified! Your loan is now ready for final disbursement.";
+                        // Notify member via preferences
+                        if ($record->user) {
+                            $record->user->notifyMember('Agreement Verified', $msg, [
+                                'type' => 'loan_agreement_verified',
+                                'loan_id' => $record->id,
+                                'qard_id_string' => $record->qard_id_string,
+                            ]);
                         }
 
                         Notification::make()
@@ -467,40 +407,15 @@ class QardHasanResource extends Resource
                             'reason' => $reason,
                         ]);
 
-                        // Notify member
-                        try {
-                            $record->loadMissing('user');
-                            $user = $record->user;
-                            $msg = "Your signed loan agreement for {$record->qard_id_string} was rejected: {$reason}. Please re-upload.";
-
-                            if (! empty($user?->email)) {
-                                Mail::to($user->email)->send(new LoanAgreementRejectedUser($record, $reason));
-                            }
-
-                            if ($user) {
-                                $user->notify(new LoanAgreementRejectedNotification(
-                                    title: 'Agreement Rejected',
-                                    message: $msg,
-                                    loanId: $record->id,
-                                    qardIdString: $record->qard_id_string,
-                                    reason: $reason
-                                ));
-
-                                try {
-                                    $push = app(PushService::class);
-                                    $token = $user->fcm_token ?: $user->device_token;
-                                    if ($token) {
-                                        $push->send($token, 'Agreement Rejected', $msg, [
-                                            'type' => 'loan_agreement_rejected',
-                                            'loan_id' => $record->id,
-                                            'qard_id_string' => $record->qard_id_string,
-                                            'reason' => $reason,
-                                        ]);
-                                    }
-                                } catch (\Throwable $e) {
-                                }
-                            }
-                        } catch (\Throwable $e) {
+                        $msg = "Your signed loan agreement for {$record->qard_id_string} was rejected: {$reason}. Please re-upload.";
+                        // Notify member via preferences
+                        if ($record->user) {
+                            $record->user->notifyMember('Agreement Rejected', $msg, [
+                                'type' => 'loan_agreement_rejected',
+                                'loan_id' => $record->id,
+                                'qard_id_string' => $record->qard_id_string,
+                                'reason' => $reason,
+                            ]);
                         }
 
                         Notification::make()
@@ -681,27 +596,18 @@ class QardHasanResource extends Resource
                             Mail::to($adminEmails)->send(new LoanDisbursedAdminNotification($record, $credit));
                         }
 
-                        // Best-effort notifications to member (SMS + Push)
-                        try {
-                            $fresh = $record->user?->fresh();
-                            if ($fresh) {
-                                $sms = app(SmsService::class);
-                                $push = app(PushService::class);
-                                $modeText = $withdrawable ? 'Cash-out enabled' : 'Internal use only';
-                                $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($fresh->balance ?? 0), 2);
-                                $sms->send($fresh->phone ?? null, $msg);
-                                $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
-                                $push->send($token, 'Loan Disbursed', $msg, [
-                                    'type' => 'loan_disbursed',
-                                    'loan_id' => $record->id,
-                                    'qard_id_string' => $record->qard_id_string,
-                                    'credited_amount' => $credit,
-                                    'balance' => (float) ($fresh->balance ?? 0),
-                                    'withdrawable' => $withdrawable,
-                                ]);
-                            }
-                        } catch (\Throwable $e) {
-                            // ignore notification errors
+                        // Notify member via preferences
+                        if ($record->user) {
+                            $modeText = $withdrawable ? 'Cash-out enabled' : 'Internal use only';
+                            $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($record->user->balance ?? 0), 2);
+                            $record->user->notifyMember('Loan Disbursed', $msg, [
+                                'type' => 'loan_disbursed',
+                                'loan_id' => $record->id,
+                                'qard_id_string' => $record->qard_id_string,
+                                'credited_amount' => $credit,
+                                'balance' => (float) ($record->user->balance ?? 0),
+                                'withdrawable' => $withdrawable,
+                            ]);
                         }
 
                         Notification::make()
@@ -750,15 +656,18 @@ class QardHasanResource extends Resource
                         $txn->meta = $meta;
                         $txn->save();
 
-                        // Best-effort notify member via SMS
-                        try {
-                            $record->loadMissing('user');
-                            $sms = app(SmsService::class);
+                        // Notify member via preferences
+                        if ($record->user) {
                             $msg = $enable
                                 ? ('Cash-out ENABLED for loan '.($record->qard_id_string).'. You can now withdraw the funds to your bank.')
                                 : ('Cash-out DISABLED for loan '.($record->qard_id_string).'. Withdrawal to bank is restricted; you can still spend inside the app.');
-                            $sms->send($record->user?->phone ?? null, $msg);
-                        } catch (\Throwable $e) {
+
+                            $record->user->notifyMember('Cash-Out Updated', $msg, [
+                                'type' => 'loan_cashout_updated',
+                                'loan_id' => $record->id,
+                                'qard_id_string' => $record->qard_id_string,
+                                'enabled' => $enable,
+                            ]);
                         }
 
                         Notification::make()

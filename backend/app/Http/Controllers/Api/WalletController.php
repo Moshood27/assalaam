@@ -350,14 +350,13 @@ class WalletController extends Controller
 
         $user->refresh();
 
-        // Best-effort SMS notification
-        try {
-            $sms = app(\App\Services\SmsService::class);
-            $msg = 'Wallet debit: ₦'.number_format($total, 2).' allocated to schemes. Ref: '.$reference.'. New bal: ₦'.number_format((float)$user->balance, 2);
-            $sms->send($user->phone ?? null, $msg);
-        } catch (\Throwable $e) {
-            // ignore SMS errors
-        }
+        // Notify member via preferences
+        $user->notifyMember('Scheme Allocation', 'Wallet debit: ₦'.number_format($total, 2).' allocated to schemes. Ref: '.$reference.'. New bal: ₦'.number_format((float)$user->balance, 2), [
+            'type' => 'wallet_allocation',
+            'amount' => $total,
+            'reference' => $reference,
+            'balance' => (float)$user->balance,
+        ]);
 
         return response()->json([
             'reference' => $reference,
@@ -525,16 +524,23 @@ class WalletController extends Controller
             return response()->json(['message' => 'Insufficient wallet balance'], 422);
         }
 
-        // Best-effort SMS notifications
-        try {
-            $sms = app(\App\Services\SmsService::class);
-            $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->name.' ('.$recipient->membership_number.'). Ref: '.$groupRef.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
-            $sms->send($sender->phone ?? null, $msgFrom);
-            $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->name.' ('.$sender->membership_number.'). Ref: '.$groupRef.'.';
-            $sms->send($recipient->phone ?? null, $msgTo);
-        } catch (\Throwable $e) {
-            // ignore
-        }
+        // Notify members via preferences
+        $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->name.' ('.$recipient->membership_number.'). Ref: '.$groupRef.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
+        $sender->notifyMember('Wallet Transfer Sent', $msgFrom, [
+            'type' => 'p2p_transfer_sent',
+            'amount' => $amount,
+            'recipient_id' => $recipient->id,
+            'reference' => $groupRef,
+            'balance' => (float)$finalSenderBal,
+        ], ['mail', 'sms', 'push', 'database']); // respect prefs but we can force certain channels if we wanted
+
+        $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->name.' ('.$sender->membership_number.'). Ref: '.$groupRef.'.';
+        $recipient->notifyMember('Wallet Transfer Received', $msgTo, [
+            'type' => 'p2p_transfer_received',
+            'amount' => $amount,
+            'sender_id' => $sender->id,
+            'reference' => $groupRef,
+        ]);
 
         return response()->json([
             'reference' => $groupRef,
@@ -662,11 +668,12 @@ class WalletController extends Controller
             }
         } catch (\Throwable $e) { /* ignore */ }
 
-        // Best-effort SMS to member
-        try {
-            $sms = app(\App\Services\SmsService::class);
-            $sms->send($user->phone ?? null, 'Withdrawal request received: ₦'.number_format($amount, 2).'. Ref: '.$reference.'.');
-        } catch (\Throwable $e) { /* ignore */ }
+        // Notify member via preferences
+        $user->notifyMember('Withdrawal Request', 'Withdrawal request received: ₦'.number_format($amount, 2).'. Ref: '.$reference.'.', [
+            'type' => 'withdrawal_request_initiated',
+            'amount' => $amount,
+            'reference' => $reference,
+        ]);
 
         return response()->json([
             'id' => $req->id,
@@ -718,10 +725,12 @@ class WalletController extends Controller
         $wr->processed_at = now();
         $wr->save();
 
-        try {
-            $sms = app(\App\Services\SmsService::class);
-            $sms->send($user->phone ?? null, 'Withdrawal cancelled: ₦'.number_format((float)$wr->amount, 2).'. Ref: '.$wr->reference.'.');
-        } catch (\Throwable $e) { /* ignore */ }
+        // Notify member via preferences
+        $user->notifyMember('Withdrawal Cancelled', 'Withdrawal cancelled: ₦'.number_format((float)$wr->amount, 2).'. Ref: '.$wr->reference.'.', [
+            'type' => 'withdrawal_cancelled',
+            'amount' => (float)$wr->amount,
+            'reference' => $wr->reference,
+        ]);
 
         return response()->json([
             'id' => $wr->id,

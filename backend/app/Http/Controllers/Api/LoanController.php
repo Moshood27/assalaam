@@ -281,38 +281,16 @@ class LoanController extends Controller
                 // ignore admin push errors
             }
 
-            // Best-effort SMS + Push to member
-            try {
-                $fresh = $q->user?->fresh();
-                if ($fresh) {
-                    $sms = app(\App\Services\SmsService::class);
-                    $push = app(\App\Services\PushService::class);
-                    $msg = 'Loan approved instantly: ₦'.number_format($credit, 2).' credited. Loan ID: '.($q->qard_id_string).'. Bal: ₦'.number_format((float) ($fresh->balance ?? 0), 2);
-                    $sms->send($fresh->phone ?? null, $msg);
-                    $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
-                    $push->send($token, 'Loan Approved', $msg, [
-                        'type' => 'loan_disbursed',
-                        'loan_id' => $q->id,
-                        'qard_id_string' => $q->qard_id_string,
-                        'credited_amount' => $credit,
-                        'balance' => (float) ($fresh->balance ?? 0),
-                    ]);
-                    // Log to Inbox (database notifications)
-                    try {
-                        $fresh->notify(new LoanApprovedNotification(
-                            title: 'Loan Approved',
-                            message: $msg,
-                            loanId: $q->id,
-                            qardIdString: $q->qard_id_string,
-                            creditedAmount: (float) $credit,
-                            balance: (float) ($fresh->balance ?? 0),
-                        ));
-                    } catch (\Throwable $e) {
-                        // swallow
-                    }
-                }
-            } catch (\Throwable $e) {
-                // ignore notification errors
+            // Notify member via preferences (SMS, Push, Email, Database)
+            if ($q->user) {
+                $msg = 'Loan approved instantly: ₦'.number_format($credit, 2).' credited. Loan ID: '.($q->qard_id_string).'. Bal: ₦'.number_format((float) ($q->user->balance ?? 0), 2);
+                $q->user->notifyMember('Loan Approved', $msg, [
+                    'type' => 'loan_disbursed',
+                    'loan_id' => $q->id,
+                    'qard_id_string' => $q->qard_id_string,
+                    'credited_amount' => $credit,
+                    'balance' => (float) ($q->user->balance ?? 0),
+                ]);
             }
 
             ShariahAudit::log($user, 'create_qard_hasan_instant', [
@@ -341,23 +319,14 @@ class LoanController extends Controller
             $q->guarantors()->attach($attach);
             $q->loadMissing(['guarantors.branch', 'user']);
 
-            // Notify guarantors via SMS and Push (best-effort)
-            try {
-                $sms = app(\App\Services\SmsService::class);
-                $push = app(\App\Services\PushService::class);
-                foreach ($guarantors as $g) {
-                    $msg = 'Guarantor request: Member '.($user->name).' requested a loan (ID: '.($q->qard_id_string).', ₦'.number_format((float)$q->principal_amount, 2).'). Please open your Coop app > Loans to Accept or Decline.';
-                    $sms->send($g->phone ?? null, $msg);
-                    // Push notification to guarantor device if available
-                    $token = $g->fcm_token ?: ($g->device_token ?? null);
-                    $push->send($token, 'Guarantor Request', $msg, [
-                        'type' => 'guarantor_request',
-                        'loan_id' => $q->id,
-                        'qard_id_string' => $q->qard_id_string,
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                // ignore notification errors
+            // Notify guarantors via preferences
+            foreach ($guarantors as $g) {
+                $msg = 'Guarantor request: Member '.($user->name).' requested a loan (ID: '.($q->qard_id_string).', ₦'.number_format((float)$q->principal_amount, 2).'). Please open your Coop app > Loans to Accept or Decline.';
+                $g->notifyMember('Guarantor Request', $msg, [
+                    'type' => 'guarantor_request',
+                    'loan_id' => $q->id,
+                    'qard_id_string' => $q->qard_id_string,
+                ]);
             }
 
             // Email admins about new loan request (best-effort)
@@ -572,17 +541,17 @@ class LoanController extends Controller
                     'reference' => $rep->reference,
                 ]);
 
-                // Best-effort SMS notification to member
-                try {
-                    $user->refresh();
-                    $sms = app(\App\Services\SmsService::class);
-                    $remaining = number_format((float) $q->remaining_principal, 2);
-                    $newBal = number_format((float) $user->balance, 2);
-                    $msg = 'Loan repayment: ₦'.number_format($appliedAmount, 2).' applied to '.($q->qard_id_string).'. Remaining: ₦'.$remaining.'. Ref: '.$rep->reference.'. Wallet: ₦'.$newBal;
-                    $sms->send($user->phone ?? null, $msg);
-                } catch (\Throwable $e) {
-                    // ignore SMS errors
-                }
+                // Notify member via preferences
+                $remaining = number_format((float) $q->remaining_principal, 2);
+                $newBal = number_format((float) $user->balance, 2);
+                $msg = 'Loan repayment: ₦'.number_format($appliedAmount, 2).' applied to '.($q->qard_id_string).'. Remaining: ₦'.$remaining.'. Ref: '.$rep->reference.'. Wallet: ₦'.$newBal;
+                $user->notifyMember('Loan Repayment', $msg, [
+                    'type' => 'loan_repayment',
+                    'loan_id' => $q->id,
+                    'repayment_id' => $rep->id,
+                    'amount' => $appliedAmount,
+                    'remaining' => (float) $q->remaining_principal,
+                ]);
 
                 $after = [
                     'paid_amount' => (float) $q->paid_amount,

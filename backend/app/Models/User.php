@@ -72,6 +72,9 @@ class User extends Authenticatable implements FilamentUser
         'major_loss_at',
         'takaful_exempt',
         'takaful_notify_contacts',
+        'notify_email',
+        'notify_sms',
+        'notify_push',
     ];
 
     /**
@@ -109,12 +112,66 @@ class User extends Authenticatable implements FilamentUser
             'major_loss_at' => 'datetime',
             'takaful_exempt' => 'boolean',
             'takaful_notify_contacts' => 'boolean',
+            'notify_email' => 'boolean',
+            'notify_sms' => 'boolean',
+            'notify_push' => 'boolean',
         ];
     }
 
     public function walletTransactions()
     {
         return $this->hasMany(WalletTransaction::class);
+    }
+
+    /**
+     * Send a member-facing notification through enabled channels.
+     *
+     * @param string $title
+     * @param string $message
+     * @param array $data Optional payload for push/database channels
+     * @param array|null $channels Subset of ['database','mail','sms','push']; null = auto from preferences
+     */
+    public function notifyMember(string $title, string $message, array $data = [], ?array $channels = null): void
+    {
+        try {
+            $resolved = $channels ?: array_values(array_filter([
+                ($this->notify_email ? 'mail' : null),
+                ($this->notify_sms ? 'sms' : null),
+                ($this->notify_push ? 'push' : null),
+                'database',
+            ]));
+
+            $useMail = in_array('mail', $resolved, true) && (bool) ($this->notify_email ?? true) && !empty($this->email);
+            $useDb = in_array('database', $resolved, true);
+
+            // Use Laravel notification for database/email
+            try {
+                $this->notify(new \App\Notifications\GeneralNotification($title, $message, $data, $useMail, $useDb));
+            } catch (\Throwable $e) {
+                // avoid breaking caller flow
+            }
+
+            // SMS
+            if (in_array('sms', $resolved, true) && (bool) ($this->notify_sms ?? true) && !empty($this->phone)) {
+                try {
+                    app(\App\Services\SmsService::class)->send($this->phone, $message);
+                } catch (\Throwable $e) {
+                }
+            }
+
+            // Push
+            if (in_array('push', $resolved, true) && (bool) ($this->notify_push ?? true)) {
+                $token = $this->fcm_token ?: ($this->device_token ?? null);
+                if (!empty($token)) {
+                    try {
+                        app(\App\Services\PushService::class)->send($token, $title, $message, $data ?? []);
+                    } catch (\Throwable $e) {
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // swallow all errors
+        }
     }
 
     public function branch()

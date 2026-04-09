@@ -193,6 +193,44 @@
         </div>
       </div>
 
+      <!-- Notification Preferences -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Notification Preferences</p>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-bold text-slate-800">Email Notifications</p>
+              <p class="text-xs text-slate-500">Receive transaction alerts via email</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="notifPrefs.notify_email" class="sr-only peer" @change="saveNotifPrefs">
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-700"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between border-t pt-4">
+            <div>
+              <p class="text-sm font-bold text-slate-800">SMS Notifications</p>
+              <p class="text-xs text-slate-500">Receive alerts via SMS (charges apply)</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="notifPrefs.notify_sms" class="sr-only peer" @change="saveNotifPrefs">
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-700"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between border-t pt-4">
+            <div>
+              <p class="text-sm font-bold text-slate-800">Push Notifications</p>
+              <p class="text-xs text-slate-500">Real-time alerts on your device</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="notifPrefs.notify_push" class="sr-only peer" @change="saveNotifPrefs">
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-700"></div>
+            </label>
+          </div>
+        </div>
+        <p v-if="notifBusy" class="text-[10px] text-emerald-700 mt-3 font-bold">Saving preferences...</p>
+      </div>
+
       <!-- Change Email -->
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Update Email</p>
@@ -419,6 +457,10 @@ const resetSentTo = ref('')
 const resetMessage = ref('')
 const resetError = ref(false)
 const resetForm = ref({ code: '', new_pin: '', confirm_pin: '' })
+
+// Notification preferences state
+const notifPrefs = ref({ notify_email: true, notify_sms: true, notify_push: true })
+const notifBusy = ref(false)
 
 const copy = async (text) => {
   try {
@@ -714,12 +756,33 @@ const confirmPinReset = async () => {
   }
 }
 
+const saveNotifPrefs = async () => {
+  notifBusy.value = true
+  try {
+    await axios.post('/api/profile/notifications', {
+      notify_email: !!notifPrefs.value.notify_email,
+      notify_sms: !!notifPrefs.value.notify_sms,
+      notify_push: !!notifPrefs.value.notify_push,
+    })
+  } catch (err) {
+    alert(err?.response?.data?.message || 'Failed to save notification preferences.')
+  } finally {
+    notifBusy.value = false
+  }
+}
+
 onMounted(async () => {
   // Load profile
   try {
     const { data } = await axios.get('/api/profile')
     profile.value = data
     emailForm.value.email = data?.email || ''
+    
+    // Sync notification preferences
+    notifPrefs.value.notify_email = !!data?.notify_email
+    notifPrefs.value.notify_sms = !!data?.notify_sms
+    notifPrefs.value.notify_push = !!data?.notify_push
+
     const assigned = Boolean(data?.bvn_assigned ?? JSON.parse(localStorage.getItem('bvn_assigned') || 'false'))
     bvnAssigned.value = assigned
     try { localStorage.setItem('bvn_assigned', JSON.stringify(assigned)) } catch (_) {}

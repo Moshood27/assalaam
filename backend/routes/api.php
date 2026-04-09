@@ -116,6 +116,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/profile/passport', [ProfileController::class, 'uploadPassport']);
     Route::post('/profile/email', [ProfileController::class, 'updateEmail']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
+    Route::post('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences']);
     // Banks directory (dynamic list from provider)
     Route::get('/banks', [ProfileController::class, 'banks']);
     // Bank details: resolve and save (2-step with confirm flag)

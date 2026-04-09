@@ -2,12 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Mail\BulkCommunication;
 use App\Models\User;
 use App\Services\PushService;
 use App\Services\SmsService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendBulkCommunication implements ShouldQueue
 {
@@ -27,31 +29,26 @@ class SendBulkCommunication implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(SmsService $smsService, PushService $pushService): void
+    public function handle(): void
     {
-        $smsCount = 0;
-        $pushCount = 0;
-
-        User::where('branch_id', $this->branchId)->chunk(200, function ($users) use ($smsService, $pushService, &$smsCount, &$pushCount) {
+        $count = 0;
+        User::where('branch_id', $this->branchId)->chunk(200, function ($users) use (&$count) {
             foreach ($users as $user) {
-                if (in_array('sms', $this->channels)) {
-                    $phone = $user->phone;
-                    if ($phone && $smsService->send($phone, $this->message)) {
-                        $smsCount++;
-                    }
-                }
+                // Determine channels for this user: intersection of job's channels and user preferences
+                $userChannels = array_filter($this->channels, function($ch) use ($user) {
+                    if ($ch === 'sms') return (bool) ($user->notify_sms ?? true);
+                    if ($ch === 'mail') return (bool) ($user->notify_email ?? true);
+                    if ($ch === 'push') return (bool) ($user->notify_push ?? true);
+                    return true; // database, etc
+                });
 
-                if (in_array('push', $this->channels)) {
-                    $token = $user->fcm_token ?: $user->device_token;
-                    if ($token && $pushService->send($token, $this->title, $this->message, [])) {
-                        $pushCount++;
-                    }
+                if (!empty($userChannels)) {
+                    $user->notifyMember($this->title, $this->message, [], array_values($userChannels));
+                    $count++;
                 }
             }
         });
 
-        Log::info("Bulk communication Job finished for branch {$this->branchId}. SMS: $smsCount, Push: $pushCount.");
-
-        // Optional: Could send a notification to the admin who triggered it if we wanted to be fancy.
+        Log::info("Bulk communication Job finished for branch {$this->branchId}. Total users notified: $count.");
     }
 }

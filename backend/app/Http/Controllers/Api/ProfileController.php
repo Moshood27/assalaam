@@ -151,6 +151,10 @@ class ProfileController extends Controller
             // Transaction PIN status for improved UX on the client
             'pin_set' => method_exists($user, 'hasTransactionPin') ? $user->hasTransactionPin() : (!empty($user->transaction_pin_hash)),
             'pin_set_at' => $user->pin_set_at ? $user->pin_set_at->toDateTimeString() : null,
+            // Notification preferences
+            'notify_email' => (bool) ($user->notify_email ?? true),
+            'notify_sms' => (bool) ($user->notify_sms ?? true),
+            'notify_push' => (bool) ($user->notify_push ?? true),
             // Member's verified cash-out bank details (if saved)
             'bank_details' => [
                 'bank_code' => $user->bank_code,
@@ -441,6 +445,39 @@ class ProfileController extends Controller
                 'account_number' => $user->account_number,
                 'account_name' => $user->account_name,
                 'has_verified' => true,
+            ],
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's notification preferences.
+     */
+    public function updateNotificationPreferences(Request $request)
+    {
+        $user = $request->user();
+
+        // Restrict this endpoint to non-admin members only
+        if (method_exists($user, 'getAttribute') && (bool) ($user->is_admin ?? false)) {
+            return response()->json(['message' => 'Admins must use /api/admin/profile endpoints.'], 403);
+        }
+
+        $data = $request->validate([
+            'notify_email' => ['required', 'boolean'],
+            'notify_sms' => ['required', 'boolean'],
+            'notify_push' => ['required', 'boolean'],
+        ]);
+
+        $user->notify_email = $data['notify_email'];
+        $user->notify_sms = $data['notify_sms'];
+        $user->notify_push = $data['notify_push'];
+        $user->save();
+
+        return response()->json([
+            'message' => 'Notification preferences updated successfully.',
+            'preferences' => [
+                'notify_email' => (bool) $user->notify_email,
+                'notify_sms' => (bool) $user->notify_sms,
+                'notify_push' => (bool) $user->notify_push,
             ],
         ]);
     }
