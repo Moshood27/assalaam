@@ -8,50 +8,52 @@ import './style.css'
 try {
   const shouldSilence = String(import.meta?.env?.VITE_SILENCE_METAMASK_ERRORS ?? 'true') === 'true'
   if (shouldSilence && typeof window !== 'undefined') {
-    const isNoisy = (msg) => {
-      const s = String(msg || '')
-      return s.includes('MetaMask extension not found')
-        || s.includes('Failed to connect to MetaMask')
-        || s.includes('inpage.js')
-        || s.includes('Could not establish connection. Receiving end does not exist')
-        || s.includes('runtime.lastError')
+    const noisyStrings = [
+      'MetaMask',
+      'Grammarly',
+      'inpage.js',
+      'Could not establish connection. Receiving end does not exist',
+      'runtime.lastError',
+      'ExtensionContext',
+      'extension'
+    ]
+    const isNoisy = (arg) => {
+      const s = String(arg || (arg?.message || arg?.toString?.() || ''))
+      return noisyStrings.some(str => s.includes(str))
     }
 
     // 1. Capture global error events
-    window.addEventListener('unhandledrejection', (e) => {
-      const r = e?.reason
-      const m = (r && (r.message || r.toString?.())) || ''
+    const handleError = (e) => {
+      const m = e?.message || (e?.reason?.message || e?.reason?.toString?.() || '')
       if (isNoisy(m)) {
-        e.preventDefault?.()
-        console?.debug?.('[silenced] unhandledrejection:', m)
+        try {
+          e.preventDefault?.()
+          e.stopImmediatePropagation?.()
+        } catch (_) {}
+        return true
+      }
+      return false
+    }
+    window.addEventListener('unhandledrejection', handleError, true)
+    window.addEventListener('error', handleError, true)
+
+    // 2. Patch ALL console methods to hide browser-internal extension logs
+    const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace']
+    methods.forEach(method => {
+      const native = console[method]
+      if (typeof native !== 'function') return
+      console[method] = (...args) => {
+        try {
+          for (let i = 0; i < args.length; i++) {
+            if (isNoisy(args[i])) return
+          }
+        } catch (_) {}
+        return native.apply(console, args)
       }
     })
-    window.addEventListener('error', (e) => {
-      const m = e?.message || ''
-      if (isNoisy(m)) {
-        e.preventDefault?.()
-        e.stopImmediatePropagation?.()
-        console?.debug?.('[silenced] error:', m)
-        return false
-      }
-    }, true)
-
-    // 2. Patch console.error/warn to hide browser-internal extension logs
-    // "Unchecked runtime.lastError" is often logged via these or browser-internal means.
-    const patchConsole = (method) => {
-      const native = console[method]
-      if (!native) return
-      console[method] = (...args) => {
-        if (args.length > 0 && isNoisy(args[0])) return
-        native.apply(console, args)
-      }
-    }
-    patchConsole('error')
-    patchConsole('warn')
   }
 } catch (_) {}
 
-import axios from './http.js'
 import App from './App.vue'
 import router from './router/index.js'
 import VueApexCharts from 'vue3-apexcharts'
