@@ -1,4 +1,4 @@
-<x-filament-panels::page>
+<x-filament::page>
     <div class="w-full space-y-4">
         {{-- Map Legend --}}
         <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
@@ -36,9 +36,17 @@
              class="border border-gray-300 dark:border-gray-700 shadow-lg">
         </div>
 
+        @push('styles')
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+            .leaflet-popup-content { margin: 12px !important; width: auto !important; }
+            .leaflet-container { font-family: inherit; }
+        </style>
+        @endpush
 
+        @push('scripts')
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
             document.addEventListener('livewire:initialized', function () {
                 const branches = @json($branches);
@@ -103,11 +111,6 @@
                 }
             });
         </script>
-
-        <style>
-            .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
-            .leaflet-popup-content { margin: 12px !important; width: auto !important; }
-            .leaflet-container { font-family: inherit; }
-        </style>
+        @endpush
     </div>
-</x-filament-panels::page>
+</x-filament::page>
