@@ -1,249 +1,352 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="p-4 flex justify-between items-center bg-white border-b">
-      <button @click="$router.back()" class="text-2xl">⬅️</button>
-      <h1 class="text-xl font-bold">Wallet</h1>
-      <div />
+  <div class="min-h-screen bg-slate-50 pb-32">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.back()" class="p-2 -ml-2 rounded-full active:bg-slate-100 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 class="text-lg font-bold text-slate-800">Wallet</h1>
+        <div class="w-10"></div>
+      </div>
     </header>
 
     <div class="p-4 space-y-6">
       <!-- Balance Card -->
-      <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl">
-        <p class="text-emerald-100 text-sm">Available Balance</p>
-        <h2 class="text-4xl font-bold mt-1">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.balance) }}</h2>
-        <div class="mt-2 text-emerald-100 text-xs flex justify-between gap-2">
+      <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
+        <div class="flex items-center gap-2 mb-2 relative z-10">
+          <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
+          <button @click="hideBalances = !hideBalances" class="text-lg opacity-80 p-1 rounded-lg hover:bg-white/10 transition-colors">
+            <svg v-if="hideBalances" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.076m3.313-3.313A9.959 9.959 0 0112 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-1.447 0-2.811-.31-4.04-.864m1.107-1.107l1.107-1.107m2.774-2.774l.553-.553m2.21-2.21l.553-.553" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+            </svg>
+          </button>
+        </div>
+        <h2 class="text-4xl font-bold mt-1 relative z-10">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.balance) }}</h2>
+        <div class="mt-2 text-emerald-100 text-xs flex justify-between gap-2 relative z-10">
           <span>Available for Withdrawal</span>
           <span class="font-bold">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.available_for_withdrawal || 0) }}</span>
         </div>
-        <div class="mt-5 flex gap-2 flex-wrap">
-          <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">Allocate to Schemes</button>
-          <button @click="showFund = !showFund" class="bg-white text-emerald-800 px-4 py-2 rounded-xl text-xs font-bold">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
-          <button @click="showTransfer = !showTransfer" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">{{ showTransfer ? 'Hide' : 'Transfer' }}</button>
-          <button @click="showWithdraw = !showWithdraw" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">{{ showWithdraw ? 'Hide' : 'Withdraw to Bank' }}</button>
+        <div class="mt-6 flex gap-2 flex-wrap relative z-10">
+          <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all border border-white/10">Allocate Funds</button>
+          <button @click="showFund = !showFund" class="bg-white text-emerald-900 px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-transform active:scale-95">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
         </div>
       </div>
 
+      <div class="grid grid-cols-2 gap-3">
+        <button @click="showTransfer = !showTransfer" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+          <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">💸</div>
+          <span class="text-xs font-bold text-slate-700">{{ showTransfer ? 'Hide' : 'Transfer' }}</span>
+        </button>
+        <button @click="showWithdraw = !showWithdraw" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+          <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-xl">🏦</div>
+          <span class="text-xs font-bold text-slate-700">{{ showWithdraw ? 'Hide' : 'Withdraw' }}</span>
+        </button>
+      </div>
+
       <!-- Merchant Pay (QR) quick access -->
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-slate-800">Merchant Pay (QR)</h3>
-          <div class="flex gap-2">
-            <button @click="$router.push('/merchant/receive')" class="bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold">Receive via QR</button>
-            <button @click="$router.push('/merchant/pay')" class="bg-white text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-bold">Pay Merchant</button>
+      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden relative">
+        <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-full -mr-12 -mt-12 opacity-50" />
+        <div class="relative z-10">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-slate-800">Merchant Pay (QR)</h3>
+            <div class="flex gap-2">
+              <button @click="$router.push('/merchant/receive')" class="bg-emerald-700 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase">Receive</button>
+              <button @click="$router.push('/merchant/pay')" class="bg-white text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-[10px] font-black uppercase">Pay</button>
+            </div>
           </div>
+          <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">Let local shops accept Attaqwa Pay. Generate a QR to receive or scan a merchant's QR to pay.</p>
         </div>
-        <p class="text-xs text-slate-500 mt-2">Let local shops accept Attaqwa Pay. Generate a QR to receive or pay a merchant by scanning their QR.</p>
       </div>
 
       <!-- Virtual Account Info -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-3">
-          <h3 class="font-bold text-slate-800">Virtual Account (Bank Transfer)</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-slate-800">Bank Transfer Account</h3>
           <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (!!bvn && !bvnValid)"
-                  class="text-xs bg-emerald-700 text-white px-3 py-2 rounded-xl">
-            {{ assigning ? 'Creating…' : 'Generate Account' }}
+                  class="text-[10px] font-black uppercase bg-emerald-700 text-white px-3 py-2 rounded-xl disabled:opacity-50">
+            {{ assigning ? 'Creating…' : 'Generate' }}
           </button>
         </div>
-        <div v-if="wallet.virtual_account?.account_number" class="grid grid-cols-1 gap-3">
-          <div class="flex justify-between">
-            <span class="text-gray-500 text-xs">Bank</span>
-            <span class="font-bold text-slate-800">{{ wallet.virtual_account.bank_name }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500 text-xs">Account Name</span>
-            <span class="font-bold text-slate-800">{{ wallet.virtual_account.account_name }}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-gray-500 text-xs">Account Number</p>
-              <p class="font-bold text-slate-800">{{ wallet.virtual_account.account_number }}</p>
+        <div v-if="wallet.virtual_account?.account_number" class="space-y-4">
+          <div class="bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Bank Name</span>
+              <span class="font-bold text-slate-800 text-sm">{{ wallet.virtual_account.bank_name }}</span>
             </div>
-            <button @click="copy(wallet.virtual_account.account_number)" class="text-emerald-700 text-sm font-bold">Copy</button>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Name</span>
+              <span class="font-bold text-slate-800 text-sm">{{ wallet.virtual_account.account_name }}</span>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+              <div>
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
+                <p class="font-black text-emerald-700 text-xl tracking-wider">{{ wallet.virtual_account.account_number }}</p>
+              </div>
+              <button @click="copy(wallet.virtual_account.account_number)" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg hover:bg-emerald-100 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+              </button>
+            </div>
           </div>
-          <p class="text-xs text-slate-500">Transfer NGN to this account to top up your wallet automatically.</p>
+          <p class="text-[11px] text-slate-500 text-center px-4">Transfer funds to this account to top up your wallet instantly.</p>
         </div>
         <div v-else class="space-y-3">
           <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
-          <div class="grid grid-cols-1 gap-2">
-            <div>
-              <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">BVN (optional)</label>
-              <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" />
-              <p v-if="bvn && !bvnValid" class="text-rose-600 text-xs mt-1">Please enter a valid 11-digit BVN.</p>
-              <p class="text-[10px] text-slate-400 mt-1">Providing your BVN helps us verify your dedicated account faster.</p>
+          <div class="space-y-2">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">BVN (optional)</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
+                </svg>
+              </div>
+              <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
+                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
             </div>
+            <p v-if="bvn && !bvnValid" class="text-rose-600 text-[10px] font-bold">Please enter a valid 11-digit BVN.</p>
+            <p class="text-[10px] text-slate-400 leading-tight">Providing your BVN helps us verify your dedicated account faster.</p>
           </div>
         </div>
       </div>
 
       <!-- Card Top-up Form -->
-      <div v-if="showFund" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 class="font-bold text-slate-800 mb-3">Fund Wallet (Card)</h3>
-        <div class="flex gap-3 items-end">
-          <div class="flex-1">
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
-            <input v-model.number="topupAmount" type="number" min="1" placeholder="0.00" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" />
+      <div v-if="showFund" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
+        <h3 class="font-bold text-slate-800 mb-4">Fund Wallet (Card)</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount to Fund</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400 font-bold">₦</div>
+              <input v-model.number="topupAmount" type="number" min="1" placeholder="0.00"
+                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+            </div>
           </div>
-          <button @click="initTopup" :disabled="loading || !topupAmount" class="bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold">
-            {{ loading ? 'Processing…' : 'Top up' }}
+          <button @click="initTopup" :disabled="loading || !topupAmount"
+                  class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
+            {{ loading ? 'Processing…' : 'Proceed to Payment' }}
           </button>
         </div>
-        <p class="mt-2 text-xs text-slate-500">You will be redirected to Paystack to complete payment.</p>
+        <p class="mt-3 text-[10px] text-slate-500 text-center">Powered by Paystack. Securely top up using your debit card.</p>
       </div>
 
       <!-- P2P Transfer Form -->
-      <div v-if="showTransfer" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 class="font-bold text-slate-800 mb-3">Transfer to Member</h3>
-        <div class="grid sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Send To</label>
-            <select v-model="toType" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none">
-              <option value="phone">Phone Number</option>
-              <option value="membership">Member ID</option>
-            </select>
+      <div v-if="showTransfer" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
+        <h3 class="font-bold text-slate-800 mb-4">Transfer to Member</h3>
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <button v-for="type in ['phone', 'membership']" :key="type"
+                    @click="toType = type"
+                    :class="toType === type ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-slate-50 text-slate-600 border-slate-100'"
+                    class="p-3 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all">
+              {{ type === 'phone' ? 'Phone' : 'Member ID' }}
+            </button>
           </div>
+
           <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">{{ toType === 'phone' ? 'Phone' : 'Membership Number' }}</label>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+              {{ toType === 'phone' ? 'Phone Number' : 'Membership ID' }}
+            </label>
             <div class="flex gap-2">
-              <input v-model="toValue" type="text" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="e.g., 0803..., or MEM123" />
-              <button @click="checkRecipient" type="button" class="shrink-0 bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold">Verify</button>
-            </div>
-          </div>
-        </div>
-        <div v-if="toType === 'membership'" class="mt-3 space-y-2">
-          <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Branch ID (optional)</label>
-            <input v-model.number="branchId" type="number" min="1" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="Branch ID (if known)" />
-          </div>
-          <!-- Recipient preview / disambiguation -->
-          <div v-if="recipient" class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm">
-            Recipient: <span class="font-bold">{{ recipient.name }}</span>
-            <span v-if="recipient.membership_number" class="text-emerald-700">({{ recipient.membership_number }})</span>
-            <span v-if="recipient.branch_name" class="ml-1">— {{ recipient.branch_name }}</span>
-          </div>
-          <div v-else-if="recipientError" class="p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-sm space-y-2">
-            <div>{{ recipientError }}</div>
-            <div v-if="branchesOptions.length" class="flex flex-wrap gap-2">
-              <button v-for="b in branchesOptions" :key="b.id" type="button" @click="chooseBranch(b)" class="px-3 py-1 rounded-lg bg-white border border-amber-300 text-amber-700 text-xs hover:bg-amber-100">
-                {{ b.name }} (ID: {{ b.id }})
+              <input v-model="toValue" type="text"
+                     class="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                     :placeholder="toType === 'phone' ? 'e.g. 0803...' : 'e.g. MEM123'" />
+              <button @click="checkRecipient" type="button" class="shrink-0 bg-emerald-50 text-emerald-700 px-5 rounded-2xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-colors">
+                Verify
               </button>
             </div>
           </div>
+
+          <div v-if="toType === 'membership'" class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Branch ID (Optional)</label>
+              <input v-model.number="branchId" type="number" min="1"
+                     class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                     placeholder="ID if known" />
+            </div>
+
+            <!-- Recipient preview / disambiguation -->
+            <div v-if="recipient" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold">
+                {{ recipient.name[0] }}
+              </div>
+              <div class="min-w-0">
+                <p class="text-[10px] font-black text-emerald-800 uppercase tracking-widest leading-none mb-1">Recipient Found</p>
+                <p class="text-sm font-bold text-slate-800 truncate">{{ recipient.name }}</p>
+                <p class="text-[10px] text-emerald-600 font-medium">{{ recipient.membership_number }} • {{ recipient.branch_name }}</p>
+              </div>
+            </div>
+
+            <div v-else-if="recipientError" class="p-4 rounded-2xl bg-amber-50 border border-amber-100 space-y-3">
+              <p class="text-xs font-bold text-amber-800">{{ recipientError }}</p>
+              <div v-if="branchesOptions.length" class="flex flex-wrap gap-2">
+                <button v-for="b in branchesOptions" :key="b.id" type="button" @click="chooseBranch(b)"
+                        class="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-amber-700 text-[10px] font-bold uppercase hover:bg-amber-100 transition-colors">
+                  {{ b.name }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
+              <input v-model.number="transferAmount" type="number" min="1" placeholder="0.00"
+                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note (Optional)</label>
+            <input v-model="note" type="text" maxlength="120"
+                   class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                   placeholder="Purpose of transfer" />
+          </div>
+
+          <button @click="startTransfer" :disabled="loading || !canSend"
+                  class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
+            {{ loading ? 'Transferring…' : 'Send Funds' }}
+          </button>
+          <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN or Biometrics required.</p>
         </div>
-        <div class="mt-3">
-          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
-          <input v-model.number="transferAmount" type="number" min="1" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="0.00" />
-        </div>
-        <div class="mt-3">
-          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Note (optional)</label>
-          <input v-model="note" type="text" maxlength="120" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="e.g., Lunch refund" />
-        </div>
-        <button @click="startTransfer" :disabled="loading || !canSend" class="bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold mt-4">
-          {{ loading ? 'Transferring…' : 'Send' }}
-        </button>
-        <p class="text-[10px] text-slate-500 mt-2">You will confirm with your Transaction PIN.</p>
       </div>
 
       <!-- Withdraw to Bank Form -->
-      <div v-if="showWithdraw" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 class="font-bold text-slate-800 mb-3">Withdraw to Bank</h3>
-        <p class="text-xs text-slate-500 mb-3">Withdrawals are sent to your saved bank account (Profile › Bank Settings). You can withdraw up to your Available-for-Withdrawal amount.</p>
-        <div class="grid sm:grid-cols-2 gap-3">
+      <div v-if="showWithdraw" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
+        <h3 class="font-bold text-slate-800 mb-2">Withdraw to Bank</h3>
+        <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">Withdrawals are sent to your verified bank account in Profile settings.</p>
+        <div class="space-y-4">
           <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Amount</label>
-            <input v-model.number="withdrawAmount" type="number" min="1" :max="Number(wallet?.available_for_withdrawal || 0)" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="0.00" />
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
+              <input v-model.number="withdrawAmount" type="number" min="1" :max="Number(wallet?.available_for_withdrawal || 0)"
+                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                     placeholder="0.00" />
+            </div>
+            <div class="mt-2 flex justify-between items-center px-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase">Available</span>
+              <span class="text-[10px] text-emerald-700 font-black">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.available_for_withdrawal || 0) }}</span>
+            </div>
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Note (optional)</label>
-            <input v-model="withdrawNote" type="text" maxlength="200" class="w-full bg-slate-50 p-3 rounded-xl border text-sm outline-none" placeholder="e.g., Personal cash-out" />
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note (Optional)</label>
+            <input v-model="withdrawNote" type="text" maxlength="200"
+                   class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                   placeholder="Purpose of withdrawal" />
           </div>
+          <button @click="startWithdraw" :disabled="loading || !canWithdraw"
+                  class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
+            {{ loading ? 'Submitting…' : 'Request Cashout' }}
+          </button>
+          <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN required.</p>
         </div>
-        <div class="mt-2 text-[10px] text-slate-500">Available for Withdrawal: ₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.available_for_withdrawal || 0) }}</div>
-        <button @click="startWithdraw" :disabled="loading || !canWithdraw" class="bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold mt-4">
-          {{ loading ? 'Submitting…' : 'Request Withdrawal' }}
-        </button>
-        <p class="text-[10px] text-slate-500 mt-2">You will confirm with your Transaction PIN.</p>
       </div>
 
       <!-- Withdrawal Breakdown -->
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <h3 class="font-bold text-slate-800 mb-3">Withdrawal Breakdown</h3>
-        <div class="grid grid-cols-1 gap-2 text-sm">
-          <div class="flex justify-between">
-            <span class="text-slate-500">Credits (Withdrawable)</span>
-            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_withdrawable || 0) }}</span>
+      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden">
+        <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 opacity-50" />
+        <h3 class="font-bold text-slate-800 mb-4 relative z-10">Withdrawal Breakdown</h3>
+        <div class="space-y-3 relative z-10">
+          <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+            <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Withdrawable)</span>
+            <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_withdrawable || 0) }}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Credits (Restricted)</span>
-            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_restricted || 0) }}</span>
+          <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+            <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Restricted)</span>
+            <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_restricted || 0) }}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Total Debits</span>
-            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.total_debits || 0) }}</span>
+          <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+            <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Total Debits</span>
+            <span class="font-bold text-rose-600 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.total_debits || 0) }}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Remaining Withdrawable</span>
-            <span class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.remaining_withdrawable || 0) }}</span>
+          <div class="flex justify-between items-center p-4 rounded-xl bg-emerald-50 border border-emerald-100 mt-2">
+            <span class="text-emerald-800 text-[10px] font-black uppercase tracking-wider">Net Withdrawable</span>
+            <span class="font-black text-emerald-700 text-lg">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.remaining_withdrawable || 0) }}</span>
           </div>
         </div>
-        <p class="text-[10px] text-slate-500 mt-2">Note: Loan disbursements are marked as restricted by default and cannot be withdrawn to bank unless enabled by Admin. You can still spend restricted funds on Airtime/Data/Store inside the app.</p>
+        <p class="text-[10px] text-slate-400 mt-4 leading-relaxed italic">Restricted funds (e.g. loan disbursements) can be spent on utilities/store but cannot be withdrawn to bank unless unlocked.</p>
       </div>
 
       <!-- Your Withdrawal Requests -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-3 gap-2 flex-wrap">
-          <h3 class="font-bold text-slate-800">Your Withdrawal Requests</h3>
-          <button @click="loadMoreWithdrawals" class="text-emerald-700 text-xs font-bold px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 sm:ml-auto">Load more</button>
+        <div class="flex justify-between items-center mb-5 gap-2 flex-wrap">
+          <h3 class="font-bold text-slate-800">Withdrawal Requests</h3>
+          <button @click="loadMoreWithdrawals" class="text-emerald-700 text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors">Load more</button>
         </div>
-        <div v-if="withdrawals.length" class="space-y-3">
-          <div v-for="wr in withdrawals" :key="wr.id" class="border border-slate-100 rounded-xl p-4">
-            <div class="flex items-center justify-between gap-3">
+        <div v-if="withdrawals.length" class="space-y-4">
+          <div v-for="wr in withdrawals" :key="wr.id" class="group border border-slate-100 rounded-2xl p-4 active:bg-slate-50 transition-colors">
+            <div class="flex items-center justify-between gap-3 mb-2">
               <div class="min-w-0">
-                <p class="text-sm font-bold text-slate-800 truncate">₦ {{ formatMoney(wr.amount) }}</p>
-                <p class="text-[10px] uppercase text-slate-400 truncate">Ref: {{ wr.reference }}</p>
+                <p class="text-base font-black text-slate-800">₦ {{ formatMoney(wr.amount) }}</p>
+                <p class="text-[10px] uppercase font-mono text-slate-400 tracking-tighter">REF: {{ wr.reference }}</p>
               </div>
               <div class="shrink-0 flex items-center gap-2">
-                <span :class="statusClass(wr.status)" class="text-xs font-bold px-2 py-1 rounded-full">{{ wr.status }}</span>
-                <button v-if="wr.status === 'pending'" @click="cancelWithdrawal(wr)" class="text-rose-700 text-[10px] font-bold px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100">Cancel</button>
+                <span :class="statusClass(wr.status)" class="text-[10px] font-black uppercase px-2 py-1 rounded-lg tracking-wider">{{ wr.status }}</span>
+                <button v-if="wr.status === 'pending'" @click="cancelWithdrawal(wr)" class="text-rose-700 text-[10px] font-black uppercase px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 transition-colors">Cancel</button>
               </div>
             </div>
-            <div class="flex items-center justify-between mt-1 gap-3 flex-wrap">
-              <p class="text-[10px] text-slate-400 truncate">{{ new Date(wr.created_at).toLocaleString() }}</p>
-              <p v-if="wr.bank?.account_number || wr.account_number" class="text-[10px] text-slate-400 truncate">Bank: {{ wr.bank?.bank_name || wr.bank_name }} • Acct: {{ (wr.bank?.account_number || wr.account_number || '').replace(/.(?=.{4})/g, '•') }}</p>
+            <div class="flex items-center justify-between mt-1 pt-2 border-t border-slate-50">
+              <p class="text-[10px] text-slate-400 font-medium">{{ new Date(wr.created_at).toLocaleDateString() }} • {{ new Date(wr.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</p>
+              <p v-if="wr.bank?.account_number || wr.account_number" class="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[140px]">
+                {{ wr.bank?.bank_name || wr.bank_name }}
+              </p>
             </div>
           </div>
         </div>
-        <div v-else class="text-sm text-slate-500">No withdrawal requests yet.</div>
+        <div v-else class="text-center py-6">
+          <p class="text-xs text-slate-400">No withdrawal requests found.</p>
+        </div>
       </div>
 
       <!-- Recent Wallet Transactions -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-3 gap-2 flex-wrap">
-          <h3 class="font-bold text-slate-800">Recent Wallet Activity</h3>
-          <button @click="loadMore" class="text-emerald-700 text-xs font-bold px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 sm:ml-auto">Load more</button>
+        <div class="flex justify-between items-center mb-5 gap-2 flex-wrap">
+          <h3 class="font-bold text-slate-800">Transaction History</h3>
+          <button @click="loadMore" class="text-emerald-700 text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors">View All</button>
         </div>
-        <div v-if="transactions.length" class="space-y-3">
-          <div v-for="tx in transactions" :key="tx.id" class="border border-slate-100 rounded-xl p-4">
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3 min-w-0">
-                <div :class="tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
-                  {{ tx.type === 'credit' ? '+' : '−' }}
-                </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-bold text-slate-800 truncate">{{ titleFor(tx) }}</p>
-                </div>
+        <div v-if="transactions.length" class="space-y-4">
+          <div v-for="tx in transactions" :key="tx.id" class="flex items-center justify-between gap-3 group">
+            <div class="flex items-center gap-3 min-w-0">
+              <div :class="tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'"
+                   class="w-11 h-11 rounded-2xl flex items-center justify-center text-lg shrink-0 transition-transform group-active:scale-90">
+                <svg v-if="tx.type === 'credit'" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
               </div>
-              <p class="font-bold shrink-0" :class="tx.type === 'credit' ? 'text-emerald-700' : 'text-rose-700'">₦ {{ formatMoney(tx.amount) }}</p>
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-slate-800 truncate leading-none mb-1">{{ titleFor(tx) }}</p>
+                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{{ new Date(tx.created_at).toLocaleDateString() }} • {{ tx.reference.slice(0, 12) }}...</p>
+              </div>
             </div>
-            <div class="flex items-center justify-between mt-1 gap-3 flex-wrap">
-              <p class="text-[10px] uppercase text-slate-400 truncate">Ref: {{ tx.reference }}</p>
-              <div class="flex items-center gap-2 ml-auto">
-                <a :href="getReceiptDownloadUrl(tx)" target="_blank" class="text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100">Receipt</a>
-                <p class="text-[10px] text-slate-400 shrink-0">{{ new Date(tx.created_at).toLocaleString() }}</p>
-              </div>
+            <div class="text-right shrink-0">
+              <p class="font-black text-sm" :class="tx.type === 'credit' ? 'text-emerald-700' : 'text-slate-800'">
+                {{ tx.type === 'credit' ? '+' : '-' }}₦{{ formatMoney(tx.amount) }}
+              </p>
+              <a :href="getReceiptDownloadUrl(tx)" target="_blank" class="text-emerald-700 text-[9px] font-black uppercase tracking-widest hover:underline">Receipt</a>
             </div>
           </div>
         </div>
-        <div v-else class="text-sm text-slate-500">No wallet activity yet.</div>
+        <div v-else class="text-center py-8">
+          <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <p class="text-xs text-slate-400 font-medium">No transactions recorded yet.</p>
+        </div>
       </div>
 
       <!-- Reusable Notice Modal -->
@@ -271,18 +374,22 @@
       />
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
+    <nav class="bottom-nav" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
         <span class="text-xl">🏠</span>
         <span class="text-[10px] font-bold">Home</span>
       </button>
-      <button class="text-emerald-700 flex flex-col items-center gap-1" @click="$router.push('/wallet')">
+      <button class="bottom-nav-btn-active" @click="$router.push('/wallet')">
         <span class="text-xl">👛</span>
         <span class="text-[10px] font-bold">Wallet</span>
       </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/passbook')">
+      <button class="bottom-nav-btn" @click="$router.push('/passbook')">
         <span class="text-xl">📅</span>
         <span class="text-[10px] font-bold">Passbook</span>
+      </button>
+      <button class="bottom-nav-btn" @click="$router.push('/profile')">
+        <span class="text-xl">👤</span>
+        <span class="text-[10px] font-bold">Profile</span>
       </button>
     </nav>
   </div>

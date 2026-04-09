@@ -1,8 +1,15 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="p-4 bg-white border-b flex items-center justify-between">
-      <h1 class="text-xl font-bold">Support</h1>
-      <button @click="$router.back()" class="text-slate-600">Close</button>
+  <div class="min-h-screen bg-slate-50 pb-32">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.back()" class="p-2 -ml-2 rounded-full active:bg-slate-100 transition-colors" title="Back">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 class="text-lg font-bold text-slate-800">Support</h1>
+        <div class="w-10"></div>
+      </div>
     </header>
 
     <div class="p-4 space-y-4">
@@ -48,16 +55,20 @@
       </div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
+    <nav class="bottom-nav" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
         <span class="text-xl">🏠</span>
         <span class="text-[10px] font-bold">Home</span>
       </button>
-      <button class="text-emerald-700 flex flex-col items-center gap-1">
-        <span class="text-xl">🛟</span>
-        <span class="text-[10px] font-bold">Support</span>
+      <button class="bottom-nav-btn" @click="$router.push('/wallet')">
+        <span class="text-xl">👛</span>
+        <span class="text-[10px] font-bold">Wallet</span>
       </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/profile')">
+      <button class="bottom-nav-btn" @click="$router.push('/passbook')">
+        <span class="text-xl">📅</span>
+        <span class="text-[10px] font-bold">Passbook</span>
+      </button>
+      <button class="bottom-nav-btn" @click="$router.push('/profile')">
         <span class="text-xl">👤</span>
         <span class="text-[10px] font-bold">Profile</span>
       </button>

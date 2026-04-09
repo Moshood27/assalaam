@@ -8,7 +8,7 @@
 
     <div class="w-full max-w-md relative">
       <!-- Background glow effect -->
-      <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[2.5rem] blur-2xl opacity-50"></div>
+      <div aria-hidden="true" class="pointer-events-none absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[2.5rem] blur-2xl opacity-50"></div>
 
       <div class="card card-elevated relative overflow-hidden p-8 sm:p-10 bg-white/90 backdrop-blur-2xl border border-white/80 shadow-2xl rounded-[2.5rem]">
         <!-- Top accent gradient line -->
@@ -176,7 +176,7 @@
         </div>
       </div>
 
-      <p class="mt-8 text-center text-sm text-slate-500 font-medium px-4">
+      <p class="mt-8 text-center text-sm text-slate-500 font-medium px-4 relative">
         Need assistance? 
         <router-link to="/support" class="text-emerald-700 font-bold hover:text-emerald-800 ml-1">Contact Support</router-link>
       </p>

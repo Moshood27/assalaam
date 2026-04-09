@@ -1,79 +1,71 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="p-4 bg-white border-b flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <button @click="$router.back()" class="text-2xl">⬅️</button>
-        <h1 class="text-xl font-bold">Profile Information</h1>
+  <div class="min-h-screen bg-slate-50 pb-32">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <div class="flex items-center gap-3">
+          <button @click="$router.back()" class="p-2 -ml-2 rounded-full active:bg-slate-100 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 class="text-lg font-bold text-slate-800">Profile Information</h1>
+        </div>
+        <button @click="$router.push('/support')" class="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl hover:bg-emerald-100 transition-colors">Support</button>
       </div>
-      <button @click="$router.push('/support')" class="text-sm font-bold text-emerald-700">Support</button>
     </header>
 
-    <div class="p-4 space-y-4">
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden bg-emerald-700 text-white">
-            <img v-if="profile.passport_url" :src="getImageUrl(profile.passport_url)" alt="Profile photo" class="w-12 h-12 object-cover" />
-            <span v-else>{{ (profile.full_name || 'M')[0] }}</span>
-          </div>
-          <div>
-            <p class="text-xs text-gray-500 font-medium">Member</p>
-            <h2 class="text-sm font-bold text-slate-800 uppercase">{{ profile.full_name }}</h2>
-            <div class="mt-1">
-              <input id="passport-input" ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
-              <button @click="chooseFile" class="text-[10px] font-bold text-emerald-700 underline" :disabled="uploading">
-                {{ uploading ? 'Uploading...' : (profile.passport_url ? 'Change Photo' : 'Upload Photo') }}
-              </button>
+    <div class="p-4 space-y-6">
+      <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+        <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
+
+        <div class="flex items-center gap-4 mb-6 relative z-10">
+          <div class="relative">
+            <div class="w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-bold overflow-hidden bg-emerald-700 text-white shadow-lg shadow-emerald-700/20">
+              <img v-if="profile.passport_url" :src="getImageUrl(profile.passport_url)" alt="Profile photo" class="w-full h-full object-cover" />
+              <span v-else>{{ (profile.full_name || 'M')[0] }}</span>
             </div>
+            <button @click="chooseFile" class="absolute -bottom-2 -right-2 bg-white p-2 rounded-xl shadow-md border border-slate-100 text-emerald-700 active:scale-90 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            <input id="passport-input" ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1">Membership Status</p>
+            <h2 class="text-lg font-black text-slate-800 uppercase leading-tight truncate">{{ profile.full_name }}</h2>
+            <p class="text-xs text-slate-500 font-medium">Joined {{ profile.date_joined || 'Recently' }}</p>
           </div>
         </div>
-        <div class="grid grid-cols-1 gap-3">
-          <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
-            <div>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">Email</p>
-              <p class="font-bold text-slate-800">{{ profile.email }}</p>
+
+        <div class="space-y-3 relative z-10">
+          <div v-for="item in [
+            { label: 'Email Address', value: profile.email, icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+            { label: 'Membership ID', value: profile.membership_id, icon: 'M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5' },
+            { label: 'Phone Number', value: profile.phone || '—', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
+            { label: 'Current Branch', value: profile.branch_name || '—', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' }
+          ]" :key="item.label" class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 group transition-colors hover:border-emerald-200">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{{ item.label }}</p>
+                <p class="text-sm font-bold text-slate-800 truncate">{{ item.value }}</p>
+              </div>
             </div>
-            <button @click="copy(profile.email)" class="text-sm text-emerald-700">Copy</button>
+            <button @click="copy(item.value)" class="p-2 text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+            </button>
           </div>
-          <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
-            <div>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">Membership ID</p>
-              <p class="font-bold text-slate-800">{{ profile.membership_id }}</p>
-            </div>
-            <button @click="copy(profile.membership_id)" class="text-sm text-emerald-700">Copy</button>
-          </div>
-          <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
-            <div>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">Virtual Account</p>
-              <p class="font-bold text-slate-800">{{ profile.virtual_account || '—' }}</p>
-            </div>
-            <button v-if="profile.virtual_account" @click="copy(profile.virtual_account || '')" class="text-sm text-emerald-700">Copy</button>
-            <button v-else @click="goToWallet" class="text-sm text-white bg-emerald-700 px-3 py-1.5 rounded-lg font-bold">Generate</button>
-          </div>
-          <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
-            <div>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">Phone</p>
-              <p class="font-bold text-slate-800">{{ profile.phone || '—' }}</p>
-            </div>
-            <button @click="copy(profile.phone || '')" class="text-sm text-emerald-700">Copy</button>
-          </div>
-          <div class="flex items-start justify-between bg-slate-50 rounded-xl p-3">
-            <div>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">Address</p>
-              <p class="font-bold text-slate-800 whitespace-pre-line break-words max-w-[70%]">{{ profile.address || '—' }}</p>
-            </div>
-            <button @click="copy(profile.address || '')" class="text-sm text-emerald-700">Copy</button>
-          </div>
-          <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
-            <div>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">Branch</p>
-              <p class="font-bold text-slate-800">{{ profile.branch_name || '—' }}</p>
-            </div>
-          </div>
-          <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
-            <div>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">Date Joined</p>
-              <p class="font-bold text-slate-800">{{ profile.date_joined || '—' }}</p>
-            </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">Residential Address</p>
+            <p class="text-sm font-bold text-slate-800 leading-relaxed">{{ profile.address || '—' }}</p>
           </div>
         </div>
       </div>
@@ -342,16 +334,20 @@
       </div>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
+    <nav class="bottom-nav" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
         <span class="text-xl">🏠</span>
         <span class="text-[10px] font-bold">Home</span>
       </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/settings')">
-        <span class="text-xl">🛟</span>
-        <span class="text-[10px] font-bold">Support</span>
+      <button class="bottom-nav-btn" @click="$router.push('/wallet')">
+        <span class="text-xl">👛</span>
+        <span class="text-[10px] font-bold">Wallet</span>
       </button>
-      <button class="text-emerald-700 flex flex-col items-center gap-1">
+      <button class="bottom-nav-btn" @click="$router.push('/passbook')">
+        <span class="text-xl">📅</span>
+        <span class="text-[10px] font-bold">Passbook</span>
+      </button>
+      <button class="bottom-nav-btn-active" @click="$router.push('/profile')">
         <span class="text-xl">👤</span>
         <span class="text-[10px] font-bold">Profile</span>
       </button>
