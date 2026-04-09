@@ -75,15 +75,27 @@ class ActivityLogResource extends Resource
                             ->keyLabel('Field')
                             ->valueLabel('Value')
                             ->state(function ($state) {
-                                if (auth()->user()->hasRole('super_admin') || !is_array($state)) {
-                                    return $state;
+                                if ($state instanceof \Illuminate\Support\Collection) {
+                                    $state = $state->toArray();
                                 }
+
+                                if (!is_array($state)) {
+                                    return [];
+                                }
+
+                                $user = auth()->user();
+                                $isSuperAdmin = $user && $user->hasRole('super_admin');
+
                                 $sensitive = ['bvn', 'membership_number', 'account_number', 'password'];
-                                foreach ($sensitive as $key) {
-                                    if (isset($state[$key]) && is_string($state[$key])) {
-                                        $state[$key] = \Illuminate\Support\Str::mask($state[$key], '*', 2, -2);
+
+                                foreach ($state as $key => $value) {
+                                    if (!$isSuperAdmin && in_array($key, $sensitive)) {
+                                        $state[$key] = is_string($value) ? \Illuminate\Support\Str::mask($value, '*', 2, -2) : '*******';
+                                    } elseif (is_array($value) || is_object($value)) {
+                                        $state[$key] = json_encode($value);
                                     }
                                 }
+
                                 return $state;
                             }),
                         KeyValueEntry::make('properties.attributes')
@@ -91,15 +103,27 @@ class ActivityLogResource extends Resource
                             ->keyLabel('Field')
                             ->valueLabel('Value')
                             ->state(function ($state) {
-                                if (auth()->user()->hasRole('super_admin') || !is_array($state)) {
-                                    return $state;
+                                if ($state instanceof \Illuminate\Support\Collection) {
+                                    $state = $state->toArray();
                                 }
+
+                                if (!is_array($state)) {
+                                    return [];
+                                }
+
+                                $user = auth()->user();
+                                $isSuperAdmin = $user && $user->hasRole('super_admin');
+
                                 $sensitive = ['bvn', 'membership_number', 'account_number', 'password'];
-                                foreach ($sensitive as $key) {
-                                    if (isset($state[$key]) && is_string($state[$key])) {
-                                        $state[$key] = \Illuminate\Support\Str::mask($state[$key], '*', 2, -2);
+
+                                foreach ($state as $key => $value) {
+                                    if (!$isSuperAdmin && in_array($key, $sensitive)) {
+                                        $state[$key] = is_string($value) ? \Illuminate\Support\Str::mask($value, '*', 2, -2) : '*******';
+                                    } elseif (is_array($value) || is_object($value)) {
+                                        $state[$key] = json_encode($value);
                                     }
                                 }
+
                                 return $state;
                             }),
                     ])->columns(2),

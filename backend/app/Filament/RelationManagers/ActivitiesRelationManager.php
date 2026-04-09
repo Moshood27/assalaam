@@ -74,11 +74,45 @@ class ActivitiesRelationManager extends RelationManager
                         KeyValueEntry::make('properties.old')
                             ->label('Before')
                             ->keyLabel('Field')
-                            ->valueLabel('Value'),
+                            ->valueLabel('Value')
+                            ->state(function ($state) {
+                                if ($state instanceof \Illuminate\Support\Collection) {
+                                    $state = $state->toArray();
+                                }
+
+                                if (!is_array($state)) {
+                                    return [];
+                                }
+
+                                foreach ($state as $key => $value) {
+                                    if (is_array($value) || is_object($value)) {
+                                        $state[$key] = json_encode($value);
+                                    }
+                                }
+
+                                return $state;
+                            }),
                         KeyValueEntry::make('properties.attributes')
                             ->label('After')
                             ->keyLabel('Field')
-                            ->valueLabel('Value'),
+                            ->valueLabel('Value')
+                            ->state(function ($state) {
+                                if ($state instanceof \Illuminate\Support\Collection) {
+                                    $state = $state->toArray();
+                                }
+
+                                if (!is_array($state)) {
+                                    return [];
+                                }
+
+                                foreach ($state as $key => $value) {
+                                    if (is_array($value) || is_object($value)) {
+                                        $state[$key] = json_encode($value);
+                                    }
+                                }
+
+                                return $state;
+                            }),
                     ])->columns(2),
             ]);
     }
