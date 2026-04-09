@@ -1,5 +1,56 @@
 import { createApp } from 'vue'
 import './style.css'
+
+/**
+ * Silence noisy browser extension errors (e.g. MetaMask, Grammarly)
+ * that clutter the console but don't affect app functionality.
+ */
+try {
+  const shouldSilence = String(import.meta?.env?.VITE_SILENCE_METAMASK_ERRORS ?? 'true') === 'true'
+  if (shouldSilence && typeof window !== 'undefined') {
+    const isNoisy = (msg) => {
+      const s = String(msg || '')
+      return s.includes('MetaMask extension not found')
+        || s.includes('Failed to connect to MetaMask')
+        || s.includes('inpage.js')
+        || s.includes('Could not establish connection. Receiving end does not exist')
+        || s.includes('runtime.lastError')
+    }
+
+    // 1. Capture global error events
+    window.addEventListener('unhandledrejection', (e) => {
+      const r = e?.reason
+      const m = (r && (r.message || r.toString?.())) || ''
+      if (isNoisy(m)) {
+        e.preventDefault?.()
+        console?.debug?.('[silenced] unhandledrejection:', m)
+      }
+    })
+    window.addEventListener('error', (e) => {
+      const m = e?.message || ''
+      if (isNoisy(m)) {
+        e.preventDefault?.()
+        e.stopImmediatePropagation?.()
+        console?.debug?.('[silenced] error:', m)
+        return false
+      }
+    }, true)
+
+    // 2. Patch console.error/warn to hide browser-internal extension logs
+    // "Unchecked runtime.lastError" is often logged via these or browser-internal means.
+    const patchConsole = (method) => {
+      const native = console[method]
+      if (!native) return
+      console[method] = (...args) => {
+        if (args.length > 0 && isNoisy(args[0])) return
+        native.apply(console, args)
+      }
+    }
+    patchConsole('error')
+    patchConsole('warn')
+  }
+} catch (_) {}
+
 import axios from './http.js'
 import App from './App.vue'
 import router from './router/index.js'
@@ -146,42 +197,6 @@ router.isReady().then(async () => {
 })
 
 app.mount('#app')
-
-/**
- * Optional: Silence noisy MetaMask extension errors in environments
- * where browser extensions are not available (e.g., Capacitor WebView).
- * Disable by setting VITE_SILENCE_METAMASK_ERRORS=false
- */
-try {
-  const shouldSilence = String(import.meta?.env?.VITE_SILENCE_METAMASK_ERRORS ?? 'true') === 'true'
-  if (shouldSilence && typeof window !== 'undefined') {
-    const isNoisy = (msg) => {
-      const s = String(msg || '')
-      return s.includes('MetaMask extension not found')
-        || s.includes('Failed to connect to MetaMask')
-        || s.includes('inpage.js')
-        || s.includes('Could not establish connection. Receiving end does not exist')
-        || s.includes('runtime.lastError')
-    }
-    window.addEventListener('unhandledrejection', (e) => {
-      const r = e?.reason
-      const m = (r && (r.message || r.toString?.())) || ''
-      if (isNoisy(m)) {
-        e.preventDefault?.()
-        console?.debug?.('[silenced] unhandledrejection:', m)
-      }
-    })
-    window.addEventListener('error', (e) => {
-      const m = e?.message || ''
-      if (isNoisy(m)) {
-        e.preventDefault?.()
-        e.stopImmediatePropagation?.()
-        console?.debug?.('[silenced] error:', m)
-        return false
-      }
-    }, true)
-  }
-} catch (_) {}
 
 // Signal app ready and hide native splash (Capacitor) once mounted
 setTimeout(async () => {
