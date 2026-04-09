@@ -24,26 +24,34 @@
         <p class="text-[11px] text-rose-500 font-bold mb-4 uppercase">
           ⚠️ Click the "+" to split across multiple schemes
         </p>
-        <div class="flex gap-2">
-          <div class="flex-grow">
+        <div class="space-y-4">
+          <div>
             <label class="lbl">Scheme</label>
             <select v-model="selectedSchemeId" class="inp">
               <option value="">Select Scheme</option>
               <option v-for="s in schemes" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
-          <div class="flex-grow">
+          <div>
             <label class="lbl">Project (optional)</label>
             <select v-model="selectedProjectId" class="inp">
               <option value="">No Project</option>
               <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
           </div>
-          <div class="w-1/3">
+          <div>
             <label class="lbl">Amount</label>
-            <input v-model.number="inputAmount" type="number" inputmode="decimal" pattern="[0-9]*" step="0.01" min="0" autocomplete="off" enterkeyhint="done" placeholder="Enter amount" class="inp text-right text-xl font-bold tracking-wide h-12 placeholder-slate-400" />
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+              <input v-model.number="inputAmount" type="number" inputmode="decimal" placeholder="0.00" class="inp pl-8 text-xl font-black" />
+            </div>
           </div>
-          <button @click="addToList" class="btn-primary mt-6 w-12 h-12 rounded-xl text-2xl font-bold flex items-center justify-center">+</button>
+          <button @click="addToList" class="btn-primary w-full py-4 flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add to List
+          </button>
         </div>
         <div class="mt-3 flex items-center gap-2">
           <input id="fine" type="checkbox" v-model="isFine" class="accent-emerald-700">
@@ -116,20 +124,28 @@
       @cancel="handlePinCancel"
     />
 
-    <nav class="bottom-nav">
-      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/passbook')">
-        <span class="text-xl">📅</span>
-        <span class="text-[10px] font-bold">Passbook</span>
-      </button>
-      <button class="bottom-nav-btn bottom-nav-btn-active" @click="$router.push('/pay')">
-        <span class="text-xl">💳</span>
-        <span class="text-[10px] font-bold">Pay</span>
-      </button>
-    </nav>
+    <div class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item group" @click="$router.push('/dashboard')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-item group" @click="$router.push('/passbook')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+          </svg>
+          <span>Passbook</span>
+        </button>
+        <button class="nav-item group active" @click="$router.push('/pay')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+          </svg>
+          <span>Pay</span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
