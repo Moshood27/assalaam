@@ -35,79 +35,79 @@
              style="height: 600px; width: 100%; border-radius: 12px; z-index: 1;"
              class="border border-gray-300 dark:border-gray-700 shadow-lg">
         </div>
-    </div>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <script>
-        document.addEventListener('livewire:initialized', function () {
-            const branches = @json($branches);
-            const mapContainer = document.getElementById('map');
+        <script>
+            document.addEventListener('livewire:initialized', function () {
+                const branches = @json($branches);
+                const mapContainer = document.getElementById('map');
 
-            if (!branches || branches.length === 0) {
-                mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No branches found.</div>';
-                return;
-            }
+                if (!branches || branches.length === 0) {
+                    mapContainer.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No branches found.</div>';
+                    return;
+                }
 
-            const validBranches = branches.filter(b => b.latitude && b.longitude);
-            if (validBranches.length === 0) return;
+                const validBranches = branches.filter(b => b.latitude && b.longitude);
+                if (validBranches.length === 0) return;
 
-            // Aggregate
-            const totalSavings = validBranches.reduce((a, b) => a + (Number(b.savings_rate) || 0), 0);
-            const avgDefault = validBranches.reduce((a, b) => a + (Number(b.default_rate) || 0), 0) / validBranches.length;
-            const fmt = (n) => {
-                try { return Number(n).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch { return n }
-            };
-            document.getElementById('agg-branches').textContent = String(validBranches.length);
-            document.getElementById('agg-savings').textContent = `₦ ${fmt(totalSavings)}`;
-            document.getElementById('agg-default').textContent = `${(avgDefault || 0).toFixed(2)}%`;
+                // Aggregate
+                const totalSavings = validBranches.reduce((a, b) => a + (Number(b.savings_rate) || 0), 0);
+                const avgDefault = validBranches.reduce((a, b) => a + (Number(b.default_rate) || 0), 0) / validBranches.length;
+                const fmt = (n) => {
+                    try { return Number(n).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch { return n }
+                };
+                document.getElementById('agg-branches').textContent = String(validBranches.length);
+                document.getElementById('agg-savings').textContent = `₦ ${fmt(totalSavings)}`;
+                document.getElementById('agg-default').textContent = `${(avgDefault || 0).toFixed(2)}%`;
 
-            const map = L.map('map').setView([validBranches[0].latitude, validBranches[0].longitude], 6);
+                const map = L.map('map').setView([validBranches[0].latitude, validBranches[0].longitude], 6);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
-
-            const markers = [];
-
-            validBranches.forEach(branch => {
-                const color = branch.default_rate > 20 ? '#ef4444' : (branch.default_rate > 10 ? '#f97316' : '#22c55e');
-                const maxSavings = Math.max(...validBranches.map(b => Number(b.savings_rate) || 0)) || 1;
-                const scaled = 5 + ((Number(branch.savings_rate) || 0) / maxSavings) * 25;
-                const radius = Math.min(28, Math.max(8, scaled));
-
-                const marker = L.circleMarker([branch.latitude, branch.longitude], {
-                    radius: radius,
-                    fillColor: color,
-                    color: "#000",
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.7
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap'
                 }).addTo(map);
 
-                const savingsFmt = (() => { try { return Number(branch.savings_rate || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch { return branch.savings_rate; } })();
-                marker.bindPopup(`
-                    <div class="text-sm" style="min-width: 200px">
-                        <h3 class="font-bold text-base border-b border-gray-200 mb-2 pb-1">${branch.name}</h3>
-                        <p class="mb-1"><strong>Total Savings:</strong> ₦${savingsFmt}</p>
-                        <p><strong>Default Rate:</strong> <span style="color: ${color}; font-weight: bold;">${(Number(branch.default_rate) || 0).toFixed(2)}%</span></p>
-                    </div>
-                `);
-                marker.bindTooltip(`${branch.name}: ₦${savingsFmt}`, { direction: 'top' });
+                const markers = [];
 
-                markers.push([branch.latitude, branch.longitude]);
+                validBranches.forEach(branch => {
+                    const color = branch.default_rate > 20 ? '#ef4444' : (branch.default_rate > 10 ? '#f97316' : '#22c55e');
+                    const maxSavings = Math.max(...validBranches.map(b => Number(b.savings_rate) || 0)) || 1;
+                    const scaled = 5 + ((Number(branch.savings_rate) || 0) / maxSavings) * 25;
+                    const radius = Math.min(28, Math.max(8, scaled));
+
+                    const marker = L.circleMarker([branch.latitude, branch.longitude], {
+                        radius: radius,
+                        fillColor: color,
+                        color: "#000",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.7
+                    }).addTo(map);
+
+                    const savingsFmt = (() => { try { return Number(branch.savings_rate || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch { return branch.savings_rate; } })();
+                    marker.bindPopup(`
+                        <div class="text-sm" style="min-width: 200px">
+                            <h3 class="font-bold text-base border-b border-gray-200 mb-2 pb-1">${branch.name}</h3>
+                            <p class="mb-1"><strong>Total Savings:</strong> ₦${savingsFmt}</p>
+                            <p><strong>Default Rate:</strong> <span style="color: ${color}; font-weight: bold;">${(Number(branch.default_rate) || 0).toFixed(2)}%</span></p>
+                        </div>
+                    `);
+                    marker.bindTooltip(`${branch.name}: ₦${savingsFmt}`, { direction: 'top' });
+
+                    markers.push([branch.latitude, branch.longitude]);
+                });
+
+                if (markers.length > 0) {
+                    map.fitBounds(L.latLngBounds(markers), { padding: [50, 50] });
+                }
             });
+        </script>
 
-            if (markers.length > 0) {
-                map.fitBounds(L.latLngBounds(markers), { padding: [50, 50] });
-            }
-        });
-    </script>
-
-    <style>
-        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
-        .leaflet-popup-content { margin: 12px !important; width: auto !important; }
-        .leaflet-container { font-family: inherit; }
-    </style>
+        <style>
+            .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+            .leaflet-popup-content { margin: 12px !important; width: auto !important; }
+            .leaflet-container { font-family: inherit; }
+        </style>
+    </div>
 </x-filament-panels::page>
