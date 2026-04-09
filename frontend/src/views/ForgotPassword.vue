@@ -1,111 +1,185 @@
 <template>
   <div class="min-h-screen auth-bg relative flex items-center justify-center p-4 overflow-hidden">
-    <div class="w-full max-w-md">
-      <div class="card card-elevated relative overflow-hidden p-6 sm:p-8 bg-white/80 backdrop-blur-xl border border-white/60 shadow-xl">
-        <div aria-hidden="true" class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"></div>
-        <div class="flex flex-col items-center text-center mb-6">
-          <div class="w-16 h-16 rounded-2xl bg-emerald-600 flex items-center justify-center text-white text-2xl shadow-lg">🔑</div>
-          <h1 class="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900">Reset your password</h1>
-          <p class="text-slate-500 text-sm mt-1">Receive a reset code by email or SMS</p>
+    <!-- Decorative fintech gradient blobs -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+      <div class="absolute -top-24 -right-20 w-72 h-72 bg-gradient-to-br from-emerald-400/25 to-sky-400/25 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-28 -left-16 w-80 h-80 bg-gradient-to-tr from-emerald-300/20 to-indigo-300/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="w-full max-w-md relative">
+      <!-- Background glow effect -->
+      <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[2.5rem] blur-2xl opacity-50"></div>
+
+      <div class="card card-elevated relative overflow-hidden p-8 sm:p-10 bg-white/90 backdrop-blur-2xl border border-white/80 shadow-2xl rounded-[2.5rem]">
+        <!-- Top accent gradient line -->
+        <div aria-hidden="true" class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 opacity-80"></div>
+
+        <div class="flex flex-col items-center text-center mb-8">
+          <div class="w-20 h-20 rounded-[1.75rem] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-3xl shadow-xl shadow-emerald-500/20 mb-4 transform hover:scale-105 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Recover Account</h1>
+          <p class="text-slate-500 text-sm mt-2 font-medium">Get a secure reset code to your preferred channel</p>
         </div>
 
-        <div class="space-y-5">
+        <div class="space-y-6">
           <!-- Step 1: Request code -->
-          <div v-if="step === 1" class="space-y-4">
-            <div>
-              <label class="form-label">Delivery Method</label>
-              <div class="flex gap-2">
-                <button @click="channel = 'email'" type="button" :class="['px-4 h-10 rounded-lg border', channel==='email' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200']">Email</button>
-                <button @click="channel = 'sms'" type="button" :class="['px-4 h-10 rounded-lg border', channel==='sms' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200']">SMS</button>
+          <div v-if="step === 1" class="space-y-6">
+            <div class="space-y-3">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Delivery Method</label>
+              <div class="flex p-1 bg-slate-100 rounded-2xl">
+                <button @click="channel = 'email'" type="button" :class="['flex-1 py-3 rounded-xl font-bold text-sm transition-all', channel==='email' ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+                  Email
+                </button>
+                <button @click="channel = 'sms'" type="button" :class="['flex-1 py-3 rounded-xl font-bold text-sm transition-all', channel==='sms' ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+                  SMS
+                </button>
               </div>
             </div>
 
-            <div v-if="channel === 'email'">
-              <label class="form-label">Email</label>
-              <input v-model="requestForm.email" type="email" placeholder="you@example.com" class="input" />
+            <div v-if="channel === 'email'" class="relative group">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Email Address</label>
+              <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </span>
+                <input v-model="requestForm.email" type="email" placeholder="you@example.com" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+              </div>
             </div>
 
-            <div v-else class="space-y-3">
-              <details class="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-                <summary class="cursor-pointer text-sm text-slate-700">Use phone number (recommended)</summary>
-                <div class="mt-3">
-                  <label class="form-label">Phone Number</label>
-                  <input v-model="requestForm.phone" type="tel" placeholder="e.g. 0803 123 4567" class="input" />
-                  <p class="text-xs text-slate-500 mt-1">We'll send the code to this number if it matches your account.</p>
+            <div v-else class="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div class="relative group">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Phone Number</label>
+                <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </span>
+                  <input v-model="requestForm.phone" type="tel" placeholder="e.g. 0803 123 4567" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
                 </div>
-              </details>
-
-              <div class="text-center text-xs text-slate-400">— OR —</div>
-
-              <div>
-                <label class="form-label">Branch</label>
-                <SearchableSelect
-                  v-model="requestForm.branch_id"
-                  :items="branches"
-                  label="Select Branch"
-                  placeholder="Choose your branch"
-                  searchPlaceholder="Search branches…"
-                />
               </div>
-              <div>
-                <label class="form-label">Membership Number</label>
-                <input v-model="requestForm.membership_number" type="text" placeholder="e.g. 052286" class="input" />
+
+              <div class="relative py-2">
+                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div class="w-full border-t border-slate-100"></div>
+                </div>
+                <div class="relative flex justify-center text-xs uppercase font-black tracking-widest text-slate-300">
+                  <span class="bg-white px-3">or identify via branch</span>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Your Branch</label>
+                  <SearchableSelect
+                    v-model="requestForm.branch_id"
+                    :items="branches"
+                    placeholder="Choose your branch"
+                    searchPlaceholder="Search branches…"
+                  />
+                </div>
+                <div class="relative group">
+                  <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Membership Number</label>
+                  <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                      </svg>
+                    </span>
+                    <input v-model="requestForm.membership_number" type="text" placeholder="e.g. 052286" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <button @click="handleRequest" :disabled="loading" class="btn-primary w-full h-12 text-base">
-              <span v-if="loading" class="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
-              <span>{{ loading ? 'Sending…' : 'Send reset code' }}</span>
+            <button @click="handleRequest" :disabled="loading" class="w-full h-14 text-lg rounded-2xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] disabled:opacity-50">
+              <span v-if="loading" class="inline-block animate-spin border-3 border-white/30 border-t-white rounded-full w-6 h-6 mr-2 align-middle"></span>
+              <span>{{ loading ? 'Sending…' : 'Send Reset Code' }}</span>
             </button>
 
-            <p v-if="success" class="text-center text-emerald-700 text-sm">{{ success }}</p>
-            <p v-if="error" class="text-center text-rose-600 text-sm">{{ error }}</p>
+            <div v-if="success" class="p-3 bg-emerald-50 rounded-xl text-emerald-700 text-sm font-bold text-center animate-bounce">{{ success }}</div>
+            <div v-if="error" class="p-3 bg-rose-50 rounded-xl text-rose-600 text-sm font-medium text-center animate-pulse">{{ error }}</div>
 
-            <div class="text-xs text-center">
-              <router-link class="text-emerald-700 font-semibold hover:underline" to="/login">Back to login</router-link>
+            <div class="text-center">
+              <router-link class="text-emerald-700 font-bold hover:text-emerald-800 flex items-center justify-center gap-1" to="/login">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                <span>Back to Login</span>
+              </router-link>
             </div>
           </div>
 
           <!-- Step 2: Enter code and new password -->
-          <div v-else class="space-y-4">
-            <div class="rounded-lg border border-emerald-200/60 bg-emerald-50/50 p-3 text-sm text-emerald-800">
-              <strong>Check your {{ channel === 'email' ? 'email' : 'SMS' }}.</strong>
-              <div class="mt-1">We sent a 6‑digit code. It expires in 10 minutes.</div>
+          <div v-else class="space-y-6">
+            <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 text-sm">
+              <div class="font-bold text-emerald-800 mb-1">Secure code sent!</div>
+              <div class="text-emerald-700">Check your {{ channel === 'email' ? 'email' : 'SMS' }}. Code expires in 10 mins.</div>
             </div>
 
-            <div>
-              <label class="form-label">6‑digit Code</label>
-              <input v-model="resetForm.code" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456" class="input" />
-            </div>
-            <div>
-              <label class="form-label">New Password</label>
-              <input v-model="resetForm.password" :type="showPassword ? 'text' : 'password'" placeholder="Enter new password" class="input pr-12" />
-              <button @click="showPassword = !showPassword" type="button" class="-mt-10 float-right mr-3 text-gray-400 hover:text-slate-600" aria-label="Toggle password visibility">
-                <span v-if="showPassword">🙈</span>
-                <span v-else>👁️</span>
-              </button>
-            </div>
-            <div>
-              <label class="form-label">Confirm Password</label>
-              <input v-model="resetForm.password_confirmation" :type="showPassword ? 'text' : 'password'" placeholder="Confirm new password" class="input" />
+            <div class="relative group">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">6‑digit Code</label>
+              <input v-model="resetForm.code" type="text" maxlength="6" inputmode="numeric" placeholder="000000" class="input h-14 text-center text-2xl font-black tracking-[0.5em] bg-slate-50/50 border-slate-200/60" />
             </div>
 
-            <button @click="handleReset" :disabled="loading" class="btn-primary w-full h-12 text-base">
-              <span v-if="loading" class="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
-              <span>{{ loading ? 'Resetting…' : 'Reset password' }}</span>
+            <div class="relative group">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">New Secure Password</label>
+              <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </span>
+                <input v-model="resetForm.password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+                <button @click="showPassword = !showPassword" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors p-1" aria-label="Toggle password visibility">
+                  <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.076m3.313-3.313A9.959 9.959 0 0112 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-1.447 0-2.811-.31-4.04-.864m1.107-1.107l1.107-1.107m2.774-2.774l.553-.553m2.21-2.21l.553-.553" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="relative group">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Confirm New Password</label>
+              <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </span>
+                <input v-model="resetForm.password_confirmation" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+              </div>
+            </div>
+
+            <button @click="handleReset" :disabled="loading" class="w-full h-14 text-lg rounded-2xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] disabled:opacity-50">
+              <span v-if="loading" class="inline-block animate-spin border-3 border-white/30 border-t-white rounded-full w-6 h-6 mr-2 align-middle"></span>
+              <span>{{ loading ? 'Resetting…' : 'Reset Password' }}</span>
             </button>
 
-            <p v-if="success" class="text-center text-emerald-700 text-sm">{{ success }}</p>
-            <p v-if="error" class="text-center text-rose-600 text-sm">{{ error }}</p>
+            <div v-if="success" class="p-3 bg-emerald-50 rounded-xl text-emerald-700 text-sm font-bold text-center">{{ success }}</div>
+            <div v-if="error" class="p-3 bg-rose-50 rounded-xl text-rose-600 text-sm font-medium text-center animate-pulse">{{ error }}</div>
 
-            <div class="text-xs text-center">
-              <button @click="backToRequest" class="text-emerald-700 font-semibold hover:underline">Resend or change method</button>
+            <div class="text-center">
+              <button @click="backToRequest" class="text-[11px] font-black text-emerald-700 uppercase tracking-widest hover:underline">Resend or change method</button>
             </div>
           </div>
         </div>
       </div>
 
-      <p class="mt-6 text-center text-xs text-slate-500">Need help? <router-link to="/support" class="text-emerald-700 font-semibold hover:underline">Contact Support</router-link></p>
+      <p class="mt-8 text-center text-sm text-slate-500 font-medium px-4">
+        Need assistance? 
+        <router-link to="/support" class="text-emerald-700 font-bold hover:text-emerald-800 ml-1">Contact Support</router-link>
+      </p>
     </div>
   </div>
 </template>

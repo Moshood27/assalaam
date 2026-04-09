@@ -1,17 +1,19 @@
 <template>
   <div class="min-h-screen pb-28 overflow-x-hidden">
-    <header class="p-4 flex justify-between items-center bg-white/80 backdrop-blur border-b">
-      <button class="flex items-center gap-2 min-w-0" @click="$router.push('/profile')">
-        <div class="w-10 h-10 rounded-full overflow-hidden bg-emerald-700 flex items-center justify-center text-white font-bold text-xl">
-          <img v-if="dashboardData.passport_url" :src="getImageUrl(dashboardData.passport_url)" alt="Profile photo" class="w-10 h-10 object-cover" />
-          <span v-else>{{ (dashboardData.full_name || 'M')[0] }}</span>
-        </div>
-        <div class="text-left min-w-0">
-          <p class="text-xs text-gray-500 font-medium">Welcome back,</p>
-          <h2 class="text-sm font-bold text-slate-800 uppercase truncate">{{ dashboardData.full_name }}</h2>
-        </div>
-      </button>
-      <button id="nav-profile" class="bg-slate-100 p-2 rounded-full text-xl" title="Settings" @click="$router.push('/settings')">⚙️</button>
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button class="flex items-center gap-2 min-w-0" @click="$router.push('/profile')">
+          <div class="w-10 h-10 rounded-full overflow-hidden bg-emerald-700 flex items-center justify-center text-white font-bold text-xl">
+            <img v-if="dashboardData.passport_url" :src="getImageUrl(dashboardData.passport_url)" alt="Profile photo" class="w-10 h-10 object-cover" />
+            <span v-else>{{ (dashboardData.full_name || 'M')[0] }}</span>
+          </div>
+          <div class="text-left min-w-0">
+            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Welcome back,</p>
+            <h2 class="text-sm font-black text-slate-800 uppercase truncate">{{ dashboardData.full_name }}</h2>
+          </div>
+        </button>
+        <button id="nav-profile" class="btn-muted rounded-full p-2" title="Settings" @click="$router.push('/settings')">⚙️</button>
+      </div>
     </header>
 
     <div class="p-4">
@@ -19,9 +21,15 @@
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
         <div class="flex items-center gap-2 mb-2 relative z-10">
           <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
-          <button @click="toggleBalances()" class="text-lg opacity-80" title="Toggle visibility">
-            <span v-if="hideBalances">👁️</span>
-            <span v-else>🙈</span>
+          <button @click="toggleBalances()" class="text-lg opacity-80 p-1 rounded-lg hover:bg-white/10 transition-colors" title="Toggle visibility">
+            <svg v-if="hideBalances" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.076m3.313-3.313A9.959 9.959 0 0112 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-1.447 0-2.811-.31-4.04-.864m1.107-1.107l1.107-1.107m2.774-2.774l.553-.553m2.21-2.21l.553-.553" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+            </svg>
           </button>
         </div>
         <h1 class="text-3xl sm:text-4xl leading-tight font-bold relative z-10 tracking-tight">
@@ -203,16 +211,16 @@
       @close="closeNotice"
     />
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t p-3 flex justify-around items-center" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
-      <button class="text-emerald-700 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
+    <nav class="bottom-nav" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+      <button class="bottom-nav-btn-active" @click="$router.push('/dashboard')">
         <span class="text-xl">🏠</span>
         <span class="text-[10px] font-bold">Home</span>
       </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/passbook')">
+      <button class="bottom-nav-btn" @click="$router.push('/passbook')">
         <span class="text-xl">📅</span>
         <span class="text-[10px] font-bold">Passbook</span>
       </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="logout">
+      <button class="bottom-nav-btn" @click="logout">
         <span class="text-xl">🚪</span>
         <span class="text-[10px] font-bold">Logout</span>
       </button>
