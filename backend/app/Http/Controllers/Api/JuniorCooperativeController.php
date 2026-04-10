@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use App\Models\JuniorAccount;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class JuniorCooperativeController extends Controller
 {
@@ -52,10 +53,13 @@ class JuniorCooperativeController extends Controller
             $user->decrement('balance', $request->amount);
             $account->increment('balance', $request->amount);
 
+            $reference = 'JUNIOR_DEP_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
+
             // Log transaction for the user
             $user->walletTransactions()->create([
                 'type' => 'debit',
                 'amount' => $request->amount,
+                'reference' => $reference,
                 'description' => "Deposit to Junior account: {$account->child_name}",
                 'source' => 'junior_cooperative',
                 'meta' => ['junior_account_id' => $account->id]
@@ -92,10 +96,13 @@ class JuniorCooperativeController extends Controller
             $account->decrement('balance', $request->amount);
             $user->increment('balance', $request->amount);
 
+            $reference = 'JUNIOR_WTH_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
+
             // Log transaction for the user
             $user->walletTransactions()->create([
                 'type' => 'credit',
                 'amount' => $request->amount,
+                'reference' => $reference,
                 'description' => "Withdrawal from Junior account: {$account->child_name}",
                 'source' => 'junior_cooperative',
                 'meta' => ['junior_account_id' => $account->id]
