@@ -79,7 +79,7 @@ class ProductResource extends Resource
                 Forms\Components\Toggle::make('is_approved')
                     ->label('Approved')
                     ->disabled(!auth()->user()->is_admin) // Only admins can approve
-                    ->default(fn ($get) => $get('vendor_id') === null), // Auto-approve internal products
+                    ->default(true), // Admin-created products should be approved by default
                 Forms\Components\Placeholder::make('selling_price_preview')
                     ->label('Selling Price (auto)')
                     ->content(fn ($record, $get) => (function () use ($record, $get) {

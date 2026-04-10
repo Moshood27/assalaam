@@ -18,6 +18,12 @@ return new class extends Migration
 
             $table->foreign('approved_by_id')->references('id')->on('users')->onDelete('set null');
         });
+
+        // Auto-approve existing internal products
+        DB::table('products')->whereNull('vendor_id')->update([
+            'is_approved' => true,
+            'approved_at' => now(),
+        ]);
     }
 
     /**

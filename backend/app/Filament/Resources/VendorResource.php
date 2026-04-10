@@ -66,7 +66,7 @@ class VendorResource extends Resource
                     ->schema([
                         Forms\Components\Toggle::make('is_approved')
                             ->label('Approved')
-                            ->default(false),
+                            ->default(true),
                         Forms\Components\Toggle::make('is_active')
                             ->label('Active')
                             ->default(true),

@@ -21,7 +21,7 @@
       <section class="card card-elevated p-6 bg-gradient-to-br from-white to-slate-50">
         <p class="text-slate-700 leading-relaxed">
           We value your privacy. This Privacy Policy explains what information we collect, how we use it, and the
-          choices you have about your information when using the Assalam Co‑operative member portal and mobile app.
+          choices you have about your information when using the <span class="font-bold">{{ brand.name }}</span> member portal and mobile app.
         </p>
       </section>
 
@@ -142,4 +142,5 @@
 </template>
 
 <script setup>
+import brand from '../brand'
 </script>
