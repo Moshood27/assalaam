@@ -6,7 +6,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
         </button>
         <h1 class="text-lg font-bold text-slate-800">Junior Cooperative</h1>
-        <button @click="openCreate" class="btn-ghost text-xs py-1.5 px-3">New Account</button>
+        <div class="flex gap-1">
+          <button @click="openCreate" class="btn-ghost text-xs py-1.5 px-3">New Account</button>
+        </div>
       </div>
     </header>
 
@@ -34,11 +36,16 @@
               <h3 class="text-lg font-bold text-slate-800">{{ acc.child_name }}</h3>
               <p class="text-xs text-slate-500 font-medium mt-0.5">Purpose: {{ acc.purpose }}</p>
             </div>
-            <div class="text-right">
-              <p class="text-lg font-black text-slate-900">₦ {{ formatMoney(acc.balance) }}</p>
-              <p v-if="acc.locked_until" class="text-[10px] text-slate-400 font-bold uppercase" :class="isLocked(acc) ? 'text-red-500' : 'text-green-500'">
-                {{ isLocked(acc) ? 'Locked until ' + formatDate(acc.locked_until) : 'Unlocked (' + formatDate(acc.locked_until) + ')' }}
-              </p>
+            <div class="flex flex-col items-end">
+              <button @click="openEdit(acc)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-blue-600 mb-1" title="Edit Account">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+              </button>
+              <div class="text-right">
+                <p class="text-lg font-black text-slate-900">₦ {{ formatMoney(acc.balance) }}</p>
+                <p v-if="acc.locked_until" class="text-[10px] text-slate-400 font-bold uppercase" :class="isLocked(acc) ? 'text-red-500' : 'text-green-500'">
+                  {{ isLocked(acc) ? 'Locked until ' + formatDate(acc.locked_until) : 'Unlocked (' + formatDate(acc.locked_until) + ')' }}
+                </p>
+              </div>
             </div>
           </div>
           <div class="mt-5 flex gap-2">
@@ -56,11 +63,11 @@
       </div>
     </div>
 
-    <!-- Create Modal -->
+    <!-- Create/Edit Modal -->
     <div v-if="showCreate" class="modal">
       <div class="modal-card">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-bold text-slate-800">New Junior Account</h3>
+          <h3 class="text-xl font-bold text-slate-800">{{ editingId ? 'Edit' : 'New' }} Junior Account</h3>
           <button @click="showCreate=false" class="text-slate-400 hover:text-slate-600">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -85,7 +92,7 @@
           </div>
           <div class="grid grid-cols-2 gap-3 mt-6">
             <button @click="showCreate=false" class="btn-muted">Cancel</button>
-            <button @click="createAccount" class="btn-primary" :disabled="loading || !form.child_name || !form.child_dob">{{ loading ? 'Creating...' : 'Create Account' }}</button>
+            <button @click="saveAccount" class="btn-primary" :disabled="loading || !form.child_name || !form.child_dob">{{ loading ? 'Saving...' : (editingId ? 'Update Account' : 'Create Account') }}</button>
           </div>
         </div>
       </div>
@@ -192,6 +199,7 @@ const totalBalance = computed(() => {
 })
 
 const showCreate = ref(false)
+const editingId = ref(null)
 const form = ref({ child_name: '', child_dob: '', purpose: 'Education', locked_until: '' })
 
 const showDeposit = ref(false)
@@ -203,7 +211,21 @@ const withdrawAmount = ref('')
 const historyTransactions = ref([])
 const historyLoading = ref(false)
 
-const openCreate = () => { showCreate.value = true }
+const openCreate = () => {
+  editingId.value = null
+  form.value = { child_name: '', child_dob: '', purpose: 'Education', locked_until: '' }
+  showCreate.value = true
+}
+const openEdit = (acc) => {
+  editingId.value = acc.id
+  form.value = {
+    child_name: acc.child_name,
+    child_dob: acc.child_dob ? acc.child_dob.split('T')[0] : '',
+    purpose: acc.purpose,
+    locked_until: acc.locked_until ? acc.locked_until.split('T')[0] : ''
+  }
+  showCreate.value = true
+}
 const openDeposit = (acc) => {
   activeAccount.value = acc
   depositAmount.value = ''
@@ -250,15 +272,19 @@ async function load() {
   }
 }
 
-async function createAccount() {
+async function saveAccount() {
   try {
     loading.value = true
-    await axios.post('/api/junior-cooperative', form.value)
+    if (editingId.value) {
+      await axios.patch(`/api/junior-cooperative/${editingId.value}`, form.value)
+    } else {
+      await axios.post('/api/junior-cooperative', form.value)
+    }
     showCreate.value = false
     form.value = { child_name: '', child_dob: '', purpose: 'Education', locked_until: '' }
     await load()
   } catch (e) {
-    alert(e?.response?.data?.message || 'Failed to create account')
+    alert(e?.response?.data?.message || 'Failed to save account')
   } finally {
     loading.value = false
   }

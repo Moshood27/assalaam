@@ -21,13 +21,24 @@
       </div>
 
       <div v-if="beneficiaries.length" class="grid gap-4">
+        <div v-for="(val, type) in summary" :key="type" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ type === 'all' ? 'General' : type }} Assets</span>
+            <span class="text-xs font-bold" :class="val > 33.33 ? 'text-amber-600' : 'text-emerald-600'">{{ val }}% Allocated</span>
+          </div>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" :class="val > 33.33 ? 'bg-amber-500' : 'bg-emerald-500'" :style="{ width: val + '%' }"></div>
+          </div>
+          <p v-if="val > 33.33" class="text-[10px] text-amber-600 font-medium mt-1">Note: Bequests exceeding 1/3 (33.33%) may require heirs' consent under Sharia.</p>
+        </div>
+
         <div v-for="b in beneficiaries" :key="b.id" class="card p-5 group">
           <div class="flex items-start justify-between">
             <div class="flex gap-4">
               <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">👤</div>
               <div>
                 <h3 class="font-bold text-slate-800">{{ b.name }}</h3>
-                <p class="text-xs text-slate-500 font-medium">{{ b.relationship }} • {{ b.percentage }}% Allocation</p>
+                <p class="text-xs text-slate-500 font-medium">{{ b.relationship }} • {{ b.percentage }}% Allocation ({{ b.asset_type === 'all' ? 'General' : b.asset_type }})</p>
               </div>
             </div>
             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -85,6 +96,15 @@
               <option value="Other">Other</option>
             </select>
           </div>
+          <div>
+            <label class="lbl">Asset Type</label>
+            <select v-model="form.asset_type" class="inp">
+              <option value="all">General (All Assets)</option>
+              <option value="shares">Shares Only</option>
+              <option value="savings">Savings Only</option>
+              <option value="takaful">Takaful Benefit</option>
+            </select>
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="lbl">Phone Number</label>
@@ -121,18 +141,20 @@ const beneficiaries = ref([])
 const loading = ref(false)
 const showModal = ref(false)
 const editingId = ref(null)
+const summary = ref({})
 const form = ref({
   name: '',
   relationship: '',
   phone: '',
   email: '',
   address: '',
-  percentage: 0
+  percentage: 0,
+  asset_type: 'all'
 })
 
 const openAdd = () => {
   editingId.value = null
-  form.value = { name: '', relationship: '', phone: '', email: '', address: '', percentage: 0 }
+  form.value = { name: '', relationship: '', phone: '', email: '', address: '', percentage: 0, asset_type: 'all' }
   showModal.value = true
 }
 
@@ -146,6 +168,7 @@ async function load() {
   try {
     const { data } = await axios.get('/api/wasiyyah')
     beneficiaries.value = data.beneficiaries || []
+    summary.value = data.summary || {}
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to load beneficiaries')
   }

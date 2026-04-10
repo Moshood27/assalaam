@@ -137,9 +137,9 @@ class MemberRegistrationController extends Controller
         ]);
         $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
 
-        // Basic backoff: allow at most once per 60 seconds
-        if ($app->last_otp_sent_at && $app->last_otp_sent_at->diffInSeconds(now()) < 60) {
-            return response()->json(['message' => 'Please wait before requesting codes again.'], 429);
+        // Basic backoff: allow at most once per 30 seconds
+        if ($app->last_otp_sent_at && $app->last_otp_sent_at->diffInSeconds(now()) < 30) {
+            return response()->json(['message' => 'Please wait at least 30 seconds before requesting new codes.'], 429);
         }
 
         $emailCode = (string) random_int(100000, 999999);

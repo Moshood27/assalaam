@@ -43,6 +43,12 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Placeholder::make('deceased_alert')
+                    ->hidden(fn (User $record = null) => $record === null || $record->deceased_at === null)
+                    ->content(function (User $record) {
+                        return new \Illuminate\Support\HtmlString('<div class="p-4 bg-danger-500/10 text-danger-700 rounded-lg border border-danger-500/20"><strong>DECEASED:</strong> This member is marked as deceased. Please see the <strong>Wasiyyah (Beneficiaries)</strong> tab below for distribution instructions.</div>');
+                    })
+                    ->columnSpanFull(),
                 Forms\Components\Section::make('Profile')
                     ->schema([
                         Forms\Components\TextInput::make('name')->required()->maxLength(255),
@@ -282,6 +288,11 @@ class UserResource extends Resource
                     ->getStateUsing(fn (User $record) => $record->bvn_verified_at !== null)
                     ->sortable(),
                 TextColumn::make('balance')->money('ngn', true)->sortable(),
+                TextColumn::make('gold_balance')
+                    ->label('Gold Balance')
+                    ->suffix(' g')
+                    ->sortable()
+                    ->numeric(6),
                 TextColumn::make('created_at')->label('Date Joined')->date(),
                 TextColumn::make('account_number')
                     ->label('Bank Acct #')
@@ -294,8 +305,45 @@ class UserResource extends Resource
                         return Str::mask($state, '*', 2, -2);
                     }),
                 TextColumn::make('account_name')->label('Bank Acct Name')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('last_activity_at')
+                    ->label('Last Activity')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\IconColumn::make('deceased_at')
+                    ->label('Deceased')
+                    ->boolean()
+                    ->getStateUsing(fn (User $record) => $record->deceased_at !== null)
+                    ->color('danger')
+                    ->sortable()
+                    ->toggleable(),
             ])
-            ->filters([])
+            ->filters([
+                Tables\Filters\TernaryFilter::make('deceased')
+                    ->label('Deceased Status')
+                    ->placeholder('All Users')
+                    ->trueLabel('Deceased Only')
+                    ->falseLabel('Active Only')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('deceased_at'),
+                        false: fn (Builder $query) => $query->whereNull('deceased_at'),
+                    ),
+                Tables\Filters\Filter::make('needs_wellness_check')
+                    ->label('Needs Wellness Check')
+                    ->query(function (Builder $query) {
+                        $months = config('cooperative.legacy.inactivity_months', 6);
+                        $threshold = now()->subMonths($months);
+                        return $query->whereNull('deceased_at')
+                            ->where(function($q) use ($threshold) {
+                                $q->where('last_activity_at', '<', $threshold)
+                                  ->orWhereNull('last_activity_at');
+                            })
+                            ->where(function($q) {
+                                $q->whereNull('wellness_check_notified_at')
+                                  ->orWhereColumn('wellness_check_notified_at', '<', 'last_activity_at');
+                            });
+                    }),
+            ])
             ->headerActions([
                 Action::make('print')
                     ->label('Print')
@@ -569,6 +617,47 @@ class UserResource extends Resource
                             ->success()
                             ->send();
                     }),
+                Action::make('markAsNeedy')
+                    ->label('Mark as Zakat Eligible')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (User $record) => !$record->badges()->where('badge_type', 'zakat_needy')->exists())
+                    ->action(function (User $record) {
+                        $record->badges()->create([
+                            'badge_type' => 'zakat_needy',
+                            'name' => 'Zakat Eligible (Needy)',
+                            'description' => 'This member has been verified as eligible for Zakat distribution within the cooperative.',
+                            'earned_at' => now(),
+                        ]);
+
+                        ShariahAudit::log(auth()->user(), 'user_marked_zakat_needy', [
+                            'user_id' => $record->id,
+                        ]);
+
+                        Notification::make()
+                            ->title('Member marked as Zakat eligible')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
+                Action::make('unmarkAsNeedy')
+                    ->label('Remove Zakat Eligibility')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (User $record) => $record->badges()->where('badge_type', 'zakat_needy')->exists())
+                    ->action(function (User $record) {
+                        $record->badges()->where('badge_type', 'zakat_needy')->delete();
+
+                        ShariahAudit::log(auth()->user(), 'user_unmarked_zakat_needy', [
+                            'user_id' => $record->id,
+                        ]);
+
+                        Notification::make()
+                            ->title('Zakat eligibility removed')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
                 Action::make('verifyKyc')
                     ->label('Verify KYC')
                     ->icon('heroicon-o-shield-check')
@@ -655,6 +744,8 @@ class UserResource extends Resource
             RelationManagers\ProjectProfitPayoutsRelationManager::class,
             RelationManagers\WalletTransactionsRelationManager::class,
             RelationManagers\StoreOrdersRelationManager::class,
+            RelationManagers\BeneficiariesRelationManager::class,
+            RelationManagers\JuniorAccountsRelationManager::class,
             ActivitiesRelationManager::class,
         ];
     }

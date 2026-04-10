@@ -19,4 +19,9 @@ return [
 
     // Zakat Al-Fitr fixed amount in NGN (should be updated annually)
     'fitr_amount' => (float) env('ZAKAT_FITR_AMOUNT', 3500),
+
+    // Digital Gold Settings
+    'gold_spread' => (float) env('GOLD_SPREAD', 0.01), // 1% spread between buy/sell
+    'gold_buy_fee' => (float) env('GOLD_BUY_FEE', 0.005), // 0.5% transaction fee on buy
+    'gold_sell_fee' => (float) env('GOLD_SELL_FEE', 0.005), // 0.5% transaction fee on sell
 ];

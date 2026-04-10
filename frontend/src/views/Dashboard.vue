@@ -61,8 +61,8 @@
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
-        <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="warning" icon="📊" />
-        <StatPill label="Utilities" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.utilities))" hint="Spent" intent="default" icon="📶" />
+        <StatPill label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? '≈ ₦ ***' : (kpis.gold_value_naira ? '≈ ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="🪙" @click="$router.push('/gold')" class="cursor-pointer" />
+        <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="📊" />
         <StatPill label="Attaqwa Score" :value="String(kpis.attaqwa_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />
       </div>
 
@@ -111,6 +111,10 @@
       <button @click="$router.push('/store')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center text-2xl">🛒</div>
         <span class="text-sm font-bold text-slate-700">Store</span>
+      </button>
+      <button @click="$router.push('/gold')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-yellow-50 rounded-2xl flex items-center justify-center text-2xl">🪙</div>
+        <span class="text-sm font-bold text-slate-700">Gold Savings</span>
       </button>
       <button @click="$router.push('/merchant/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">📸</div>
@@ -345,9 +349,9 @@ const load = async () => {
     const nisab = formatMoney(data.zakat_status.nisab)
     
     if (data.zakat_status.eligible) {
-      showNotice('Zakat Alert', `Your savings have reached the Nisab (${currency} ${nisab}). Your Zakat due is ${currency} ${due}.`, 'info')
+      showNotice('Zakat Alert', `Your savings have reached the Nisab. Your Zakat due is ${currency} ${due}.`, 'info')
     } else {
-      showNotice('Zakat Update', `Your savings have reached the Nisab (${currency} ${nisab}). Keep tracking your savings to know when your Zakat becomes due!`, 'info')
+      showNotice('Zakat Update', `Your savings have reached the Nisab. Keep tracking your savings to know when your Zakat becomes due!`, 'info')
     }
   }
 }

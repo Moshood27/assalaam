@@ -14,6 +14,7 @@ class Beneficiary extends Model
         'email',
         'address',
         'percentage',
+        'asset_type',
     ];
 
     protected $casts = [

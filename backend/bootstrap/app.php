@@ -24,12 +24,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Alias custom middleware
         $middleware->alias([
             'inactivity' => \App\Http\Middleware\InactivityTimeout::class,
+            'track_activity' => \App\Http\Middleware\TrackUserActivity::class,
         ]);
 
         // Append security headers to all web and API responses
         $middleware->appendToGroup('web', [\App\Http\Middleware\SecurityHeaders::class]);
         $middleware->prependToGroup('api', [\App\Http\Middleware\QueryTokenToBearer::class]);
         $middleware->appendToGroup('api', [\App\Http\Middleware\SecurityHeaders::class]);
+        $middleware->appendToGroup('api', [\App\Http\Middleware\TrackUserActivity::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         \Sentry\Laravel\Integration::handles($exceptions);

@@ -8,6 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::command('app:send-wellness-check')->daily();
 Schedule::command('app:apply-monthly-fines')->monthlyOn(5, '00:00');
 Schedule::command('telescope:prune')->daily();
 Schedule::command('backup:clean')->daily()->at('01:00');

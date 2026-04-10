@@ -7,6 +7,7 @@ use App\Models\QardHasan;
 use App\Models\TakafulPoolEntry;
 use App\Models\User;
 use App\Models\WithdrawalRequest;
+use App\Services\GoldSilverPriceService;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
@@ -43,7 +44,15 @@ class FinanceSnapshot extends BaseWidget
 
         $overdueCount = QardHasan::where('status', 'overdue')->count();
 
+        $totalGold = (float) User::sum('gold_balance');
+        $goldPrice = (new GoldSilverPriceService())->getGoldPrice()['sell'] ?? 0;
+        $goldValue = $totalGold * $goldPrice;
+
         return [
+            Card::make('Gold Reserves', number_format($totalGold, 4) . ' g')
+                ->description('₦' . number_format($goldValue, 2) . ' @ sell price')
+                ->color('warning')
+                ->icon('heroicon-o-archive-box'),
             Card::make('Active Loans Portfolio', '₦' . number_format((float) $activePortfolio, 2))
                 ->description('Outstanding principal (Active)')
                 ->color('warning'),

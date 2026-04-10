@@ -114,6 +114,10 @@ class ContributionResource extends Resource
                 TextColumn::make('scheme.name')->label('Scheme')->searchable(),
                 TextColumn::make('project.name')->label('Project')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
+                TextColumn::make('units')
+                    ->label(fn ($record) => ($record && $record->scheme && $record->scheme->name === 'Digital Gold') ? 'Grams' : 'Units')
+                    ->numeric(6)
+                    ->toggleable(),
                 TextColumn::make('status')->badge()->colors([
                     'success' => ['success', 'paid', 'completed'],
                     'warning' => ['pending', 'processing'],

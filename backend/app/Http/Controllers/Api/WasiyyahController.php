@@ -9,8 +9,14 @@ class WasiyyahController extends Controller
 {
     public function index(Request $request)
     {
+        $beneficiaries = $request->user()->beneficiaries;
+        $summary = $beneficiaries->groupBy('asset_type')->map(function ($group) {
+            return (float) $group->sum('percentage');
+        });
+
         return response()->json([
-            'beneficiaries' => $request->user()->beneficiaries
+            'beneficiaries' => $beneficiaries,
+            'summary' => $summary
         ]);
     }
 
@@ -22,8 +28,22 @@ class WasiyyahController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
-            'percentage' => 'required|numeric|min:0|max:100',
+            'percentage' => 'required|numeric|min:0.01|max:100',
+            'asset_type' => 'nullable|string|in:all,shares,savings,takaful',
         ]);
+
+        $assetType = $validated['asset_type'] ?? 'all';
+        $validated['asset_type'] = $assetType;
+
+        $currentTotal = $request->user()->beneficiaries()
+            ->where('asset_type', $assetType)
+            ->sum('percentage');
+
+        if ($currentTotal + $validated['percentage'] > 100) {
+            return response()->json([
+                'message' => "Total percentage for '{$assetType}' allocation cannot exceed 100%. Currently at {$currentTotal}%."
+            ], 422);
+        }
 
         $beneficiary = $request->user()->beneficiaries()->create($validated);
 
@@ -43,8 +63,25 @@ class WasiyyahController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
-            'percentage' => 'sometimes|required|numeric|min:0|max:100',
+            'percentage' => 'sometimes|required|numeric|min:0.01|max:100',
+            'asset_type' => 'nullable|string|in:all,shares,savings,takaful',
         ]);
+
+        if (isset($validated['percentage']) || isset($validated['asset_type'])) {
+            $newAssetType = $validated['asset_type'] ?? $beneficiary->asset_type;
+            $newPercentage = $validated['percentage'] ?? $beneficiary->percentage;
+
+            $otherTotal = $request->user()->beneficiaries()
+                ->where('id', '!=', $id)
+                ->where('asset_type', $newAssetType)
+                ->sum('percentage');
+
+            if ($otherTotal + $newPercentage > 100) {
+                return response()->json([
+                    'message' => "Total percentage for '{$newAssetType}' allocation cannot exceed 100%. Currently at {$otherTotal}%."
+                ], 422);
+            }
+        }
 
         $beneficiary->update($validated);
 

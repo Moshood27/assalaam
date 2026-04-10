@@ -1,0 +1,398 @@
+<template>
+  <div class="min-h-screen pb-20 bg-slate-50">
+    <header class="bg-white border-b border-slate-100 p-4 sticky top-0 z-10 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <button @click="$router.back()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        <h1 class="text-xl font-bold text-slate-800">Gold Savings</h1>
+      </div>
+      <button @click="exportTransactions" class="p-2 text-slate-500 hover:text-yellow-600 transition-colors" title="Export CSV">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="p-4 max-w-lg mx-auto space-y-4">
+      <!-- Gold Balance Card -->
+      <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+        <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+        <div class="relative z-10">
+          <p class="text-yellow-100 text-sm font-medium mb-1">Total Gold Balance</p>
+          <div class="flex items-baseline gap-2">
+            <h2 class="text-4xl font-black">{{ goldData.gold_balance.toFixed(6) }}</h2>
+            <span class="text-lg font-bold">grams</span>
+          </div>
+          <div class="mt-4 pt-4 border-t border-white/20">
+            <p class="text-yellow-100 text-xs mb-1">Current Value</p>
+            <p class="text-2xl font-bold">₦ {{ formatMoney(goldData.current_value) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price History Chart -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between mb-2 px-2">
+          <h3 class="text-xs font-bold text-slate-400 uppercase">Price Trend (7 Days)</h3>
+          <div class="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+            LIVE
+          </div>
+        </div>
+        <div class="h-40">
+          <apexchart 
+            type="area" 
+            height="160" 
+            :options="chartOptions" 
+            :series="chartSeries"
+          ></apexchart>
+        </div>
+      </div>
+
+      <!-- Live Price Card -->
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Market Price</p>
+            <p class="text-xl font-black text-slate-800">₦ {{ formatMoney(goldData.base_price) }} <span class="text-sm font-normal text-slate-400">/ gram</span></p>
+          </div>
+          <button @click="fetchData" :disabled="loading" class="p-2 hover:bg-slate-50 rounded-full transition-colors text-yellow-600">
+            <svg xmlns="http://www.w3.org/2000/svg" :class="['h-6 w-6', loading ? 'animate-spin' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Buying At</p>
+            <p class="font-bold text-emerald-600">₦ {{ formatMoney(goldData.buy_price) }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Selling At</p>
+            <p class="font-bold text-amber-600">₦ {{ formatMoney(goldData.sell_price) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance & Zakat Stats -->
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Performance Card -->
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Profit/Loss</p>
+            <p :class="['text-lg font-black', goldData.performance.total_profit_loss >= 0 ? 'text-emerald-600' : 'text-rose-600']">
+              ₦ {{ formatMoney(goldData.performance.total_profit_loss) }}
+            </p>
+          </div>
+          <div class="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between">
+            <span class="text-[10px] text-slate-400 font-bold">ROI</span>
+            <span :class="['text-[10px] font-black px-1.5 py-0.5 rounded-md', goldData.performance.roi_percent >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600']">
+              {{ goldData.performance.roi_percent > 0 ? '+' : '' }}{{ goldData.performance.roi_percent }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- Zakat Tracker Card -->
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+          <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Zakat Nisab</p>
+          <div class="flex items-end justify-between mb-1">
+            <p class="text-lg font-black text-slate-800">{{ goldData.zakat.progress_percent }}%</p>
+            <p class="text-[10px] text-slate-400 font-bold">{{ goldData.zakat.nisab_grams }}g</p>
+          </div>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+            <div 
+              class="bg-amber-400 h-full rounded-full transition-all duration-500" 
+              :style="{ width: goldData.zakat.progress_percent + '%' }"
+            ></div>
+          </div>
+          <p class="text-[8px] text-slate-400 mt-2 leading-tight uppercase font-bold">
+            {{ goldData.zakat.is_eligible ? 'Nisab Reached' : `${goldData.zakat.grams_to_nisab.toFixed(2)}g to Nisab` }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="grid grid-cols-2 gap-4">
+        <button @click="activeTab = 'buy'" :class="['py-3 rounded-2xl font-bold transition-all', activeTab === 'buy' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200']">
+          Buy Gold
+        </button>
+        <button @click="activeTab = 'sell'" :class="['py-3 rounded-2xl font-bold transition-all', activeTab === 'sell' ? 'bg-amber-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200']">
+          Sell Gold
+        </button>
+      </div>
+
+      <!-- Forms and History sections remain same... but I'll include them for completeness -->
+       <!-- Buy Form -->
+      <div v-if="activeTab === 'buy'" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <h3 class="font-bold text-slate-800">Buy Digital Gold</h3>
+        <p class="text-xs text-slate-500">Convert your wallet balance into gold. Minimum ₦1,000.</p>
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Amount in Naira (₦)</label>
+          <div class="relative">
+            <input v-model="form.amount" type="number" placeholder="e.g. 5000" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-lg font-bold focus:ring-2 focus:ring-emerald-500" />
+            <p v-if="form.amount" class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
+              ≈ {{ ((form.amount * 0.995) / goldData.buy_price).toFixed(6) }} g
+            </p>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-2 px-1">Includes 0.5% fee: ₦{{ (form.amount * 0.005).toFixed(2) }}</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Transaction PIN</label>
+          <input v-model="form.pin" type="password" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-emerald-500" />
+        </div>
+
+        <button @click="handleBuy" :disabled="loading || !form.amount || !form.pin" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:shadow-none transition-all active:scale-[0.98]">
+          {{ loading ? 'Processing...' : `Confirm Purchase` }}
+        </button>
+      </div>
+
+      <!-- Sell Form -->
+      <div v-if="activeTab === 'sell'" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+        <h3 class="font-bold text-slate-800">Sell Digital Gold</h3>
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-slate-500">Convert your gold back to Naira.</p>
+          <button @click="form.grams = goldData.gold_balance" class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg hover:bg-amber-100 transition-colors">SELL MAX</button>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Amount in Grams (g)</label>
+          <div class="relative">
+            <input v-model="form.grams" type="number" step="0.000001" placeholder="e.g. 0.05" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-lg font-bold focus:ring-2 focus:ring-amber-500" />
+            <p v-if="form.grams" class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
+              ≈ ₦ {{ formatMoney(form.grams * goldData.sell_price * 0.995) }}
+            </p>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-2 px-1">Est. Credit: ₦{{ formatMoney(form.grams * goldData.sell_price * 0.995) }} (after 0.5% fee)</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Transaction PIN</label>
+          <input v-model="form.pin" type="password" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-amber-500" />
+        </div>
+
+        <button @click="handleSell" :disabled="loading || !form.grams || !form.pin" class="w-full bg-amber-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-amber-100 disabled:opacity-50 disabled:shadow-none transition-all active:scale-[0.98]">
+          {{ loading ? 'Processing...' : `Confirm Sale` }}
+        </button>
+      </div>
+
+      <!-- History -->
+      <div class="space-y-3">
+        <h3 class="font-bold text-slate-800 px-1">Recent Transactions</h3>
+        <div v-if="history.length === 0 && !loading" class="bg-white rounded-3xl p-8 text-center border border-slate-100">
+          <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p class="text-slate-400 text-sm">No gold transactions yet.</p>
+        </div>
+        
+        <div v-for="tx in history" :key="tx.id" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', tx.amount > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600']">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path v-if="tx.amount > 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-bold text-slate-800 text-sm">{{ tx.amount > 0 ? 'Bought' : 'Sold' }} Gold</p>
+              <p class="text-[10px] text-slate-400">{{ formatDate(tx.created_at) }}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p :class="['font-bold text-sm', tx.amount > 0 ? 'text-emerald-600' : 'text-amber-600']">
+              {{ tx.amount > 0 ? '+' : '' }}{{ tx.units.toFixed(6) }} g
+            </p>
+            <p class="text-[10px] text-slate-400">₦ {{ formatMoney(Math.abs(tx.amount)) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sunnah Info -->
+      <div class="bg-emerald-50 rounded-3xl p-6 border border-emerald-100">
+        <h3 class="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Why Gold?
+        </h3>
+        <p class="text-xs text-emerald-700 leading-relaxed italic">
+          "The Messenger of Allah (ﷺ) said: A time will come over the people when nothing will be of use except a Dinar and a Dirham (gold and silver)." 
+          <span class="block mt-1 font-bold">— Musnad Ahmad</span>
+        </p>
+        <p class="text-[10px] text-emerald-600/80 mt-3 leading-relaxed">
+          Gold is a stable store of value and protects your wealth against inflation. In Islamic tradition, it is considered the most reliable form of currency.
+        </p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import axios from 'axios'
+
+const loading = ref(false)
+const activeTab = ref('buy')
+const goldData = ref({
+  gold_balance: 0,
+  base_price: 0,
+  buy_price: 0,
+  sell_price: 0,
+  current_value: 0,
+  price_history: [],
+  performance: {
+    total_profit_loss: 0,
+    roi_percent: 0
+  },
+  zakat: {
+    progress_percent: 0,
+    nisab_grams: 85,
+    is_eligible: false,
+    grams_to_nisab: 85
+  }
+})
+const history = ref([])
+const form = ref({
+  amount: null,
+  grams: null,
+  pin: ''
+})
+
+// Chart Configuration
+const chartSeries = computed(() => [{
+  name: 'Price (NGN)',
+  data: goldData.value.price_history.map(h => h.price)
+}])
+
+const chartOptions = computed(() => ({
+  chart: {
+    type: 'area',
+    toolbar: { show: false },
+    sparkline: { enabled: false },
+    zoom: { enabled: false }
+  },
+  colors: ['#eab308'],
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.45,
+      opacityTo: 0.05,
+      stops: [20, 100]
+    }
+  },
+  stroke: {
+    curve: 'smooth',
+    width: 2
+  },
+  xaxis: {
+    categories: goldData.value.price_history.map(h => {
+      const d = new Date(h.date)
+      return d.toLocaleDateString('en-US', { weekday: 'short' })
+    }),
+    labels: { show: true, style: { fontSize: '10px', colors: '#94a3b8' } },
+    axisBorder: { show: false },
+    axisTicks: { show: false }
+  },
+  yaxis: {
+    show: false
+  },
+  grid: {
+    show: false,
+    padding: { left: 0, right: 0 }
+  },
+  dataLabels: { enabled: false },
+  tooltip: {
+    theme: 'light',
+    x: { show: true },
+    y: {
+      formatter: (val) => `₦${val.toLocaleString()}`
+    }
+  }
+}))
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const res = await axios.get('/gold/price')
+    goldData.value = res.data
+    
+    const histRes = await axios.get('/gold/history')
+    history.value = histRes.data.data
+  } catch (err) {
+    console.error(err)
+    alert('Failed to fetch gold data')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleBuy = async () => {
+  if (!confirm(`Confirm buying gold for ₦${form.value.amount}?`)) return
+  loading.value = true
+  try {
+    const res = await axios.post('/gold/buy', {
+      amount_naira: form.value.amount,
+      pin: form.value.pin
+    })
+    alert(res.data.message)
+    form.value = { amount: null, grams: null, pin: '' }
+    await fetchData()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Purchase failed')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleSell = async () => {
+  if (!confirm(`Confirm selling ${form.value.grams}g of gold?`)) return
+  loading.value = true
+  try {
+    const res = await axios.post('/gold/sell', {
+      grams: form.value.grams,
+      pin: form.value.pin
+    })
+    alert(res.data.message)
+    form.value = { amount: null, grams: null, pin: '' }
+    await fetchData()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Sale failed')
+  } finally {
+    loading.value = false
+  }
+}
+
+const exportTransactions = async () => {
+  try {
+    const response = await axios.get('/gold/export', { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'gold_transactions.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } catch (err) {
+    alert('Export failed')
+  }
+}
+
+const formatMoney = (val) => {
+  return Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const formatDate = (dateStr) => {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+onMounted(fetchData)
+</script>

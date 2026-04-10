@@ -492,6 +492,17 @@ class WebhookController extends Controller
             foreach ($contributions as $contribution) {
                 $contribution->status = 'success';
                 $contribution->save();
+
+                // If this is Zakat or Zakat Al-Fitr, record it in the Charity Ledger
+                $schemeName = $contribution->scheme?->name;
+                if ($schemeName && in_array($schemeName, ['Zakat', 'Zakat Al-Fitr'])) {
+                    \App\Models\CharityEntry::create([
+                        'user_id' => $contribution->user_id,
+                        'source' => $schemeName,
+                        'amount' => $contribution->amount,
+                        'note' => "Payment for {$schemeName} via Paystack (Ref: {$reference})",
+                    ]);
+                }
             }
 
             // Notify user (non-blocking) + best-effort Push
@@ -766,6 +777,17 @@ class WebhookController extends Controller
             foreach ($contributions as $contribution) {
                 $contribution->status = 'success';
                 $contribution->save();
+
+                // If this is Zakat or Zakat Al-Fitr, record it in the Charity Ledger
+                $schemeName = $contribution->scheme?->name;
+                if ($schemeName && in_array($schemeName, ['Zakat', 'Zakat Al-Fitr'])) {
+                    \App\Models\CharityEntry::create([
+                        'user_id' => $contribution->user_id,
+                        'source' => $schemeName,
+                        'amount' => $contribution->amount,
+                        'note' => "Payment for {$schemeName} via Flutterwave (Ref: {$reference})",
+                    ]);
+                }
             }
 
             // Notify user (non-blocking) + best-effort Push

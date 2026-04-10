@@ -41,6 +41,7 @@ const VendorOrders = () => import('../views/VendorOrders.vue')
 const VendorSettlements = () => import('../views/VendorSettlements.vue')
 const Wasiyyah = () => import('../views/Wasiyyah.vue')
 const JuniorCooperative = () => import('../views/JuniorCooperative.vue')
+const GoldSavings = () => import('../views/GoldSavings.vue')
 
 const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminRegister = () => import('../views/admin/AdminRegister.vue')
@@ -80,6 +81,7 @@ const routes = [
 
   { path: '/wasiyyah', name: 'wasiyyah', component: Wasiyyah, meta: { requiresAuth: true } },
   { path: '/junior-cooperative', name: 'junior.cooperative', component: JuniorCooperative, meta: { requiresAuth: true } },
+  { path: '/gold', name: 'gold', component: GoldSavings, meta: { requiresAuth: true } },
 
   { path: '/goals', name: 'goals', component: () => import('../views/Goals.vue'), meta: { requiresAuth: true } },
   { path: '/projects', name: 'projects', component: Projects, meta: { requiresAuth: true } },

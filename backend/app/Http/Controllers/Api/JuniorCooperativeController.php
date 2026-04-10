@@ -36,6 +36,33 @@ class JuniorCooperativeController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, $id)
+    {
+        $account = $request->user()->juniorAccounts()->findOrFail($id);
+
+        $validated = $request->validate([
+            'child_name' => 'sometimes|required|string|max:255',
+            'child_dob' => 'sometimes|required|date',
+            'locked_until' => 'nullable|date',
+            'purpose' => 'sometimes|required|string|max:255',
+        ]);
+
+        // If locked_until is provided, ensure it's not in the past if it's being changed
+        if (isset($validated['locked_until']) && $validated['locked_until'] !== $account->locked_until) {
+            $date = new \DateTime($validated['locked_until']);
+            if ($date < new \DateTime('today')) {
+                return response()->json(['message' => 'The locked until date cannot be in the past.'], 422);
+            }
+        }
+
+        $account->update($validated);
+
+        return response()->json([
+            'message' => 'Junior account updated successfully',
+            'account' => $account
+        ]);
+    }
+
     public function deposit(Request $request, $id)
     {
         $request->validate([

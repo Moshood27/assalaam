@@ -23,12 +23,14 @@ class ZakatController extends Controller
     {
         $user = $request->user();
 
-        // Resolve scheme IDs for Savings and Shares
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id', 'name');
+        // Resolve scheme IDs for Savings, Shares and Digital Gold
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Digital Gold'])->pluck('id', 'name');
 
         // Compute current balances from contributions with status success
         $savings = 0.0;
         $shares = 0.0;
+        $goldSavings = 0.0;
+
         if (isset($schemes['Savings'])) {
             $savings = (float) $user->contributions()
                 ->where('status', 'success')
@@ -41,8 +43,24 @@ class ZakatController extends Controller
                 ->where('scheme_id', $schemes['Shares'])
                 ->sum('amount');
         }
+        if (isset($schemes['Digital Gold'])) {
+            // For Digital Gold, we prefer using current market value,
+            // but for historical tracking we look at net amount spent.
+            $goldSavings = (float) $user->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Digital Gold'])
+                ->sum('amount');
+        }
 
-        $base = round($savings + $shares, 2);
+        // Current Gold market value
+        $goldPrice = $this->priceService->getSellPrice();
+        $currentGoldValue = $goldPrice ? round($user->gold_balance * $goldPrice, 2) : 0;
+
+        // Current Wallet balance
+        $walletBalance = (float) $user->balance;
+
+        // Base wealth for Zakat: Savings + Shares + Current Gold Value + Wallet Balance
+        $base = round($savings + $shares + $currentGoldValue + $walletBalance, 2);
 
         $nisab = (float) $this->priceService->getDynamicNisab();
         $rate = (float) config('zakat.rate');
@@ -56,7 +74,7 @@ class ZakatController extends Controller
         $daysSinceCrossed = 0;
 
         if ($base >= $nisab && ($schemes->count() > 0)) {
-            // Find earliest date when cumulative savings+shares crossed nisab
+            // Find earliest date when cumulative contributions crossed nisab
             $contribs = $user->contributions()
                 ->where('status', 'success')
                 ->whereIn('scheme_id', array_values($schemes->toArray()))
@@ -72,6 +90,12 @@ class ZakatController extends Controller
                 }
             }
 
+            // Fallback: If total base wealth is above Nisab but contributions alone are not,
+            // we assume the threshold was crossed today (due to wallet balance or gold appreciation).
+            if (!$crossedOn) {
+                $crossedOn = now();
+            }
+
             if ($crossedOn) {
                 $eligibleOn = $crossedOn->copy()->addDays($lunarDays);
                 $daysSinceCrossed = now()->diffInDays($crossedOn);
@@ -85,6 +109,9 @@ class ZakatController extends Controller
             'base' => $base,
             'savings' => $savings,
             'shares' => $shares,
+            'gold_savings' => $goldSavings,
+            'gold_value' => $currentGoldValue,
+            'wallet_balance' => $walletBalance,
             'nisab' => $nisab,
             'rate' => $rate,
             'eligible' => $eligible,
@@ -107,7 +134,7 @@ class ZakatController extends Controller
             return response()->json(['message' => 'Failed to compute Zakat'], 500);
         }
 
-        if (($estimate['base'] ?? 0) < (float) config('zakat.nisab_ngn')) {
+        if (($estimate['base'] ?? 0) < ($estimate['nisab'] ?? (float) config('zakat.nisab_ngn'))) {
             return response()->json(['message' => 'Zakat is not due yet (below Nisab)'], 422);
         }
 

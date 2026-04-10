@@ -91,6 +91,9 @@ class DashboardController extends Controller
                 ->sum(DB::raw('principal_amount - paid_amount'));
         }
 
+        $goldBasePrice = $this->priceService->getGoldPrice();
+        $goldSellPrice = $this->priceService->getSellPrice();
+
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
@@ -98,6 +101,9 @@ class DashboardController extends Controller
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,
             'has_pin' => !empty($user->transaction_pin_hash),
             'attaqwa_score' => (int) $user->attaqwa_score,
+            'gold_balance' => (float) $user->gold_balance,
+            'gold_value_naira' => $goldSellPrice ? round($user->gold_balance * $goldSellPrice, 2) : null,
+            'gold_price_per_gram' => $goldBasePrice
         ];
 
         return response()->json([

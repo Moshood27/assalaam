@@ -76,6 +76,8 @@ class User extends Authenticatable implements FilamentUser
         'notify_sms',
         'notify_push',
         'attaqwa_score',
+        'last_activity_at',
+        'wellness_check_notified_at',
     ];
 
     /**
@@ -116,6 +118,9 @@ class User extends Authenticatable implements FilamentUser
             'notify_email' => 'boolean',
             'notify_sms' => 'boolean',
             'notify_push' => 'boolean',
+            'gold_balance' => 'decimal:6',
+            'last_activity_at' => 'datetime',
+            'wellness_check_notified_at' => 'datetime',
         ];
     }
 

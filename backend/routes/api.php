@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\WasiyyahController;
 use App\Http\Controllers\Api\JuniorCooperativeController;
 use App\Http\Controllers\Api\SupportChatController;
 use App\Http\Controllers\Api\ScoreController;
+use App\Http\Controllers\Api\GoldController;
 
 Route::get('/health', function () {
     return response()
@@ -283,9 +284,17 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Junior Cooperative (Children's Savings)
     Route::get('/junior-cooperative', [JuniorCooperativeController::class, 'index']);
     Route::post('/junior-cooperative', [JuniorCooperativeController::class, 'store']);
+    Route::patch('/junior-cooperative/{id}', [JuniorCooperativeController::class, 'update']);
     Route::post('/junior-cooperative/{id}/deposit', [JuniorCooperativeController::class, 'deposit']);
     Route::post('/junior-cooperative/{id}/withdraw', [JuniorCooperativeController::class, 'withdraw']);
     Route::get('/junior-cooperative/{id}/history', [JuniorCooperativeController::class, 'history']);
+
+    // Gold-Backed Savings (Inflation Hedge)
+    Route::get('/gold/price', [GoldController::class, 'getPrice']);
+    Route::post('/gold/buy', [GoldController::class, 'buy']);
+    Route::post('/gold/sell', [GoldController::class, 'sell']);
+    Route::get('/gold/history', [GoldController::class, 'history']);
+    Route::get('/gold/export', [GoldController::class, 'export']);
 
     // In-App Notifications (Inbox)
     Route::get('/notifications', [NotificationsController::class, 'index']);

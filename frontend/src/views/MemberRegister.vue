@@ -208,6 +208,7 @@
             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Expires in: <span class="text-rose-500">{{ countdown }}s</span></div>
             <button @click="handleResend" :disabled="resendCooldown > 0" class="text-[11px] font-black text-emerald-700 uppercase tracking-widest hover:underline disabled:opacity-40">Resend Codes <span v-if="resendCooldown>0">({{ resendCooldown }})</span></button>
           </div>
+          <p v-if="errorSendOtps" class="text-rose-600 text-[10px] font-bold mt-1 text-center bg-rose-50 p-2 rounded-lg">{{ errorSendOtps }}</p>
 
           <div class="rounded-2xl border border-slate-200/60 p-5 bg-emerald-50/30 space-y-3">
             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Identity Verification (BVN)</div>
@@ -312,6 +313,7 @@ const loadingVerifySms = ref(false)
 const errorVerifySms = ref('')
 const loadingFinalize = ref(false)
 const errorFinalize = ref('')
+const errorSendOtps = ref('')
 
 const form = ref({
   branch_id: '',
@@ -332,7 +334,7 @@ const emailVerified = ref(false)
 const phoneVerified = ref(false)
 const maskedEmail = ref('')
 const maskedPhone = ref('')
-const countdown = ref(600)
+const countdown = ref(0)
 let timer = null
 const resendCooldown = ref(0)
 let resendTimer = null
@@ -455,6 +457,7 @@ async function handleUpload() {
 }
 
 async function handleSendOtps() {
+  errorSendOtps.value = ''
   try {
     const { data } = await axios.post('/api/register/send-otps', { token: token.value })
     maskedEmail.value = data?.sent_to?.email || ''
@@ -462,7 +465,13 @@ async function handleSendOtps() {
     countdown.value = data?.expires_in || 600
     startTimers()
     startResendCooldown()
-  } catch (e) {}
+  } catch (e) {
+    if (e?.response?.status === 429) {
+      errorSendOtps.value = e?.response?.data?.message || 'Please wait before requesting codes again.'
+    } else {
+      errorSendOtps.value = 'Failed to send verification codes.'
+    }
+  }
 }
 
 function startTimers() {
@@ -474,7 +483,7 @@ function startTimers() {
   }, 1000)
 }
 function startResendCooldown() {
-  resendCooldown.value = 60
+  resendCooldown.value = 30
   if (resendTimer) clearInterval(resendTimer)
   resendTimer = setInterval(() => {
     if (resendCooldown.value > 0) resendCooldown.value--

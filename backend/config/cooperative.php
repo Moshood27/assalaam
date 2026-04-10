@@ -15,4 +15,8 @@ return [
     ],
     'admin_ip_whitelist' => array_filter(array_map('trim', explode(',', env('ADMIN_IP_WHITELIST', '')))),
     'low_stock_threshold' => env('COOP_LOW_STOCK_THRESHOLD', 5),
+    'legacy' => [
+        'inactivity_months' => env('COOP_LEGACY_INACTIVITY_MONTHS', 6),
+        'check_period_days' => env('COOP_LEGACY_CHECK_PERIOD_DAYS', 30), // Notify admin after this many days since wellness check if still inactive
+    ],
 ];
