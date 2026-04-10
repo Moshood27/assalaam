@@ -17,6 +17,9 @@ const VTU = () => import('../views/VTU.vue')
 const VTUHistory = () => import('../views/VTUHistory.vue')
 const Agm = () => import('../views/Agm.vue')
 const AgmSession = () => import('../views/AgmSession.vue')
+const ProjectProposals = () => import('../views/ProjectProposals.vue')
+const ProjectProposalDetail = () => import('../views/ProjectProposalDetail.vue')
+const ShariaBoard = () => import('../views/ShariaBoard.vue')
 const Store = () => import('../views/Store.vue')
 const OrderReceipt = () => import('../views/OrderReceipt.vue')
 const Privacy = () => import('../views/Privacy.vue')
@@ -26,8 +29,18 @@ const Projects = () => import('../views/Projects.vue')
 const Project = () => import('../views/Project.vue')
 const Takaful = () => import('../views/Takaful.vue')
 const Transparency = () => import('../views/Transparency.vue')
+const Sadaqah = () => import('../views/Sadaqah.vue')
+const SadaqahDetail = () => import('../views/SadaqahDetail.vue')
+const SadaqahHistory = () => import('../views/SadaqahHistory.vue')
 const MerchantReceive = () => import('../views/MerchantReceive.vue')
 const MerchantPay = () => import('../views/MerchantPay.vue')
+const VendorApply = () => import('../views/VendorApply.vue')
+const VendorDashboard = () => import('../views/VendorDashboard.vue')
+const VendorProducts = () => import('../views/VendorProducts.vue')
+const VendorOrders = () => import('../views/VendorOrders.vue')
+const VendorSettlements = () => import('../views/VendorSettlements.vue')
+const Wasiyyah = () => import('../views/Wasiyyah.vue')
+const JuniorCooperative = () => import('../views/JuniorCooperative.vue')
 
 const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminRegister = () => import('../views/admin/AdminRegister.vue')
@@ -57,9 +70,23 @@ const routes = [
   { path: '/merchant/pay', name: 'merchant.pay', component: MerchantPay, meta: { requiresAuth: true } },
   { path: '/store/orders', name: 'store.orders', component: () => import('../views/StoreOrders.vue'), meta: { requiresAuth: true } },
   { path: '/store/orders/:id', name: 'store.order', component: OrderReceipt, meta: { requiresAuth: true } },
+
+  // Vendor Portal
+  { path: '/vendor/apply', name: 'vendor.apply', component: VendorApply, meta: { requiresAuth: true } },
+  { path: '/vendor/dashboard', name: 'vendor.dashboard', component: VendorDashboard, meta: { requiresAuth: true } },
+  { path: '/vendor/products', name: 'vendor.products', component: VendorProducts, meta: { requiresAuth: true } },
+  { path: '/vendor/orders', name: 'vendor.orders', component: VendorOrders, meta: { requiresAuth: true } },
+  { path: '/vendor/settlements', name: 'vendor.settlements', component: VendorSettlements, meta: { requiresAuth: true } },
+
+  { path: '/wasiyyah', name: 'wasiyyah', component: Wasiyyah, meta: { requiresAuth: true } },
+  { path: '/junior-cooperative', name: 'junior.cooperative', component: JuniorCooperative, meta: { requiresAuth: true } },
+
   { path: '/goals', name: 'goals', component: () => import('../views/Goals.vue'), meta: { requiresAuth: true } },
   { path: '/projects', name: 'projects', component: Projects, meta: { requiresAuth: true } },
   { path: '/projects/:id', name: 'project', component: Project, meta: { requiresAuth: true } },
+  { path: '/sadaqah', name: 'sadaqah', component: Sadaqah, meta: { requiresAuth: true } },
+  { path: '/sadaqah/history', name: 'sadaqah.history', component: SadaqahHistory, meta: { requiresAuth: true } },
+  { path: '/sadaqah/:id', name: 'sadaqah.detail', component: SadaqahDetail, meta: { requiresAuth: true } },
   { path: '/transparency', name: 'transparency', component: Transparency, meta: { requiresAuth: true } },
   // VTU
   { path: '/vtu', name: 'vtu', component: VTU, meta: { requiresAuth: true } },
@@ -67,6 +94,9 @@ const routes = [
   // AGM Voting
   { path: '/agm', name: 'agm', component: Agm, meta: { requiresAuth: true } },
   { path: '/agm/sessions/:id', name: 'agm.session', component: AgmSession, meta: { requiresAuth: true } },
+  { path: '/agm/proposals', name: 'agm.proposals', component: ProjectProposals, meta: { requiresAuth: true } },
+  { path: '/agm/proposals/:id', name: 'agm.proposal_detail', component: ProjectProposalDetail, meta: { requiresAuth: true } },
+  { path: '/sharia-board', name: 'sharia.board', component: ShariaBoard, meta: { requiresAuth: true } },
   // Placeholder: use existing Qard Hasan prototype under /loans for now
   { path: '/loans', name: 'loans', component: Loans, meta: { requiresAuth: true } },
   { path: '/qard', name: 'qard', component: QardHasan },

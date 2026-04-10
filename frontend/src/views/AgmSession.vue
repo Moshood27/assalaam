@@ -71,6 +71,13 @@
       <section class="card card-elevated p-5">
         <div class="flex items-center justify-between mb-6">
           <h2 class="font-black text-slate-800 tracking-tight text-lg">Live Results</h2>
+          <div v-if="participation" class="text-right flex flex-col items-end">
+             <div class="text-[9px] font-black uppercase text-slate-400">Participation</div>
+             <div class="text-[11px] font-black" :class="participation.quorum_met ? 'text-emerald-600' : 'text-amber-600'">
+               {{ participation.total_cast }} / {{ participation.total_eligible }}
+               <span v-if="participation.minimum_quorum" class="opacity-60 text-[9px]"> (Q: {{ participation.minimum_quorum }})</span>
+             </div>
+          </div>
           <button class="text-xs font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl hover:bg-emerald-100 transition-colors" @click="loadResults" :disabled="resLoading">
             {{ resLoading ? '...' : 'Refresh' }}
           </button>
@@ -87,7 +94,10 @@
               <div class="p-4 bg-white border-b border-slate-100 font-black text-slate-800 text-sm uppercase tracking-tight">{{ pos }}</div>
               <ul class="divide-y divide-slate-100">
                 <li v-for="row in list" :key="row.candidate_id" class="p-4 flex items-center justify-between hover:bg-white transition-colors">
-                  <div class="font-bold text-slate-700 text-sm">{{ row.candidate_name }}</div>
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="font-bold text-slate-700 text-sm truncate">{{ row.candidate_name }}</div>
+                    <span v-if="row.is_tied" class="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 text-[8px] font-black uppercase tracking-tighter shadow-sm">Tie</span>
+                  </div>
                   <div class="flex items-center gap-2">
                     <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-emerald-700 font-black text-[10px] shadow-sm">{{ row.votes }}</span>
                     <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">votes</span>
@@ -144,6 +154,7 @@ const voting = ref(false)
 const resLoading = ref(false)
 const resError = ref('')
 const results = ref({})
+const participation = ref(null)
 
 const votedName = (pos) => {
   const cid = pos?.voted_candidate_id
@@ -193,6 +204,7 @@ const loadResults = async () => {
     const token = localStorage.getItem('token')
     const { data } = await axios.get(`/api/agm/sessions/${id}/results`, { headers: { Authorization: `Bearer ${token}` } })
     results.value = data?.results || {}
+    participation.value = data?.participation || null
   } catch (e) {
     resError.value = e?.response?.data?.message || e.message
   } finally {

@@ -67,6 +67,10 @@ class AgmController extends Controller
         ]);
         $user = $request->user();
 
+        if (!$user->isEligibleForShura()) {
+            return response()->json(['message' => 'You are not eligible to vote at this time'], 403);
+        }
+
         $session = AgmSession::findOrFail($id);
         if ($session->status !== 'open') {
             // if times are set, ensure within window
@@ -90,11 +94,21 @@ class AgmController extends Controller
             return response()->json(['message' => 'You have already voted for ' . $position], 409);
         }
 
+        $weight = 1.00;
+        if ($session->voting_type === 'share_percentage') {
+            $eligibility = $user->savingsSharesEligibility();
+            $weight = (float) ($eligibility['shares'] ?? 0);
+            if ($weight <= 0) {
+                return response()->json(['message' => 'You must have shares to vote in this session'], 403);
+            }
+        }
+
         $vote = AgmVote::create([
             'user_id' => $user->id,
             'session_id' => $session->id,
             'candidate_id' => $candidate->id,
             'position' => $position,
+            'weight' => $weight,
         ]);
 
         // Best-effort push confirmation to the voter
@@ -122,7 +136,7 @@ class AgmController extends Controller
     {
         $session = AgmSession::findOrFail($id);
         $rows = AgmVote::query()
-            ->select('position', 'candidate_id', DB::raw('COUNT(*) as votes'))
+            ->select('position', 'candidate_id', DB::raw('SUM(weight) as total_weight'))
             ->where('session_id', $session->id)
             ->groupBy('position', 'candidate_id')
             ->get();
@@ -136,7 +150,7 @@ class AgmController extends Controller
             $byPosition[$pos][] = [
                 'candidate_id' => $cid,
                 'candidate_name' => optional($candidates->get($cid))->name,
-                'votes' => (int) $r->votes,
+                'votes' => (float) $r->total_weight,
             ];
         }
         // Ensure positions with zero votes still appear with zero counts
@@ -157,12 +171,38 @@ class AgmController extends Controller
         // Sort each position group by votes desc
         foreach ($byPosition as $pos => &$list) {
             usort($list, fn($a, $b) => $b['votes'] <=> $a['votes']);
+            // Flag ties at the top
+            if (count($list) > 1 && $list[0]['votes'] > 0 && $list[0]['votes'] === $list[1]['votes']) {
+                $maxVotes = $list[0]['votes'];
+                foreach ($list as &$item) {
+                    if ($item['votes'] === $maxVotes) {
+                        $item['is_tied'] = true;
+                    }
+                }
+            }
         }
         unset($list);
+
+        // Participation metrics
+        $totalEligible = \App\Models\User::query()
+            ->where('is_defaulter', false)
+            ->whereNull('deceased_at')
+            ->count();
+        $totalCast = AgmVote::query()
+            ->where('session_id', $session->id)
+            ->distinct('user_id')
+            ->count('user_id');
 
         return response()->json([
             'session' => $session,
             'results' => $byPosition,
+            'participation' => [
+                'total_eligible' => $totalEligible,
+                'total_cast' => $totalCast,
+                'percentage' => $totalEligible > 0 ? round(($totalCast / $totalEligible) * 100, 2) : 0,
+                'minimum_quorum' => $session->minimum_quorum,
+                'quorum_met' => $session->minimum_quorum ? ($totalCast >= $session->minimum_quorum) : true,
+            ],
         ]);
     }
 }

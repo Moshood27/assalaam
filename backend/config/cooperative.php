@@ -14,4 +14,5 @@ return [
         'include_shares' => env('COOP_ZAKAT_INCLUDE_SHARES', false),
     ],
     'admin_ip_whitelist' => array_filter(array_map('trim', explode(',', env('ADMIN_IP_WHITELIST', '')))),
+    'low_stock_threshold' => env('COOP_LOW_STOCK_THRESHOLD', 5),
 ];

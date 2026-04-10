@@ -2084,14 +2084,14 @@ class UtilityController extends Controller
     public function verifyMerchant(Request $request)
     {
         $validated = $request->validate([
-            'serviceID' => 'required|string',
-            'billersCode' => 'required|string',
-            'type' => 'nullable|string', // required for cable/electricity
+            'serviceID' => 'required',
+            'billersCode' => 'required',
+            'type' => 'nullable', // required for cable/electricity
         ]);
 
-        $type = $request->input('type', 'prepaid');
-        $serviceId = $validated['serviceID'];
-        $billersCode = $validated['billersCode'];
+        $type = (string) $request->input('type', 'prepaid');
+        $serviceId = (string) $request->input('serviceID');
+        $billersCode = (string) $request->input('billersCode');
 
         // Determine if it's cable or electricity for the router
         $vtuType = 'verify-electricity';
@@ -2109,8 +2109,9 @@ class UtilityController extends Controller
         $response = $this->callVtuSmart($vtuType, $payload);
 
         if (!$response['ok']) {
+            $msg = $response['body']['message'] ?? $response['body']['response_description'] ?? $response['error'] ?? 'Verification failed';
             return response()->json([
-                'message' => 'Verification failed',
+                'message' => $msg,
                 'details' => $response['body'] ?? $response['error']
             ], 422);
         }
@@ -2125,8 +2126,13 @@ class UtilityController extends Controller
             str_contains(strtoupper($customerName), 'NOT FOUND') ||
             strtoupper(trim($customerName)) === 'N/A'
         ) {
+            $errorMsg = $body['message'] ?? $body['response_description'] ?? $body['content']['error'] ?? $body['customer_name'] ?? $body['Customer_Name'] ?? 'Verification failed';
+            if ($errorMsg === 'Verification failed' && $customerName && $customerName !== 'N/A') {
+                $errorMsg = $customerName;
+            }
+
             return response()->json([
-                'message' => 'Verification failed',
+                'message' => $errorMsg,
                 'details' => $body
             ], 422);
         }
@@ -2417,7 +2423,7 @@ class UtilityController extends Controller
                     'abuja-electric' => '03', 'aedc' => '03',
                     'kano-electric' => '04', 'kedco' => '04',
                     'port-harcourt-electric' => '05', 'phed' => '05',
-                    'jos-electric' => '06', 'jed' => '06',
+                    'jos-electric' => '06', 'jed' => '06', 'jedc' => '06',
                     'kaduna-electric' => '07', 'kaedco' => '07',
                     'ibadan-electric' => '08', 'ibedc' => '08',
                     'enugu-electric' => '09', 'eedc' => '09',
@@ -2513,6 +2519,25 @@ class UtilityController extends Controller
 
     private function callVtpass(string $type, array $payload): array
     {
+        $serviceID = strtolower((string)($payload['serviceID'] ?? ''));
+        $mapping = [
+            'ekedc' => 'eko-electric',
+            'ikedc' => 'ikeja-electric',
+            'aedc' => 'abuja-electric',
+            'kedco' => 'kano-electric',
+            'phed' => 'port-harcourt-electric',
+            'jed' => 'jos-electric',
+            'jedc' => 'jos-electric',
+            'kaedco' => 'kaduna-electric',
+            'ibedc' => 'ibadan-electric',
+            'eedc' => 'enugu-electric',
+            'bedc' => 'benin-electric',
+            'yedc' => 'yola-electric',
+        ];
+        if (isset($mapping[$serviceID])) {
+            $payload['serviceID'] = $mapping[$serviceID];
+        }
+
         $baseUrl = rtrim(config('services.vtu.base_url', 'https://vtpass.com/api'), '/');
         $apiKey = config('services.vtu.api_key');
         $publicKey = config('services.vtu.public_key');

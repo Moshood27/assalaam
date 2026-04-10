@@ -70,6 +70,65 @@
         </div>
       </div>
 
+      <!-- Attaqwa Score & Badges -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 overflow-hidden relative">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full -mr-16 -mt-16 opacity-40" />
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-[10px] text-teal-600 font-black uppercase tracking-widest mb-1">Internal Credit Rating</p>
+              <h3 class="text-xl font-black text-slate-800">Attaqwa Score</h3>
+            </div>
+            <div class="text-right">
+              <span class="text-3xl font-black text-teal-600">{{ profile.attaqwa_score || 0 }}</span>
+              <p class="text-[10px] text-slate-400 font-bold uppercase">{{ bandLabel(profile.attaqwa_band) }}</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+            Your score is based on your cooperative behavior, consistent savings, and loan repayments. High scores unlock larger interest-free loans.
+          </p>
+
+          <div v-if="profile.attaqwa_tips && profile.attaqwa_tips.length > 0" class="mb-4 space-y-2">
+            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">How to improve your score</p>
+            <div v-for="(tip, idx) in profile.attaqwa_tips" :key="idx" class="flex items-start gap-2 text-[11px] text-teal-700 bg-teal-50/50 p-2 rounded-lg border border-teal-100/50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ tip }}
+            </div>
+          </div>
+
+          <div v-if="profile.badges && profile.badges.length > 0">
+            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Earned Badges</p>
+            <div class="flex flex-wrap gap-2">
+              <div v-for="badge in profile.badges" :key="badge.id" 
+                   class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-xl group relative cursor-help">
+                <span class="text-lg" v-if="badge.type === 'consistency_savings_12'">📅</span>
+                <span class="text-lg" v-else-if="badge.type === 'early_loan_repayment'">🚀</span>
+                <span class="text-lg" v-else-if="badge.type === 'savings_milestone_100k'">💰</span>
+                <span class="text-lg" v-else-if="badge.type === 'vtu_power_user'">⚡</span>
+                <span class="text-lg" v-else-if="badge.type === 'loan_master'">🎓</span>
+                <span class="text-lg" v-else>🏆</span>
+                <div class="min-w-0">
+                  <p class="text-[10px] font-bold text-emerald-800 leading-none">{{ badge.name }}</p>
+                </div>
+                
+                <!-- Tooltip -->
+                <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-slate-800 text-white text-[10px] p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                  {{ badge.description }}
+                  <p class="mt-1 opacity-60">Earned: {{ new Date(badge.earned_at).toLocaleDateString() }}</p>
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
+             <p class="text-xs text-slate-400">No badges earned yet. Keep saving consistently to earn your first badge!</p>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Verification</p>
         <div class="grid grid-cols-2 gap-3">
@@ -101,6 +160,68 @@
           </div>
         </div>
         <div class="mt-3 text-xs text-gray-500">KYC status is used to prevent fraud and verify identity.</div>
+      </div>
+
+      <!-- Vendor Portal -->
+      <div v-if="profile.vendor" class="bg-white rounded-3xl shadow-sm border border-emerald-100 p-5 overflow-hidden relative group">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Vendor Dashboard</p>
+              <h3 class="text-lg font-black text-slate-800 uppercase">{{ profile.vendor.name }}</h3>
+            </div>
+            <div :class="profile.vendor.is_approved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'" class="px-2 py-1 rounded-lg text-[10px] font-black uppercase">
+              {{ profile.vendor.is_approved ? 'Approved' : 'Pending Approval' }}
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">Manage your products, track orders, and view payouts from your business.</p>
+          <button @click="$router.push('/vendor/dashboard')" class="w-full h-12 rounded-xl bg-emerald-700 text-white font-bold hover:bg-emerald-800 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-700/20">
+            <span>Go to Vendor Portal</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div v-else class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Local Business</p>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl">🏪</div>
+          <div class="flex-1">
+            <h3 class="text-sm font-bold text-slate-800">Become a Vendor</h3>
+            <p class="text-xs text-slate-500">Sell your products to other members with cooperative financing.</p>
+          </div>
+          <button @click="$router.push('/vendor/apply')" class="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs hover:bg-emerald-100 transition-colors">Apply</button>
+        </div>
+      </div>
+
+      <!-- Islamic Finance Features -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Islamic Finance</p>
+        <div class="space-y-4">
+          <button @click="$router.push('/wasiyyah')" class="w-full flex items-center gap-4 text-left group">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-lg group-active:scale-90 transition-transform">📋</div>
+            <div class="flex-1">
+              <h3 class="text-sm font-bold text-slate-800">Wasiyyah (Next of Kin)</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Manage your beneficiaries and legacy details.</p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300 group-hover:text-indigo-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          
+          <button @click="$router.push('/junior-cooperative')" class="w-full flex items-center gap-4 text-left group pt-4 border-t border-slate-50">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg group-active:scale-90 transition-transform">👶</div>
+            <div class="flex-1">
+              <h3 class="text-sm font-bold text-slate-800">Junior Cooperative</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Locked savings for your children's education.</p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Bank Settings -->
@@ -764,6 +885,18 @@ const saveNotifPrefs = async () => {
     alert(err?.response?.data?.message || 'Failed to save notification preferences.')
   } finally {
     notifBusy.value = false
+  }
+}
+
+const bandLabel = (band) => {
+  switch (band) {
+    case 'excellent': return 'Excellent Trust'
+    case 'very_good': return 'Very Good Trust'
+    case 'good': return 'Good Trust'
+    case 'fair': return 'Fair Trust'
+    case 'low': return 'Low Trust'
+    case 'very_low': return 'Very Low Trust'
+    default: return 'Points'
   }
 }
 

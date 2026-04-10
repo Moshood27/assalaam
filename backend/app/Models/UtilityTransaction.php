@@ -41,6 +41,15 @@ class UtilityTransaction extends Model
         'provider_response' => 'array',
     ];
 
+    protected static function booted()
+    {
+        static::updated(function ($model) {
+            if ($model->wasChanged('status') && $model->status === 'success') {
+                app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
+            }
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

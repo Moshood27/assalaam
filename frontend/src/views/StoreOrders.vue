@@ -76,8 +76,8 @@ const money = (val) => Number(val || 0).toLocaleString(undefined, { minimumFract
 
 const statusClass = (status) => {
   const s = String(status || '').toLowerCase()
-  if (s === 'paid' || s === 'completed' || s === 'success') return 'text-emerald-700'
-  if (s === 'pending' || s === 'processing' || s.includes('murabaha')) return 'text-amber-600'
+  if (s === 'paid' || s === 'completed' || s === 'success' || s === 'delivered') return 'text-emerald-700'
+  if (s === 'pending' || s === 'processing' || s === 'shipped' || s.includes('murabaha')) return 'text-amber-600'
   if (s === 'failed' || s === 'cancelled') return 'text-rose-700'
   return 'text-slate-500'
 }

@@ -8,6 +8,7 @@ use App\Filament\Resources\AgmSessionResource\RelationManagers\VotesRelationMana
 use App\Models\AgmSession;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use Filament\Forms;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -35,6 +36,14 @@ class AgmSessionResource extends Resource
                         'open' => 'Open',
                         'closed' => 'Closed',
                     ])->native(false)->required()->default('draft'),
+                Forms\Components\Select::make('voting_type')
+                    ->options([
+                        'one_member_one_vote' => 'One Member, One Vote',
+                        'share_percentage' => 'Share Percentage (Weighted)',
+                    ])->native(false)->required()->default('one_member_one_vote'),
+                Forms\Components\TextInput::make('minimum_quorum')
+                    ->numeric()
+                    ->helperText('Minimum number of voters required for valid results (optional)'),
                 Forms\Components\DateTimePicker::make('start_at')->seconds(false)->native(false),
                 Forms\Components\DateTimePicker::make('end_at')->seconds(false)->native(false),
             ])->columns(2);
@@ -51,6 +60,7 @@ class AgmSessionResource extends Resource
                         'success' => 'open',
                         'gray' => 'closed',
                     ])->sortable(),
+                TextColumn::make('voting_type')->badge()->sortable(),
                 TextColumn::make('start_at')->dateTime('Y-m-d H:i')->sortable(),
                 TextColumn::make('end_at')->dateTime('Y-m-d H:i')->sortable(),
                 TextColumn::make('created_at')->since()->label('Created')->toggleable(isToggledHiddenByDefault: true),
@@ -91,6 +101,33 @@ class AgmSessionResource extends Resource
                             'session_id' => $record->id,
                             'name' => $record->name,
                         ]);
+                    }),
+                Tables\Actions\Action::make('export_results')
+                    ->label('Export CSV')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('info')
+                    ->action(function ($record) {
+                        return response()->streamDownload(function () use ($record) {
+                            $handle = fopen('php://output', 'w');
+                            fputcsv($handle, ['Position', 'Candidate', 'Weight (Votes)']);
+
+                            $votes = \App\Models\AgmVote::query()
+                                ->select('position', 'candidate_id', DB::raw('SUM(weight) as total_weight'))
+                                ->where('session_id', $record->id)
+                                ->groupBy('position', 'candidate_id')
+                                ->get();
+
+                            $candidates = \App\Models\AgmCandidate::query()->where('session_id', $record->id)->get()->keyBy('id');
+
+                            foreach ($votes as $v) {
+                                fputcsv($handle, [
+                                    $v->position,
+                                    optional($candidates->get($v->candidate_id))->name ?? 'Unknown',
+                                    $v->total_weight
+                                ]);
+                            }
+                            fclose($handle);
+                        }, "agm_results_{$record->id}.csv");
                     }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

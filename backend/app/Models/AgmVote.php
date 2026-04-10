@@ -16,6 +16,7 @@ class AgmVote extends Model
         'position',
         'user_id',
         'candidate_id',
+        'weight',
     ];
 
     public function session()

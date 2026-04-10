@@ -246,6 +246,7 @@ class WalletController extends Controller
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
             'items.*.project_id' => 'nullable|integer|exists:projects,id',
+            'items.*.units' => 'nullable|integer|min:1',
             'items.*.amount' => 'required|numeric|min:1',
             'pin' => ['required','regex:/^\d{4}$/'],
         ]);
@@ -265,6 +266,7 @@ class WalletController extends Controller
                 $row = [
                     'scheme_id' => (int)$i['scheme_id'],
                     'amount' => (float)($i['amount'] ?? 0),
+                    'units' => !empty($i['units']) ? (int)$i['units'] : null,
                 ];
                 if (!empty($i['project_id'])) {
                     $row['project_id'] = (int) $i['project_id'];
@@ -273,14 +275,24 @@ class WalletController extends Controller
             })
             ->filter(fn($i) => $i['amount'] > 0);
 
-        // Validate any provided project_ids are active
+        // Validate any provided project_ids are active and check units
         $projectIds = $items->pluck('project_id')->filter()->unique()->values();
         if ($projectIds->isNotEmpty()) {
             $projects = Project::whereIn('id', $projectIds)->get()->keyBy('id');
-            foreach ($projectIds as $pid) {
-                $p = $projects[$pid] ?? null;
-                if (!$p || !($p->active)) {
-                    return response()->json(['message' => 'Selected project is not available'], 422);
+            foreach ($items as $item) {
+                if (!empty($item['project_id'])) {
+                    $p = $projects[$item['project_id']] ?? null;
+                    if (!$p || !($p->active)) {
+                        return response()->json(['message' => 'Selected project is not available'], 422);
+                    }
+                    if ($p->is_unit_based) {
+                        if (empty($item['units']) || $item['units'] <= 0) {
+                            return response()->json(['message' => 'Units are required for unit-based project: ' . $p->name], 422);
+                        }
+                        if ($item['units'] > $p->available_units) {
+                            return response()->json(['message' => "Only {$p->available_units} units available for " . $p->name], 422);
+                        }
+                    }
                 }
             }
         }
@@ -314,6 +326,7 @@ class WalletController extends Controller
                 ];
                 if (!empty($item['project_id'])) {
                     $row['project_id'] = (int) $item['project_id'];
+                    $row['units'] = $item['units'] ?? null;
                 }
                 Contribution::create($row);
             }

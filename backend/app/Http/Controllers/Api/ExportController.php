@@ -183,6 +183,35 @@ class ExportController extends Controller
         return $pdf->download($filename);
     }
 
+    public function downloadMurabahahAgreement(Request $request, int $id)
+    {
+        set_time_limit(120);
+        $user = $request->user();
+
+        $q = StoreOrder::with('items')->where('id', $id);
+
+        // If not admin, restrict to own order
+        if (!$user->is_admin) {
+            $q->where('user_id', $user->id);
+        }
+
+        $order = $q->firstOrFail();
+
+        $meta = is_array($order->meta) ? $order->meta : [];
+        if (($meta['financing']['type'] ?? null) !== 'murabaha') {
+            return response()->json(['message' => 'This order is not under Murabahah financing'], 422);
+        }
+
+        $data = [
+            'user' => $order->user,
+            'order' => $order,
+        ];
+
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.murabahah_agreement', $data);
+        $filename = 'Murabahah_Agreement_' . $order->reference . '.pdf';
+        return $pdf->download($filename);
+    }
+
     public function downloadDividend(Request $request, int $year)
     {
         try {

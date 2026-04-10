@@ -59,10 +59,11 @@
       </div>
 
       <!-- KPI row -->
-      <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
         <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="warning" icon="📊" />
         <StatPill label="Utilities" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.utilities))" hint="Spent" intent="default" icon="📶" />
+        <StatPill label="Attaqwa Score" :value="String(kpis.attaqwa_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />
       </div>
 
       <!-- Trend chart -->
@@ -82,6 +83,10 @@
       <button @click="$router.push('/projects')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl">📦</div>
         <span class="text-sm font-bold text-slate-700">Projects</span>
+      </button>
+      <button @click="$router.push('/sadaqah')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl">🌙</div>
+        <span class="text-sm font-bold text-slate-700">Sadaqah</span>
       </button>
       <button @click="$router.push('/vtu')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📶</div>
@@ -123,9 +128,21 @@
         <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">🕌</div>
         <span class="text-sm font-bold text-slate-700">Zakat</span>
       </button>
+      <button v-if="dashboardData.is_ramadan" @click="payZakatFitr" class="bg-emerald-50 p-5 rounded-3xl shadow-sm border border-emerald-100 flex flex-col items-center gap-2 active:bg-emerald-100 transition-all">
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">🥣</div>
+        <span class="text-sm font-bold text-emerald-800">Zakat Al-Fitr</span>
+      </button>
       <button @click="$router.push('/goals')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">🕋</div>
         <span class="text-sm font-bold text-slate-700">Hajj & Umrah</span>
+      </button>
+      <button @click="$router.push('/junior-cooperative')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">👶</div>
+        <span class="text-sm font-bold text-slate-700">Junior Coop</span>
+      </button>
+      <button @click="$router.push('/wasiyyah')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📋</div>
+        <span class="text-sm font-bold text-slate-700">Wasiyyah</span>
       </button>
     </div>
 
@@ -267,7 +284,7 @@ const kpis = computed(() => {
   const outstandingLoans = txs.filter(t => (t.type === 'loan' || String(t.scheme?.name || '').toLowerCase().includes('loan')))
     .reduce((sum, t) => sum + Number(t.balance || 0), 0)
   const utilSpent = utils.reduce((sum, u) => sum + Number(u.amount || 0), 0)
-  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent }
+  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent, attaqwa_score: d.attaqwa_score || 0 }
 })
 
 const chart = computed(() => {
@@ -321,6 +338,18 @@ const load = async () => {
   const token = localStorage.getItem('token')
   const { data } = await axios.get('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } })
   dashboardData.value = data
+  
+  // Show Zakat alert if reached nisab but not yet paid (or simply reached nisab)
+  if (data.zakat_status?.reached_nisab) {
+    const due = formatMoney(data.zakat_status.zakat_due)
+    const nisab = formatMoney(data.zakat_status.nisab)
+    
+    if (data.zakat_status.eligible) {
+      showNotice('Zakat Alert', `Your savings have reached the Nisab (${currency} ${nisab}). Your Zakat due is ${currency} ${due}.`, 'info')
+    } else {
+      showNotice('Zakat Update', `Your savings have reached the Nisab (${currency} ${nisab}). Keep tracking your savings to know when your Zakat becomes due!`, 'info')
+    }
+  }
 }
 
 const logout = () => {
@@ -362,6 +391,29 @@ const checkZakat = async () => {
   } catch (e) {
     const msg = e?.response?.data?.message || 'An error occurred while checking Zakat.'
     showNotice('Zakat', msg, 'error')
+  }
+}
+
+const payZakatFitr = async () => {
+  try {
+    const amount = formatMoney(dashboardData.value.fitr_amount)
+    const ok = await modal.confirm(`Quick-pay Zakat Al-Fitr for this year: ${currency} ${amount}. Proceed to payment?`, {
+      confirmText: 'Pay Now',
+      title: 'Zakat Al-Fitr'
+    })
+    if (!ok) return
+
+    const token = localStorage.getItem('token')
+    const { data } = await axios.post('/api/zakat/pay-fitr', {}, { headers: { Authorization: `Bearer ${token}` } })
+    const url = data?.checkout_url
+    if (url) {
+      window.location.assign(url)
+    } else {
+      showNotice('Zakat Al-Fitr', 'Failed to start payment. Please try again.', 'error')
+    }
+  } catch (e) {
+    const msg = e?.response?.data?.message || 'An error occurred while initiating Zakat Al-Fitr payment.'
+    showNotice('Zakat Al-Fitr', msg, 'error')
   }
 }
 

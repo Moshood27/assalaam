@@ -5,12 +5,20 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\Scheme;
+use App\Services\GoldSilverPriceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ZakatController extends Controller
 {
+    protected $priceService;
+
+    public function __construct(GoldSilverPriceService $priceService)
+    {
+        $this->priceService = $priceService;
+    }
+
     public function estimate(Request $request)
     {
         $user = $request->user();
@@ -36,9 +44,11 @@ class ZakatController extends Controller
 
         $base = round($savings + $shares, 2);
 
-        $nisab = (float) config('zakat.nisab_ngn');
+        $nisab = (float) $this->priceService->getDynamicNisab();
         $rate = (float) config('zakat.rate');
         $lunarDays = (int) config('zakat.lunar_days');
+        $isRamadan = $this->priceService->isRamadan();
+        $fitrAmount = (float) config('zakat.fitr_amount');
 
         $eligible = false;
         $crossedOn = null;
@@ -82,6 +92,8 @@ class ZakatController extends Controller
             'eligible_on' => optional($eligibleOn)->toDateTimeString(),
             'days_since_crossed' => $daysSinceCrossed,
             'zakat_due' => $zakatDue,
+            'is_ramadan' => $isRamadan,
+            'fitr_amount' => $fitrAmount,
         ]);
     }
 
@@ -204,6 +216,76 @@ class ZakatController extends Controller
             'checkout_url' => $data['authorization_url'] ?? null,
             'access_code' => $data['access_code'] ?? null,
             'reference' => $data['reference'] ?? $reference,
+            'total' => $amount,
+        ]);
+    }
+
+    public function payFitr(Request $request)
+    {
+        $user = $request->user();
+        $amount = (float) config('zakat.fitr_amount');
+
+        if ($amount <= 0) {
+            return response()->json(['message' => 'Zakat Al-Fitr amount is not configured'], 422);
+        }
+
+        // Ensure a Zakat Al-Fitr scheme exists
+        $scheme = Scheme::firstOrCreate(
+            ['name' => 'Zakat Al-Fitr'],
+            ['min_amount' => 1, 'active' => true]
+        );
+
+        $reference = 'FITR_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
+
+        $user->contributions()->create([
+            'scheme_id' => $scheme->id,
+            'amount' => $amount,
+            'reference' => $reference,
+            'status' => 'pending',
+        ]);
+
+        $gateway = strtolower($request->input('gateway', 'paystack'));
+
+        if ($gateway === 'flutterwave') {
+            $flwSecret = config('services.flutterwave.secret_key');
+            $payload = [
+                'tx_ref' => $reference,
+                'amount' => $amount,
+                'currency' => 'NGN',
+                'customer' => [
+                    'email' => $user->email,
+                    'name' => $user->name,
+                ],
+                'meta' => ['user_id' => $user->id, 'fitr' => true],
+            ];
+
+            $resp = Http::withToken($flwSecret)->post('https://api.flutterwave.com/v3/payments', $payload);
+            if (!$resp->ok()) {
+                return response()->json(['message' => 'Payment initialization failed'], 502);
+            }
+            return response()->json([
+                'checkout_url' => $resp->json('data.link'),
+                'reference' => $reference,
+                'total' => $amount,
+            ]);
+        }
+
+        $secret = config('services.paystack.secret_key');
+        $payload = [
+            'email' => $user->email,
+            'amount' => (int)($amount * 100),
+            'reference' => $reference,
+            'metadata' => ['user_id' => $user->id, 'fitr' => true],
+        ];
+
+        $response = Http::withToken($secret)->post('https://api.paystack.co/transaction/initialize', $payload);
+        if (!$response->ok()) {
+            return response()->json(['message' => 'Payment initialization failed'], 502);
+        }
+
+        return response()->json([
+            'checkout_url' => $response->json('data.authorization_url'),
+            'reference' => $reference,
             'total' => $amount,
         ]);
     }

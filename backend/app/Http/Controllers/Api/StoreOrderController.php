@@ -31,7 +31,7 @@ class StoreOrderController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
-        $order = StoreOrder::with('items')
+        $order = StoreOrder::with('items.vendor:id,name')
             ->where('user_id', $user->id)
             ->findOrFail($id);
         return response()->json($order);
@@ -63,6 +63,7 @@ class StoreOrderController extends Controller
             'financing.enabled' => 'nullable|boolean',
             'financing.months' => 'required_if:financing.enabled,true|integer|min:6|max:12',
             'financing.profit_rate' => 'required_if:financing.enabled,true|numeric|min:0.1|max:0.15',
+            'financing.autopay_enabled' => 'nullable|boolean',
         ]);
 
         $user = $request->user();
@@ -79,7 +80,7 @@ class StoreOrderController extends Controller
 
         // Load products and compute totals
         $productIds = collect($validated['items'])->pluck('product_id')->all();
-        $products = Product::whereIn('id', $productIds)->where('is_active', true)->get()->keyBy('id');
+        $products = Product::with('vendor')->whereIn('id', $productIds)->where('is_active', true)->get()->keyBy('id');
 
         if (count($products) !== count($productIds)) {
             return response()->json(['message' => 'One or more products are invalid/unavailable'], 422);
@@ -106,8 +107,17 @@ class StoreOrderController extends Controller
             $lineProfit = round($lineTotal - $lineCost, 2);
             $grandTotal += $lineTotal;
             $grandCost += $lineCost;
+
+            $vendor = $p->vendor;
+            $vendorAmount = null;
+            if ($vendor) {
+                $commission = (float)($vendor->commission_rate ?? 0);
+                $vendorAmount = round($lineCost * (1 - ($commission / 100)), 2);
+            }
+
             $lineItems[] = [
                 'product_id' => $p->id,
+                'vendor_id' => $p->vendor_id,
                 'product_name' => $p->name,
                 'quantity' => $qty,
                 'unit_price' => $unitPrice,
@@ -115,6 +125,7 @@ class StoreOrderController extends Controller
                 'line_total' => $lineTotal,
                 'line_cost' => $lineCost,
                 'line_profit' => $lineProfit,
+                'vendor_amount' => $vendorAmount,
             ];
         }
 
@@ -158,6 +169,7 @@ class StoreOrderController extends Controller
 
             $months = (int) ($fin['months'] ?? 0);
             $profitRate = (float) ($fin['profit_rate'] ?? 0); // e.g. 0.10 => 10%
+            $autopay = (bool) ($fin['autopay_enabled'] ?? true);
 
             // Compute Murabaha (cost-plus) totals per line using COST as base
             $financedLineItems = [];
@@ -168,6 +180,7 @@ class StoreOrderController extends Controller
                 $financedTotal += $lineFinanced;
                 $financedLineItems[] = [
                     'product_id' => $li['product_id'],
+                    'vendor_id' => $li['vendor_id'] ?? null,
                     'product_name' => $li['product_name'],
                     'quantity' => $li['quantity'],
                     'unit_price' => $unitFinanced, // financed unit price
@@ -175,6 +188,7 @@ class StoreOrderController extends Controller
                     'line_total' => $lineFinanced,
                     'line_cost' => $li['line_cost'],
                     'line_profit' => round($lineFinanced - (float)$li['line_cost'], 2),
+                    'vendor_amount' => $li['vendor_amount'], // Respect commission
                 ];
             }
             $financedTotal = round($financedTotal, 2);
@@ -203,6 +217,7 @@ class StoreOrderController extends Controller
                     'months' => $months,
                     'profit_rate' => $profitRate,
                     'schedule' => $schedule,
+                    'autopay_enabled' => $autopay,
                 ],
             ];
 
@@ -223,9 +238,11 @@ class StoreOrderController extends Controller
                     ]));
 
                     // Decrement stock if tracking
-                    Product::where('id', $li['product_id'])
-                        ->where('track_stock', true)
-                        ->decrement('stock_quantity', $li['quantity']);
+                    $prod = Product::where('id', $li['product_id'])->first();
+                    if ($prod && $prod->track_stock) {
+                        $prod->decrement('stock_quantity', $li['quantity']);
+                        $prod->refresh()->checkLowStock();
+                    }
                 }
 
                 return $order;
@@ -270,9 +287,11 @@ class StoreOrderController extends Controller
                 ]));
 
                 // Decrement stock if tracking
-                Product::where('id', $li['product_id'])
-                    ->where('track_stock', true)
-                    ->decrement('stock_quantity', $li['quantity']);
+                $prod = Product::where('id', $li['product_id'])->first();
+                if ($prod && $prod->track_stock) {
+                    $prod->decrement('stock_quantity', $li['quantity']);
+                    $prod->refresh()->checkLowStock();
+                }
             }
 
             // Record wallet debit transaction

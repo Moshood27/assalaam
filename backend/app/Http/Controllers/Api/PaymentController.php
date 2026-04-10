@@ -24,6 +24,7 @@ class PaymentController extends Controller
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
             'items.*.project_id' => 'nullable|integer|exists:projects,id',
+            'items.*.units' => 'nullable|integer|min:1',
             'items.*.amount' => 'required|numeric|min:1',
             'callback_url' => 'nullable|url',
         ]);
@@ -50,6 +51,8 @@ class PaymentController extends Controller
                 ], 422);
             }
             $projectId = $item['project_id'] ?? null;
+            $units = (int) ($item['units'] ?? 0);
+
             if (!empty($projectId)) {
                 $p = $projects[$projectId] ?? null;
                 if (! $p || !($p->active)) {
@@ -57,10 +60,27 @@ class PaymentController extends Controller
                         'message' => 'Selected project is not available',
                     ], 422);
                 }
+
+                if ($p->is_unit_based) {
+                    if ($units <= 0) {
+                        return response()->json([
+                            'message' => 'Number of units is required for unit-based project: ' . $p->name,
+                        ], 422);
+                    }
+                    if ($units > $p->available_units) {
+                        return response()->json([
+                            'message' => "Only {$p->available_units} units available for " . $p->name,
+                        ], 422);
+                    }
+                    // Force the amount to match unit calculation (don't trust frontend)
+                    $amount = round($units * (float) $p->unit_price, 2);
+                }
             }
+
             $row = [
                 'scheme_id' => (int) $scheme->id,
                 'amount' => $amount,
+                'units' => $units > 0 ? $units : null,
             ];
             if (!empty($projectId)) {
                 $row['project_id'] = (int) $projectId;
@@ -90,6 +110,7 @@ class PaymentController extends Controller
             ];
             if (!empty($item['project_id'])) {
                 $payloadData['project_id'] = (int) $item['project_id'];
+                $payloadData['units'] = $item['units'] ?? null;
             }
             $user->contributions()->create($payloadData);
         }

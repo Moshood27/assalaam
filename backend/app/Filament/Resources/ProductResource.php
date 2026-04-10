@@ -28,6 +28,11 @@ class ProductResource extends Resource
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
+                Forms\Components\Select::make('vendor_id')
+                    ->relationship('vendor', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Internal (Cooperative)'),
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -71,6 +76,10 @@ class ProductResource extends Resource
                 Forms\Components\Toggle::make('is_active')
                     ->label('Active')
                     ->default(true),
+                Forms\Components\Toggle::make('is_approved')
+                    ->label('Approved')
+                    ->disabled(!auth()->user()->is_admin) // Only admins can approve
+                    ->default(fn ($get) => $get('vendor_id') === null), // Auto-approve internal products
                 Forms\Components\Placeholder::make('selling_price_preview')
                     ->label('Selling Price (auto)')
                     ->content(fn ($record, $get) => (function () use ($record, $get) {
@@ -87,19 +96,44 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('category.name')->sortable()->toggleable(),
+                Tables\Columns\TextColumn::make('vendor.name')->label('Vendor')->placeholder('Internal')->sortable()->toggleable(),
                 TextColumn::make('name')->searchable()->wrap()->limit(40),
-                TextColumn::make('stock_quantity')->label('Stock')->numeric()->sortable()->toggleable(),
+                TextColumn::make('stock_quantity')
+                    ->label('Stock')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable()
+                    ->color(fn ($record) => $record->track_stock && $record->stock_quantity <= 5 ? 'danger' : null)
+                    ->icon(fn ($record) => $record->track_stock && $record->stock_quantity <= 5 ? 'heroicon-o-exclamation-triangle' : null),
                 TextColumn::make('cost_price')->label('Cost')->money('ngn', true)->sortable(),
                 TextColumn::make('markup_percent')->label('Markup %')->formatStateUsing(fn ($state) => number_format((float)$state, 2) . '%')->sortable(),
                 TextColumn::make('selling_price')->label('Selling')->money('ngn', true)->sortable(),
                 TextColumn::make('created_at')->since()->label('Created')->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_active')->boolean()->label('Active')->alignCenter(),
+                IconColumn::make('is_approved')->boolean()->label('Approved')->alignCenter(),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')->label('Active')
                     ->trueLabel('Active')->falseLabel('Inactive')->placeholder('All'),
+                Tables\Filters\TernaryFilter::make('is_approved')->label('Approved')
+                    ->trueLabel('Approved')->falseLabel('Pending')->placeholder('All'),
+                Tables\Filters\Filter::make('low_stock')
+                    ->toggle()
+                    ->query(fn ($query) => $query->where('track_stock', true)->where('stock_quantity', '<=', 5)),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn ($record) => !$record->is_approved && auth()->user()->is_admin)
+                    ->action(function ($record) {
+                        $record->update([
+                            'is_approved' => true,
+                            'approved_at' => now(),
+                            'approved_by_id' => auth()->id(),
+                        ]);
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

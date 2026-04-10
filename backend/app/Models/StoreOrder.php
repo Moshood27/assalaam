@@ -36,6 +36,15 @@ class StoreOrder extends Model
         'meta' => 'array',
     ];
 
+    protected static function booted()
+    {
+        static::updated(function ($order) {
+            if ($order->wasChanged('status') && $order->status === 'completed') {
+                $order->processVendorPayouts();
+            }
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -44,5 +53,41 @@ class StoreOrder extends Model
     public function items()
     {
         return $this->hasMany(StoreOrderItem::class);
+    }
+
+    public function processVendorPayouts()
+    {
+        if ($this->status !== 'completed') return;
+
+        foreach ($this->items()->whereNotNull('vendor_id')->whereNull('vendor_paid_at')->get() as $item) {
+            $vendor = $item->vendor;
+            if (!$vendor || !$vendor->owner_user_id) continue;
+
+            $owner = $vendor->owner;
+            if (!$owner) continue;
+
+            \Illuminate\Support\Facades\DB::transaction(function () use ($item, $vendor, $owner) {
+                $owner->increment('balance', $item->vendor_amount);
+
+                $item->update([
+                    'vendor_paid_at' => now(),
+                    'vendor_payout_reference' => 'PAYOUT_' . $this->reference . '_' . $item->id,
+                ]);
+
+                WalletTransaction::create([
+                    'user_id' => $owner->id,
+                    'type' => 'credit',
+                    'amount' => $item->vendor_amount,
+                    'reference' => $item->vendor_payout_reference,
+                    'source' => 'vendor_payout',
+                    'meta' => [
+                        'store_order_id' => $this->id,
+                        'store_order_item_id' => $item->id,
+                        'product_name' => $item->product_name,
+                        'vendor_id' => $vendor->id,
+                    ],
+                ]);
+            });
+        }
     }
 }

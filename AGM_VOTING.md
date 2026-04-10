@@ -7,8 +7,19 @@ Last updated: 2026‑03‑21
 
 ## Goals
 - Enable democratic elections of committee/board positions digitally.
-- Let members review positions and candidates, vote once per position, and see live tallies.
-- Give admins a simple panel to configure AGM sessions, manage candidates, and monitor votes.
+- Weighted Voting: Support both "One Member, One Vote" and "Weighted Voting" (based on share percentage).
+- Project Proposals: Allow members to submit ideas for new investments.
+- Eligibility Gating: Ensure only members in good standing (not defaulters, not deceased) can participate in Shura.
+- Sharia Review: Formal workflow for Sharia compliance review of project proposals.
+- Sharia Board: Dedicated directory of Sharia scholars and advisors within the app.
+- Quorum & Participation: Tracking of eligible voters vs actual participation to ensure constitutional validity of Shura decisions.
+- Results Export: Administrators can export voting results to CSV for official record-keeping.
+- Project Promotion: Administrators can promote successful project proposals to official investment projects with one click.
+- Consultation (Shura): Commenting system for project proposals to allow member discussion.
+- Shura Analytics: Centralized dashboard for monitoring participation rates, vote weights, and governance trends across all activities.
+- Automated Notifications: Push notifications for voting window openings, status changes, and result publications.
+- Automated Scheduling: Console commands (`shura:notify-proposal-voting-open`, `shura:notify-results-published`) to handle high-volume notification delivery.
+- Admin Panel: Give admins a simple panel to configure AGM sessions, manage candidates, review project proposals (Sharia & Status), and monitor votes.
 
 
 ## Roles at a Glance
@@ -27,16 +38,30 @@ Last updated: 2026‑03‑21
 The feature uses three tables/models with constraints that enforce one‑vote‑per‑position per member:
 
 - AgmSession
-  - Fields: id, name, status (draft|open|closed), start_at, end_at, timestamps
+  - Fields: id, name, status (draft|open|closed), voting_type (one_member_one_vote|share_percentage), minimum_quorum, start_at, end_at, voting_open_notified_at, results_notified_at, timestamps
   - Computed attributes: is_open (true if status=open OR current time is within [start_at, end_at]), is_within_window
   - Relations: candidates(), votes()
 - AgmCandidate
   - Fields: id, session_id (FK), name, position, manifesto, photo_url, timestamps
   - Relations: session(), votes()
 - AgmVote
-  - Fields: id, session_id (FK), position, user_id (FK), candidate_id (FK), timestamps
+  - Fields: id, session_id (FK), position, user_id (FK), candidate_id (FK), weight, timestamps
   - Unique constraint: (session_id, position, user_id)
   - Relations: session(), candidate(), user()
+
+- ProjectProposal
+  - Fields: id, user_id (FK), title, description, target_amount, status (pending|approved|voting|closed|rejected), sharia_status (pending_review|compliant|non_compliant), sharia_notes, sharia_certificate_path, fatwa_summary, voting_type (one_member_one_vote|share_percentage), minimum_quorum, voting_start_at, voting_end_at, voting_open_notified_at, results_notified_at, timestamps
+  - Relations: user(), votes(), comments()
+- ProjectProposalVote
+  - Fields: id, project_proposal_id (FK), user_id (FK), choice (yes|no), weight, timestamps
+  - Unique constraint: (project_proposal_id, user_id)
+  - Relations: proposal(), user()
+- ProjectProposalComment
+  - Fields: id, project_proposal_id (FK), user_id (FK), comment, timestamps
+  - Relations: proposal(), user()
+
+- ShariaBoardMember
+  - Fields: id, name, title, bio, photo_url, is_active, sort_order, timestamps
 
 These are defined in:
 - backend/app/Models/AgmSession.php
@@ -47,8 +72,19 @@ These are defined in:
 - backend/database/migrations/2026_03_21_012200_create_agm_votes_table.php
 
 
-## Voting Rules & Lifecycle
+## Voting Rules, Eligibility & Lifecycle
+- Eligibility: Participation in Shura (AGM voting and Project Proposals) is restricted to eligible members.
+  - Defaulters (is_defaulter = true) are blocked from voting and submitting proposals.
+  - Deceased members are blocked.
+  - Logic is centralized in `User::isEligibleForShura()`.
 - Sessions can be “open” explicitly (status=open) OR implicitly by a schedule window where now ∈ [start_at, end_at].
+- Project Proposals:
+  - Members can submit proposals (if eligible).
+  - Proposals undergo Sharia Review (Sharia Status: pending_review -> compliant/non_compliant).
+  - Admins can upload a signed Sharia Certificate (PDF) and provide a Fatwa Summary for compliant proposals.
+  - Admins must approve and set status to 'voting' for members to cast votes.
+  - Members can comment on proposals for consultation (Shura) before/during voting.
+- Quorum: Both AGM sessions and Project Proposals support an optional `minimum_quorum`. Participation metrics (total eligible vs total cast) are displayed in results to verify if the quorum was met.
 - Members can cast one vote per position per session. Once recorded, it cannot be changed from the app.
 - Server validates that the candidate belongs to the given session.
 - Server blocks voting if:
@@ -60,6 +96,7 @@ These are defined in:
 ## Backend APIs (Member‑facing)
 All endpoints are protected with Sanctum and the inactivity middleware. Send the member token with Authorization: Bearer <token>.
 
+### AGM Voting
 Controller: backend/app/Http/Controllers/Api/AgmController.php
 Routes: backend/routes/api.php
 
@@ -90,14 +127,43 @@ Routes: backend/routes/api.php
   - 404 if candidate not in that session.
 
 - GET /api/agm/sessions/{id}/results
-  - Returns aggregated votes per position.
+  - Returns aggregated votes per position (sums weight) and participation metrics.
+  - Includes `is_tied: true` flag if multiple candidates are tied at the top for a position.
   - 200 OK: {
-      session: { ... },
+      session: { ..., minimum_quorum },
       results: {
         "President": [ { candidate_id, candidate_name, votes }, ... ],
         "Secretary": [ ... ]
-      }
+      },
+      participation: { total_eligible, total_cast, percentage, minimum_quorum, quorum_met }
     }
+
+### Sharia Board
+Controller: backend/app/Http/Controllers/Api/ShariaBoardController.php
+
+- GET /api/sharia-board
+  - Returns an active list of Sharia Board members for the directory.
+  - 200 OK: [ { id, name, title, bio, photo_url, ... }, ... ]
+
+### Project Proposals
+Controller: backend/app/Http/Controllers/Api/ProjectProposalController.php
+Routes: backend/routes/api.php
+
+- GET /api/project-proposals
+  - Returns a list of project proposals.
+- POST /api/project-proposals
+  - Body: { "title", "description", "target_amount" (optional) }
+  - Members can submit new investment ideas.
+- GET /api/project-proposals/{id}
+  - Returns proposal details, voting status, results (sums weight), participation metrics, and comments.
+  - Includes `is_tie: true` if 'yes' and 'no' votes are equal (and non-zero).
+  - 200 OK: { proposal: { ..., fatwa_summary, sharia_certificate_path, comments: [...] }, results: { yes, no }, is_tie, participation: { ... }, my_vote: "yes"|"no"|null, is_voting_open }
+- POST /api/project-proposals/{id}/vote
+  - Body: { "choice": "yes"|"no" }
+  - Casts a vote (one_member_one_vote or share_percentage weight).
+- POST /api/project-proposals/{id}/comments
+  - Body: { "comment": string }
+  - Adds a comment to the proposal for consultation.
 
 Authentication & protections:
 - Routes are under: Route::middleware(['auth:sanctum', 'inactivity'])->group(...)
@@ -126,7 +192,10 @@ UI safeguards:
 Admins manage AGM via Filament resources in the backend admin panel.
 
 - AgmSessionResource
-  - Create/edit sessions with: name, status (draft|open|closed), start_at, end_at.
+  - Create/edit sessions with: name, status (draft|open|closed), voting_type, minimum_quorum, start_at, end_at.
+  - Actions:
+    - Open Session / Close Session (with Sharia Audit logging)
+    - Export CSV (Downloads voting results for record-keeping)
   - Filters and badges indicate status; can bulk delete, etc.
   - Relations:
     - Candidates (CandidatesRelationManager)
@@ -134,6 +203,20 @@ Admins manage AGM via Filament resources in the backend admin panel.
       - Shows live votes_count per candidate
     - Votes (VotesRelationManager)
       - Read‑only list of recorded votes: position, candidate, voter, timestamp
+
+- ProjectProposalResource
+  - Manage member-submitted investment ideas.
+  - Sharia Review section: Set sharia_status, upload Certificate (PDF), and Fatwa Summary.
+  - Configuration: status, voting_type, minimum_quorum, start/end times.
+  - Actions:
+    - Promote to Project: Creates an active `Project` record from the proposal (Available for Approved/Closed proposals).
+    - Export CSV (Downloads voting results for record-keeping)
+  - Relations:
+    - Comments (Consultation history)
+
+- ShariaBoardMemberResource
+  - Maintain the directory of Sharia scholars (name, title, bio, photo).
+  - Reorderable list for app display sequence.
 
 Usage guidance:
 1) Create a new session (status=draft while you add candidates).
@@ -214,8 +297,8 @@ These appear in the app under Reports (/reports) with a year selector.
 ## Future Enhancements
 - Anonymous ballot storage with verifiable tallies
 - Tie‑break logic and runoff workflows in results view
-- Exportable CSV/PDF of results for admins
-- Eligibility gating (e.g., only members in good standing may vote)
+- Auto-generate PDF Fatwa certificates from templates
+- Push notifications when quorum is reached
 
 
 ---

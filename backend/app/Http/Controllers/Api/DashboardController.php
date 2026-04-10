@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Models\WalletTransaction;
 use App\Models\QardHasan;
 use App\Models\Contribution;
+use App\Http\Controllers\Api\ZakatController;
 use App\Http\Controllers\Controller;
+use App\Services\GoldSilverPriceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -13,9 +15,35 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    protected $priceService;
+
+    public function __construct(GoldSilverPriceService $priceService)
+    {
+        $this->priceService = $priceService;
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
+
+        // Calculate Zakat status
+        $zakatStatus = null;
+        try {
+            // Instantiate ZakatController to reuse estimate logic
+            $zakatController = app(ZakatController::class);
+            $estimate = $zakatController->estimate($request)->getData(true);
+
+            if ($estimate && isset($estimate['base'], $estimate['nisab'])) {
+                $zakatStatus = [
+                    'eligible' => (bool) ($estimate['eligible'] ?? false),
+                    'zakat_due' => (float) ($estimate['zakat_due'] ?? 0),
+                    'nisab' => (float) $estimate['nisab'],
+                    'reached_nisab' => (bool) ($estimate['base'] >= $estimate['nisab']),
+                ];
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to calculate Zakat status for dashboard: ' . $e->getMessage());
+        }
 
         // Compute profile passport URL if available
         $passportUrl = null;
@@ -69,6 +97,7 @@ class DashboardController extends Controller
             'wallet_balance' => (float) $user->balance,
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,
             'has_pin' => !empty($user->transaction_pin_hash),
+            'attaqwa_score' => (int) $user->attaqwa_score,
         ];
 
         return response()->json([
@@ -94,6 +123,9 @@ class DashboardController extends Controller
                     : null,
             ],
             'kpis' => $kpis,
+            'zakat_status' => $zakatStatus,
+            'is_ramadan' => $this->priceService->isRamadan(),
+            'fitr_amount' => (float) config('zakat.fitr_amount', 3500),
             'transactions' => $walletTransactions,
             'utility_transactions' => $utility,
         ]);

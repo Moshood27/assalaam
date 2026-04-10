@@ -60,6 +60,10 @@
                   </div>
                   <div class="text-emerald-700 font-black text-sm whitespace-nowrap">₦ {{ money(p.selling_price) }}</div>
                 </div>
+                <div v-if="p.vendor" class="flex items-center gap-1 mb-1">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase">Vendor:</span>
+                  <span class="text-[10px] text-emerald-700 font-black truncate">{{ p.vendor.name }}</span>
+                </div>
                 <div v-if="p.track_stock" class="mb-1">
                   <span v-if="p.stock_quantity > 0" class="text-[10px] text-slate-500 font-bold">In Stock: {{ p.stock_quantity }}</span>
                   <span v-else class="text-[10px] text-rose-600 font-black uppercase tracking-widest">Out of Stock</span>
@@ -148,8 +152,12 @@
                   Est. total on credit: ₦ {{ money(creditEstimateTotal) }} • Est. monthly: ₦ {{ money(creditMonthly) }}
                   <div class="mt-1 font-bold text-emerald-700" v-if="eligData">Borrowing Limit: ₦ {{ money(eligData.limit) }}</div>
                 </div>
+                <div class="mt-2 flex items-start gap-2">
+                  <input type="checkbox" v-model="agreedToTerms" class="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                  <label class="text-[10px] text-slate-600">I agree to the Murabahah Financing Terms and authorize the Cooperative to purchase these items on my behalf for resale at the stated cost-plus profit.</label>
+                </div>
                 <div class="mt-2">
-                  <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="placing || !totalQty || !creditValid || exceedsLimit" @click="creditCheckout()">
+                  <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="placing || !totalQty || !creditValid || exceedsLimit || !agreedToTerms" @click="creditCheckout()">
                     Apply & Buy on Credit
                   </button>
                   <div v-if="exceedsLimit" class="mt-1 text-rose-600 text-[10px] font-black uppercase">
@@ -269,6 +277,7 @@ const placeSuccess = ref('')
 const purchaseMode = ref('cash')
 // PIN prompt modal state
 const pinPrompt = ref({ visible: false })
+const agreedToTerms = ref(false)
 
 // Quick view modal state
 const selectedProduct = ref(null)

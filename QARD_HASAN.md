@@ -7,7 +7,7 @@ Applicable date: 2026-04-01
 
 ## 1) Concept Overview
 - Qard Hasan is an interest‑free loan facility for members.
-- Members can request a loan; depending on their Coop Score and policy rules, they may need 2–3 guarantors.
+- Members can request a loan; depending on their Attaqwa Score and policy rules, they may need 2–3 guarantors.
 - Admins review in Filament: Approve/Reject, optionally accept guarantors on behalf of members, and Disburse to the member’s in‑app wallet.
 - Repayment is strictly blocked until the loan is disbursed and becomes Active.
 
@@ -46,11 +46,11 @@ The relevant backend models are:
 - Base principal:
   - First loan: 5% of (Savings + Shares)
   - After completing first loan: 2 × (Savings + Shares)
-- Coop Score limit boost (applies only after the first loan is completed):
+- Attaqwa Score limit boost (applies only after the first loan is completed):
   - Score ≥ 90 → +15%
   - Score ≥ 80 → +10%
   - Score ≥ 70 → +5%
-- Guarantor requirement from Coop Score:
+- Guarantor requirement from Attaqwa Score:
   - Instant approval when score ≥ instant threshold → 0 guarantors
   - Low score → 3 guarantors
   - Otherwise → 2 guarantors
@@ -156,7 +156,7 @@ All outbound notifications are best‑effort and do not block core flows.
 
 ## 9) Quick API Reference
 - GET /api/loans — list the authenticated member’s loans (with repayments and guarantors)
-- GET /api/loans/eligibility — show member eligibility, Coop Score, required_guarantors, and boosted limits
+- GET /api/loans/eligibility — show member eligibility, Attaqwa Score, required_guarantors, and boosted limits
 - POST /api/loans — create a loan (see body schema above)
 - POST /api/loans/{id}/repay — repay a loan (wallet, bank_transfer/ussd instructions, or gateway)
 - GET /api/reports/loans/{id}/schedule — view your amortization schedule and next due installment
@@ -176,7 +176,7 @@ Notes:
 - Admin fee support:
   - Flat fee (admin_fee_flat) and percentage fee (admin_fee_pct up to 2%).
   - Credited amount = principal − (flat + principal × pct/100).
-- Guarantor requirements scale with Coop Score; instant approval requires none and proceeds to immediate disbursement/activation.
+- Guarantor requirements scale with Attaqwa Score; instant approval requires none and proceeds to immediate disbursement/activation.
 
 
 ## 11) Testing Tips
@@ -184,7 +184,7 @@ Notes:
   - Ensure the test member has ≥ 6 months in the system and no open loans.
   - For guarantor path: pick 2–3 non‑defaulter users.
 - Instant approval test:
-  - Temporarily set a high Coop Score for the member (or use a fixture) to trigger 0 guarantors and instant activation/disbursement.
+  - Temporarily set a high Attaqwa Score for the member (or use a fixture) to trigger 0 guarantors and instant activation/disbursement.
 - Repayment (wallet):
   - Top up wallet, then POST /api/loans/{id}/repay with { amount, source: "wallet" } and verify paid_amount and status transitions.
 - Repayment (Paystack/Flutterwave):

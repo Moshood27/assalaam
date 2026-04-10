@@ -42,18 +42,23 @@ class DistributeProjectProfit implements ShouldQueue
         $cutoff = $profit->created_at;
 
         // Aggregate total invested per user up to the profit time
+        $isUnitBased = (bool) ($profit->project->is_unit_based ?? false);
+
         $investments = ProjectInvestment::query()
-            ->selectRaw('user_id, SUM(amount) as total')
+            ->selectRaw('user_id, SUM(amount) as total_amount, SUM(units) as total_units')
             ->where('project_id', $projectId)
             ->where('created_at', '<=', $cutoff)
             ->groupBy('user_id')
             ->get();
 
-        $totalInvested = (float) $investments->sum('total');
+        $totalForCalculation = $isUnitBased
+            ? (float) $investments->sum('total_units')
+            : (float) $investments->sum('total_amount');
+
         $net = (float) $profit->net_distributable;
 
-        if ($totalInvested <= 0 || $net <= 0) {
-            Log::info('No distribution due to zero totals', ['profit_id' => $profit->id, 'total_invested' => $totalInvested, 'net' => $net]);
+        if ($totalForCalculation <= 0 || $net <= 0) {
+            Log::info('No distribution due to zero totals', ['profit_id' => $profit->id, 'total_for_calc' => $totalForCalculation, 'net' => $net]);
             return;
         }
 
@@ -65,7 +70,8 @@ class DistributeProjectProfit implements ShouldQueue
 
         foreach ($investments as $row) {
             $userId = (int) $row->user_id;
-            $share = (float) $row->total / $totalInvested; // 0..1
+            $userTotal = $isUnitBased ? (float) $row->total_units : (float) $row->total_amount;
+            $share = $userTotal / $totalForCalculation; // 0..1
             $rawKobo = $share * $netKobo;
             $floorKobo = (int) floor($rawKobo);
             $alloc[$userId] = $floorKobo;

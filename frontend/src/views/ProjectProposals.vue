@@ -1,0 +1,183 @@
+<template>
+  <div class="min-h-screen bg-slate-50 pb-24 font-sans">
+    <header class="header-fintech">
+      <div class="navbar-inner">
+        <button @click="$router.push('/agm')" class="text-2xl hover:opacity-70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Project Proposals</h1>
+        <div class="w-6"></div>
+      </div>
+    </header>
+
+    <div class="p-4 space-y-4 max-w-md mx-auto">
+      <!-- Action: Submit New Proposal -->
+      <section v-if="!showForm" class="card card-elevated p-5 bg-emerald-600 text-white border-0 shadow-lg shadow-emerald-200">
+        <h2 class="font-black tracking-tight text-lg mb-1">Submit Investment Idea</h2>
+        <p class="text-xs text-emerald-100 mb-4 leading-relaxed">Have a profitable idea for the cooperative? Submit a proposal for Sharia review and member voting.</p>
+        <button @click="showForm = true" class="w-full py-3 bg-white text-emerald-700 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-sm hover:bg-emerald-50 transition-colors">
+          Submit New Proposal
+        </button>
+      </section>
+
+      <!-- Proposal Form -->
+      <section v-if="showForm" class="card card-elevated p-5 space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-black text-slate-800 tracking-tight text-lg">New Proposal</h2>
+          <button @click="showForm = false" class="text-[10px] font-bold uppercase text-slate-400">Cancel</button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[10px] font-black uppercase text-slate-500 mb-1 ml-1">Title</label>
+            <input v-model="form.title" type="text" placeholder="e.g. Fish Farm Investment" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-slate-500 mb-1 ml-1">Description</label>
+            <textarea v-model="form.description" rows="4" placeholder="Detail your idea, expected costs, and returns..." class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"></textarea>
+          </div>
+          <div>
+            <label class="block text-[10px] font-black uppercase text-slate-500 mb-1 ml-1">Target Amount (Optional)</label>
+            <input v-model="form.target_amount" type="number" placeholder="0.00" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" />
+          </div>
+        </div>
+        <button @click="submit" :disabled="submitting" class="w-full py-3 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-md shadow-emerald-100 active:scale-95 transition-all disabled:opacity-50">
+          {{ submitting ? 'Submitting...' : 'Submit Proposal' }}
+        </button>
+      </section>
+
+      <!-- Proposals List -->
+      <section class="card card-elevated p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-black text-slate-800 tracking-tight text-lg">Current Proposals</h2>
+          <button @click="load" class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Refresh</button>
+        </div>
+
+        <div v-if="loading" class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700"></div>
+        </div>
+        <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
+        <div v-else>
+          <div v-if="!proposals.length" class="text-slate-400 text-sm text-center py-12 italic">No proposals found.</div>
+          <ul class="space-y-4">
+            <li v-for="p in proposals" :key="p.id" class="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3 hover:border-emerald-200 transition-colors cursor-pointer" @click="$router.push({ name: 'agm.proposal_detail', params: { id: p.id } })">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1">
+                  <div class="font-bold text-slate-800 leading-tight mb-1">{{ p.title }}</div>
+                  <div class="text-[11px] text-slate-500 line-clamp-2">{{ p.description }}</div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter"
+                        :class="statusClass(p.status)">
+                    {{ p.status }}
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter"
+                        :class="shariaClass(p.sharia_status)">
+                    {{ p.sharia_status }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-1 pt-3 border-t border-slate-100">
+                <div class="text-[9px] text-slate-400 font-bold uppercase">By {{ p.user?.name || 'Unknown' }}</div>
+                <div v-if="p.target_amount" class="text-[10px] font-black text-emerald-700">₦ {{ Number(p.target_amount).toLocaleString() }}</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item group" @click="$router.push('/dashboard')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-item group active" @click="$router.push('/agm')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25v3.375c0 .621.504 1.125 1.125 1.125h3.375M9 15l2.25 2.25L15 12" />
+          </svg>
+          <span>AGM</span>
+        </button>
+        <button class="nav-item group" @click="$router.push('/reports')">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0017.25 3.75H6.75A2.25 2.25 0 004.5 6v12A2.25 2.25 0 006.75 20.25z" />
+          </svg>
+          <span>Reports</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import axios from '../http'
+
+const loading = ref(false)
+const error = ref('')
+const proposals = ref([])
+const showForm = ref(false)
+const submitting = ref(false)
+
+const form = ref({
+  title: '',
+  description: '',
+  target_amount: null
+})
+
+const statusClass = (s) => {
+  switch (s) {
+    case 'approved': return 'bg-blue-100 text-blue-700'
+    case 'voting': return 'bg-emerald-100 text-emerald-700'
+    case 'rejected': return 'bg-rose-100 text-rose-700'
+    case 'closed': return 'bg-slate-100 text-slate-700'
+    default: return 'bg-amber-100 text-amber-700'
+  }
+}
+
+const shariaClass = (s) => {
+  switch (s) {
+    case 'compliant': return 'bg-emerald-100 text-emerald-700'
+    case 'non_compliant': return 'bg-rose-100 text-rose-700'
+    default: return 'bg-amber-100 text-amber-700'
+  }
+}
+
+const load = async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    const { data } = await axios.get('/api/project-proposals')
+    proposals.value = data.data || []
+  } catch (e) {
+    error.value = e?.response?.data?.message || e.message
+  } finally {
+    loading.value = false
+  }
+}
+
+const submit = async () => {
+  if (!form.value.title || !form.value.description) {
+    alert('Please fill in both title and description.')
+    return
+  }
+  submitting.value = true
+  try {
+    await axios.post('/api/project-proposals', form.value)
+    alert('Proposal submitted successfully! It will undergo Sharia review.')
+    showForm.value = false
+    form.value = { title: '', description: '', target_amount: null }
+    await load()
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to submit proposal')
+  } finally {
+    submitting.value = false
+  }
+}
+
+onMounted(load)
+</script>

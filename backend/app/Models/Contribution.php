@@ -27,6 +27,7 @@ class Contribution extends Model
         'scheme_id',
         'project_id',
         'amount',
+        'units',
         'reference',
         'status',
     ];
@@ -43,12 +44,21 @@ class Contribution extends Model
             // If created already successful and linked to a project (e.g., wallet allocation), create investment
             try {
                 if ($model->project_id && $model->status === 'success') {
+                    // Decrement available units if applicable
+                    if ($model->units > 0) {
+                        $project = Project::find($model->project_id);
+                        if ($project && $project->is_unit_based) {
+                            $project->decrement('available_units', $model->units);
+                        }
+                    }
+
                     if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
                         ProjectInvestment::create([
                             'user_id' => $model->user_id,
                             'project_id' => $model->project_id,
                             'contribution_id' => $model->id,
                             'amount' => $model->amount,
+                            'units' => $model->units,
                             'reference' => $model->reference,
                         ]);
                     }
@@ -61,16 +71,32 @@ class Contribution extends Model
         static::updated(function (self $model) {
             // When a contribution tied to a project is marked successful, create a ProjectInvestment once
             try {
-                if ($model->project_id && $model->status === 'success' && $model->wasChanged('status')) {
-                    // Avoid duplicates if re-updated
-                    if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
-                        ProjectInvestment::create([
-                            'user_id' => $model->user_id,
-                            'project_id' => $model->project_id,
-                            'contribution_id' => $model->id,
-                            'amount' => $model->amount,
-                            'reference' => $model->reference,
-                        ]);
+                if ($model->status === 'success' && $model->wasChanged('status')) {
+                    // Update Attaqwa Score
+                    try {
+                        app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
+                    } catch (\Throwable $e) {}
+
+                    if ($model->project_id) {
+                        // Decrement available units if applicable
+                        if ($model->units > 0) {
+                            $project = Project::find($model->project_id);
+                            if ($project && $project->is_unit_based) {
+                                $project->decrement('available_units', $model->units);
+                            }
+                        }
+
+                        // Avoid duplicates if re-updated
+                        if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
+                            ProjectInvestment::create([
+                                'user_id' => $model->user_id,
+                                'project_id' => $model->project_id,
+                                'contribution_id' => $model->id,
+                                'amount' => $model->amount,
+                                'units' => $model->units,
+                                'reference' => $model->reference,
+                            ]);
+                        }
                     }
                 }
             } catch (\Throwable $e) {

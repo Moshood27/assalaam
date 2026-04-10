@@ -21,7 +21,19 @@ class ProductController extends Controller
         $categoryId = (int) $request->get('category_id', 0);
         $sort = trim((string) $request->get('sort', 'newest'));
 
-        $query = Product::query()->with('category')->where('is_active', true);
+        $query = Product::query()
+            ->with(['category', 'vendor'])
+            ->where('is_active', true)
+            ->where(function ($q) {
+                // Internal products are auto-approved by default in the resource, but we still check is_approved for safety
+                $q->where('is_approved', true)
+                  ->where(function ($inner) {
+                      $inner->whereNull('vendor_id')
+                            ->orWhereHas('vendor', function ($vq) {
+                                $vq->where('is_active', true)->where('is_approved', true);
+                            });
+                  });
+            });
         if ($search !== '') {
             $query->where('name', 'like', "%{$search}%");
         }
@@ -60,6 +72,10 @@ class ProductController extends Controller
                 'category' => $p->category ? [
                     'id' => $p->category->id,
                     'name' => $p->category->name,
+                ] : null,
+                'vendor' => $p->vendor ? [
+                    'id' => $p->vendor->id,
+                    'name' => $p->vendor->name,
                 ] : null,
                 'description' => $p->description,
                 'image_url' => $p->image_url,

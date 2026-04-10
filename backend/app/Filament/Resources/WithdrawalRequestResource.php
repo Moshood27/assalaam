@@ -51,6 +51,12 @@ class WithdrawalRequestResource extends Resource
                         return \Illuminate\Support\Str::mask($state, '*', 2, -2);
                     }),
                 TextColumn::make('reference')->label('Ref')->copyable()->searchable(),
+                TextColumn::make('reason')->label('Reason')->toggleable(),
+                Tables\Columns\IconColumn::make('is_vendor_settlement')
+                    ->label('Vendor')
+                    ->boolean()
+                    ->getStateUsing(fn ($record) => (bool)($record->meta['is_vendor_settlement'] ?? false))
+                    ->toggleable(),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
                 TextColumn::make('bank_name')->label('Bank')->toggleable(),
                 TextColumn::make('bank_code')->label('Code')->toggleable(isToggledHiddenByDefault: true),
@@ -78,6 +84,16 @@ class WithdrawalRequestResource extends Resource
                         'paid' => 'Paid',
                         'declined' => 'Declined',
                     ]),
+                Tables\Filters\TernaryFilter::make('vendor_settlement')
+                    ->label('Vendor Settlement')
+                    ->placeholder('All Requests')
+                    ->trueLabel('Only Vendor Settlements')
+                    ->falseLabel('Exclude Vendor Settlements')
+                    ->query(fn (Builder $query, $state) => match ($state) {
+                        '1' => $query->where('meta->is_vendor_settlement', true),
+                        '0' => $query->whereNull('meta->is_vendor_settlement'),
+                        default => $query,
+                    }),
             ])
             ->headerActions([
                 Tables\Actions\Action::make('print')

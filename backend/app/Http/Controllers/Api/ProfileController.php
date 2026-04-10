@@ -120,6 +120,9 @@ class ProfileController extends Controller
             }
         }
 
+        $scoreSvc = app(\App\Services\AttaqwaScoreService::class);
+        $scoreData = $scoreSvc->scoreForUser($user);
+
         return response()->json([
             'id' => (int) $user->id,
             'full_name' => $user->name,
@@ -163,6 +166,25 @@ class ProfileController extends Controller
                 'account_name' => $user->account_name,
                 'has_verified' => (bool) ($user->bank_code && $user->account_number && $user->account_name),
             ],
+            // Member's vendor profile (if exists)
+            'vendor' => $user->vendor ? [
+                'id' => (int) $user->vendor->id,
+                'name' => $user->vendor->name, // Model uses 'name' for business name
+                'is_approved' => (bool) $user->vendor->is_approved,
+                'is_active' => (bool) $user->vendor->is_active,
+                'commission_rate' => (float) $user->vendor->commission_rate,
+            ] : null,
+            'attaqwa_score' => $scoreData['score'],
+            'attaqwa_band' => $scoreData['band'],
+            'attaqwa_breakdown' => $scoreData['breakdown'],
+            'attaqwa_tips' => $scoreSvc->getScoreTips($user),
+            'badges' => $user->badges->map(fn($b) => [
+                'id' => $b->id,
+                'name' => $b->name,
+                'type' => $b->badge_type,
+                'description' => $b->description,
+                'earned_at' => $b->earned_at->toDateTimeString(),
+            ]),
         ]);
     }
 

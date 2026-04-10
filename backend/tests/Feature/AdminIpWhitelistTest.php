@@ -144,21 +144,48 @@ class AdminIpWhitelistTest extends TestCase
         $this->assertNotNull($ip->fresh()->last_used_at);
     }
 
-    public function test_it_combines_static_and_database_whitelists()
+    public function test_it_allows_localhost_in_local_env()
     {
-        Config::set('cooperative.admin_ip_whitelist', ['1.1.1.1']);
-        WhitelistedIp::create(['ip_address' => '2.2.2.2', 'is_active' => true]);
+        Config::set('app.env', 'local');
+        Config::set('cooperative.admin_ip_whitelist', ['1.2.3.4']); // Some non-empty whitelist
 
-        $this->withServerVariables(['REMOTE_ADDR' => '1.1.1.1'])
+        $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
             ->get('/test-ip-whitelist')
             ->assertStatus(200);
 
-        $this->withServerVariables(['REMOTE_ADDR' => '2.2.2.2'])
+        $this->withServerVariables(['REMOTE_ADDR' => '::1'])
             ->get('/test-ip-whitelist')
             ->assertStatus(200);
+    }
 
-        $this->withServerVariables(['REMOTE_ADDR' => '3.3.3.3'])
+    public function test_it_blocks_localhost_in_production_env_if_not_whitelisted()
+    {
+        Config::set('app.env', 'production');
+        Config::set('cooperative.admin_ip_whitelist', ['1.2.3.4']);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
             ->get('/test-ip-whitelist')
-            ->assertStatus(403);
+            ->assertStatus(403)
+            ->assertSee('Unauthorized IP address: 127.0.0.1');
+    }
+
+    public function test_it_shows_ip_in_403_message()
+    {
+        Config::set('cooperative.admin_ip_whitelist', ['1.2.3.4']);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '8.8.8.8'])
+            ->get('/test-ip-whitelist')
+            ->assertStatus(403)
+            ->assertSee('Unauthorized IP address: 8.8.8.8');
+    }
+
+    public function test_it_allows_whitelisted_ip_with_spaces_from_database()
+    {
+        Config::set('cooperative.admin_ip_whitelist', []);
+        WhitelistedIp::create(['ip_address' => ' 5.5.5.5 ', 'is_active' => true]);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '5.5.5.5'])
+            ->get('/test-ip-whitelist')
+            ->assertStatus(200);
     }
 }

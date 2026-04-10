@@ -54,6 +54,34 @@ class ProjectResource extends Resource
                             ->columnSpanFull(),
                     ])->columns(2),
 
+                Forms\Components\Section::make('Investment Units')
+                    ->schema([
+                        Forms\Components\Toggle::make('is_unit_based')
+                            ->label('Is Unit-Based?')
+                            ->reactive()
+                            ->default(false),
+                        Forms\Components\TextInput::make('unit_price')
+                            ->label('Unit Price')
+                            ->numeric()
+                            ->prefix('₦')
+                            ->visible(fn (callable $get) => $get('is_unit_based'))
+                            ->required(fn (callable $get) => $get('is_unit_based')),
+                        Forms\Components\TextInput::make('total_units')
+                            ->label('Total Units')
+                            ->numeric()
+                            ->visible(fn (callable $get) => $get('is_unit_based'))
+                            ->required(fn (callable $get) => $get('is_unit_based'))
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                $set('available_units', $state);
+                            }),
+                        Forms\Components\TextInput::make('available_units')
+                            ->label('Available Units')
+                            ->numeric()
+                            ->visible(fn (callable $get) => $get('is_unit_based'))
+                            ->disabled()
+                            ->dehydrated(true),
+                    ])->columns(4),
+
                 Forms\Components\Section::make('Parameters')
                     ->schema([
                         Forms\Components\TextInput::make('target_amount')
@@ -83,6 +111,9 @@ class ProjectResource extends Resource
             ->columns([
                 TextColumn::make('name')->sortable()->searchable(),
                 IconColumn::make('active')->boolean()->label('Active')->sortable(),
+                IconColumn::make('is_unit_based')->boolean()->label('Units?')->sortable(),
+                TextColumn::make('available_units')->label('Available')->sortable(),
+                TextColumn::make('total_units')->label('Total Units')->sortable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('target_amount')->label('Target')->money('ngn', true)->sortable(),
                 TextColumn::make('management_fee_percent')->label('Mgmt Fee %')->sortable(),
                 TextColumn::make('started_at')->dateTime()->since()->label('Started'),
@@ -125,6 +156,7 @@ class ProjectResource extends Resource
     {
         return [
             RelationManagers\InvestmentsRelationManager::class,
+            RelationManagers\UpdatesRelationManager::class,
             RelationManagers\ProfitsRelationManager::class,
         ];
     }

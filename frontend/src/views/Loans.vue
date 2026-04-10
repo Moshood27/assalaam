@@ -42,17 +42,17 @@
                   </div>
                 </div>
                 <div class="px-5 pb-5 pt-0">
-                  <div v-if="eligibility.coop_score" class="mb-3 p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between">
+                  <div v-if="eligibility.attaqwa_score !== undefined" class="mb-3 p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between">
                     <div>
-                      <p class="text-[10px] text-slate-400 font-bold uppercase">Coop Score</p>
+                      <p class="text-[10px] text-slate-400 font-bold uppercase">Attaqwa Score</p>
                       <p class="text-lg font-black text-slate-800">
-                        {{ Math.round((eligibility.coop_score?.score || 0) * 10) / 10 }}
-                        <span v-if="eligibility.coop_score?.band" class="ml-2 text-[11px] text-slate-500 font-semibold">({{ bandLabel(eligibility.coop_score.band) }})</span>
+                        {{ Math.round((eligibility.attaqwa_score || 0) * 10) / 10 }}
+                        <span v-if="eligibility.band" class="ml-2 text-[11px] text-slate-500 font-semibold">({{ bandLabel(eligibility.band) }})</span>
                       </p>
                     </div>
                     <div class="text-right">
-                      <span v-if="eligibility.instant_approval" class="badge badge-success">Instant approval</span>
-                      <span v-else class="badge badge-warning">Guarantors: {{ eligibility.required_guarantors || 2 }}</span>
+                      <p class="text-[10px] text-emerald-500 font-bold uppercase">Limit Bonus</p>
+                      <p class="text-lg font-black text-emerald-600">+{{ eligibility.score_bonus_pct || 0 }}%</p>
                     </div>
                   </div>
                   <p v-if="Number(eligibility.limit_boost_pct || 0) > 0" class="text-[10px] text-emerald-700 font-semibold mb-2">
@@ -356,7 +356,7 @@ const error = ref('')
 const { notice, showNotice, closeNotice } = useNotice()
 
 // Eligibility and create loan
-const eligibility = ref({ savings: 0, shares: 0, base: 0, eligibility: 0, eligibility_adjusted: 0, months_in_system: 0, is_first_loan: true, can_request: false, reason: '', coop_score: null, instant_approval: false, required_guarantors: 2 })
+const eligibility = ref({ savings: 0, shares: 0, base: 0, eligibility: 0, eligibility_adjusted: 0, months_in_system: 0, is_first_loan: true, can_request: false, reason: '', attaqwa_score: 0, score_bonus_pct: 0, band: '', instant_approval: false, required_guarantors: 2 })
 const createForm = ref({ total_installments: 1, interval: 'monthly', admin_fee_flat: DEFAULT_ADMIN_FEE_FLAT, admin_fee_pct: DEFAULT_ADMIN_FEE_PCT, guarantor1: '', guarantor2: '', guarantor3: '' })
 const creating = ref(false)
 const createMsg = ref('')

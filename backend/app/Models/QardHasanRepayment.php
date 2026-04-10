@@ -31,6 +31,17 @@ class QardHasanRepayment extends Model
         'paid_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::updated(function (self $model) {
+            if ($model->status === 'success' && $model->wasChanged('status')) {
+                try {
+                    app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
+                } catch (\Throwable $e) {}
+            }
+        });
+    }
+
     public function qardHasan()
     {
         return $this->belongsTo(QardHasan::class);

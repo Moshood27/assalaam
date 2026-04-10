@@ -14,7 +14,7 @@ class ProjectInvestment extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['amount', 'reference'])
+            ->logOnly(['amount', 'units', 'reference'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
@@ -24,11 +24,13 @@ class ProjectInvestment extends Model
         'project_id',
         'contribution_id',
         'amount',
+        'units',
         'reference',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'units' => 'integer',
     ];
 
     public function user()

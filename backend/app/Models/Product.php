@@ -13,6 +13,7 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
+        'vendor_id',
         'name',
         'description',
         'cost_price',
@@ -21,15 +22,24 @@ class Product extends Model
         'track_stock',
         'image_url',
         'is_active',
+        'is_approved',
+        'approved_at',
+        'approved_by_id',
     ];
+
+    protected $appends = ['selling_price'];
 
     protected $casts = [
         'category_id' => 'integer',
+        'vendor_id' => 'integer',
         'cost_price' => 'decimal:2',
         'markup_percent' => 'decimal:2',
         'stock_quantity' => 'integer',
         'track_stock' => 'boolean',
         'is_active' => 'boolean',
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
+        'approved_by_id' => 'integer',
     ];
 
     /**
@@ -38,6 +48,51 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Relationship with Vendor model.
+     */
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    /**
+     * Relationship with user who approved the product.
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by_id');
+    }
+
+    /**
+     * Scope for approved products.
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    /**
+     * Check and notify vendor if stock is low.
+     */
+    public function checkLowStock()
+    {
+        if (!$this->track_stock || !$this->vendor_id) return;
+
+        $threshold = (int) config('cooperative.low_stock_threshold', 5);
+
+        if ($this->stock_quantity <= $threshold) {
+            $vendor = $this->vendor;
+            if ($vendor && $vendor->owner) {
+                $vendor->owner->notifyMember(
+                    'Low Stock Alert',
+                    "Your product '{$this->name}' is running low on stock. Current quantity: {$this->stock_quantity}.",
+                    ['product_id' => $this->id, 'type' => 'low_stock']
+                );
+            }
+        }
     }
 
     /**

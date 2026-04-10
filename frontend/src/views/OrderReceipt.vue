@@ -31,11 +31,15 @@
 
         <ul class="divide-y divide-slate-200 bg-white border rounded-xl">
           <li v-for="it in order.items || []" :key="it.id" class="p-3 flex items-center justify-between gap-3">
-            <div>
-              <div class="font-bold text-slate-800">{{ it.product_name }}</div>
-              <div class="text-xs text-slate-500">₦ {{ money(it.unit_price) }} x {{ it.quantity }}</div>
+            <div class="flex-1 min-w-0 pr-2">
+              <div class="font-bold text-slate-800 truncate">{{ it.product_name }}</div>
+              <div class="text-[10px] text-slate-500">
+                <span v-if="it.vendor" class="font-bold text-emerald-700">Vendor: {{ it.vendor.name }}</span>
+                <span v-if="it.vendor" class="mx-1">•</span>
+                <span>₦ {{ money(it.unit_price) }} x {{ it.quantity }}</span>
+              </div>
             </div>
-            <div class="text-sm font-bold">₦ {{ money(it.line_total) }}</div>
+            <div class="text-sm font-bold text-slate-800">₦ {{ money(it.line_total) }}</div>
           </li>
         </ul>
 
@@ -44,8 +48,16 @@
           <span class="text-slate-700">{{ order.meta.note }}</span>
         </div>
 
-        <div class="pt-2 text-xs text-slate-500">Status: <span class="font-bold text-slate-800 uppercase">{{ order.status }}</span></div>
-        <div class="text-xs text-slate-500">Date: {{ new Date(order.created_at).toLocaleString() }}</div>
+        <div class="grid grid-cols-2 gap-4 pt-2">
+          <div>
+            <div class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Order Status</div>
+            <div class="text-xs font-bold uppercase mt-1" :class="statusClass(order.status)">{{ order.status }}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Date</div>
+            <div class="text-xs font-bold text-slate-800 mt-1">{{ new Date(order.created_at).toLocaleString() }}</div>
+          </div>
+        </div>
 
         <div v-if="financing" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-slate-700">
           <div class="font-black uppercase tracking-widest text-amber-700 mb-2">Murabaha Financing</div>
@@ -74,7 +86,8 @@
           <div v-if="paySuccess" class="mt-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded">{{ paySuccess }}</div>
         </div>
 
-        <div class="flex items-center justify-end">
+        <div class="flex items-center justify-end gap-3">
+          <a v-if="financing" :href="getAgreementUrl()" target="_blank" class="px-4 py-2 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 text-sm font-bold">Download Agreement</a>
           <a :href="getDownloadUrl()" target="_blank" class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm">Print / Download PDF</a>
         </div>
       </section>
@@ -260,6 +273,12 @@ const getDownloadUrl = () => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
   return `${baseUrl}/api/download-order-receipt/${id}?token=${encodeURIComponent(token)}`
+}
+
+const getAgreementUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-murabahah-agreement/${id}?token=${encodeURIComponent(token)}`
 }
 
 onMounted(load)

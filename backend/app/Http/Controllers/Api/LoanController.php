@@ -18,7 +18,7 @@ use App\Mail\RepaymentReceiptUser;
 use App\Mail\LoanDisbursedUser;
 use App\Mail\LoanDisbursedAdminNotification;
 use App\Mail\LoanRequestedAdminNotification;
-use App\Services\CoopScoreService;
+use App\Services\AttaqwaScoreService;
 use App\Notifications\LoanApprovedNotification;
 
 class LoanController extends Controller
@@ -43,11 +43,11 @@ class LoanController extends Controller
         $months = $user->monthsInSystem();
         $canRequest = $months >= 6 && ($adj['eligibility_adjusted'] ?? 0) > 0;
 
-        // Coop Score and guidance
-        $scoreSvc = app(CoopScoreService::class);
+        // Attaqwa Score and guidance
+        $scoreSvc = app(AttaqwaScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
-        $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? CoopScoreService::INSTANT_THRESHOLD);
-        $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? CoopScoreService::LOW_THRESHOLD);
+        $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
+        $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
 
         // Score-based limit boost (applies only after first loan is completed)
         $boostPct = 0.0;
@@ -96,11 +96,11 @@ class LoanController extends Controller
             'guarantor_memberships.*' => ['string', 'distinct'],
         ]);
 
-        // Compute Coop Score and derived requirements
-        $scoreSvc = app(CoopScoreService::class);
+        // Compute Attaqwa Score and derived requirements
+        $scoreSvc = app(AttaqwaScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
-        $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? CoopScoreService::INSTANT_THRESHOLD);
-        $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? CoopScoreService::LOW_THRESHOLD);
+        $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
+        $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
         $requiredGuarantors = $instant ? 0 : ($low ? 3 : 2);
 
         // Enforce 6-month membership before requesting any loan
@@ -145,7 +145,7 @@ class LoanController extends Controller
             return response()->json(['message' => 'You must complete your existing loan before taking a new one.'], 422);
         }
 
-        // Validate guarantors based on Coop Score policy
+        // Validate guarantors based on Attaqwa Score policy
         // Build guarantor ID list from either numeric IDs or membership numbers (alphanumeric)
         $guarantorIds = array_values(array_unique(array_map('intval', $data['guarantor_ids'] ?? [])));
         $membershipInputs = $data['guarantor_memberships'] ?? null;

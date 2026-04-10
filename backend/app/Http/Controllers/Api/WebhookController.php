@@ -11,6 +11,8 @@ use App\Models\WalletTransaction;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
 use App\Models\ProjectInvestment;
+use App\Models\SadaqahProject;
+use App\Models\SadaqahContribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -119,6 +121,56 @@ class WebhookController extends Controller
                 ->get();
 
             if ($contributions->isEmpty()) {
+                // Check if this is a Sadaqah Contribution
+                $sadaqahContrib = SadaqahContribution::where('reference', $reference)->first();
+                if ($sadaqahContrib) {
+                    $amountNgn = round(((int) ($vd['amount'] ?? 0)) / 100, 2);
+                    $paidCurrency = $vd['currency'] ?? 'NGN';
+                    if ($paidCurrency !== 'NGN' || ($amountNgn + 0.005) < (float) $sadaqahContrib->amount) {
+                        Log::warning('Paystack webhook: amount/currency mismatch for sadaqah', [
+                            'reference' => $reference,
+                            'paid_amount' => $amountNgn,
+                            'expected' => (float) $sadaqahContrib->amount,
+                            'currency' => $paidCurrency,
+                        ]);
+                        return response()->json(['message' => 'Amount mismatch'], 400);
+                    }
+
+                    if ($sadaqahContrib->status === 'success') {
+                        return response()->json(['status' => 'ok']);
+                    }
+
+                    DB::transaction(function () use ($sadaqahContrib) {
+                        $sadaqahContrib->status = 'success';
+                        $sadaqahContrib->save();
+
+                        $project = SadaqahProject::lockForUpdate()->find($sadaqahContrib->sadaqah_project_id);
+                        if ($project) {
+                            $project->raised_amount = (float) $project->raised_amount + (float) $sadaqahContrib->amount;
+                            $project->save();
+                        }
+                    });
+
+                    // Notify user
+                    try {
+                        $user = User::find($sadaqahContrib->user_id);
+                        if ($user) {
+                            $project = SadaqahProject::find($sadaqahContrib->sadaqah_project_id);
+                            $user->notify(new \App\Notifications\PaymentNotification(
+                                title: 'Sadaqah Contribution Successful',
+                                message: "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
+                                amount: (float) $sadaqahContrib->amount,
+                                reference: $sadaqahContrib->reference,
+                                source: 'sadaqah_contribution'
+                            ));
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('Failed to send Sadaqah webhook notification (Paystack)', ['error' => $e->getMessage()]);
+                    }
+
+                    return response()->json(['status' => 'success']);
+                }
+
                 // First, check if this is a pending loan repayment reference
                 $loanRep = QardHasanRepayment::where('reference', $reference)->first();
                 if ($loanRep) {
@@ -762,6 +814,54 @@ class WebhookController extends Controller
             }
 
             Log::info('Flutterwave payment processed for schemes', ['reference' => $reference, 'user_id' => optional($user)->id]);
+            return response()->json(['status' => 'success']);
+        }
+
+        // Check if this is a Sadaqah Contribution
+        $sadaqahContrib = SadaqahContribution::where('reference', $reference)->first();
+        if ($sadaqahContrib) {
+            if ($currency !== 'NGN' || ($amountNgn + 0.005) < (float) $sadaqahContrib->amount) {
+                Log::warning('Flutterwave webhook: amount/currency mismatch for sadaqah', [
+                    'reference' => $reference,
+                    'paid_amount' => $amountNgn,
+                    'expected' => (float) $sadaqahContrib->amount,
+                    'currency' => $currency,
+                ]);
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+
+            if ($sadaqahContrib->status === 'success') {
+                return response()->json(['status' => 'ok']);
+            }
+
+            DB::transaction(function () use ($sadaqahContrib) {
+                $sadaqahContrib->status = 'success';
+                $sadaqahContrib->save();
+
+                $project = SadaqahProject::lockForUpdate()->find($sadaqahContrib->sadaqah_project_id);
+                if ($project) {
+                    $project->raised_amount = (float) $project->raised_amount + (float) $sadaqahContrib->amount;
+                    $project->save();
+                }
+            });
+
+            // Notify user
+            try {
+                $user = User::find($sadaqahContrib->user_id);
+                if ($user) {
+                    $project = SadaqahProject::find($sadaqahContrib->sadaqah_project_id);
+                    $user->notify(new \App\Notifications\PaymentNotification(
+                        title: 'Sadaqah Contribution Successful',
+                        message: "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
+                        amount: (float) $sadaqahContrib->amount,
+                        reference: $sadaqahContrib->reference,
+                        source: 'sadaqah_contribution'
+                    ));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send Sadaqah webhook notification (Flutterwave)', ['error' => $e->getMessage()]);
+            }
+
             return response()->json(['status' => 'success']);
         }
 

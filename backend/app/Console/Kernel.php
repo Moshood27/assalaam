@@ -33,6 +33,9 @@ class Kernel extends ConsoleKernel
         // The Hunter: hourly sweep to auto-recover overdue loan installments from wallet balances
         $schedule->command('loans:hunter-sweep')->hourly();
 
+        // Murabaha Store: auto-deduct due installments daily at 03:00 Africa/Lagos
+        $schedule->command('murabaha:sweep')->dailyAt('03:00')->timezone('Africa/Lagos');
+
         // VTU provider wallet health check: notify admins if balances drop below threshold
         $schedule->command('vtu:check-balances')->hourly()->timezone('Africa/Lagos');
 

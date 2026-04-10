@@ -44,7 +44,9 @@ class StoreOrderResource extends Resource
                                 'murabaha_pending' => 'Murabaha Application',
                                 'murabaha_active' => 'Murabaha Active',
                                 'processing' => 'Processing',
-                                'completed' => 'Completed/Delivered',
+                                'shipped' => 'Shipped',
+                                'delivered' => 'Delivered',
+                                'completed' => 'Completed/Fullfilled',
                                 'cancelled' => 'Cancelled',
                             ])
                             ->required()
@@ -90,22 +92,52 @@ class StoreOrderResource extends Resource
                                     ->relationship('product', 'name')
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(fn ($state, Forms\Set $set) => (function() use ($state, $set) {
+                                    ->afterStateUpdated(fn ($state, Forms\Set $set, Forms\Get $get) => (function() use ($state, $set, $get) {
                                         if ($state) {
-                                            $product = \App\Models\Product::find($state);
+                                            $product = \App\Models\Product::with('vendor')->find($state);
                                             if ($product) {
                                                 $set('product_name', $product->name);
                                                 $set('unit_price', $product->selling_price);
                                                 $set('unit_cost', $product->cost_price);
+                                                $set('vendor_id', $product->vendor_id);
+
+                                                if ($product->vendor) {
+                                                    $qty = (int)($get('quantity') ?? 1);
+                                                    $cost = (float)$product->cost_price;
+                                                    $comm = (float)($product->vendor->commission_rate ?? 0);
+                                                    $vendorAmount = round(($cost * $qty) * (1 - ($comm / 100)), 2);
+                                                    $set('vendor_amount', $vendorAmount);
+                                                } else {
+                                                    $set('vendor_amount', null);
+                                                }
                                             }
                                         }
                                     })()),
+                                Forms\Components\Select::make('vendor_id')
+                                    ->relationship('vendor', 'name')
+                                    ->disabled()
+                                    ->placeholder('Internal (Coop)')
+                                    ->dehydrated(),
                                 Forms\Components\TextInput::make('product_name')
                                     ->required(),
                                 Forms\Components\TextInput::make('quantity')
                                     ->numeric()
                                     ->default(1)
-                                    ->required(),
+                                    ->required()
+                                    ->live()
+                                    ->afterStateUpdated(fn ($state, Forms\Set $set, Forms\Get $get) => (function() use ($state, $set, $get) {
+                                        $productId = $get('product_id');
+                                        if ($productId) {
+                                            $product = \App\Models\Product::with('vendor')->find($productId);
+                                            if ($product && $product->vendor) {
+                                                $qty = (int)$state;
+                                                $cost = (float)$product->cost_price;
+                                                $comm = (float)($product->vendor->commission_rate ?? 0);
+                                                $vendorAmount = round(($cost * $qty) * (1 - ($comm / 100)), 2);
+                                                $set('vendor_amount', $vendorAmount);
+                                            }
+                                        }
+                                    })()),
                                 Forms\Components\TextInput::make('unit_price')
                                     ->numeric()
                                     ->prefix('₦')
@@ -114,7 +146,12 @@ class StoreOrderResource extends Resource
                                     ->numeric()
                                     ->prefix('₦')
                                     ->required(),
-                            ])->columns(5)
+                                Forms\Components\TextInput::make('vendor_amount')
+                                    ->numeric()
+                                    ->prefix('₦')
+                                    ->disabled()
+                                    ->dehydrated(),
+                            ])->columns(4)
                     ])
             ]);
     }
@@ -151,6 +188,9 @@ class StoreOrderResource extends Resource
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
                     ]),
+                Tables\Filters\SelectFilter::make('vendor')
+                    ->relationship('items.vendor', 'name')
+                    ->label('Vendor'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -191,11 +231,19 @@ class StoreOrderResource extends Resource
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update(['status' => 'completed']);
+                        $record->processVendorPayouts();
                         ShariahAudit::log(auth()->user(), 'complete_store_order', [
                             'order_id' => $record->id,
                             'status' => 'completed',
                         ]);
                     }),
+
+                Tables\Actions\Action::make('download_agreement')
+                    ->label('Agreement')
+                    ->icon('heroicon-o-document-text')
+                    ->color('warning')
+                    ->visible(fn ($record) => ($record->meta['financing']['type'] ?? null) === 'murabaha')
+                    ->url(fn ($record) => route('download-murabahah-agreement', ['id' => $record->id, 'token' => auth()->user()->createToken('filament-export')->plainTextToken]), shouldOpenInNewTab: true),
 
                 Tables\Actions\Action::make('cancel_order')
                     ->label('Cancel')

@@ -75,6 +75,7 @@ class User extends Authenticatable implements FilamentUser
         'notify_email',
         'notify_sms',
         'notify_push',
+        'attaqwa_score',
     ];
 
     /**
@@ -116,6 +117,11 @@ class User extends Authenticatable implements FilamentUser
             'notify_sms' => 'boolean',
             'notify_push' => 'boolean',
         ];
+    }
+
+    public function badges()
+    {
+        return $this->hasMany(UserBadge::class);
     }
 
     public function walletTransactions()
@@ -199,6 +205,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(StoreOrder::class);
     }
 
+    public function vendor()
+    {
+        return $this->hasOne(Vendor::class, 'owner_user_id');
+    }
+
     public function utilityTransactions()
     {
         return $this->hasMany(UtilityTransaction::class);
@@ -234,6 +245,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(ProjectProfitPayout::class);
     }
 
+    public function beneficiaries()
+    {
+        return $this->hasMany(Beneficiary::class);
+    }
+
+    public function juniorAccounts()
+    {
+        return $this->hasMany(JuniorAccount::class);
+    }
+
     public function takafulPoolEntries()
     {
         return $this->hasMany(TakafulPoolEntry::class);
@@ -251,6 +272,22 @@ class User extends Authenticatable implements FilamentUser
         }
 
         return Hash::check($pin, $this->transaction_pin_hash);
+    }
+
+    /**
+     * Check if user is eligible for Shura (Voting and Project Proposals).
+     */
+    public function isEligibleForShura(): bool
+    {
+        if ($this->is_defaulter) {
+            return false;
+        }
+
+        if ($this->deceased_at) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -327,12 +364,18 @@ class User extends Authenticatable implements FilamentUser
         $hasCompleted = $this->hasCompletedLoan();
         $isFirstLoan = ! $hasCompleted;
 
-        $adjusted = $isFirstLoan ? round($base * 0.05, 2) : round($base * 2, 2);
+        $baseAdjusted = $isFirstLoan ? round($base * 0.05, 2) : round($base * 2, 2);
+
+        // Attaqwa Score Bonus: +1% for every 20 points, max +50%
+        $scoreBonus = min(($this->attaqwa_score / 20) / 100, 0.50);
+        $finalEligibility = round($baseAdjusted * (1 + $scoreBonus), 2);
 
         return array_merge($calc, [
             'months_in_system' => $months,
             'is_first_loan' => $isFirstLoan,
-            'eligibility_adjusted' => $adjusted,
+            'attaqwa_score' => $this->attaqwa_score,
+            'score_bonus_pct' => round($scoreBonus * 100, 2),
+            'eligibility_adjusted' => $finalEligibility,
         ]);
     }
 

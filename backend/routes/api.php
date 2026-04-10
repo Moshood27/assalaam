@@ -18,8 +18,11 @@ use App\Http\Controllers\Api\AdminUtilityController;
 use App\Http\Controllers\Api\AdminProfileController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\AgmController;
+use App\Http\Controllers\Api\ProjectProposalController;
+use App\Http\Controllers\Api\ShariaBoardController;
 use App\Http\Controllers\Api\GuarantorController;
 use App\Http\Controllers\Api\ZakatController;
+use App\Http\Controllers\Api\SadaqahController;
 use App\Http\Controllers\Api\AdminProductController;
 use App\Http\Controllers\Api\SecurityController;
 use App\Http\Controllers\Api\ProjectController;
@@ -28,6 +31,10 @@ use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\TakafulController;
 use App\Http\Controllers\Api\TransparencyController;
 use App\Http\Controllers\Api\MerchantPayController;
+use App\Http\Controllers\Api\WasiyyahController;
+use App\Http\Controllers\Api\JuniorCooperativeController;
+use App\Http\Controllers\Api\SupportChatController;
+use App\Http\Controllers\Api\ScoreController;
 
 Route::get('/health', function () {
     return response()
@@ -184,6 +191,20 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Coop Store (member-facing)
     Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']);
     Route::get('/products/categories', [\App\Http\Controllers\Api\ProductController::class, 'categories']);
+
+    // Vendor Portal (authenticated vendors)
+    Route::get('/vendor/profile', [\App\Http\Controllers\Api\VendorController::class, 'profile']);
+    Route::post('/vendor/profile', [\App\Http\Controllers\Api\VendorController::class, 'upsertProfile']);
+    Route::get('/vendor/stats', [\App\Http\Controllers\Api\VendorController::class, 'stats']);
+    Route::get('/vendor/orders', [\App\Http\Controllers\Api\VendorController::class, 'orders']);
+    Route::post('/vendor/orders/{id}/status', [\App\Http\Controllers\Api\VendorController::class, 'updateOrderStatus']);
+    Route::get('/vendor/settlements', [\App\Http\Controllers\Api\VendorController::class, 'settlements']);
+    Route::post('/vendor/settlements', [\App\Http\Controllers\Api\VendorController::class, 'requestSettlement']);
+    Route::get('/vendor/products', [\App\Http\Controllers\Api\VendorProductController::class, 'index']);
+    Route::post('/vendor/products', [\App\Http\Controllers\Api\VendorProductController::class, 'store']);
+    Route::match(['put','patch'], '/vendor/products/{id}', [\App\Http\Controllers\Api\VendorProductController::class, 'update']);
+    Route::delete('/vendor/products/{id}', [\App\Http\Controllers\Api\VendorProductController::class, 'destroy']);
+
     Route::get('/store/eligibility', [\App\Http\Controllers\Api\StoreOrderController::class, 'eligibility']);
     Route::get('/store/orders', [\App\Http\Controllers\Api\StoreOrderController::class, 'index']);
     Route::get('/store/orders/{id}', [\App\Http\Controllers\Api\StoreOrderController::class, 'show']);
@@ -200,7 +221,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Loans (authenticated)
     Route::get('/loans', [LoanController::class, 'index']);
     Route::get('/loans/eligibility', [LoanController::class, 'eligibility']);
-    Route::get('/coop-score', [\App\Http\Controllers\Api\ScoreController::class, 'show']);
+    Route::get('/coop-score', [ScoreController::class, 'show']);
     Route::post('/loans', [LoanController::class, 'store']);
     Route::post('/loans/{id}/repay', [LoanController::class, 'repay']);
     Route::post('/loans/{id}/agreement', [LoanController::class, 'uploadAgreement']);
@@ -210,6 +231,14 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/agm/sessions/{id}/candidates', [AgmController::class, 'candidates']);
     Route::post('/agm/sessions/{id}/vote', [AgmController::class, 'vote']);
     Route::get('/agm/sessions/{id}/results', [AgmController::class, 'results']);
+
+    // Project Proposals
+    Route::get('/sharia-board', [ShariaBoardController::class, 'index']);
+    Route::get('/project-proposals', [ProjectProposalController::class, 'index']);
+    Route::post('/project-proposals', [ProjectProposalController::class, 'store']);
+    Route::get('/project-proposals/{id}', [ProjectProposalController::class, 'show']);
+    Route::post('/project-proposals/{id}/vote', [ProjectProposalController::class, 'vote']);
+    Route::post('/project-proposals/{id}/comments', [ProjectProposalController::class, 'storeComment']);
 
     // Guarantor digital approvals
     Route::get('/guarantor/requests', [GuarantorController::class, 'listRequests']);
@@ -228,6 +257,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/download-passbook', [ExportController::class, 'downloadPassbook']);
     Route::get('/download-loan-schedule/{id}', [ExportController::class, 'downloadLoanSchedule']);
     Route::get('/download-loan-agreement/{id}', [ExportController::class, 'downloadLoanAgreement'])->name('download-loan-agreement');
+    Route::get('/download-murabahah-agreement/{id}', [ExportController::class, 'downloadMurabahahAgreement'])->name('download-murabahah-agreement');
     Route::get('/download-dividend/{year}', [ExportController::class, 'downloadDividend']);
     Route::get('/download-appropriation/{year}', [ExportController::class, 'downloadAppropriation']);
     Route::get('/download-financials/{year}', [ExportController::class, 'downloadFinancials']);
@@ -236,6 +266,26 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Zakat
     Route::get('/zakat/estimate', [ZakatController::class, 'estimate']);
     Route::post('/zakat/pay', [ZakatController::class, 'pay']);
+    Route::post('/zakat/pay-fitr', [ZakatController::class, 'payFitr']);
+
+    // Sadaqah Jariyah Crowdfunding
+    Route::get('/sadaqah/projects', [SadaqahController::class, 'index']);
+    Route::get('/sadaqah/my-contributions', [SadaqahController::class, 'myContributions']);
+    Route::get('/sadaqah/projects/{id}', [SadaqahController::class, 'show']);
+    Route::post('/sadaqah/projects/{id}/contribute', [SadaqahController::class, 'contribute']);
+
+    // Wasiyyah (Beneficiaries)
+    Route::get('/wasiyyah', [WasiyyahController::class, 'index']);
+    Route::post('/wasiyyah', [WasiyyahController::class, 'store']);
+    Route::patch('/wasiyyah/{id}', [WasiyyahController::class, 'update']);
+    Route::delete('/wasiyyah/{id}', [WasiyyahController::class, 'destroy']);
+
+    // Junior Cooperative (Children's Savings)
+    Route::get('/junior-cooperative', [JuniorCooperativeController::class, 'index']);
+    Route::post('/junior-cooperative', [JuniorCooperativeController::class, 'store']);
+    Route::post('/junior-cooperative/{id}/deposit', [JuniorCooperativeController::class, 'deposit']);
+    Route::post('/junior-cooperative/{id}/withdraw', [JuniorCooperativeController::class, 'withdraw']);
+    Route::get('/junior-cooperative/{id}/history', [JuniorCooperativeController::class, 'history']);
 
     // In-App Notifications (Inbox)
     Route::get('/notifications', [NotificationsController::class, 'index']);
@@ -243,9 +293,9 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/notifications/read-all', [NotificationsController::class, 'readAll']);
 
     // In-App Support Chat (member)
-    Route::get('/support/messages', [\App\Http\Controllers\Api\SupportChatController::class, 'index']);
-    Route::post('/support/messages', [\App\Http\Controllers\Api\SupportChatController::class, 'store']);
-    Route::post('/support/read', [\App\Http\Controllers\Api\SupportChatController::class, 'markRead']);
+    Route::get('/support/messages', [SupportChatController::class, 'index']);
+    Route::post('/support/messages', [SupportChatController::class, 'store']);
+    Route::post('/support/read', [SupportChatController::class, 'markRead']);
 });
 
 // Existing Qard Hasan prototype endpoints (kept)

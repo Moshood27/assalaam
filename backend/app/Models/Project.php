@@ -17,6 +17,10 @@ class Project extends Model
         'target_amount',
         'management_fee_percent',
         'active',
+        'is_unit_based',
+        'unit_price',
+        'total_units',
+        'available_units',
         'started_at',
         'closed_at',
     ];
@@ -24,6 +28,10 @@ class Project extends Model
     protected $casts = [
         'target_amount' => 'decimal:2',
         'management_fee_percent' => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'is_unit_based' => 'boolean',
+        'total_units' => 'integer',
+        'available_units' => 'integer',
         'active' => 'boolean',
         'started_at' => 'datetime',
         'closed_at' => 'datetime',
@@ -38,5 +46,10 @@ class Project extends Model
     public function profits()
     {
         return $this->hasMany(ProjectProfit::class);
+    }
+
+    public function updates()
+    {
+        return $this->hasMany(ProjectUpdate::class)->latest();
     }
 }
