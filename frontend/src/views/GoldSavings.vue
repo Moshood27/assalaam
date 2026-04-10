@@ -321,10 +321,10 @@ const chartOptions = computed(() => ({
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await axios.get('/gold/price')
+    const res = await axios.get('/api/gold/price')
     goldData.value = res.data
     
-    const histRes = await axios.get('/gold/history')
+    const histRes = await axios.get('/api/gold/history')
     history.value = histRes.data.data
   } catch (err) {
     console.error(err)
@@ -338,7 +338,7 @@ const handleBuy = async () => {
   if (!confirm(`Confirm buying gold for ₦${form.value.amount}?`)) return
   loading.value = true
   try {
-    const res = await axios.post('/gold/buy', {
+    const res = await axios.post('/api/gold/buy', {
       amount_naira: form.value.amount,
       pin: form.value.pin
     })
@@ -356,7 +356,7 @@ const handleSell = async () => {
   if (!confirm(`Confirm selling ${form.value.grams}g of gold?`)) return
   loading.value = true
   try {
-    const res = await axios.post('/gold/sell', {
+    const res = await axios.post('/api/gold/sell', {
       grams: form.value.grams,
       pin: form.value.pin
     })
@@ -372,7 +372,7 @@ const handleSell = async () => {
 
 const exportTransactions = async () => {
   try {
-    const response = await axios.get('/gold/export', { responseType: 'blob' })
+    const response = await axios.get('/api/gold/export', { responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
     link.href = url
