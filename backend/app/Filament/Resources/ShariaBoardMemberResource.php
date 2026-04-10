@@ -58,7 +58,7 @@ class ShariaBoardMemberResource extends Resource
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
             ->filters([
-                Tables\Filters\ToggledFilter::make('is_active'),
+                Tables\Filters\TernaryFilter::make('is_active')->label('Active'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

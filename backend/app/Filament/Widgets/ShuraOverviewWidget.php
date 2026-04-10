@@ -21,14 +21,9 @@ class ShuraOverviewWidget extends BaseWidget
         $activeAgms = AgmSession::where('status', 'open')->count();
         $activeProposals = ProjectProposal::where('status', 'voting')->count();
 
-        $totalEligibleVoters = User::where('is_active', true)
+        $totalEligibleVoters = User::query()
+            ->where('is_defaulter', false)
             ->whereNull('deceased_at')
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('loans')
-                    ->whereColumn('loans.user_id', 'users.id')
-                    ->where('loans.status', 'defaulted');
-            })
             ->count();
 
         $totalAgmVotes = AgmVote::distinct('user_id')->count('user_id');
