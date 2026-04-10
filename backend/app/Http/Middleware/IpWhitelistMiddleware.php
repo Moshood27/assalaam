@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 use App\Models\WhitelistedIp;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class IpWhitelistMiddleware
 {
@@ -40,6 +41,11 @@ class IpWhitelistMiddleware
 
         $clientIp = $request->ip();
 
+        // Always allow localhost/loopback in development or if explicitly allowed
+        if (app()->environment('local') && in_array($clientIp, ['127.0.0.1', '::1'])) {
+            return $next($request);
+        }
+
         // Check if the client IP is in the whitelist (exact match)
         if (in_array($clientIp, $fullWhitelist)) {
             $this->updateLastUsed($clientIp);
@@ -54,7 +60,9 @@ class IpWhitelistMiddleware
             }
         }
 
-        abort(403, 'Unauthorized IP address.');
+        Log::warning("Unauthorized IP address access attempt: {$clientIp} on " . $request->fullUrl());
+
+        abort(403, 'Unauthorized IP address: ' . $clientIp);
     }
 
     /**
