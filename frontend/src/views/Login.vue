@@ -68,11 +68,11 @@
           </div>
 
           <div v-if="biometricSupported" class="flex items-center gap-3 px-1">
-            <div class="relative inline-flex items-center cursor-pointer">
-              <input id="rememberBio" v-model="rememberWithBiometrics" type="checkbox" class="sr-only peer" />
-              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-              <label for="rememberBio" class="ml-3 text-sm font-medium text-slate-600 select-none">Enable biometric login</label>
-            </div>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input v-model="rememberWithBiometrics" type="checkbox" class="sr-only peer" />
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <span class="ml-3 text-sm font-medium text-slate-600">Enable biometric login</span>
+            </label>
           </div>
 
           <div class="space-y-4 pt-2">

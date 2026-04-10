@@ -4,3 +4,7 @@ google-services.json*
 backend/storage/app/firebase-auth.json
 docker-compose.yml
 docker-compose.pro.yml
+*.jks
+*.keystore
+
+
