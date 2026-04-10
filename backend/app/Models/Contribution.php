@@ -22,6 +22,11 @@ class Contribution extends Model
             ->dontLogEmptyChanges();
     }
 
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'units' => 'decimal:6',
+    ];
+
     protected $fillable = [
         'user_id',
         'scheme_id',

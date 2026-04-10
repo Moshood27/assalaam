@@ -207,7 +207,7 @@
           </div>
           <div class="text-right">
             <p :class="['font-bold text-sm', tx.amount > 0 ? 'text-emerald-600' : 'text-amber-600']">
-              {{ tx.amount > 0 ? '+' : '' }}{{ tx.units.toFixed(6) }} g
+              {{ tx.amount > 0 ? '+' : '' }}{{ Number(tx.units || 0).toFixed(6) }} g
             </p>
             <p class="text-[10px] text-slate-400">₦ {{ formatMoney(Math.abs(tx.amount)) }}</p>
           </div>
