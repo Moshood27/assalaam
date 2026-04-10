@@ -10,6 +10,11 @@ class ListAuditTrails extends ListRecords
 {
     protected static string $resource = AuditTrailResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'General system audit trail for tracking model changes and events.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [];

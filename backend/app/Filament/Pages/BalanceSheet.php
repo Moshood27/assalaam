@@ -15,6 +15,11 @@ class BalanceSheet extends Page
 
     protected static string $view = 'filament.pages.balance-sheet';
 
+    public function getSubheading(): ?string
+    {
+        return 'Financial snapshot of assets, liabilities, and equity at a specific time.';
+    }
+
     public ?string $as_of = null;
     public array $report = [];
 

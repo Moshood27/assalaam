@@ -10,6 +10,11 @@ class ListSavingsGoals extends ListRecords
 {
     protected static string $resource = SavingsGoalResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Define and manage target savings goals available for members.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

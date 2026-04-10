@@ -10,6 +10,11 @@ class ListGoalBookings extends ListRecords
 {
     protected static string $resource = GoalBookingResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage member bookings and commitments towards specific savings goals.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

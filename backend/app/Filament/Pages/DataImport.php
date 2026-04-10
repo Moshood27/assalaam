@@ -18,6 +18,11 @@ class DataImport extends Page
 
     protected static string $view = 'filament.pages.data-import';
 
+    public function getSubheading(): ?string
+    {
+        return 'Batch import data from CSV or other file formats into the system.';
+    }
+
     public $membersFile;
     public $schemesFile;
     public $loansFile;

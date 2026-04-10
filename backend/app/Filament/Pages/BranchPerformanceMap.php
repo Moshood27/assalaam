@@ -18,6 +18,11 @@ class BranchPerformanceMap extends Page
 
     protected static ?string $navigationGroup = 'Analytics';
 
+    public function getSubheading(): ?string
+    {
+        return 'Visualise branch locations and key performance metrics on a map.';
+    }
+
     public Collection $branches;
 
     public function mount(): void

@@ -10,6 +10,11 @@ class ListWhitelistedIps extends ListRecords
 {
     protected static string $resource = WhitelistedIpResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Secure the admin panel by restricting access to specific IP addresses.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

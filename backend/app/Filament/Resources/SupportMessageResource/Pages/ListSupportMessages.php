@@ -9,6 +9,11 @@ class ListSupportMessages extends ListRecords
 {
     protected static string $resource = SupportMessageResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage and respond to member support queries and tickets.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

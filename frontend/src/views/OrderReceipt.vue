@@ -147,6 +147,14 @@ const error = ref('')
 
 const money = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
+const statusClass = (status) => {
+  const s = String(status || '').toLowerCase()
+  if (s === 'paid' || s === 'completed' || s === 'success' || s === 'delivered') return 'text-emerald-700'
+  if (s === 'pending' || s === 'processing' || s === 'shipped' || s.includes('murabaha')) return 'text-amber-600'
+  if (s === 'failed' || s === 'cancelled') return 'text-rose-700'
+  return 'text-slate-500'
+}
+
 const financing = computed(() => (order.value?.meta && order.value.meta.financing) ? order.value.meta.financing : null)
 const financingRate = computed(() => {
   const r = Number(financing.value?.profit_rate || 0)

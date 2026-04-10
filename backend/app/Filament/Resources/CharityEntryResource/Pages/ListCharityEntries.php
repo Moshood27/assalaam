@@ -11,6 +11,11 @@ class ListCharityEntries extends ListRecords
 {
     protected static string $resource = CharityEntryResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Record and manage charitable donations and Sadaqah distributions.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

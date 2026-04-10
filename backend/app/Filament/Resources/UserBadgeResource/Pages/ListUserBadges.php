@@ -10,6 +10,11 @@ class ListUserBadges extends ListRecords
 {
     protected static string $resource = UserBadgeResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage badges and recognition awards for system users.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

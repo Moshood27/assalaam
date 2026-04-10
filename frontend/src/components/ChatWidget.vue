@@ -14,6 +14,9 @@ let lastPage = 1
 const listEl = ref(null)
 
 async function fetchProfile() {
+  const token = localStorage.getItem('token')
+  if (!token) return
+
   try {
     const { data } = await axios.get('/api/profile')
     userId.value = data?.id || null

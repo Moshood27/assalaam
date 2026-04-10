@@ -14,6 +14,11 @@ class ListSchemes extends ListRecords
 {
     protected static string $resource = SchemeResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage various cooperative schemes, membership types, and their rules.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

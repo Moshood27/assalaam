@@ -11,6 +11,11 @@ class ListContributions extends ListRecords
 {
     protected static string $resource = ContributionResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Monitor and track periodic contributions and member subscriptions.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

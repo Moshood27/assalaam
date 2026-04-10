@@ -16,6 +16,11 @@ class TrialBalance extends Page
 
     protected static string $view = 'filament.pages.trial-balance';
 
+    public function getSubheading(): ?string
+    {
+        return 'Comprehensive list of all ledger balances for auditing and verification.';
+    }
+
     public ?string $from = null;
     public ?string $to = null;
 

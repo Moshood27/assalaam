@@ -11,6 +11,11 @@ class ListBranches extends ListRecords
 {
     protected static string $resource = BranchResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage organizational branches, their locations, and basic settings.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

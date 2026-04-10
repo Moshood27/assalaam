@@ -10,6 +10,11 @@ class ListStoreOrders extends ListRecords
 {
     protected static string $resource = StoreOrderResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Process and track customer orders from the cooperative\'s e-commerce store.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

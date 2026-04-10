@@ -10,6 +10,11 @@ class ListShariaBoardMembers extends ListRecords
 {
     protected static string $resource = ShariaBoardMemberResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage profiles and details of Sharia Board members.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

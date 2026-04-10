@@ -119,12 +119,29 @@
         <div class="px-6 py-4 bg-emerald-50/40 rounded-2xl border border-emerald-100/40 text-slate-600 text-[13px] leading-relaxed max-w-[280px] mx-auto">
           Finding it difficult to sign in or want to know more about our Cooperative?
           <br />
-          <router-link to="/support" class="text-emerald-700 font-bold hover:text-emerald-800 inline-flex items-center justify-center gap-1 mt-2 w-full">
+          <button @click="showSupportModal = true" class="text-emerald-700 font-bold hover:text-emerald-800 inline-flex items-center justify-center gap-1 mt-2 w-full">
             <span>Contact Support</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
             </svg>
-          </router-link>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Public Support Modal (Immediate Help) -->
+    <div v-if="showSupportModal" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showSupportModal = false"></div>
+      <div class="relative w-full max-w-md bg-slate-50 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <div class="p-6 bg-white border-b flex items-center justify-between">
+          <h2 class="text-xl font-bold text-slate-800">Contact Support</h2>
+          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">✕</button>
+        </div>
+        <div class="p-6">
+          <SupportContacts />
+          <div class="mt-6 text-center">
+            <router-link to="/support" class="text-sm font-bold text-emerald-700 hover:underline">View full support page</router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -137,6 +154,7 @@ import axios from '../http.js'
 import { Capacitor } from '@capacitor/core'
 import { useRouter, useRoute } from 'vue-router'
 import SearchableSelect from '../components/SearchableSelect.vue'
+import SupportContacts from '../components/SupportContacts.vue'
 import brand from '../brand'
 import { getBiometricAvailabilityDetails, canQuickLogin as canQuickLoginSvc, quickLoginViaBiometric, storeBiometricCredentials } from '../services/biometric'
 
@@ -146,6 +164,7 @@ const branches = ref([])
 const loading = ref(false)
 const showPassword = ref(false)
 const error = ref('')
+const showSupportModal = ref(false)
 
 const biometricSupported = ref(false)
 const canBiometricQuickLogin = ref(false)

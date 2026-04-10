@@ -10,6 +10,11 @@ class ListVendors extends ListRecords
 {
     protected static string $resource = VendorResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage third-party vendors and service providers.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

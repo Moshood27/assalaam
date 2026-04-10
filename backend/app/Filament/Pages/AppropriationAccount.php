@@ -15,6 +15,11 @@ class AppropriationAccount extends Page
 
     protected static string $view = 'filament.pages.appropriation-account';
 
+    public function getSubheading(): ?string
+    {
+        return 'Financial appropriation of profits and reserves accounting.';
+    }
+
     public ?string $from = null;
     public ?string $to = null;
 

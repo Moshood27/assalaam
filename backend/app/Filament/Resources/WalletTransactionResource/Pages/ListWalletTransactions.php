@@ -10,6 +10,11 @@ class ListWalletTransactions extends ListRecords
 {
     protected static string $resource = WalletTransactionResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Detailed ledger of all digital wallet transactions and movements.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -16,6 +16,11 @@ class ShuraAnalytics extends Page
 
     protected static string $view = 'filament.pages.shura-analytics';
 
+    public function getSubheading(): ?string
+    {
+        return 'Analytical insights into Shura membership participation and governance.';
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [

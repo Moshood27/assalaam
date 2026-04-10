@@ -14,6 +14,11 @@ class ListQardHasans extends ListRecords
 {
     protected static string $resource = QardHasanResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage interest-free (Qard Hasan) loan applications and repayments.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

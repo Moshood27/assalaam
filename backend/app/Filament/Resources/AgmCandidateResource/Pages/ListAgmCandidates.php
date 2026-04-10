@@ -10,6 +10,11 @@ class ListAgmCandidates extends ListRecords
 {
     protected static string $resource = AgmCandidateResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage candidates and nominees for the Annual General Meeting elections.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

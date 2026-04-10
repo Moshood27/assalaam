@@ -14,6 +14,11 @@ class ListUsers extends ListRecords
 {
     protected static string $resource = UserResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage system users, their roles, permissions, and basic profiles.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

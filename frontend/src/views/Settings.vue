@@ -13,45 +13,11 @@
     </header>
 
     <div class="p-4 space-y-4">
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">WhatsApp Contacts</p>
-        <div class="space-y-3">
-          <a :href="wa('2348012345678')" target="_blank" class="flex items-center justify-between p-4 rounded-2xl border hover:bg-emerald-50">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl">🟢</span>
-              <div>
-                <p class="font-bold text-slate-800">Support 1</p>
-                <p class="text-xs text-slate-500">Tap to chat on WhatsApp</p>
-              </div>
-            </div>
-            <span class="text-emerald-700 font-bold">Open</span>
-          </a>
-          <a :href="wa('2348098765432')" target="_blank" class="flex items-center justify-between p-4 rounded-2xl border hover:bg-emerald-50">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl">🟢</span>
-              <div>
-                <p class="font-bold text-slate-800">Support 2</p>
-                <p class="text-xs text-slate-500">Tap to chat on WhatsApp</p>
-              </div>
-            </div>
-            <span class="text-emerald-700 font-bold">Open</span>
-          </a>
-          <a :href="wa('2348076543210')" target="_blank" class="flex items-center justify-between p-4 rounded-2xl border hover:bg-emerald-50">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl">🟢</span>
-              <div>
-                <p class="font-bold text-slate-800">Support 3</p>
-                <p class="text-xs text-slate-500">Tap to chat on WhatsApp</p>
-              </div>
-            </div>
-            <span class="text-emerald-700 font-bold">Open</span>
-          </a>
-        </div>
-      </div>
+      <SupportContacts />
 
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Help</p>
-        <button v-if="false" @click="openWebPortal" class="btn-primary w-full h-12">Open Web Passbook</button>
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 text-center">
+        <p class="text-xs text-slate-400 mb-4">Version 1.1.0</p>
+        <button @click="logout" class="w-full py-3 rounded-2xl bg-rose-50 text-rose-600 font-bold hover:bg-rose-100 transition-colors">Sign Out</button>
       </div>
     </div>
 
@@ -77,6 +43,13 @@
 </template>
 
 <script setup>
-const wa = (phone) => `https://wa.me/${phone}`
-const openWebPortal = () => window.open('https://portal.example.com', '_blank')
+import { useRouter } from 'vue-router'
+import SupportContacts from '../components/SupportContacts.vue'
+
+const router = useRouter()
+const logout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('admin_token')
+  router.push('/login')
+}
 </script>

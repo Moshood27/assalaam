@@ -10,6 +10,11 @@ class ListAgmSessions extends ListRecords
 {
     protected static string $resource = AgmSessionResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Oversee and track AGM sessions, agendas, and voting processes.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -17,6 +17,11 @@ class LoanMonitoring extends Page
 
     protected static string $view = 'filament.pages.loan-monitoring';
 
+    public function getSubheading(): ?string
+    {
+        return 'Track and monitor loan performance, repayments, and defaults.';
+    }
+
     public array $membersOnLoan = [];
     public array $defaulters = [];
 

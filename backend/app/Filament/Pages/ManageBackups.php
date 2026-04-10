@@ -31,6 +31,11 @@ class ManageBackups extends Page implements HasTable
 
     protected static string $view = 'filament.pages.manage-backups';
 
+    public function getSubheading(): ?string
+    {
+        return 'Maintain system database and file backups for disaster recovery.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -15,6 +15,11 @@ class IncomeAndExpenditure extends Page
 
     protected static string $view = 'filament.pages.income-and-expenditure';
 
+    public function getSubheading(): ?string
+    {
+        return 'Detailed view of organization\'s income sources and expenditure items.';
+    }
+
     public ?string $from = null;
     public ?string $to = null;
 

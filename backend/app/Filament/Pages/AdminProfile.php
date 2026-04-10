@@ -15,6 +15,11 @@ class AdminProfile extends Page
 
     protected static string $view = 'filament.pages.admin-profile';
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage your administrator account details, email, and password.';
+    }
+
     public ?string $name = null;
     public ?string $email = null;
 

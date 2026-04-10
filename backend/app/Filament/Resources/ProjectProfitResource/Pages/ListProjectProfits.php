@@ -10,6 +10,11 @@ class ListProjectProfits extends ListRecords
 {
     protected static string $resource = ProjectProfitResource::class;
 
+    public function getSubheading(): ?string
+    {
+        return 'Manage the distribution and tracking of profits from investment projects.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
