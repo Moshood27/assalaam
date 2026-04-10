@@ -375,7 +375,7 @@ const loadTvBundles = async () => {
 const verifyMerchant = async () => {
   const serviceID = tab.value === 'electricity' ? electricity.value.disco : cable.value.service
   const billersCode = tab.value === 'electricity' ? electricity.value.meter : cable.value.smartcard
-  const type = tab.value === 'cable' ? (selectedTvBundle.value?.type || 'renewal') : null
+  const type = tab.value === 'cable' ? (selectedTvBundle.value?.type || 'renewal') : (tab.value === 'electricity' ? electricity.value.meterType : null)
 
   if (!serviceID || !billersCode) return
 
@@ -391,7 +391,7 @@ const verifyMerchant = async () => {
       type
     })
 
-    const name = data?.customer_name || data?.Customer_Name || data?.content?.Customer_Name || data?.content?.customer_name;
+    const name = data?.customer_name || data?.Customer_Name || data?.customername || data?.content?.Customer_Name || data?.content?.customer_name;
     if (name) {
       verification.value.customerName = name
       verification.value.verified = true

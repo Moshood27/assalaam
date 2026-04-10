@@ -2118,9 +2118,13 @@ class UtilityController extends Controller
         $body = $response['body'];
         // Nellobyte returns { customer_name: "..." }
         // VTpass returns { content: { Customer_Name: "..." } }
-        $customerName = $body['customer_name'] ?? ($body['Customer_Name'] ?? ($body['content']['Customer_Name'] ?? null));
+        $customerName = $body['customer_name'] ?? $body['Customer_Name'] ?? $body['customername'] ?? $body['content']['Customer_Name'] ?? $body['content']['customer_name'] ?? null;
 
-        if (!$customerName || str_contains(strtoupper($customerName), 'INVALID')) {
+        if (!$customerName ||
+            str_contains(strtoupper($customerName), 'INVALID') ||
+            str_contains(strtoupper($customerName), 'NOT FOUND') ||
+            strtoupper(trim($customerName)) === 'N/A'
+        ) {
             return response()->json([
                 'message' => 'Verification failed',
                 'details' => $body
@@ -2559,6 +2563,12 @@ class UtilityController extends Controller
     private function isVtpassSuccess($body): bool
     {
         if (is_array($body)) {
+            // Verification responses (electricity/cable)
+            $cname = strtoupper(trim((string)($body['customer_name'] ?? $body['Customer_Name'] ?? $body['customername'] ?? $body['content']['Customer_Name'] ?? $body['content']['customer_name'] ?? '')));
+            if ($cname !== '' && ($cname === 'N/A' || str_contains($cname, 'INVALID') || str_contains($cname, 'NOT FOUND'))) {
+                return false;
+            }
+
             // VTpass standard success code
             $code = (string)($body['code'] ?? ($body['data']['code'] ?? ''));
             if ($code === '000') return true;
@@ -2573,12 +2583,9 @@ class UtilityController extends Controller
                 return true;
             }
 
-            // Verification responses (electricity/cable)
-            if (isset($body['customer_name']) || isset($body['Customer_Name'])) {
-                $cname = strtoupper((string)($body['customer_name'] ?? $body['Customer_Name']));
-                if (!str_contains($cname, 'INVALID') && !str_contains($cname, 'NOT FOUND')) {
-                    return true;
-                }
+            // If a non-empty, non-invalid name is present, consider it success
+            if ($cname !== '') {
+                return true;
             }
 
             // 2. Check for "success" or "successful" or "delivered" strings
