@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('agm_sessions', function (Blueprint $table) {
-            $table->timestamp('voting_open_notified_at')->nullable();
+            if (!Schema::hasColumn('agm_sessions', 'voting_open_notified_at')) {
+                $table->timestamp('voting_open_notified_at')->nullable();
+            }
             $table->timestamp('results_notified_at')->nullable();
         });
 
@@ -28,7 +30,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('agm_sessions', function (Blueprint $table) {
-            $table->dropColumn(['voting_open_notified_at', 'results_notified_at']);
+            if (Schema::hasColumn('agm_sessions', 'voting_open_notified_at')) {
+                $table->dropColumn('voting_open_notified_at');
+            }
+            $table->dropColumn('results_notified_at');
         });
 
         Schema::table('project_proposals', function (Blueprint $table) {
