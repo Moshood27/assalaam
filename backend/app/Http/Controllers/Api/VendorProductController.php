@@ -43,8 +43,14 @@ class VendorProductController extends Controller
             'stock_quantity' => 'nullable|integer|min:0',
             'track_stock' => 'nullable|boolean',
             'image_url' => 'nullable|string|max:1000',
+            'image' => 'nullable|image|max:2048',
             'is_active' => 'nullable|boolean',
         ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $validated['image_url'] = $path;
+        }
 
         $p = new Product();
         $p->fill($validated);
@@ -71,8 +77,15 @@ class VendorProductController extends Controller
             'stock_quantity' => 'sometimes|integer|min:0',
             'track_stock' => 'sometimes|boolean',
             'image_url' => 'nullable|string|max:1000',
+            'image' => 'nullable|image|max:2048',
             'is_active' => 'sometimes|boolean',
         ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $validated['image_url'] = $path;
+        }
+
         $product->fill($validated);
         // If critical fields are changed, require re-approval
         if ($request->hasAny(['name', 'cost_price', 'markup_percent'])) {

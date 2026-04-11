@@ -341,9 +341,11 @@ Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/vtu')->group(fu
     Route::get('/transactions', [AdminUtilityController::class, 'transactions']);
 });
 
-// Admin products management (images)
+// Admin products management (images & approval)
 Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/products')->group(function () {
     Route::get('/', [AdminProductController::class, 'index']);
     Route::post('/{id}/image', [AdminProductController::class, 'uploadImage']);
     Route::delete('/{id}/image', [AdminProductController::class, 'deleteImage']);
+    Route::post('/{id}/approve', [AdminProductController::class, 'approve']);
+    Route::post('/{id}/reject', [AdminProductController::class, 'reject']);
 });

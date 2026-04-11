@@ -146,6 +146,7 @@ class DashboardController extends Controller
             'kpis' => $kpis,
             'zakat_status' => $zakatStatus,
             'is_ramadan' => $this->priceService->isRamadan(),
+            'is_admin' => (bool) $user->is_admin,
             'fitr_amount' => (float) config('zakat.fitr_amount', 3500),
             'transactions' => $walletTransactions,
             'utility_transactions' => $utility,

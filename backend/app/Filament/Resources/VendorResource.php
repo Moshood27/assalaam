@@ -98,13 +98,53 @@ class VendorResource extends Resource
                     ->visible(fn (Vendor $record) => !$record->is_approved)
                     ->action(function (Vendor $record) {
                         $record->update(['is_approved' => true]);
+
+                        if ($record->owner) {
+                            $record->owner->notifyMember(
+                                'Vendor Approved',
+                                "Your vendor application for '{$record->name}' has been approved. You can now start adding products to your store.",
+                                ['vendor_id' => $record->id, 'type' => 'vendor_approved']
+                            );
+                        }
+
                         Notification::make()->title('Vendor Approved')->success()->send();
+                    }),
+                Action::make('reject')
+                    ->label('Mark Pending')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('warning')
+                    ->visible(fn (Vendor $record) => $record->is_approved)
+                    ->requiresConfirmation()
+                    ->action(function (Vendor $record) {
+                        $record->update(['is_approved' => false]);
+                        Notification::make()->title('Vendor status updated to Pending')->info()->send();
                     }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('approve_all')
+                        ->label('Approve Selected')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $records->each(function ($record) {
+                                if (!$record->is_approved) {
+                                    $record->update(['is_approved' => true]);
+
+                                    if ($record->owner) {
+                                        $record->owner->notifyMember(
+                                            'Vendor Approved',
+                                            "Your vendor application for '{$record->name}' has been approved.",
+                                            ['vendor_id' => $record->id, 'type' => 'vendor_approved']
+                                        );
+                                    }
+                                }
+                            });
+                            Notification::make()->title('Selected vendors approved')->success()->send();
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

@@ -60,9 +60,10 @@
               <img v-if="p.image_url" :src="getImageUrl(p.image_url)" alt="image" class="w-16 h-16 rounded object-cover" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-3 mb-1">
-                  <div class="font-bold text-slate-800 truncate flex items-center gap-2">
+                  <div class="font-bold text-slate-800 truncate flex items-center gap-2 flex-wrap">
                     <span class="truncate cursor-pointer hover:underline" @click="openQuick(p)">{{ p.name }}</span>
                     <span v-if="isNew(p.created_at)" class="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 px-2 py-0.5 rounded">New</span>
+                    <span v-if="!p.is_approved" class="text-[10px] font-black uppercase tracking-widest bg-rose-100 text-rose-700 px-2 py-0.5 rounded">Pending Approval</span>
                   </div>
                   <div class="text-emerald-700 font-black text-sm whitespace-nowrap">₦ {{ money(p.selling_price) }}</div>
                 </div>
@@ -75,7 +76,10 @@
                   <span v-else class="text-[10px] text-rose-600 font-black uppercase tracking-widest">Out of Stock</span>
                 </div>
                 <p class="text-[12px] text-slate-600 line-clamp-2 mb-2">{{ p.description || '—' }}</p>
-                <div class="flex items-center justify-end gap-2">
+                <div class="flex items-center justify-end gap-2 flex-wrap">
+                  <button v-if="isAdmin && !p.is_approved" class="px-2 py-1 rounded bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest" @click.stop="approveProduct(p)">Approve</button>
+                  <button v-if="isAdmin && p.is_approved && p.vendor_id" class="px-2 py-1 rounded border border-rose-200 text-rose-700 text-[10px] font-black uppercase tracking-widest" @click.stop="rejectProduct(p)">Mark Pending</button>
+                  
                   <template v-if="cart[p.id]">
                     <button class="px-2 py-1 rounded-lg border border-slate-200" @click="decQty(p.id)">-</button>
                     <span class="text-sm font-bold">{{ cart[p.id].qty }}</span>
@@ -196,7 +200,8 @@
           <img v-if="selectedProduct.image_url" :src="getImageUrl(selectedProduct.image_url)" alt="image" class="w-20 h-20 rounded object-cover" />
           <div class="flex-1 min-w-0">
             <div class="font-bold text-slate-800 truncate">{{ selectedProduct.name }}</div>
-            <div class="text-emerald-700 font-black text-sm">₦ {{ money(selectedProduct.selling_price) }}</div>
+            <div v-if="!selectedProduct.is_approved" class="text-[10px] font-black uppercase tracking-widest bg-rose-100 text-rose-700 px-2 py-0.5 rounded inline-block mt-1">Pending Approval</div>
+            <div class="text-emerald-700 font-black text-sm mt-1">₦ {{ money(selectedProduct.selling_price) }}</div>
             <div v-if="selectedProduct.track_stock" class="mt-1">
               <span v-if="selectedProduct.stock_quantity > 0" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">In Stock: {{ selectedProduct.stock_quantity }}</span>
               <span v-else class="text-[10px] text-rose-600 font-black uppercase tracking-widest">Sold Out</span>
@@ -204,6 +209,10 @@
             <p class="text-[12px] text-slate-600 mt-1">{{ selectedProduct.description || '—' }}</p>
           </div>
           <button class="text-slate-400 hover:text-slate-600" @click="closeQuick()">✕</button>
+        </div>
+        <div v-if="isAdmin" class="mt-4 flex items-center gap-2 border-t pt-4">
+          <button v-if="!selectedProduct.is_approved" class="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-100" @click="approveProduct(selectedProduct)">Approve Product</button>
+          <button v-else-if="selectedProduct.vendor_id" class="flex-1 py-3 rounded-xl border border-rose-200 text-rose-700 font-bold text-xs uppercase tracking-widest" @click="rejectProduct(selectedProduct)">Mark as Pending</button>
         </div>
         <div class="mt-4 flex items-center justify-between" v-if="!selectedProduct.track_stock || selectedProduct.stock_quantity > 0">
           <div class="flex items-center gap-2">
@@ -272,6 +281,7 @@ const categories = ref([])
 const sortBy = ref('newest')
 
 const vendor = ref(null)
+const isAdmin = ref(false)
 const walletBalance = ref(0)
 const eligData = ref(null)
 
@@ -348,6 +358,35 @@ const loadVendor = async () => {
       vendor.value = data
     }
   } catch (_) {}
+}
+
+const loadAdminStatus = async () => {
+  try {
+    const { data } = await axios.get('/api/dashboard')
+    isAdmin.value = !!data.is_admin
+  } catch (_) {}
+}
+
+const approveProduct = async (p) => {
+  if (!confirm(`Approve "${p.name}"?`)) return
+  try {
+    await axios.post(`/api/admin/products/${p.id}/approve`)
+    p.is_approved = true
+    alert('Product approved successfully')
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to approve product')
+  }
+}
+
+const rejectProduct = async (p) => {
+  if (!confirm(`Mark "${p.name}" as pending?`)) return
+  try {
+    await axios.post(`/api/admin/products/${p.id}/reject`)
+    p.is_approved = false
+    alert('Product marked as pending')
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to update status')
+  }
 }
 
 const CART_KEY = 'coop_store_cart_v1'
@@ -519,7 +558,7 @@ const routerPush = (path) => {
   try { window.location.href = `${import.meta.env.BASE_URL || '/'}${path.replace(/^\//,'')}` } catch (_) {}
 }
 
-onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories(); loadStoreEligibility(); loadVendor() })
+onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories(); loadStoreEligibility(); loadVendor(); loadAdminStatus() })
 </script>
 
 <style scoped>

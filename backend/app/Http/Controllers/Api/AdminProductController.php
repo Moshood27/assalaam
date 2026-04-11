@@ -43,6 +43,7 @@ class AdminProductController extends Controller
                 'cost_price' => (float) $p->cost_price,
                 'markup_percent' => (float) $p->markup_percent,
                 'is_active' => (bool) $p->is_active,
+                'is_approved' => (bool) $p->is_approved,
                 'created_at' => $p->created_at,
             ];
         });
@@ -90,6 +91,41 @@ class AdminProductController extends Controller
             'message' => 'Image removed',
             'product' => $product,
         ]);
+    }
+
+    /**
+     * Approve a product.
+     */
+    public function approve(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->is_approved = true;
+        $product->approved_at = now();
+        $product->approved_by_id = $request->user()->id;
+        $product->save();
+
+        // Notify vendor
+        if ($product->vendor && $product->vendor->owner) {
+            $product->vendor->owner->notifyMember(
+                'Product Approved',
+                "Your product '{$product->name}' has been approved and is now visible in the store.",
+                ['product_id' => $product->id, 'type' => 'product_approved']
+            );
+        }
+
+        return response()->json(['message' => 'Product approved', 'product' => $product]);
+    }
+
+    /**
+     * Reject/Unapprove a product.
+     */
+    public function reject(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->is_approved = false;
+        $product->save();
+
+        return response()->json(['message' => 'Product marked as pending', 'product' => $product]);
     }
 
     private function deleteExistingIfLocal(Product $product): void

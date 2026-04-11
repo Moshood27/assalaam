@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 
 class ProductResource extends Resource
 {
@@ -133,12 +134,68 @@ class ProductResource extends Resource
                             'approved_at' => now(),
                             'approved_by_id' => auth()->id(),
                         ]);
+
+                        if ($record->vendor && $record->vendor->owner) {
+                            $record->vendor->owner->notifyMember(
+                                'Product Approved',
+                                "Your product '{$record->name}' has been approved and is now visible in the store.",
+                                ['product_id' => $record->id, 'type' => 'product_approved']
+                            );
+                        }
+
+                        Notification::make()
+                            ->title('Product approved')
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('reject')
+                    ->label('Mark Pending')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('warning')
+                    ->visible(fn ($record) => $record->is_approved && auth()->user()->is_admin)
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['is_approved' => false]);
+
+                        Notification::make()
+                            ->title('Product marked as pending')
+                            ->info()
+                            ->send();
                     }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('approve_all')
+                        ->label('Approve Selected')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->visible(fn () => auth()->user()->is_admin)
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $records->each(function ($record) {
+                                if (!$record->is_approved) {
+                                    $record->update([
+                                        'is_approved' => true,
+                                        'approved_at' => now(),
+                                        'approved_by_id' => auth()->id(),
+                                    ]);
+
+                                    if ($record->vendor && $record->vendor->owner) {
+                                        $record->vendor->owner->notifyMember(
+                                            'Product Approved',
+                                            "Your product '{$record->name}' has been approved.",
+                                            ['product_id' => $record->id, 'type' => 'product_approved']
+                                        );
+                                    }
+                                }
+                            });
+                            Notification::make()
+                                ->title('Selected products approved')
+                                ->success()
+                                ->send();
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

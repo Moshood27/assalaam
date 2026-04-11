@@ -32,7 +32,7 @@
           <p v-if="val > 33.33" class="text-[10px] text-amber-600 font-medium mt-1">Note: Bequests exceeding 1/3 (33.33%) may require heirs' consent under Sharia.</p>
         </div>
 
-        <div v-for="b in beneficiaries" :key="b.id" class="card p-5 group">
+        <div v-for="b in beneficiaries" :key="b.id" @click="editBeneficiary(b)" class="card p-5 group cursor-pointer active:bg-slate-50 hover:border-indigo-100 transition-all">
           <div class="flex items-start justify-between">
             <div class="flex gap-4">
               <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">👤</div>
@@ -41,11 +41,11 @@
                 <p class="text-xs text-slate-500 font-medium">{{ b.relationship }} • {{ b.percentage }}% Allocation ({{ b.asset_type === 'all' ? 'General' : b.asset_type }})</p>
               </div>
             </div>
-            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button @click="editBeneficiary(b)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600">
+            <div class="flex gap-2">
+              <button @click.stop="editBeneficiary(b)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
               </button>
-              <button @click="deleteBeneficiary(b.id)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-rose-600">
+              <button @click.stop="deleteBeneficiary(b.id)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-rose-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
               </button>
             </div>
@@ -177,10 +177,19 @@ async function load() {
 async function saveBeneficiary() {
   try {
     loading.value = true
+    const payload = {
+      name: form.value.name,
+      relationship: form.value.relationship,
+      phone: form.value.phone,
+      email: form.value.email,
+      address: form.value.address,
+      percentage: form.value.percentage,
+      asset_type: form.value.asset_type
+    }
     if (editingId.value) {
-      await axios.patch(`/api/wasiyyah/${editingId.value}`, form.value)
+      await axios.patch(`/api/wasiyyah/${editingId.value}`, payload)
     } else {
-      await axios.post('/api/wasiyyah', form.value)
+      await axios.post('/api/wasiyyah', payload)
     }
     showModal.value = false
     await load()

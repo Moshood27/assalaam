@@ -124,6 +124,23 @@
           </div>
 
           <div>
+            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Product Image</label>
+            <div class="mt-2 flex items-center gap-4">
+              <div class="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden flex-shrink-0">
+                <img v-if="imagePreview" :src="imagePreview" class="w-full h-full object-cover" />
+                <div v-else class="w-full h-full flex items-center justify-center text-2xl">🖼️</div>
+              </div>
+              <div class="flex-1">
+                <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*" class="hidden" />
+                <button @click="$refs.fileInput.click()" type="button" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                  Choose Image
+                </button>
+                <p class="text-[9px] text-slate-400 mt-2 font-medium">JPG, PNG or WEBP. Max 2MB.</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
             <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Status</label>
             <div class="mt-2 flex items-center gap-4">
               <label class="flex items-center gap-2 cursor-pointer">
@@ -144,10 +161,6 @@
             <textarea v-model="form.description" rows="3" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800" placeholder="Describe your product..."></textarea>
           </div>
           
-          <div>
-            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Product Image (URL for now)</label>
-            <input v-model="form.image_url" type="text" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800" placeholder="https://example.com/image.jpg" />
-          </div>
         </div>
 
         <div class="p-6 bg-slate-50 border-t border-slate-100">
@@ -171,6 +184,8 @@ const loading = ref(true)
 const showModal = ref(false)
 const saving = ref(false)
 const editingId = ref(null)
+const imagePreview = ref(null)
+const selectedFile = ref(null)
 
 const form = ref({
   name: '',
@@ -212,6 +227,8 @@ const loadData = async () => {
 
 const openCreateModal = () => {
   editingId.value = null
+  imagePreview.value = null
+  selectedFile.value = null
   form.value = {
     name: '',
     description: '',
@@ -228,6 +245,8 @@ const openCreateModal = () => {
 
 const openEditModal = (p) => {
   editingId.value = p.id
+  imagePreview.value = p.image_url ? getImageUrl(p.image_url) : null
+  selectedFile.value = null
   form.value = {
     name: p.name,
     description: p.description,
@@ -242,13 +261,38 @@ const openEditModal = (p) => {
   showModal.value = true
 }
 
+const handleFileChange = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    selectedFile.value = file
+    imagePreview.value = URL.createObjectURL(file)
+  }
+}
+
 const saveProduct = async () => {
   saving.value = true
   try {
+    const formData = new FormData()
+    Object.keys(form.value).forEach(key => {
+      if (form.value[key] !== null && form.value[key] !== undefined) {
+        formData.append(key, form.value[key])
+      }
+    })
+    
+    if (selectedFile.value) {
+      formData.append('image', selectedFile.value)
+    }
+
     if (editingId.value) {
-      await axios.put(`/api/vendor/products/${editingId.value}`, form.value)
+      // Use POST with _method=PUT to handle multipart/form-data for update
+      formData.append('_method', 'PUT')
+      await axios.post(`/api/vendor/products/${editingId.value}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
     } else {
-      await axios.post('/api/vendor/products', form.value)
+      await axios.post('/api/vendor/products', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
     }
     showModal.value = false
     loadData()

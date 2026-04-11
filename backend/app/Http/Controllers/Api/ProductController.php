@@ -23,8 +23,15 @@ class ProductController extends Controller
 
         $query = Product::query()
             ->with(['category', 'vendor'])
-            ->where('is_active', true)
-            ->where(function ($q) {
+            ->where('is_active', true);
+
+        // Regular users only see approved products from approved vendors
+        // Admins can see pending products too (for approval from storefront)
+        $user = $request->user();
+        $isAdmin = $user && (bool) $user->is_admin;
+
+        if (!$isAdmin) {
+            $query->where(function ($q) {
                 // Internal products are auto-approved by default in the resource, but we still check is_approved for safety
                 $q->where('is_approved', true)
                   ->where(function ($inner) {
@@ -34,6 +41,7 @@ class ProductController extends Controller
                             });
                   });
             });
+        }
         if ($search !== '') {
             $query->where('name', 'like', "%{$search}%");
         }
@@ -82,6 +90,7 @@ class ProductController extends Controller
                 'selling_price' => $p->selling_price,
                 'stock_quantity' => $p->stock_quantity,
                 'track_stock' => $p->track_stock,
+                'is_approved' => (bool) $p->is_approved,
                 'created_at' => optional($p->created_at)->toIso8601String(),
             ];
         });
