@@ -148,6 +148,14 @@
         <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📋</div>
         <span class="text-sm font-bold text-slate-700">Wasiyyah</span>
       </button>
+      <button v-if="kpis.vendor && kpis.vendor.is_vendor" @click="$router.push('/vendor/dashboard')" class="bg-emerald-50 p-5 rounded-3xl shadow-sm border border-emerald-100 flex flex-col items-center gap-2 active:bg-emerald-100 transition-all">
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">🏪</div>
+        <span class="text-sm font-bold text-emerald-800">Vendor Portal</span>
+      </button>
+      <button v-else @click="$router.push('/vendor/apply')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">🏪</div>
+        <span class="text-sm font-bold text-slate-700">Become a Vendor</span>
+      </button>
     </div>
 
     <!-- Quick guide links -->

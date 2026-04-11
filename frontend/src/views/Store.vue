@@ -11,6 +11,12 @@
           <button class="p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="$router.push('/store/orders')" title="Orders">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
           </button>
+          <button v-if="vendor && vendor.id" class="p-2 hover:bg-emerald-50 rounded-xl transition-colors" @click="$router.push('/vendor/dashboard')" title="Vendor Portal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-700"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </button>
+          <button v-else class="p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="$router.push('/vendor/apply')" title="Become a Vendor">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </button>
           <button @click="$router.back()" class="p-2 hover:bg-slate-100 rounded-xl transition-colors" aria-label="Go back">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
           </button>
@@ -265,6 +271,7 @@ const selectedCategory = ref(0)
 const categories = ref([])
 const sortBy = ref('newest')
 
+const vendor = ref(null)
 const walletBalance = ref(0)
 const eligData = ref(null)
 
@@ -331,6 +338,15 @@ const loadStoreEligibility = async () => {
   try {
     const { data } = await axios.get('/api/store/eligibility')
     eligData.value = data
+  } catch (_) {}
+}
+
+const loadVendor = async () => {
+  try {
+    const { data } = await axios.get('/api/vendor/profile')
+    if (data && data.id) {
+      vendor.value = data
+    }
   } catch (_) {}
 }
 
@@ -503,7 +519,7 @@ const routerPush = (path) => {
   try { window.location.href = `${import.meta.env.BASE_URL || '/'}${path.replace(/^\//,'')}` } catch (_) {}
 }
 
-onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories(); loadStoreEligibility() })
+onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories(); loadStoreEligibility(); loadVendor() })
 </script>
 
 <style scoped>

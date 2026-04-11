@@ -194,6 +194,14 @@ const submit = async () => {
 
 onMounted(async () => {
   try {
+    const { data: profile } = await axios.get('/api/vendor/profile')
+    if (profile && profile.id) {
+      router.replace('/vendor/dashboard')
+      return
+    }
+  } catch (_) {}
+
+  try {
     const { data } = await axios.get('/api/banks')
     banks.value = data.banks
   } catch (err) {

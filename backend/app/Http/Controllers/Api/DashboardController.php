@@ -94,6 +94,20 @@ class DashboardController extends Controller
         $goldBasePrice = $this->priceService->getGoldPrice();
         $goldSellPrice = $this->priceService->getSellPrice();
 
+        $vendor = $user->vendor;
+        $vendorStatus = null;
+        if ($vendor) {
+            $vendorStatus = [
+                'is_vendor' => true,
+                'is_approved' => (bool) $vendor->is_approved,
+                'name' => $vendor->name,
+            ];
+        } else {
+            $vendorStatus = [
+                'is_vendor' => false,
+            ];
+        }
+
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
@@ -103,7 +117,8 @@ class DashboardController extends Controller
             'attaqwa_score' => (int) $user->attaqwa_score,
             'gold_balance' => (float) $user->gold_balance,
             'gold_value_naira' => $goldSellPrice ? round($user->gold_balance * $goldSellPrice, 2) : null,
-            'gold_price_per_gram' => $goldBasePrice
+            'gold_price_per_gram' => $goldBasePrice,
+            'vendor' => $vendorStatus
         ];
 
         return response()->json([
