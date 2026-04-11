@@ -21,12 +21,23 @@
 
     <div v-else class="pb-20">
       <div class="h-64 bg-slate-200 relative overflow-hidden">
-        <img 
-          v-if="project.media_urls && project.media_urls.length" 
-          :src="getImageUrl(project.media_urls[0])" 
-          class="w-full h-full object-cover"
-          alt="Project image"
-        />
+        <template v-if="project.media_urls && project.media_urls.length">
+          <video 
+            v-if="isVideo(project.media_urls[0])" 
+            :src="getImageUrl(project.media_urls[0])" 
+            class="w-full h-full object-cover"
+            controls
+            autoplay
+            muted
+            loop
+          ></video>
+          <img 
+            v-else
+            :src="getImageUrl(project.media_urls[0])" 
+            class="w-full h-full object-cover"
+            alt="Project image"
+          />
+        </template>
         <div v-else class="w-full h-full flex items-center justify-center text-slate-400 bg-slate-100">
            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
         </div>
@@ -43,6 +54,16 @@
 
           <div class="prose prose-sm text-slate-600 mb-8 whitespace-pre-wrap">
             {{ project.description }}
+          </div>
+
+          <div v-if="project.media_urls && project.media_urls.length > 1" class="mb-8">
+            <p class="text-[10px] text-slate-400 font-bold uppercase mb-3 tracking-widest">Project Gallery</p>
+            <div class="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 no-scrollbar snap-x">
+              <div v-for="(media, index) in project.media_urls" :key="index" class="min-w-[140px] aspect-square bg-slate-100 rounded-2xl overflow-hidden snap-start border border-slate-50 shadow-sm">
+                <video v-if="isVideo(media)" :src="getImageUrl(media)" class="w-full h-full object-cover" controls></video>
+                <img v-else :src="getImageUrl(media)" class="w-full h-full object-cover" />
+              </div>
+            </div>
           </div>
 
           <div class="space-y-4 pt-4 border-t border-slate-50">
@@ -88,7 +109,7 @@
       </div>
 
       <div class="mt-8 px-4">
-        <div class="bg-slate-800 rounded-[2rem] p-6 text-white shadow-xl">
+        <div v-if="project.active" class="bg-slate-800 rounded-[2rem] p-6 text-white shadow-xl">
           <h3 class="text-lg font-bold mb-4">Make a Contribution</h3>
           
           <div class="space-y-4">
@@ -142,6 +163,13 @@
               By contributing, you agree to our terms and conditions. May your contribution be rewarded.
             </p>
           </div>
+        </div>
+        <div v-else class="bg-emerald-600 rounded-[2rem] p-8 text-white shadow-xl text-center">
+           <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+           </div>
+           <h3 class="text-xl font-black uppercase tracking-widest">Project Completed</h3>
+           <p class="text-emerald-50 text-sm mt-2 font-medium">Jazakallah Khair to all who contributed. The physical work is now complete. Scroll up to see the proof of impact.</p>
         </div>
       </div>
     </div>
@@ -221,6 +249,12 @@ const getProgress = () => {
   if (!project.value || !project.value.target_amount || project.value.target_amount <= 0) return 0
   const pct = (Number(project.value.raised_amount) / Number(project.value.target_amount)) * 100
   return Math.min(100, Math.round(pct))
+}
+
+const isVideo = (url) => {
+  if (!url) return false
+  const ext = url.split('.').pop().toLowerCase()
+  return ['mp4', 'webm', 'ogg', 'mov'].includes(ext)
 }
 
 const getImageUrl = (url) => {

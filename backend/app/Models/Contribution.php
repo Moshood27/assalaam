@@ -31,6 +31,7 @@ class Contribution extends Model
         'user_id',
         'scheme_id',
         'project_id',
+        'savings_group_id',
         'amount',
         'units',
         'reference',
@@ -133,5 +134,10 @@ class Contribution extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function savingsGroup()
+    {
+        return $this->belongsTo(SavingsGroup::class);
     }
 }

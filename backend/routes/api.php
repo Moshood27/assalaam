@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\JuniorCooperativeController;
 use App\Http\Controllers\Api\SupportChatController;
 use App\Http\Controllers\Api\ScoreController;
 use App\Http\Controllers\Api\GoldController;
+use App\Http\Controllers\Api\SavingsGroupController;
 
 Route::get('/health', function () {
     return response()
@@ -170,6 +171,14 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/projects/{id}/investments', [ProjectController::class, 'myInvestments']);
     Route::get('/projects/{id}/profits', [ProjectController::class, 'profits']);
 
+    // Savings Groups (Ajo/Esusu/Pardna)
+    Route::get('/savings-groups', [SavingsGroupController::class, 'index']);
+    Route::get('/savings-groups/discover', [SavingsGroupController::class, 'discover']);
+    Route::post('/savings-groups', [SavingsGroupController::class, 'store']);
+    Route::get('/savings-groups/{id}', [SavingsGroupController::class, 'show']);
+    Route::post('/savings-groups/{id}/join', [SavingsGroupController::class, 'join']);
+    Route::post('/savings-groups/{id}/leave', [SavingsGroupController::class, 'leave']);
+
     // Passbook
     Route::get('/passbook/{year}', [PassbookController::class, 'getMatrix']);
 
@@ -209,9 +218,11 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
 
     Route::get('/store/eligibility', [\App\Http\Controllers\Api\StoreOrderController::class, 'eligibility']);
     Route::get('/store/orders', [\App\Http\Controllers\Api\StoreOrderController::class, 'index']);
+    Route::get('/store/disputes', [\App\Http\Controllers\Api\StoreOrderController::class, 'myDisputes']);
     Route::get('/store/orders/{id}', [\App\Http\Controllers\Api\StoreOrderController::class, 'show']);
     Route::post('/store/orders', [\App\Http\Controllers\Api\StoreOrderController::class, 'store']);
     Route::post('/store/orders/{id}/installments/pay', [\App\Http\Controllers\Api\StoreOrderController::class, 'payInstallment']);
+    Route::post('/store/orders/{id}/dispute', [\App\Http\Controllers\Api\StoreOrderController::class, 'dispute']);
 
     // Goal-based Savings (Hajj & Umrah)
     Route::get('/goals', [\App\Http\Controllers\Api\SavingsGoalController::class, 'index']);
@@ -257,6 +268,8 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
 
     // PDF export
     Route::get('/download-passbook', [ExportController::class, 'downloadPassbook']);
+    Route::get('/download-passbook-csv', [ExportController::class, 'downloadPassbookCsv']);
+    Route::get('/download-statement', [ExportController::class, 'downloadStatement']);
     Route::get('/download-loan-schedule/{id}', [ExportController::class, 'downloadLoanSchedule']);
     Route::get('/download-loan-agreement/{id}', [ExportController::class, 'downloadLoanAgreement'])->name('download-loan-agreement');
     Route::get('/download-murabahah-agreement/{id}', [ExportController::class, 'downloadMurabahahAgreement'])->name('download-murabahah-agreement');
@@ -264,9 +277,11 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/download-appropriation/{year}', [ExportController::class, 'downloadAppropriation']);
     Route::get('/download-financials/{year}', [ExportController::class, 'downloadFinancials']);
     Route::get('/download-order-receipt/{id}', [ExportController::class, 'downloadOrderReceipt']);
+    Route::get('/download-zakat-report', [ExportController::class, 'downloadZakatReport']);
 
     // Zakat
     Route::get('/zakat/estimate', [ZakatController::class, 'estimate']);
+    Route::get('/zakat/history', [ZakatController::class, 'history']);
     Route::post('/zakat/pay', [ZakatController::class, 'pay']);
     Route::post('/zakat/pay-fitr', [ZakatController::class, 'payFitr']);
 

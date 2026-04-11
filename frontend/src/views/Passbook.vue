@@ -8,7 +8,10 @@
           </svg>
         </button>
         <h1 class="text-lg sm:text-xl font-bold text-slate-800">Passbook</h1>
-        <a :href="getDownloadUrl()" target="_blank" class="btn-ghost text-xs">PDF</a>
+        <div class="flex items-center gap-2">
+          <a :href="getDownloadUrl('pdf')" target="_blank" class="btn-ghost text-[10px] px-2 py-1 border rounded">PDF</a>
+          <a :href="getDownloadUrl('csv')" target="_blank" class="btn-ghost text-[10px] px-2 py-1 border rounded">CSV</a>
+        </div>
       </div>
     </header>
 
@@ -162,10 +165,11 @@ const fetchPassbook = async () => {
   }
 }
 
-const getDownloadUrl = () => {
+const getDownloadUrl = (format) => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
-  return `${baseUrl}/api/download-passbook?year=${selectedYear.value}&token=${encodeURIComponent(token)}`
+  const endpoint = format === 'csv' ? 'download-passbook-csv' : 'download-passbook'
+  return `${baseUrl}/api/${endpoint}?year=${selectedYear.value}&token=${encodeURIComponent(token)}`
 }
 onMounted(fetchPassbook)
 </script>

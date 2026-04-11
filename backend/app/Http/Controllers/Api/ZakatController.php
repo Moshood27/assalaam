@@ -5,122 +5,48 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\Scheme;
-use App\Services\GoldSilverPriceService;
+use App\Models\SadaqahProject;
+use App\Models\SadaqahContribution;
+use App\Models\WalletTransaction;
+use App\Services\ZakatService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ZakatController extends Controller
 {
     protected $priceService;
+    protected $zakatService;
 
-    public function __construct(GoldSilverPriceService $priceService)
+    public function __construct(GoldSilverPriceService $priceService, ZakatService $zakatService)
     {
         $this->priceService = $priceService;
+        $this->zakatService = $zakatService;
     }
 
     public function estimate(Request $request)
     {
         $user = $request->user();
-
-        // Resolve scheme IDs for Savings, Shares and Digital Gold
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Digital Gold'])->pluck('id', 'name');
-
-        // Compute current balances from contributions with status success
-        $savings = 0.0;
-        $shares = 0.0;
-        $goldSavings = 0.0;
-
-        if (isset($schemes['Savings'])) {
-            $savings = (float) $user->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Savings'])
-                ->sum('amount');
-        }
-        if (isset($schemes['Shares'])) {
-            $shares = (float) $user->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Shares'])
-                ->sum('amount');
-        }
-        if (isset($schemes['Digital Gold'])) {
-            // For Digital Gold, we prefer using current market value,
-            // but for historical tracking we look at net amount spent.
-            $goldSavings = (float) $user->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Digital Gold'])
-                ->sum('amount');
-        }
-
-        // Current Gold market value
-        $goldPrice = $this->priceService->getSellPrice();
-        $currentGoldValue = $goldPrice ? round($user->gold_balance * $goldPrice, 2) : 0;
-
-        // Current Wallet balance
-        $walletBalance = (float) $user->balance;
-
-        // Base wealth for Zakat: Savings + Shares + Current Gold Value + Wallet Balance
-        $base = round($savings + $shares + $currentGoldValue + $walletBalance, 2);
-
-        $nisab = (float) $this->priceService->getDynamicNisab();
-        $rate = (float) config('zakat.rate');
-        $lunarDays = (int) config('zakat.lunar_days');
-        $isRamadan = $this->priceService->isRamadan();
-        $fitrAmount = (float) config('zakat.fitr_amount');
-
-        $eligible = false;
-        $crossedOn = null;
-        $eligibleOn = null;
-        $daysSinceCrossed = 0;
-
-        if ($base >= $nisab && ($schemes->count() > 0)) {
-            // Find earliest date when cumulative contributions crossed nisab
-            $contribs = $user->contributions()
-                ->where('status', 'success')
-                ->whereIn('scheme_id', array_values($schemes->toArray()))
-                ->orderBy('created_at', 'asc')
-                ->get(['amount', 'created_at']);
-
-            $running = 0.0;
-            foreach ($contribs as $c) {
-                $running += (float) $c->amount;
-                if ($running >= $nisab) {
-                    $crossedOn = $c->created_at?->copy();
-                    break;
-                }
-            }
-
-            // Fallback: If total base wealth is above Nisab but contributions alone are not,
-            // we assume the threshold was crossed today (due to wallet balance or gold appreciation).
-            if (!$crossedOn) {
-                $crossedOn = now();
-            }
-
-            if ($crossedOn) {
-                $eligibleOn = $crossedOn->copy()->addDays($lunarDays);
-                $daysSinceCrossed = now()->diffInDays($crossedOn);
-                $eligible = now()->greaterThanOrEqualTo($eligibleOn);
-            }
-        }
-
-        $zakatDue = round($base * $rate, 2);
+        $estimate = $this->zakatService->getEstimate($user);
 
         return response()->json([
-            'base' => $base,
-            'savings' => $savings,
-            'shares' => $shares,
-            'gold_savings' => $goldSavings,
-            'gold_value' => $currentGoldValue,
-            'wallet_balance' => $walletBalance,
-            'nisab' => $nisab,
-            'rate' => $rate,
-            'eligible' => $eligible,
-            'crossed_on' => optional($crossedOn)->toDateTimeString(),
-            'eligible_on' => optional($eligibleOn)->toDateTimeString(),
-            'days_since_crossed' => $daysSinceCrossed,
-            'zakat_due' => $zakatDue,
-            'is_ramadan' => $isRamadan,
-            'fitr_amount' => $fitrAmount,
+            'base' => $estimate['base'],
+            'savings' => $estimate['savings'],
+            'shares' => $estimate['shares'],
+            'gold_value' => $estimate['gold_value'],
+            'wallet_balance' => $estimate['wallet_balance'],
+            'nisab' => $estimate['nisab'],
+            'rate' => $estimate['rate'],
+            'eligible' => $estimate['eligible'],
+            'crossed_on' => optional($estimate['crossed_on'])->toDateTimeString(),
+            'eligible_on' => optional($estimate['eligible_on'])->toDateTimeString(),
+            'days_since_crossed' => $estimate['days_since_crossed'],
+            'zakat_due' => $estimate['zakat_due'],
+            'is_ramadan' => $estimate['is_ramadan'],
+            'fitr_amount' => $estimate['fitr_amount'],
+            'last_paid_at' => $estimate['last_paid_at'] ? $estimate['last_paid_at']->toDateTimeString() : null,
         ]);
     }
 
@@ -128,7 +54,7 @@ class ZakatController extends Controller
     {
         $user = $request->user();
 
-        // Compute current base and zakat due using estimate logic (without extra queries if possible)
+        // Compute current base and zakat due using estimate logic
         $estimate = $this->estimate($request)->getData(true);
         if (!is_array($estimate)) {
             return response()->json(['message' => 'Failed to compute Zakat'], 500);
@@ -141,6 +67,15 @@ class ZakatController extends Controller
         $amount = round(($estimate['zakat_due'] ?? 0), 2);
         if ($amount <= 0) {
             return response()->json(['message' => 'Invalid Zakat amount'], 422);
+        }
+
+        // Handle Internal Wallet Payment
+        $gateway = strtolower($request->input('gateway', 'paystack'));
+        if ($gateway === 'wallet') {
+            if (!$user->verifyTransactionPin($request->input('pin'))) {
+                return response()->json(['message' => 'Invalid transaction PIN'], 403);
+            }
+            return $this->payInternal($user, $amount, 'Zakat');
         }
 
         // Ensure a Zakat scheme exists
@@ -159,9 +94,6 @@ class ZakatController extends Controller
             'reference' => $reference,
             'status' => 'pending',
         ]);
-
-        // Choose payment gateway
-        $gateway = strtolower($request->input('gateway', 'paystack'));
 
         if ($gateway === 'flutterwave') {
             $flwSecret = config('services.flutterwave.secret_key');
@@ -256,6 +188,15 @@ class ZakatController extends Controller
             return response()->json(['message' => 'Zakat Al-Fitr amount is not configured'], 422);
         }
 
+        // Handle Internal Wallet Payment
+        $gateway = strtolower($request->input('gateway', 'paystack'));
+        if ($gateway === 'wallet') {
+            if (!$user->verifyTransactionPin($request->input('pin'))) {
+                return response()->json(['message' => 'Invalid transaction PIN'], 403);
+            }
+            return $this->payInternal($user, $amount, 'Zakat Al-Fitr');
+        }
+
         // Ensure a Zakat Al-Fitr scheme exists
         $scheme = Scheme::firstOrCreate(
             ['name' => 'Zakat Al-Fitr'],
@@ -270,8 +211,6 @@ class ZakatController extends Controller
             'reference' => $reference,
             'status' => 'pending',
         ]);
-
-        $gateway = strtolower($request->input('gateway', 'paystack'));
 
         if ($gateway === 'flutterwave') {
             $flwSecret = config('services.flutterwave.secret_key');
@@ -315,5 +254,85 @@ class ZakatController extends Controller
             'reference' => $reference,
             'total' => $amount,
         ]);
+    }
+
+    protected function payInternal($user, $amount, $type = 'Zakat')
+    {
+        if ($user->balance < $amount) {
+            return response()->json(['message' => 'Insufficient wallet balance'], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($user, $amount, $type) {
+                // Deduct from wallet
+                $user->balance -= $amount;
+                $user->save();
+
+                // Create Wallet Transaction for deduction
+                $user->walletTransactions()->create([
+                    'amount' => -$amount,
+                    'type' => 'debit',
+                    'category' => 'contribution',
+                    'description' => "Payment for {$type}",
+                    'reference' => strtoupper($type) . '_' . now()->format('YmdHis') . '_' . bin2hex(random_bytes(2)),
+                    'status' => 'success',
+                ]);
+
+                // Create Contribution record
+                $scheme = Scheme::firstOrCreate(['name' => $type], ['active' => true]);
+                $user->contributions()->create([
+                    'scheme_id' => $scheme->id,
+                    'amount' => $amount,
+                    'status' => 'success',
+                    'reference' => 'INTERNAL_' . strtoupper($type) . '_' . now()->format('YmdHis'),
+                ]);
+
+                // Move to Zakat Fund (SadaqahProject)
+                $zakatProject = SadaqahProject::firstOrCreate(
+                    ['name' => 'General Zakat Fund'],
+                    ['description' => 'Automated Zakat Fund', 'active' => true]
+                );
+
+                SadaqahContribution::create([
+                    'user_id' => $user->id,
+                    'sadaqah_project_id' => $zakatProject->id,
+                    'amount' => $amount,
+                    'status' => 'success',
+                    'reference' => 'ZAKAT_FUND_MOVE_' . now()->format('YmdHis'),
+                ]);
+
+                $zakatProject->increment('raised_amount', $amount);
+
+                if ($type === 'Zakat') {
+                    $user->update([
+                        'zakat_last_paid_at' => now(),
+                        'zakat_nisab_crossed_at' => now(), // Start next Hawl cycle if already above nisab
+                    ]);
+                }
+            });
+
+            return response()->json(['message' => "{$type} paid successfully using wallet balance"]);
+        } catch (\Exception $e) {
+            Log::error("Internal {$type} payment failed: " . $e->getMessage());
+            return response()->json(['message' => 'Internal transfer failed. Please try again.'], 500);
+        }
+    }
+
+    public function history(Request $request)
+    {
+        $user = $request->user();
+        $zakatProject = SadaqahProject::where('name', 'General Zakat Fund')->first();
+
+        if (!$zakatProject) {
+            return response()->json([]);
+        }
+
+        $history = SadaqahContribution::where('user_id', $user->id)
+            ->where('sadaqah_project_id', $zakatProject->id)
+            ->where('status', 'success')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($history);
     }
 }

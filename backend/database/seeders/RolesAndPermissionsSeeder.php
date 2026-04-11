@@ -55,6 +55,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'takaful_pool_entry',
             'utility_transaction',
             'whitelisted_ip',
+            'savings_group',
+            'savings_group_member',
         ];
 
         $actions = ['view', 'view_any', 'create', 'update', 'delete', 'delete_any'];
@@ -105,6 +107,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_any_scheme', 'view_scheme',
             'view_any_agm_session', 'view_agm_session',
             'view_any_agm_candidate', 'view_agm_candidate',
+            'view_any_savings_group', 'view_savings_group',
+            'view_any_savings_group_member', 'view_savings_group_member',
             'approve_loans', // Specific custom permission
             'view_own_branch_members', // Legacy/custom
             'record_contributions', // Legacy/custom

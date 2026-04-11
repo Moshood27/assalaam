@@ -24,6 +24,7 @@ class PaymentController extends Controller
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
             'items.*.project_id' => 'nullable|integer|exists:projects,id',
+            'items.*.savings_group_id' => 'nullable|integer|exists:savings_groups,id',
             'items.*.units' => 'nullable|integer|min:1',
             'items.*.amount' => 'required|numeric|min:1',
             'callback_url' => 'nullable|url',
@@ -36,6 +37,23 @@ class PaymentController extends Controller
         $schemes = Scheme::whereIn('id', $schemeIds)->get()->keyBy('id');
         // Optional project validation: ensure provided project_id exists and is active
         $projectIds = collect($validated['items'])->pluck('project_id')->filter()->unique()->values();
+
+        // Add project_ids from savings groups if not already in items
+        $savingsGroupIds = collect($validated['items'])->pluck('savings_group_id')->filter()->unique()->values();
+        $savingsGroups = $savingsGroupIds->isNotEmpty() ? \App\Models\SavingsGroup::whereIn('id', $savingsGroupIds)->get()->keyBy('id') : collect();
+
+        foreach ($validated['items'] as &$item) {
+            if (!empty($item['savings_group_id']) && empty($item['project_id'])) {
+                $sg = $savingsGroups[$item['savings_group_id']] ?? null;
+                if ($sg && $sg->project_id) {
+                    $item['project_id'] = $sg->project_id;
+                    $projectIds->push($sg->project_id);
+                }
+            }
+        }
+        unset($item);
+
+        $projectIds = $projectIds->unique()->values();
         $projects = $projectIds->isNotEmpty() ? Project::whereIn('id', $projectIds)->get()->keyBy('id') : collect();
 
         $sanitized = [];
@@ -51,6 +69,7 @@ class PaymentController extends Controller
                 ], 422);
             }
             $projectId = $item['project_id'] ?? null;
+            $savingsGroupId = $item['savings_group_id'] ?? null;
             $units = (int) ($item['units'] ?? 0);
 
             if (!empty($projectId)) {
@@ -85,6 +104,9 @@ class PaymentController extends Controller
             if (!empty($projectId)) {
                 $row['project_id'] = (int) $projectId;
             }
+            if (!empty($savingsGroupId)) {
+                $row['savings_group_id'] = (int) $savingsGroupId;
+            }
             $sanitized[] = $row;
         }
 
@@ -111,6 +133,9 @@ class PaymentController extends Controller
             if (!empty($item['project_id'])) {
                 $payloadData['project_id'] = (int) $item['project_id'];
                 $payloadData['units'] = $item['units'] ?? null;
+            }
+            if (!empty($item['savings_group_id'])) {
+                $payloadData['savings_group_id'] = (int) $item['savings_group_id'];
             }
             $user->contributions()->create($payloadData);
         }

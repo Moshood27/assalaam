@@ -54,6 +54,12 @@ class ContributionResource extends Resource
                             ->native(false)
                             ->helperText('Link this payment to a pooled project (Mudarabah)')
                             ->columnSpan(1),
+                        Forms\Components\Select::make('savings_group_id')
+                            ->label('Savings Group (optional)')
+                            ->relationship('savingsGroup', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->columnSpan(1),
                         Forms\Components\TextInput::make('amount')
                             ->label('Amount')
                             ->numeric()
@@ -74,6 +80,12 @@ class ContributionResource extends Resource
                     ->options(Project::query()->where('active', true)->pluck('name', 'id'))
                     ->searchable()
                     ->native(false)
+                    ->hiddenOn('create'),
+                Forms\Components\Select::make('savings_group_id')
+                    ->label('Savings Group (optional)')
+                    ->relationship('savingsGroup', 'name')
+                    ->searchable()
+                    ->preload()
                     ->hiddenOn('create'),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
@@ -113,6 +125,7 @@ class ContributionResource extends Resource
                     }),
                 TextColumn::make('scheme.name')->label('Scheme')->searchable(),
                 TextColumn::make('project.name')->label('Project')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('savingsGroup.name')->label('Savings Group')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
                 TextColumn::make('units')
                     ->label(fn ($record) => ($record && $record->scheme && $record->scheme->name === 'Digital Gold') ? 'Grams' : 'Units')

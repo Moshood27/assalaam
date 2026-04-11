@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Scheme;
 use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -78,6 +79,8 @@ class User extends Authenticatable implements FilamentUser
         'attaqwa_score',
         'last_activity_at',
         'wellness_check_notified_at',
+        'zakat_nisab_crossed_at',
+        'zakat_last_paid_at',
     ];
 
     /**
@@ -121,6 +124,8 @@ class User extends Authenticatable implements FilamentUser
             'gold_balance' => 'decimal:6',
             'last_activity_at' => 'datetime',
             'wellness_check_notified_at' => 'datetime',
+            'zakat_nisab_crossed_at' => 'datetime',
+            'zakat_last_paid_at' => 'datetime',
         ];
     }
 
@@ -210,6 +215,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(StoreOrder::class);
     }
 
+    public function shariaDisputes()
+    {
+        return $this->hasMany(ShariaDispute::class);
+    }
+
     public function vendor()
     {
         return $this->hasOne(Vendor::class, 'owner_user_id');
@@ -263,6 +273,21 @@ class User extends Authenticatable implements FilamentUser
     public function takafulPoolEntries()
     {
         return $this->hasMany(TakafulPoolEntry::class);
+    }
+
+    public function savingsGroupMembers()
+    {
+        return $this->hasMany(SavingsGroupMember::class);
+    }
+
+    public function savingsGroups()
+    {
+        return $this->hasManyThrough(SavingsGroup::class, SavingsGroupMember::class, 'user_id', 'id', 'id', 'savings_group_id');
+    }
+
+    public function createdSavingsGroups()
+    {
+        return $this->hasMany(SavingsGroup::class, 'creator_id');
     }
 
     public function hasTransactionPin(): bool
@@ -490,5 +515,24 @@ class User extends Authenticatable implements FilamentUser
         $b = $this->withdrawableBreakdown();
 
         return (float) ($b['available_for_withdrawal'] ?? 0.0);
+    }
+
+    /**
+     * Calculate total assets relevant for Zakat (Naira + Gold + Shares + Savings)
+     */
+    public function zakatBaseWealth(float $goldPrice): float
+    {
+        // Savings, Shares are usually stored in Contributions
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id');
+
+        $savingsAndShares = (float) $this->contributions()
+            ->where('status', 'success')
+            ->whereIn('scheme_id', $schemes)
+            ->sum('amount');
+
+        $goldValue = round(($this->gold_balance ?? 0) * $goldPrice, 2);
+        $walletBalance = (float) ($this->balance ?? 0);
+
+        return (float) round($savingsAndShares + $goldValue + $walletBalance, 2);
     }
 }

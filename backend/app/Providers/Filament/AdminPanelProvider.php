@@ -22,6 +22,10 @@ use App\Filament\Resources\ProjectResource;
 use App\Filament\Resources\QardHasanResource;
 use App\Filament\Resources\SavingsGoalResource;
 use App\Filament\Resources\SchemeResource;
+use App\Filament\Resources\SadaqahProjectResource;
+use App\Filament\Resources\ZakatResource;
+use App\Filament\Resources\ShariaBoardMemberResource;
+use App\Filament\Resources\ShariaDisputeResource;
 use App\Filament\Resources\ShariahAuditLogResource;
 use App\Filament\Resources\StoreOrderResource;
 use App\Filament\Resources\SupportMessageResource;
@@ -96,6 +100,10 @@ class AdminPanelProvider extends PanelProvider
                 QardHasanResource::class,
                 SavingsGoalResource::class,
                 SchemeResource::class,
+                SadaqahProjectResource::class,
+                ZakatResource::class,
+                ShariaBoardMemberResource::class,
+                ShariaDisputeResource::class,
                 ShariahAuditLogResource::class,
                 TakafulContributionResource::class,
                 TakafulPoolEntryResource::class,

@@ -19,7 +19,7 @@ class ShariaBoardMemberResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'AGM & Voting';
+    protected static ?string $navigationGroup = 'Sharia Board';
     protected static ?int $navigationSort = 40;
 
     public static function form(Form $form): Form

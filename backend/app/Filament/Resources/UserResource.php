@@ -214,6 +214,16 @@ class UserResource extends Resource
                             Forms\Components\Toggle::make('notify_sms')->label('SMS Notifications')->default(true),
                             Forms\Components\Toggle::make('notify_push')->label('Push Notifications')->default(true),
                         ])->columns(3)->columnSpanFull(),
+                        Forms\Components\Section::make('Zakat Information')
+                            ->schema([
+                                Forms\Components\DateTimePicker::make('zakat_nisab_crossed_at')
+                                    ->label('Nisab Crossed At')
+                                    ->helperText('The date when the user wealth first crossed the Nisab threshold.')
+                                    ->native(false),
+                                Forms\Components\DateTimePicker::make('zakat_last_paid_at')
+                                    ->label('Last Zakat Paid At')
+                                    ->native(false),
+                            ])->columns(2),
                         Forms\Components\DateTimePicker::make('deceased_at')->label('Deceased At')->native(false)->seconds(false),
                         Forms\Components\DateTimePicker::make('major_loss_at')->label('Major Loss At')->native(false)->seconds(false),
                     ])->columns(2),
@@ -317,6 +327,31 @@ class UserResource extends Resource
                     ->color('danger')
                     ->sortable()
                     ->toggleable(),
+                TextColumn::make('zakat_nisab_crossed_at')
+                    ->label('Nisab Crossed')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('zakat_last_paid_at')
+                    ->label('Last Zakat')
+                    ->date()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\IconColumn::make('zakat_eligible')
+                    ->label('Zakat Due')
+                    ->boolean()
+                    ->getStateUsing(function (User $record) {
+                        if (!$record->zakat_nisab_crossed_at) return false;
+                        $lunarDays = (int) config('zakat.lunar_days', 354);
+                        return now()->diffInDays($record->zakat_nisab_crossed_at) >= $lunarDays;
+                    })
+                    ->sortable(query: function (Builder $query, string $direction) {
+                        $lunarDays = (int) config('zakat.lunar_days', 354);
+                        return $query->orderBy(
+                            DB::raw('DATEDIFF(NOW(), zakat_nisab_crossed_at) >= ' . $lunarDays),
+                            $direction
+                        );
+                    }),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('deceased')
@@ -327,6 +362,25 @@ class UserResource extends Resource
                     ->queries(
                         true: fn (Builder $query) => $query->whereNotNull('deceased_at'),
                         false: fn (Builder $query) => $query->whereNull('deceased_at'),
+                    ),
+                Tables\Filters\TernaryFilter::make('zakat_due')
+                    ->label('Zakat Due Status')
+                    ->placeholder('All Users')
+                    ->trueLabel('Zakat Due')
+                    ->falseLabel('Not Due')
+                    ->queries(
+                        true: function (Builder $query) {
+                            $lunarDays = (int) config('zakat.lunar_days', 354);
+                            return $query->whereNotNull('zakat_nisab_crossed_at')
+                                ->whereRaw('DATEDIFF(NOW(), zakat_nisab_crossed_at) >= ?', [$lunarDays]);
+                        },
+                        false: function (Builder $query) {
+                            $lunarDays = (int) config('zakat.lunar_days', 354);
+                            return $query->where(function ($q) use ($lunarDays) {
+                                $q->whereNull('zakat_nisab_crossed_at')
+                                    ->orWhereRaw('DATEDIFF(NOW(), zakat_nisab_crossed_at) < ?', [$lunarDays]);
+                            });
+                        },
                     ),
                 Tables\Filters\Filter::make('needs_wellness_check')
                     ->label('Needs Wellness Check')

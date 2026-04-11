@@ -20,6 +20,7 @@ const AgmSession = () => import('../views/AgmSession.vue')
 const ProjectProposals = () => import('../views/ProjectProposals.vue')
 const ProjectProposalDetail = () => import('../views/ProjectProposalDetail.vue')
 const ShariaBoard = () => import('../views/ShariaBoard.vue')
+const TahkimHistory = () => import('../views/TahkimHistory.vue')
 const Store = () => import('../views/Store.vue')
 const OrderReceipt = () => import('../views/OrderReceipt.vue')
 const Privacy = () => import('../views/Privacy.vue')
@@ -100,6 +101,7 @@ const routes = [
   { path: '/agm/proposals', name: 'agm.proposals', component: ProjectProposals, meta: { requiresAuth: true } },
   { path: '/agm/proposals/:id', name: 'agm.proposal_detail', component: ProjectProposalDetail, meta: { requiresAuth: true } },
   { path: '/sharia-board', name: 'sharia.board', component: ShariaBoard, meta: { requiresAuth: true } },
+  { path: '/sharia-board/history', name: 'sharia.board.history', component: TahkimHistory, meta: { requiresAuth: true } },
   // Placeholder: use existing Qard Hasan prototype under /loans for now
   { path: '/loans', name: 'loans', component: Loans, meta: { requiresAuth: true } },
   { path: '/qard', name: 'qard', component: QardHasan },

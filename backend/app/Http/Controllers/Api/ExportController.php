@@ -9,12 +9,21 @@ use App\Models\QardHasanRepayment;
 use App\Models\StoreOrder;
 use App\Models\WalletTransaction;
 use App\Services\AccountingReportService;
+use App\Models\Scheme;
+use App\Services\ZakatService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class ExportController extends Controller
 {
+    protected $zakatService;
+
+    public function __construct(ZakatService $zakatService)
+    {
+        $this->zakatService = $zakatService;
+    }
+
     public function downloadPassbook(Request $request)
     {
         // Ensure user is authenticated (Sanctum)
@@ -36,11 +45,48 @@ class ExportController extends Controller
                 ->orderBy('created_at')
                 ->get();
 
+            // Build Matrix data for the PDF (matching the UI)
+            $startOfYear = Carbon::create($year, 1, 1, 0, 0, 0);
+            $yearContributions = $user->contributions()
+                ->whereYear('created_at', $year)
+                ->where('status', 'success')
+                ->get();
+            $bfContributions = $user->contributions()
+                ->where('created_at', '<', $startOfYear)
+                ->where('status', 'success')
+                ->get();
+
+            $schemes = Scheme::orderBy('name')->get();
+            $matrix = $schemes->map(function ($scheme) use ($yearContributions, $bfContributions) {
+                $row = [
+                    'scheme_name' => $scheme->name,
+                    'months' => array_fill(1, 12, 0),
+                    'bf' => 0.0,
+                    'total' => 0.0,
+                ];
+                foreach ($bfContributions as $con) {
+                    if ($con->scheme_id === $scheme->id) {
+                        $row['bf'] += (float) $con->amount;
+                    }
+                }
+                foreach ($yearContributions as $con) {
+                    if ($con->scheme_id === $scheme->id) {
+                        $month = $con->created_at->month;
+                        $row['months'][$month] += (float) $con->amount;
+                        $row['total'] += (float) $con->amount;
+                    }
+                }
+                return $row;
+            });
+
             $data = [
                 'user' => $user,
                 'branch' => optional($user->branch)->name,
                 'year' => $year,
                 'contributions' => $contributions,
+                'matrix' => $matrix,
+                'grand_total' => $matrix->sum('total'),
+                'bf_total' => $matrix->sum('bf'),
             ];
 
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.passbook', $data);
@@ -49,6 +95,144 @@ class ExportController extends Controller
             \Log::error('downloadPassbook error', ['exception' => $e->getMessage()]);
             return response()->json(['message' => 'Unable to generate PDF at the moment. Please try again later.'], 422);
         }
+    }
+
+    public function downloadPassbookCsv(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            $year = (int) $request->integer('year', now()->year);
+            $contributions = $user->contributions()
+                ->with('scheme')
+                ->where('status', 'success')
+                ->whereYear('created_at', $year)
+                ->orderBy('created_at')
+                ->get();
+
+            $filename = 'Passbook_' . $year . '_' . $user->membership_number . '.csv';
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"$filename\"",
+            ];
+
+            $callback = function () use ($contributions) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['Date', 'Scheme', 'Reference', 'Amount']);
+                foreach ($contributions as $c) {
+                    fputcsv($file, [
+                        $c->created_at->format('Y-m-d H:i'),
+                        optional($c->scheme)->name ?? '-',
+                        $c->reference,
+                        number_format((float)$c->amount, 2, '.', ''),
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Throwable $e) {
+            \Log::error('downloadPassbookCsv error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate CSV.'], 422);
+        }
+    }
+
+    public function downloadStatement(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            $format = strtolower((string) $request->query('format', 'pdf'));
+            $sixMonthsAgo = now()->subMonths(6)->startOfDay();
+
+            // Calculate opening balance
+            $openingBalance = (float) WalletTransaction::where('user_id', $user->id)
+                ->where('created_at', '<', $sixMonthsAgo)
+                ->selectRaw("SUM(CASE WHEN type = 'credit' THEN amount ELSE -amount END) as balance")
+                ->value('balance') ?? 0.0;
+
+            $transactions = WalletTransaction::where('user_id', $user->id)
+                ->where('created_at', '>=', $sixMonthsAgo)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $data = [
+                'user' => $user,
+                'branch' => optional($user->branch)->name,
+                'transactions' => $transactions,
+                'opening_balance' => $openingBalance,
+                'period' => [
+                    'from' => $sixMonthsAgo->format('Y-m-d'),
+                    'to' => now()->format('Y-m-d'),
+                ],
+            ];
+
+            if ($format === 'csv') {
+                return $this->generateStatementCsv($data);
+            }
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.bank_statement', $data);
+            return $pdf->download('Statement_' . $user->membership_number . '.pdf');
+        } catch (\Throwable $e) {
+            \Log::error('downloadStatement error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate export at the moment.'], 422);
+        }
+    }
+
+    private function generateStatementCsv(array $data)
+    {
+        $user = $data['user'];
+        $transactions = $data['transactions'];
+        $openingBalance = $data['opening_balance'];
+
+        $filename = 'Statement_' . $user->membership_number . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($transactions, $openingBalance, $data) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Date', 'Description', 'Reference', 'Credit', 'Debit', 'Balance']);
+
+            $currentBalance = (float) $openingBalance;
+            fputcsv($file, [$data['period']['from'], 'OPENING BALANCE', '-', '-', '-', number_format($currentBalance, 2, '.', '')]);
+
+            foreach ($transactions as $tx) {
+                $isCredit = strtolower((string) $tx->type) === 'credit';
+                $amt = (float) $tx->amount;
+                $currentBalance += ($isCredit ? $amt : -$amt);
+
+                $desc = ucwords(str_replace('_', ' ', (string) $tx->source));
+                if ($tx->source === 'p2p_transfer') {
+                    $meta = $tx->meta;
+                    if ($isCredit && isset($meta['from_name'])) {
+                        $desc .= " from " . $meta['from_name'];
+                    } elseif (!$isCredit && isset($meta['to_name'])) {
+                        $desc .= " to " . $meta['to_name'];
+                    }
+                }
+
+                fputcsv($file, [
+                    $tx->created_at->format('Y-m-d H:i'),
+                    $desc,
+                    $tx->reference,
+                    $isCredit ? number_format($amt, 2, '.', '') : '',
+                    ! $isCredit ? number_format($amt, 2, '.', '') : '',
+                    number_format($currentBalance, 2, '.', ''),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function downloadLoanSchedule(Request $request, int $id)
@@ -327,6 +511,26 @@ class ExportController extends Controller
         } catch (\Throwable $e) {
             \Log::error('downloadOrderReceipt error', ['exception' => $e->getMessage(), 'order_id' => $id]);
             return response()->json(['message' => 'Unable to generate receipt at the moment. Please try again later.'], 422);
+        }
+    }
+
+    public function downloadZakatReport(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            $data = $this->zakatService->getEstimate($user);
+            $data['branch'] = optional($user->branch)->name;
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_report', $data);
+            $filename = 'Zakat_Report_' . $user->membership_number . '_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadZakatReport error', ['exception' => $e->getMessage(), 'user_id' => $user->id]);
+            return response()->json(['message' => 'Unable to generate Zakat report at the moment.'], 422);
         }
     }
 }

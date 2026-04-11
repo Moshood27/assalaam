@@ -26,7 +26,9 @@ class SadaqahProjectResource extends Resource
 {
     protected static ?string $model = SadaqahProject::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-heart';
+
+    protected static ?string $navigationGroup = 'Charity';
 
     public static function form(Form $form): Form
     {
@@ -61,11 +63,25 @@ class SadaqahProjectResource extends Resource
                         FileUpload::make('media_urls')
                             ->multiple()
                             ->image()
-                            ->directory('sadaqah-projects'),
+                            ->acceptedFileTypes(['image/*', 'video/*', 'video/mp4', 'video/quicktime'])
+                            ->maxSize(20480) // 20MB
+                            ->directory('sadaqah-projects')
+                            ->helperText('Upload photos or videos as proof of impact.'),
                         Toggle::make('active')
-                            ->default(true),
+                            ->default(true)
+                            ->onIcon('heroicon-m-check')
+                            ->offIcon('heroicon-m-x-mark')
+                            ->label('Project Active')
+                            ->helperText('Deactivate this project once it is completed to notify contributors.'),
                         DateTimePicker::make('started_at'),
-                        DateTimePicker::make('closed_at'),
+                        DateTimePicker::make('closed_at')
+                            ->helperText('Setting this date will also mark the project as closed.')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, $set) {
+                                if ($state) {
+                                    $set('active', false);
+                                }
+                            }),
                     ])
             ]);
     }
@@ -77,7 +93,15 @@ class SadaqahProjectResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('type')
-                    ->badge(),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'well' => 'info',
+                        'mosque' => 'success',
+                        'medical' => 'danger',
+                        'education' => 'warning',
+                        'general' => 'gray',
+                        default => 'gray',
+                    }),
                 TextColumn::make('target_amount')
                     ->money('NGN')
                     ->sortable(),
@@ -117,5 +141,10 @@ class SadaqahProjectResource extends Resource
         return [
             'index' => Pages\ManageSadaqahProjects::route('/'),
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('active', true)->count() ?: null;
     }
 }

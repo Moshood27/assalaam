@@ -21,7 +21,7 @@ class StoreOrderController extends Controller
         ]);
         $user = $request->user();
         $per = $validated['per_page'] ?? 15;
-        $q = StoreOrder::with('items')
+        $q = StoreOrder::with(['items', 'dispute'])
             ->where('user_id', $user->id)
             ->latest()
             ->paginate($per);
@@ -31,7 +31,7 @@ class StoreOrderController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
-        $order = StoreOrder::with('items.vendor:id,name')
+        $order = StoreOrder::with(['items.vendor:id,name', 'dispute'])
             ->where('user_id', $user->id)
             ->findOrFail($id);
         return response()->json($order);
@@ -505,5 +505,53 @@ class StoreOrderController extends Controller
             'order' => $order,
             'balance' => (float) $user->fresh()->balance,
         ]);
+    }
+
+    /**
+     * Raise a Sharia Dispute (Tahkim) for a store order.
+     * Goes to the Sharia Board for mediation.
+     */
+    public function dispute(Request $request, $id)
+    {
+        $user = $request->user();
+        $order = StoreOrder::where('user_id', $user->id)->findOrFail($id);
+
+        if ($order->dispute) {
+            return response()->json([
+                'message' => 'A dispute has already been raised for this order.',
+                'dispute' => $order->dispute
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:255',
+            'description' => 'nullable|string|max:2000',
+        ]);
+
+        $dispute = $order->dispute()->create([
+            'user_id' => $user->id,
+            'reason' => $validated['reason'],
+            'description' => $validated['description'] ?? null,
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Dispute raised successfully. The Sharia Board will mediate this case (Tahkim).',
+            'dispute' => $dispute
+        ], 201);
+    }
+
+    /**
+     * List all Sharia Disputes (Tahkim) for the authenticated member.
+     */
+    public function myDisputes(Request $request)
+    {
+        $user = $request->user();
+        $disputes = \App\Models\ShariaDispute::with(['order:id,reference,total_amount,status,created_at'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate($request->query('per_page', 15));
+
+        return response()->json($disputes);
     }
 }

@@ -107,6 +107,11 @@ class DashboardController extends Controller
         $goldBasePrice = $this->priceService->getGoldPrice();
         $goldSellPrice = $this->priceService->getSellPrice();
 
+        $activeDisputesCount = 0;
+        if (Schema::hasTable('sharia_disputes')) {
+            $activeDisputesCount = $user->shariaDisputes()->whereIn('status', ['pending', 'mediation'])->count();
+        }
+
         $vendor = $user->vendor;
         $vendorStatus = null;
         if ($vendor) {
@@ -131,7 +136,8 @@ class DashboardController extends Controller
             'gold_balance' => (float) $user->gold_balance,
             'gold_value_naira' => $goldSellPrice ? round($user->gold_balance * $goldSellPrice, 2) : null,
             'gold_price_per_gram' => $goldBasePrice,
-            'vendor' => $vendorStatus
+            'vendor' => $vendorStatus,
+            'active_disputes_count' => $activeDisputesCount
         ];
 
         return response()->json([

@@ -93,6 +93,24 @@
         </div>
         <p class="text-[12px] text-slate-500">Download your cooperative's Appropriation Account and full Financial Statements for the selected year.</p>
       </section>
+
+      <!-- 6-Month Bank Statement -->
+      <section class="card card-elevated p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="section-title">6-Month Bank Statement</h2>
+          <div class="flex items-center gap-2">
+            <a :href="getStatementUrl('pdf')" target="_blank" class="btn-primary text-xs px-3 py-1.5 rounded-full flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              PDF
+            </a>
+            <a :href="getStatementUrl('csv')" target="_blank" class="btn-ghost text-xs px-3 py-1.5 rounded-full flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              CSV
+            </a>
+          </div>
+        </div>
+        <p class="text-[12px] text-slate-500">Export your transaction history for the last 6 months. Ideal for proof of funds and business records.</p>
+      </section>
     </div>
 
     <nav class="bottom-nav">
@@ -189,6 +207,12 @@ const getFinancialsUrl = () => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
   return `${baseUrl}/api/download-financials/${divYear.value}?token=${encodeURIComponent(token)}`
+}
+
+const getStatementUrl = (format) => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-statement?format=${format}&token=${encodeURIComponent(token)}`
 }
 
 onMounted(() => { loadMix(); loadDividend() })

@@ -30,6 +30,9 @@ class Kernel extends ConsoleKernel
         // Takaful monthly contribution charge: on the 1st of every month at 08:10 Africa/Lagos
         $schedule->command('takaful:charge')->monthlyOn(1, '08:10')->timezone('Africa/Lagos');
 
+        // Savings Groups monthly contribution charge: on the 1st of every month at 08:20 Africa/Lagos
+        $schedule->command('savings-groups:charge')->monthlyOn(1, '08:20')->timezone('Africa/Lagos');
+
         // The Hunter: hourly sweep to auto-recover overdue loan installments from wallet balances
         $schedule->command('loans:hunter-sweep')->hourly();
 
@@ -38,6 +41,9 @@ class Kernel extends ConsoleKernel
 
         // VTU provider wallet health check: notify admins if balances drop below threshold
         $schedule->command('vtu:check-balances')->hourly()->timezone('Africa/Lagos');
+
+        // Zakat Hawl check: run daily at midnight
+        $schedule->command('zakat:check-nisab-hawl')->daily()->timezone('Africa/Lagos');
 
         // Reconcile pending VTU transactions every 5 minutes and refund failures
         $schedule->job(new \App\Jobs\ReconcileUtilityTransactions)->everyFiveMinutes();

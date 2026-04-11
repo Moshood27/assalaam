@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StoreOrderResource\Pages;
+use App\Filament\Resources\ShariaDisputeResource;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\StoreOrder;
 use App\Models\Product;
@@ -208,6 +209,13 @@ class StoreOrderResource extends Resource
                             'total_amount' => $record->total_amount,
                         ]);
                     }),
+
+                Tables\Actions\Action::make('view_dispute')
+                    ->label('View Dispute')
+                    ->icon('heroicon-o-scale')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->dispute()->exists())
+                    ->url(fn ($record): string => ShariaDisputeResource::getUrl('edit', ['record' => $record->dispute->id])),
 
                 Tables\Actions\Action::make('mark_processing')
                     ->label('Processing')

@@ -5,35 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wallet Transaction Receipt</title>
     <style>
-        body { font-family: DejaVu Sans, Arial, Helvetica, sans-serif; color: #111827; font-size: 12px; }
-        .header { display:flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-        .title { font-size: 18px; font-weight: 800; }
-        .muted { color: #6b7280; font-size: 11px; }
-        .badge { display:inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700; }
+        body { font-family: DejaVu Sans, Arial, Helvetica, sans-serif; color: #111827; font-size: 11px; }
+        .header { display:block; margin-bottom: 20px; border-bottom: 2px solid #111827; padding-bottom: 10px; }
+        .title { font-size: 18px; font-weight: 800; text-transform: uppercase; }
+        .muted { color: #6b7280; font-size: 10px; }
+        .badge { display:inline-block; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 800; text-transform: uppercase; }
         .badge-credit { background: #d1fae5; color: #065f46; }
         .badge-debit { background: #fee2e2; color: #991b1b; }
-        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-        th { background: #111827; color: #fff; font-size: 10px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e5e7eb; padding: 6px; text-align: left; }
+        th { background: #111827; color: #fff; font-size: 9px; text-transform: uppercase; }
         .right { text-align: right; }
         .section { margin-top: 12px; }
-        .footer { margin-top: 16px; font-size: 11px; color: #6b7280; }
+        .footer { margin-top: 20px; font-size: 10px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div>
-            <div class="title">Wallet Transaction Receipt</div>
-            <div class="muted">This document serves as proof of payment/transfer.</div>
-        </div>
-        <div style="text-align:right">
-            <div><strong>{{ $user->name }}</strong></div>
-            <div class="muted">Membership ID: {{ $user->membership_number }}</div>
-            @if(!empty($branch))
-                <div class="muted">Branch: {{ $branch }}</div>
-            @endif
-            <div class="muted">Generated: {{ now()->format('Y-m-d H:i') }}</div>
-        </div>
+        <table style="border:none; width: 100%;">
+            <tr style="border:none;">
+                <td style="border:none; width: 50%; vertical-align: top;">
+                    <div class="title">Transaction Receipt</div>
+                    <div class="muted">Proof of payment/transfer.</div>
+                </td>
+                <td style="border:none; width: 50%; text-align: right; vertical-align: top;">
+                    <div><strong>{{ $user->name }}</strong></div>
+                    <div class="muted">Membership ID: {{ $user->membership_number }}</div>
+                    @if(!empty($branch))
+                        <div class="muted">Branch: {{ $branch }}</div>
+                    @endif
+                    <div class="muted">Generated: {{ now()->format('Y-m-d H:i') }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="section">

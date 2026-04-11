@@ -50,6 +50,18 @@ class GoldSilverPriceService
     }
 
     /**
+     * Get Gold Nisab specifically (85g)
+     */
+    public function getGoldNisab()
+    {
+        $goldPricePerGram = $this->getGoldPrice();
+        if ($goldPricePerGram) {
+            return $goldPricePerGram * config('zakat.nisab_gold_grams', 85);
+        }
+        return config('zakat.nisab_ngn');
+    }
+
+    /**
      * Get gold price per gram in NGN
      */
     public function getGoldPrice()

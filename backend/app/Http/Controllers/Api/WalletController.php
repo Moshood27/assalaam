@@ -258,6 +258,7 @@ class WalletController extends Controller
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
             'items.*.project_id' => 'nullable|integer|exists:projects,id',
+            'items.*.savings_group_id' => 'nullable|integer|exists:savings_groups,id',
             'items.*.units' => 'nullable|integer|min:1',
             'items.*.amount' => 'required|numeric|min:1',
             'pin' => ['required','regex:/^\d{4}$/'],
@@ -283,9 +284,26 @@ class WalletController extends Controller
                 if (!empty($i['project_id'])) {
                     $row['project_id'] = (int) $i['project_id'];
                 }
+                if (!empty($i['savings_group_id'])) {
+                    $row['savings_group_id'] = (int) $i['savings_group_id'];
+                }
                 return $row;
             })
             ->filter(fn($i) => $i['amount'] > 0);
+
+        // Add project_ids from savings groups if not already in items
+        $savingsGroupIds = $items->pluck('savings_group_id')->filter()->unique()->values();
+        $savingsGroups = $savingsGroupIds->isNotEmpty() ? \App\Models\SavingsGroup::whereIn('id', $savingsGroupIds)->get()->keyBy('id') : collect();
+
+        $items = $items->map(function($item) use ($savingsGroups) {
+            if (!empty($item['savings_group_id']) && empty($item['project_id'])) {
+                $sg = $savingsGroups[$item['savings_group_id']] ?? null;
+                if ($sg && $sg->project_id) {
+                    $item['project_id'] = $sg->project_id;
+                }
+            }
+            return $item;
+        });
 
         // Validate any provided project_ids are active and check units
         $projectIds = $items->pluck('project_id')->filter()->unique()->values();
@@ -339,6 +357,9 @@ class WalletController extends Controller
                 if (!empty($item['project_id'])) {
                     $row['project_id'] = (int) $item['project_id'];
                     $row['units'] = $item['units'] ?? null;
+                }
+                if (!empty($item['savings_group_id'])) {
+                    $row['savings_group_id'] = (int) $item['savings_group_id'];
                 }
                 Contribution::create($row);
             }

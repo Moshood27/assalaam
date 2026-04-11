@@ -318,6 +318,8 @@
       <path value="$PROJECT_DIR$/backend/vendor/aws/aws-sdk-php" />
       <path value="$PROJECT_DIR$/backend/vendor/aws/aws-crt-php" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/filesystem" />
+      <path value="$PROJECT_DIR$/backend/vendor/laragear/webauthn" />
+      <path value="$PROJECT_DIR$/backend/vendor/laragear/meta-model" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2">

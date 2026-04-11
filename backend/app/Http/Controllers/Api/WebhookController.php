@@ -493,7 +493,7 @@ class WebhookController extends Controller
                 $contribution->status = 'success';
                 $contribution->save();
 
-                // If this is Zakat or Zakat Al-Fitr, record it in the Charity Ledger
+                // If this is Zakat or Zakat Al-Fitr, record it in the Charity Ledger and move to Fund
                 $schemeName = $contribution->scheme?->name;
                 if ($schemeName && in_array($schemeName, ['Zakat', 'Zakat Al-Fitr'])) {
                     \App\Models\CharityEntry::create([
@@ -502,6 +502,29 @@ class WebhookController extends Controller
                         'amount' => $contribution->amount,
                         'note' => "Payment for {$schemeName} via Paystack (Ref: {$reference})",
                     ]);
+
+                    // Move to Zakat Fund (SadaqahProject)
+                    $zakatProject = SadaqahProject::firstOrCreate(
+                        ['name' => 'General Zakat Fund'],
+                        ['description' => 'Automated Zakat Fund', 'active' => true]
+                    );
+
+                    SadaqahContribution::create([
+                        'user_id' => $contribution->user_id,
+                        'sadaqah_project_id' => $zakatProject->id,
+                        'amount' => $contribution->amount,
+                        'status' => 'success',
+                        'reference' => 'ZAKAT_FUND_MOVE_EXT_' . now()->format('YmdHis'),
+                    ]);
+
+                    $zakatProject->increment('raised_amount', $contribution->amount);
+
+                    if ($schemeName === 'Zakat') {
+                        $user->update([
+                            'zakat_last_paid_at' => now(),
+                            'zakat_nisab_crossed_at' => now(), // Start next Hawl cycle
+                        ]);
+                    }
                 }
             }
 
@@ -778,7 +801,7 @@ class WebhookController extends Controller
                 $contribution->status = 'success';
                 $contribution->save();
 
-                // If this is Zakat or Zakat Al-Fitr, record it in the Charity Ledger
+                // If this is Zakat or Zakat Al-Fitr, record it in the Charity Ledger and move to Fund
                 $schemeName = $contribution->scheme?->name;
                 if ($schemeName && in_array($schemeName, ['Zakat', 'Zakat Al-Fitr'])) {
                     \App\Models\CharityEntry::create([
@@ -787,6 +810,29 @@ class WebhookController extends Controller
                         'amount' => $contribution->amount,
                         'note' => "Payment for {$schemeName} via Flutterwave (Ref: {$reference})",
                     ]);
+
+                    // Move to Zakat Fund (SadaqahProject)
+                    $zakatProject = SadaqahProject::firstOrCreate(
+                        ['name' => 'General Zakat Fund'],
+                        ['description' => 'Automated Zakat Fund', 'active' => true]
+                    );
+
+                    SadaqahContribution::create([
+                        'user_id' => $contribution->user_id,
+                        'sadaqah_project_id' => $zakatProject->id,
+                        'amount' => $contribution->amount,
+                        'status' => 'success',
+                        'reference' => 'ZAKAT_FUND_MOVE_EXT_' . now()->format('YmdHis'),
+                    ]);
+
+                    $zakatProject->increment('raised_amount', $contribution->amount);
+
+                    if ($schemeName === 'Zakat') {
+                        $user->update([
+                            'zakat_last_paid_at' => now(),
+                            'zakat_nisab_crossed_at' => now(), // Start next Hawl cycle
+                        ]);
+                    }
                 }
             }
 

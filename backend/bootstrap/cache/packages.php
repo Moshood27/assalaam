@@ -139,6 +139,13 @@
       0 => 'Kreait\\Laravel\\Firebase\\ServiceProvider',
     ),
   ),
+  'laragear/webauthn' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Laragear\\WebAuthn\\WebAuthnServiceProvider',
+    ),
+  ),
   'laravel/horizon' => 
   array (
     'aliases' => 

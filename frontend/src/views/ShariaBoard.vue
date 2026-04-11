@@ -27,9 +27,15 @@
         <div class="card p-6 bg-emerald-700 text-white overflow-hidden relative">
           <div class="relative z-10">
             <h2 class="text-2xl font-black mb-2">Sharia Governance</h2>
-            <p class="text-emerald-50 text-xs leading-relaxed opacity-90">
+            <p class="text-emerald-50 text-xs leading-relaxed opacity-90 mb-4">
               Our cooperative operates under the guidance of our esteemed Sharia Supervisory Board to ensure all transactions and project investments are 100% Sharia compliant.
             </p>
+            <router-link to="/sharia-board/history" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm border border-white/10">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              My Tahkim (Disputes)
+            </router-link>
           </div>
           <div class="absolute -right-10 -bottom-10 opacity-10">
              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-40 h-40">
@@ -69,7 +75,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../http'
 
 const members = ref([])
 const loading = ref(false)
@@ -79,10 +85,7 @@ const load = async () => {
   loading.value = true
   error.value = ''
   try {
-    const token = localStorage.getItem('token')
-    const { data } = await axios.get('/api/sharia-board', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    const { data } = await axios.get('/api/sharia-board')
     members.value = data
   } catch (e) {
     error.value = e.response?.data?.message || e.message

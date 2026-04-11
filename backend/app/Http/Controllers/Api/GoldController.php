@@ -7,6 +7,7 @@ use App\Models\Scheme;
 use App\Models\WalletTransaction;
 use App\Models\Contribution;
 use App\Services\GoldSilverPriceService;
+use App\Services\ZakatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,10 +15,12 @@ use Illuminate\Support\Facades\Log;
 class GoldController extends Controller
 {
     protected $goldService;
+    protected $zakatService;
 
-    public function __construct(GoldSilverPriceService $goldService)
+    public function __construct(GoldSilverPriceService $goldService, ZakatService $zakatService)
     {
         $this->goldService = $goldService;
+        $this->zakatService = $zakatService;
     }
 
     public function getPrice()
@@ -77,10 +80,21 @@ class GoldController extends Controller
             $roi = ($profitLoss / $costBasis) * 100;
         }
 
-        // Zakat
-        $nisabGrams = config('zakat.nisab_gold_grams', 85);
-        $zakatProgress = min(($user->gold_balance / $nisabGrams) * 100, 100);
-        $isEligible = $user->gold_balance >= $nisabGrams;
+        // Zakat Report (Using the new automated logic)
+        $zakatEstimate = $this->zakatService->getEstimate($user);
+
+        // Normalize data for frontend
+        $zakatEstimate['crossed_on'] = optional($zakatEstimate['crossed_on'])->toDateTimeString();
+        $zakatEstimate['eligible_on'] = optional($zakatEstimate['eligible_on'])->toDateTimeString();
+        $zakatEstimate['last_paid_at'] = optional($zakatEstimate['last_paid_at'])->toDateTimeString();
+
+        $nisabValue = $zakatEstimate['nisab'] ?? 0;
+        $totalAssets = $zakatEstimate['base'] ?? 0;
+        $progress = $nisabValue > 0 ? round(min(($totalAssets / $nisabValue) * 100, 100), 2) : 0;
+        $gramsToNisab = 0;
+        if ($totalAssets < $nisabValue && $sellPrice > 0) {
+            $gramsToNisab = round(($nisabValue - $totalAssets) / $sellPrice, 6);
+        }
 
         return [
             'performance' => [
@@ -91,10 +105,11 @@ class GoldController extends Controller
                 'total_invested' => round($totalSpent, 2)
             ],
             'zakat' => [
-                'nisab_grams' => $nisabGrams,
-                'progress_percent' => round($zakatProgress, 2),
-                'is_eligible' => $isEligible,
-                'grams_to_nisab' => max(0, round($nisabGrams - $user->gold_balance, 6))
+                'nisab_grams' => config('zakat.nisab_gold_grams', 85),
+                'progress_percent' => $progress,
+                'is_eligible' => $zakatEstimate['eligible'] ?? false,
+                'grams_to_nisab' => $gramsToNisab,
+                'report' => $zakatEstimate
             ]
         ];
     }

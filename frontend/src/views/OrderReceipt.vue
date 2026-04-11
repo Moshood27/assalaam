@@ -86,11 +86,84 @@
           <div v-if="paySuccess" class="mt-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded">{{ paySuccess }}</div>
         </div>
 
-        <div class="flex items-center justify-end gap-3">
-          <a v-if="financing" :href="getAgreementUrl()" target="_blank" class="px-4 py-2 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 text-sm font-bold">Download Agreement</a>
-          <a :href="getDownloadUrl()" target="_blank" class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm">Print / Download PDF</a>
+        <div v-if="order.dispute" class="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-xl">
+          <div class="flex items-center justify-between mb-2">
+             <div class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Sharia Dispute (Tahkim)</div>
+             <div class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" :class="disputeStatusClass(order.dispute.status)">
+               {{ order.dispute.status }}
+             </div>
+          </div>
+          <div class="text-xs text-slate-700 font-bold mb-1">{{ order.dispute.reason }}</div>
+          <p class="text-[11px] text-slate-600 line-clamp-2 mb-2">{{ order.dispute.description }}</p>
+
+          <div v-if="order.dispute.outcome_details" class="mt-2 pt-2 border-t border-slate-200">
+            <div class="text-[10px] text-emerald-700 font-bold uppercase tracking-tight mb-1">Mediation Outcome</div>
+            <p class="text-[11px] text-slate-700 whitespace-pre-line">{{ order.dispute.outcome_details }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
+          <button
+              v-if="!order.dispute && !['failed', 'cancelled'].includes(order.status?.toLowerCase())"
+              @click="openDisputeModal"
+              class="text-xs font-bold text-rose-600 hover:text-rose-700 transition flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Raise Dispute (Tahkim)
+          </button>
+          <div v-else></div>
+
+          <div class="flex items-center gap-3">
+            <a v-if="financing" :href="getAgreementUrl()" target="_blank" class="px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 text-[11px] font-bold">Agreement</a>
+            <a :href="getDownloadUrl()" target="_blank" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-[11px] font-bold text-slate-600">Download PDF</a>
+          </div>
         </div>
       </section>
+    </div>
+
+    <!-- Dispute Modal (Tahkim) -->
+    <div v-if="disputeModal.visible" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-6" @click.self="disputeModal.visible = false">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
+        <div class="p-6">
+          <h3 class="text-xl font-black mb-1 text-slate-800">Sharia Dispute</h3>
+          <p class="text-slate-500 text-xs mb-4 uppercase tracking-widest font-bold">Mediation (Tahkim)</p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1">Reason for Dispute</label>
+              <select v-model="disputeModal.reason" class="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <option value="">Select a reason</option>
+                <option value="Faulty Item">Faulty/Damaged Item</option>
+                <option value="Wrong Item Received">Wrong Item Received</option>
+                <option value="Delayed Delivery">Delayed Delivery</option>
+                <option value="Pricing Dispute">Pricing/Installment Dispute</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1">Description</label>
+              <textarea
+                  v-model="disputeModal.description"
+                  class="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none min-h-[100px]"
+                  placeholder="Tell the Sharia Board what happened..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div v-if="disputeModal.error" class="mt-4 p-3 bg-rose-50 text-rose-700 text-xs rounded-xl border border-rose-100">{{ disputeModal.error }}</div>
+          <div v-if="disputeModal.success" class="mt-4 p-3 bg-emerald-50 text-emerald-700 text-xs rounded-xl border border-emerald-100">{{ disputeModal.success }}</div>
+        </div>
+
+        <div class="flex divide-x border-t border-slate-100">
+          <button @click="disputeModal.visible = false" :disabled="disputeModal.submitting" class="flex-1 p-4 font-bold text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">Cancel</button>
+          <button @click="handleDisputeSubmit" :disabled="disputeModal.submitting || !disputeModal.reason" class="flex-1 p-4 font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">
+            <span v-if="disputeModal.submitting">Submitting...</span>
+            <span v-else>Submit Case</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- PIN Prompt Modal for Installment Payment -->
@@ -202,6 +275,55 @@ const paySuccess = ref('')
 const pinPrompt = ref({ visible: false })
 const payAmount = ref(null)
 
+const disputeModal = ref({
+  visible: false,
+  reason: '',
+  description: '',
+  submitting: false,
+  error: '',
+  success: ''
+})
+
+const disputeStatusClass = (status) => {
+  const s = String(status || '').toLowerCase()
+  if (s === 'resolved') return 'bg-emerald-100 text-emerald-700'
+  if (s === 'rejected') return 'bg-rose-100 text-rose-700'
+  if (s === 'mediation') return 'bg-amber-100 text-amber-700'
+  return 'bg-slate-200 text-slate-600'
+}
+
+const openDisputeModal = () => {
+  disputeModal.value.error = ''
+  disputeModal.value.success = ''
+  disputeModal.value.visible = true
+}
+
+const handleDisputeSubmit = async () => {
+  if (!disputeModal.value.reason) {
+    disputeModal.value.error = 'Please select a reason.'
+    return
+  }
+  disputeModal.value.submitting = true
+  disputeModal.value.error = ''
+  try {
+    const { data } = await axios.post(`/api/store/orders/${id}/dispute`, {
+      reason: disputeModal.value.reason,
+      description: disputeModal.value.description
+    })
+    disputeModal.value.success = data.message
+    // Refresh
+    const { data: fresh } = await axios.get(`/api/store/orders/${id}`)
+    order.value = fresh
+    setTimeout(() => {
+      disputeModal.value.visible = false
+    }, 2000)
+  } catch (e) {
+    disputeModal.value.error = e?.response?.data?.message || e.message
+  } finally {
+    disputeModal.value.submitting = false
+  }
+}
+
 watch(monthlyDue, (v) => {
   // default pay to monthly due, but not beyond remaining
   const minPay = Math.min(Number(v || 0), Number(remaining.value || 0))
@@ -270,6 +392,10 @@ const load = async () => {
   try {
     const { data } = await axios.get(`/api/store/orders/${id}`)
     order.value = data || {}
+    // If query has dispute=1, open the modal automatically
+    if (route.query.dispute === '1' && !order.value.dispute) {
+      openDisputeModal()
+    }
   } catch (e) {
     error.value = e?.response?.data?.message || e.message
   } finally {

@@ -95,22 +95,162 @@
           </div>
         </div>
 
-        <!-- Zakat Tracker Card -->
-        <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
-          <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Zakat Nisab</p>
+        <!-- Zakat Tracker Card (Now with Automated Report) -->
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors" @click="showZakatReport = true">
+          <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Zakat Tracker</p>
           <div class="flex items-end justify-between mb-1">
             <p class="text-lg font-black text-slate-800">{{ goldData.zakat.progress_percent }}%</p>
             <p class="text-[10px] text-slate-400 font-bold">{{ goldData.zakat.nisab_grams }}g</p>
           </div>
           <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div 
-              class="bg-amber-400 h-full rounded-full transition-all duration-500" 
+              :class="[goldData.zakat.is_eligible ? 'bg-emerald-500' : 'bg-amber-400', 'h-full rounded-full transition-all duration-500']"
               :style="{ width: goldData.zakat.progress_percent + '%' }"
             ></div>
           </div>
-          <p class="text-[8px] text-slate-400 mt-2 leading-tight uppercase font-bold">
-            {{ goldData.zakat.is_eligible ? 'Nisab Reached' : `${goldData.zakat.grams_to_nisab.toFixed(2)}g to Nisab` }}
+          <p class="text-[8px] text-slate-400 mt-2 leading-tight uppercase font-bold flex items-center justify-between">
+            <span>{{ goldData.zakat.is_eligible ? 'Nisab Reached (Hawl Active)' : `${goldData.zakat.grams_to_nisab.toFixed(2)}g to Nisab` }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           </p>
+        </div>
+      </div>
+
+      <!-- Zakat Report Modal -->
+      <div v-if="showZakatReport" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-emerald-50/50">
+            <h3 class="text-lg font-black text-slate-800">Zakat Al-Maal Report</h3>
+            <button @click="showZakatReport = false" class="p-2 hover:bg-white rounded-full transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+            <!-- Eligibility Status -->
+            <div :class="['p-4 rounded-2xl border flex items-start gap-3', goldData.zakat.is_eligible ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100']">
+              <div :class="['mt-1 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0', goldData.zakat.is_eligible ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400']">
+                <svg v-if="goldData.zakat.is_eligible" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-bold text-slate-800 text-sm">
+                  {{ goldData.zakat.is_eligible ? 'You are eligible to pay Zakat' : 'Zakat is not yet due' }}
+                </p>
+                <p class="text-xs text-slate-500 leading-relaxed mt-1">
+                  {{ goldData.zakat.is_eligible 
+                    ? 'Your wealth has stayed above the Nisab for a full lunar year (Hawl).' 
+                    : `Your assets must stay above Nisab (85g Gold) for 354 days. ${goldData.zakat.report.days_since_crossed} days tracked so far.` }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Wealth Breakdown -->
+            <div class="space-y-3">
+              <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Wealth Breakdown</h4>
+              <div class="bg-slate-50 rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between text-sm">
+                  <span class="text-slate-500">Savings & Shares</span>
+                  <span class="font-bold text-slate-800">₦{{ formatMoney(goldData.zakat.report.savings + goldData.zakat.report.shares) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-slate-500">Gold Value</span>
+                  <span class="font-bold text-slate-800">₦{{ formatMoney(goldData.zakat.report.gold_value) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-slate-500">Wallet Balance</span>
+                  <span class="font-bold text-slate-800">₦{{ formatMoney(goldData.zakat.report.wallet_balance) }}</span>
+                </div>
+                <div class="pt-2 border-t border-slate-200 flex justify-between">
+                  <span class="font-bold text-slate-600">Total Zakatable Assets</span>
+                  <span class="font-black text-emerald-600">₦{{ formatMoney(goldData.zakat.report.base) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comparison -->
+            <div class="flex items-center gap-4 bg-slate-50 rounded-2xl p-4">
+              <div class="flex-1 text-center border-r border-slate-200">
+                <p class="text-[8px] font-bold text-slate-400 uppercase mb-1">Current Assets</p>
+                <p class="text-sm font-black text-slate-800">₦{{ formatMoney(goldData.zakat.report.base) }}</p>
+              </div>
+              <div class="flex-1 text-center">
+                <p class="text-[8px] font-bold text-slate-400 uppercase mb-1">Current Nisab (85g)</p>
+                <p class="text-sm font-black text-amber-600">₦{{ formatMoney(goldData.zakat.report.nisab) }}</p>
+              </div>
+            </div>
+
+            <!-- Zakat Due -->
+            <div class="bg-emerald-600 rounded-2xl p-6 text-white text-center shadow-lg shadow-emerald-100">
+              <p class="text-xs font-bold text-emerald-100 uppercase mb-2">Estimated Zakat (2.5%)</p>
+              <h2 class="text-3xl font-black mb-1">₦ {{ formatMoney(goldData.zakat.report.zakat_due) }}</h2>
+              <p v-if="goldData.zakat.report.last_paid_at" class="text-[10px] text-emerald-200">
+                Last paid: {{ formatDateShort(goldData.zakat.report.last_paid_at) }}
+              </p>
+            </div>
+
+            <!-- Zakat Al-Fitr (Only in Ramadan) -->
+            <div v-if="goldData.zakat.report.is_ramadan" class="bg-amber-50 rounded-2xl p-4 border border-amber-100 flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-bold text-amber-600 uppercase">Zakat Al-Fitr</p>
+                <p class="text-sm font-black text-slate-800">₦ {{ formatMoney(goldData.zakat.report.fitr_amount) }}</p>
+              </div>
+              <button @click="handlePayFitr" :disabled="loading" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all">
+                Pay Fitr
+              </button>
+            </div>
+
+            <!-- Payment Gateway Selection -->
+            <div class="space-y-3">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Payment Method</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button 
+                  v-for="gw in ['wallet', 'paystack', 'flutterwave']" 
+                  :key="gw"
+                  @click="zakatForm.gateway = gw"
+                  :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === gw ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-600']"
+                >
+                  {{ gw.toUpperCase() }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Transaction PIN -->
+            <div v-if="zakatForm.gateway === 'wallet'">
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Transaction PIN</label>
+              <input v-model="zakatForm.pin" type="password" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-emerald-500" />
+            </div>
+          </div>
+
+          <div class="p-6 bg-slate-50 border-t border-slate-100">
+            <button 
+              @click="handlePayZakat" 
+              :disabled="loading || !goldData.zakat.is_eligible"
+              class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:grayscale transition-all active:scale-[0.98]"
+            >
+              {{ loading ? 'Processing...' : 'Pay Zakat Now' }}
+            </button>
+            <a 
+              :href="getZakatReportUrl()" 
+              target="_blank"
+              class="w-full bg-white text-emerald-600 border border-emerald-200 py-3 rounded-2xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 no-underline"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Report PDF
+            </a>
+            <p class="text-[10px] text-slate-400 text-center mt-3 px-4">
+              Deducts directly from your wallet and moves to the General Zakat Fund.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -181,35 +321,60 @@
       </div>
 
       <!-- History -->
-      <div class="space-y-3">
-        <h3 class="font-bold text-slate-800 px-1">Recent Transactions</h3>
-        <div v-if="history.length === 0 && !loading" class="bg-white rounded-3xl p-8 text-center border border-slate-100">
-          <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p class="text-slate-400 text-sm">No gold transactions yet.</p>
-        </div>
-        
-        <div v-for="tx in history" :key="tx.id" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', tx.amount > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600']">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path v-if="tx.amount > 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+      <div class="space-y-6">
+        <!-- Gold Transactions -->
+        <div class="space-y-3">
+          <h3 class="font-bold text-slate-800 px-1">Gold Transactions</h3>
+          <div v-if="history.length === 0 && !loading" class="bg-white rounded-3xl p-8 text-center border border-slate-100">
+            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div>
-              <p class="font-bold text-slate-800 text-sm">{{ tx.amount > 0 ? 'Bought' : 'Sold' }} Gold</p>
-              <p class="text-[10px] text-slate-400">{{ formatDate(tx.created_at) }}</p>
+            <p class="text-slate-400 text-sm">No gold transactions yet.</p>
+          </div>
+          
+          <div v-for="tx in history" :key="tx.id" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', tx.amount > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600']">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path v-if="tx.amount > 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-bold text-slate-800 text-sm">{{ tx.amount > 0 ? 'Bought' : 'Sold' }} Gold</p>
+                <p class="text-[10px] text-slate-400">{{ formatDate(tx.created_at) }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p :class="['font-bold text-sm', tx.amount > 0 ? 'text-emerald-600' : 'text-amber-600']">
+                {{ tx.amount > 0 ? '+' : '' }}{{ Number(tx.units || 0).toFixed(6) }} g
+              </p>
+              <p class="text-[10px] text-slate-400">₦ {{ formatMoney(Math.abs(tx.amount)) }}</p>
             </div>
           </div>
-          <div class="text-right">
-            <p :class="['font-bold text-sm', tx.amount > 0 ? 'text-emerald-600' : 'text-amber-600']">
-              {{ tx.amount > 0 ? '+' : '' }}{{ Number(tx.units || 0).toFixed(6) }} g
-            </p>
-            <p class="text-[10px] text-slate-400">₦ {{ formatMoney(Math.abs(tx.amount)) }}</p>
+        </div>
+
+        <!-- Zakat History -->
+        <div v-if="zakatHistory.length > 0" class="space-y-3">
+          <h3 class="font-bold text-slate-800 px-1">Zakat Purification History</h3>
+          <div v-for="zh in zakatHistory" :key="zh.id" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-bold text-slate-800 text-sm">Zakat Paid</p>
+                <p class="text-[10px] text-slate-400">{{ formatDate(zh.created_at) }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-sm text-emerald-600">₦ {{ formatMoney(zh.amount) }}</p>
+              <p class="text-[10px] text-slate-400 uppercase font-medium">Purified</p>
+            </div>
           </div>
         </div>
       </div>
@@ -240,6 +405,9 @@ import axios from 'axios'
 
 const loading = ref(false)
 const activeTab = ref('buy')
+const showZakatReport = ref(false)
+const zakatHistory = ref([])
+const zakatForm = ref({ pin: '', gateway: 'wallet' })
 const goldData = ref({
   gold_balance: 0,
   base_price: 0,
@@ -255,7 +423,19 @@ const goldData = ref({
     progress_percent: 0,
     nisab_grams: 85,
     is_eligible: false,
-    grams_to_nisab: 85
+    grams_to_nisab: 85,
+    report: {
+      base: 0,
+      savings: 0,
+      shares: 0,
+      gold_value: 0,
+      wallet_balance: 0,
+      nisab: 0,
+      rate: 0.025,
+      zakat_due: 0,
+      days_since_crossed: 0,
+      last_paid_at: null
+    }
   }
 })
 const history = ref([])
@@ -326,6 +506,9 @@ const fetchData = async () => {
     
     const histRes = await axios.get('/api/gold/history')
     history.value = histRes.data.data
+
+    const zakatHistRes = await axios.get('/api/zakat/history')
+    zakatHistory.value = zakatHistRes.data
   } catch (err) {
     console.error(err)
     alert('Failed to fetch gold data')
@@ -385,6 +568,70 @@ const exportTransactions = async () => {
   }
 }
 
+const handlePayZakat = async () => {
+  if (zakatForm.value.gateway === 'wallet' && !zakatForm.value.pin) {
+    alert('Please enter your transaction PIN')
+    return
+  }
+  if (!confirm(`Pay ₦${formatMoney(goldData.value.zakat.report.zakat_due)} Zakat?`)) return
+  loading.value = true
+  try {
+    const res = await axios.post('/api/zakat/pay', {
+      gateway: zakatForm.value.gateway,
+      pin: zakatForm.value.pin
+    })
+
+    if (res.data.checkout_url) {
+      window.location.href = res.data.checkout_url
+      return
+    }
+
+    alert(res.data.message)
+    showZakatReport.value = false
+    zakatForm.value.pin = ''
+    await fetchData()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Zakat payment failed')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handlePayFitr = async () => {
+  if (zakatForm.value.gateway === 'wallet' && !zakatForm.value.pin) {
+    alert('Please enter your transaction PIN')
+    return
+  }
+  if (!confirm(`Pay ₦${formatMoney(goldData.value.zakat.report.fitr_amount)} Zakat Al-Fitr?`)) return
+  loading.value = true
+  try {
+    const res = await axios.post('/api/zakat/pay-fitr', {
+      gateway: zakatForm.value.gateway,
+      pin: zakatForm.value.pin
+    })
+
+    if (res.data.checkout_url) {
+      window.location.href = res.data.checkout_url
+      return
+    }
+
+    alert(res.data.message)
+    showZakatReport.value = false
+    zakatForm.value.pin = ''
+    await fetchData()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Fitr payment failed')
+  } finally {
+    loading.value = false
+  }
+}
+
+const getZakatReportUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-zakat-report?token=${encodeURIComponent(token)}`
+}
+
 const formatMoney = (val) => {
   return Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
@@ -392,6 +639,12 @@ const formatMoney = (val) => {
 const formatDate = (dateStr) => {
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+const formatDateShort = (dateStr) => {
+  if (!dateStr) return 'Never'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 onMounted(fetchData)

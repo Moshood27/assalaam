@@ -34,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         \Livewire\Livewire::component('two-factor-page', \Jeffgreco13\FilamentBreezy\Pages\TwoFactorPage::class);
 
         \App\Models\StoreOrder::observe(\App\Observers\StoreOrderObserver::class);
+        \App\Models\SadaqahProject::observe(\App\Observers\SadaqahProjectObserver::class);
 
         // Global API rate limiter
         RateLimiter::for('api', function (Request $request) {

@@ -29,9 +29,13 @@
                 <div class="font-bold text-slate-800 truncate">{{ o.reference }}</div>
                 <div class="text-[12px] text-slate-500">{{ new Date(o.created_at).toLocaleString() }}</div>
               </div>
-              <div class="text-right">
+              <div class="text-right flex flex-col items-end">
                 <div class="text-sm font-extrabold text-slate-800">₦ {{ money(o.total_amount) }}</div>
-                <div class="text-[10px] font-bold uppercase" :class="statusClass(o.status)">{{ o.status }}</div>
+                <div class="flex items-center gap-2">
+                  <span v-if="o.dispute" class="text-[9px] font-black bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded border border-rose-100 uppercase">Tahkim</span>
+                  <button v-else-if="!['failed', 'cancelled'].includes(o.status?.toLowerCase())" @click.stop="$router.push(`/store/orders/${o.id}?dispute=1`)" class="text-[9px] font-bold bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded border border-slate-100 uppercase hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors">Dispute</button>
+                  <div class="text-[10px] font-bold uppercase" :class="statusClass(o.status)">{{ o.status }}</div>
+                </div>
               </div>
             </li>
           </ul>

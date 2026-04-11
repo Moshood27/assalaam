@@ -55,6 +55,11 @@ class StoreOrder extends Model
         return $this->hasMany(StoreOrderItem::class);
     }
 
+    public function dispute()
+    {
+        return $this->hasOne(ShariaDispute::class, 'store_order_id');
+    }
+
     public function processVendorPayouts()
     {
         if ($this->status !== 'completed') return;

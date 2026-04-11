@@ -315,6 +315,8 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/aws/aws-sdk-php" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/league/flysystem-aws-s3-v3" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/symfony/filesystem" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/laragear/meta-model" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/laragear/webauthn" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

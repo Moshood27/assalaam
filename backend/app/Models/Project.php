@@ -52,4 +52,9 @@ class Project extends Model
     {
         return $this->hasMany(ProjectUpdate::class)->latest();
     }
+
+    public function savingsGroups()
+    {
+        return $this->hasMany(SavingsGroup::class);
+    }
 }
