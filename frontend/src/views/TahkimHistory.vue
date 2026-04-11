@@ -140,7 +140,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from '../http'
-import { format } from 'date-fns'
 
 const disputes = ref([])
 const loading = ref(false)
@@ -164,7 +163,18 @@ const selectDispute = (d) => {
 
 const formatDate = (date) => {
   if (!date) return 'N/A'
-  return format(new Date(date), 'MMM d, yyyy h:mm a')
+  try {
+    return new Date(date).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  } catch (e) {
+    return date
+  }
 }
 
 const numberFormat = (v) => {
