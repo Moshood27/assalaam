@@ -52,7 +52,7 @@ class ShariaDisputeResource extends Resource
                 Forms\Components\Section::make('Order Items')
                     ->schema([
                         Forms\Components\Repeater::make('orderItems')
-                            ->relationship(null, null, fn ($record) => $record->order?->items() ?? \App\Models\StoreOrderItem::query()->whereRaw('1=0'))
+                            ->relationship()
                             ->schema([
                                 Forms\Components\TextInput::make('product_name')
                                     ->label('Product')

@@ -52,6 +52,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'project',
             'scheme',
             'shariah_audit_log',
+            'sharia_dispute',
+            'sharia_board_member',
             'takaful_pool_entry',
             'utility_transaction',
             'whitelisted_ip',
@@ -112,6 +114,22 @@ class RolesAndPermissionsSeeder extends Seeder
             'approve_loans', // Specific custom permission
             'view_own_branch_members', // Legacy/custom
             'record_contributions', // Legacy/custom
+        ]);
+
+        // Sharia Board
+        $shariaBoard = Role::findOrCreate('sharia_board');
+        $shariaBoard->givePermissionTo([
+            'view_any_sharia_dispute',
+            'view_sharia_dispute',
+            'update_sharia_dispute',
+            'view_any_shariah_audit_log',
+            'view_shariah_audit_log',
+            'view_any_user',
+            'view_user',
+            'view_any_store_order',
+            'view_store_order',
+            'view_any_sharia_board_member',
+            'view_sharia_board_member',
         ]);
 
         // Clerk

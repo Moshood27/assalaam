@@ -94,13 +94,27 @@
                     }).addTo(map);
 
                     const savingsFmt = (() => { try { return Number(branch.savings_rate || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch { return branch.savings_rate; } })();
-                    marker.bindPopup(`
-                        <div class="text-sm" style="min-width: 200px">
-                            <h3 class="font-bold text-base border-b border-gray-200 mb-2 pb-1">${branch.name}</h3>
-                            <p class="mb-1"><strong>Total Savings:</strong> ₦${savingsFmt}</p>
-                            <p><strong>Default Rate:</strong> <span style="color: ${color}; font-weight: bold;">${(Number(branch.default_rate) || 0).toFixed(2)}%</span></p>
-                        </div>
-                    `);
+
+                    // Safe popup content creation using DOM elements to prevent XSS
+                    const popupContent = document.createElement('div');
+                    popupContent.className = 'text-sm';
+                    popupContent.style.minWidth = '200px';
+
+                    const h3 = document.createElement('h3');
+                    h3.className = 'font-bold text-base border-b border-gray-200 mb-2 pb-1';
+                    h3.textContent = branch.name;
+                    popupContent.appendChild(h3);
+
+                    const p1 = document.createElement('p');
+                    p1.className = 'mb-1';
+                    p1.innerHTML = `<strong>Total Savings:</strong> ₦${savingsFmt}`; // savingsFmt is numeric/formatted, safe
+                    popupContent.appendChild(p1);
+
+                    const p2 = document.createElement('p');
+                    p2.innerHTML = `<strong>Default Rate:</strong> <span style="color: ${color}; font-weight: bold;">${(Number(branch.default_rate) || 0).toFixed(2)}%</span>`;
+                    popupContent.appendChild(p2);
+
+                    marker.bindPopup(popupContent);
                     marker.bindTooltip(`${branch.name}: ₦${savingsFmt}`, { direction: 'top' });
 
                     markers.push([branch.latitude, branch.longitude]);

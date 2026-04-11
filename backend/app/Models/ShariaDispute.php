@@ -30,11 +30,42 @@ class ShariaDispute extends Model
         'resolved_at' => 'datetime',
     ];
 
+    /**
+     * Sanitize mediation notes (RichEditor).
+     */
+    public function setMediationNotesAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['mediation_notes'] = $value;
+            return;
+        }
+
+        $allowedTags = '<p><br><b><i><u><ul><ol><li><a><h1><h2><h3><h4><h5><h6>';
+        $cleaned = strip_tags($value, $allowedTags);
+        $cleaned = preg_replace('/\s+on\w+="[^"]*"/i', '', $cleaned);
+        $cleaned = preg_replace('/\s+on\w+=\'[^\']*\'/i', '', $cleaned);
+        $cleaned = preg_replace('/\s+on\w+=[^\s>]+/i', '', $cleaned);
+        $cleaned = preg_replace('/href="javascript:[^"]*"/i', 'href="#"', $cleaned);
+        $cleaned = preg_replace('/href=\'javascript:[^\']*\'/i', 'href="#"', $cleaned);
+
+        $this->attributes['mediation_notes'] = $cleaned;
+    }
+
+    /**
+     * Sanitize outcome details (Plain text).
+     */
+    public function setOutcomeDetailsAttribute($value)
+    {
+        $this->attributes['outcome_details'] = strip_tags($value);
+    }
+
     protected static function booted()
     {
         static::created(function ($dispute) {
             // Notify Admins/Sharia Board
-            $recipients = User::role('sharia_board')->get();
+            $recipients = User::whereHas('roles', function ($query) {
+                $query->where('name', 'sharia_board');
+            })->get();
             if ($recipients->isEmpty()) {
                 $recipients = User::where('is_admin', true)->get();
             }
@@ -74,5 +105,21 @@ class ShariaDispute extends Model
     public function order()
     {
         return $this->belongsTo(StoreOrder::class, 'store_order_id');
+    }
+
+    /**
+     * Get the items for the order associated with this dispute.
+     * This is used by the Filament resource for the repeater.
+     */
+    public function orderItems()
+    {
+        return $this->hasManyThrough(
+            StoreOrderItem::class,
+            StoreOrder::class,
+            'id', // Local key on ShariaDispute's related model (StoreOrder)
+            'store_order_id', // Local key on StoreOrderItem table (matches StoreOrder's ID)
+            'store_order_id', // Foreign key on ShariaDispute table (points to StoreOrder)
+            'id' // Local key on StoreOrder table
+        );
     }
 }

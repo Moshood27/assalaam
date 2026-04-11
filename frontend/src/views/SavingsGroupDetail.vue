@@ -407,7 +407,7 @@ const payViaCard = async () => {
       item.units = Math.floor(group.value.monthly_contribution_amount / contribData.group.project.unit_price)
     }
 
-    const { data } = await axios.post('/api/payment/initiate', {
+    const { data } = await axios.post('/api/initiate-payment', {
       items: [item],
       callback_url: window.location.origin + '/payment-callback'
     })
