@@ -134,7 +134,7 @@ class VendorController extends Controller
         $activities = $recentOrders->concat($recentPayouts)->sortByDesc('date')->values()->all();
 
         // Add current available balance
-        $availableBalance = (float) $user->balance;
+        $availableBalance = method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance;
 
         return response()->json([
             'total_earned' => (float) $totalEarned,
@@ -169,7 +169,7 @@ class VendorController extends Controller
             return response()->json(['message' => 'Vendor profile must be approved before requesting settlements.'], 403);
         }
 
-        if (!$vendor->settlement_account_number || !$vendor->settlement_bank_code) {
+        if (!$vendor->settlement_account_number || !$vendor->settlement_bank_code || !$vendor->settlement_account_name) {
             return response()->json(['message' => 'Please complete your settlement bank details in your profile.'], 422);
         }
 
@@ -179,8 +179,20 @@ class VendorController extends Controller
 
         $amount = (float) $validated['amount'];
 
-        if ($user->balance < $amount) {
-            return response()->json(['message' => 'Insufficient balance in your wallet.'], 422);
+        $available = method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance;
+
+        if ($available < $amount) {
+            return response()->json(['message' => 'Insufficient withdrawable balance in your wallet.'], 422);
+        }
+
+        // Prevent multiple concurrent pending withdrawal requests
+        $hasPending = \App\Models\WithdrawalRequest::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
+        if ($hasPending) {
+            return response()->json([
+                'message' => 'You already have a pending withdrawal request. Please wait for it to be processed.'
+            ], 422);
         }
 
         $settlement = \App\Models\WithdrawalRequest::create([

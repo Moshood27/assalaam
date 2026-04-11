@@ -14,6 +14,16 @@
     </header>
 
     <div class="p-4 space-y-6">
+      <!-- Bank Info Missing Warning -->
+      <div v-if="!vendor.settlement_account_number || !vendor.settlement_bank_code || !vendor.settlement_account_name" class="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3">
+        <div class="text-xl">⚠️</div>
+        <div class="flex-1">
+          <p class="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-0.5">Bank Details Missing</p>
+          <p class="text-[11px] text-amber-700 font-medium">Please update your bank details in your profile to request payouts.</p>
+        </div>
+        <button @click="$router.push('/vendor/apply')" class="text-[10px] font-black text-amber-800 uppercase bg-amber-200 px-3 py-1.5 rounded-lg active:scale-95 transition-all">Update</button>
+      </div>
+
       <!-- Balance Card -->
       <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
         <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
@@ -24,7 +34,7 @@
           <div class="mt-6">
             <button 
               @click="showRequestModal = true"
-              :disabled="availableBalance < 100"
+              :disabled="availableBalance < 100 || !vendor.settlement_account_number || !vendor.settlement_bank_code || !vendor.settlement_account_name"
               class="w-full h-14 rounded-2xl bg-emerald-700 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-700/30 disabled:bg-slate-300 disabled:shadow-none transition-all active:scale-95"
             >
               Request Payout
@@ -186,7 +196,20 @@ const submitRequest = async () => {
     alert('Settlement request submitted successfully.')
   } catch (err) {
     console.error('Failed to submit request', err)
-    alert(err.response?.data?.message || 'Error submitting request')
+    
+    // Check for validation errors or specific messages
+    const errorData = err.response?.data
+    let errorMsg = 'Error submitting request'
+    
+    if (errorData?.errors) {
+      // If validation failed, get the first error
+      const firstError = Object.values(errorData.errors)[0][0]
+      errorMsg = firstError
+    } else if (errorData?.message) {
+      errorMsg = errorData.message
+    }
+    
+    alert(errorMsg)
   } finally {
     submitting.value = false
   }
