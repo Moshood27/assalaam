@@ -49,6 +49,7 @@ const AdminForgot = () => import('../views/admin/AdminForgotPassword.vue')
 const AdminImports = () => import('../views/admin/AdminImports.vue')
 const AdminVTU = () => import('../views/admin/AdminVTU.vue')
 const AdminProducts = () => import('../views/admin/AdminProducts.vue')
+const AdminVendors = () => import('../views/admin/AdminVendors.vue')
 const AdminTakaful = () => import('../views/admin/AdminTakaful.vue')
 
 const routes = [
@@ -119,6 +120,7 @@ const routes = [
   { path: '/admin/imports', name: 'admin.imports', component: AdminImports, meta: { requiresAdmin: true } },
   { path: '/admin/vtu', name: 'admin.vtu', component: AdminVTU, meta: { requiresAdmin: true } },
   { path: '/admin/products', name: 'admin.products', component: AdminProducts, meta: { requiresAdmin: true } },
+  { path: '/admin/vendors', name: 'admin.vendors', component: AdminVendors, meta: { requiresAdmin: true } },
   { path: '/admin/takaful', name: 'admin.takaful', component: AdminTakaful, meta: { requiresAdmin: true } },
 ]
 

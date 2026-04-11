@@ -16,6 +16,8 @@ class Vendor extends Model
         'phone',
         'address',
         'is_approved',
+        'approved_at',
+        'approved_by_id',
         'is_active',
         'settlement_bank_name',
         'settlement_bank_code',
@@ -27,6 +29,7 @@ class Vendor extends Model
 
     protected $casts = [
         'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
         'is_active' => 'boolean',
         'commission_rate' => 'decimal:2',
         'meta' => 'array',

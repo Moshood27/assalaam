@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\GuarantorController;
 use App\Http\Controllers\Api\ZakatController;
 use App\Http\Controllers\Api\SadaqahController;
 use App\Http\Controllers\Api\AdminProductController;
+use App\Http\Controllers\Api\AdminVendorController;
 use App\Http\Controllers\Api\SecurityController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\MemberRegistrationController;
@@ -342,6 +343,16 @@ Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/vtu')->group(fu
 });
 
 // Admin products management (images & approval)
+Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/vendors')->group(function () {
+    Route::get('/', [AdminVendorController::class, 'index']);
+    Route::post('/{id}/approve', [AdminVendorController::class, 'approve']);
+    Route::post('/{id}/reject', [AdminVendorController::class, 'reject']);
+    Route::post('/{id}/toggle-active', [AdminVendorController::class, 'toggleActive']);
+    Route::get('/settlements', [AdminVendorController::class, 'settlements']);
+    Route::post('/settlements/{id}/approve', [AdminVendorController::class, 'approveSettlement']);
+    Route::post('/settlements/{id}/reject', [AdminVendorController::class, 'rejectSettlement']);
+});
+
 Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/products')->group(function () {
     Route::get('/', [AdminProductController::class, 'index']);
     Route::post('/{id}/image', [AdminProductController::class, 'uploadImage']);
