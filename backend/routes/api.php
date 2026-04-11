@@ -173,11 +173,17 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
 
     // Savings Groups (Ajo/Esusu/Pardna)
     Route::get('/savings-groups', [SavingsGroupController::class, 'index']);
+    Route::get('/savings-groups/invitations', [SavingsGroupController::class, 'invitations']);
+    Route::get('/savings-groups/projects', [SavingsGroupController::class, 'projects']);
     Route::get('/savings-groups/discover', [SavingsGroupController::class, 'discover']);
     Route::post('/savings-groups', [SavingsGroupController::class, 'store']);
     Route::get('/savings-groups/{id}', [SavingsGroupController::class, 'show']);
+    Route::get('/savings-groups/{id}/contribution-data', [SavingsGroupController::class, 'getContributionData']);
     Route::post('/savings-groups/{id}/join', [SavingsGroupController::class, 'join']);
     Route::post('/savings-groups/{id}/leave', [SavingsGroupController::class, 'leave']);
+    Route::post('/savings-groups/{id}/invite', [SavingsGroupController::class, 'invite']);
+    Route::post('/savings-groups/{id}/accept-invitation', [SavingsGroupController::class, 'acceptInvitation']);
+    Route::post('/savings-groups/{id}/dissolve', [SavingsGroupController::class, 'dissolve']);
 
     // Passbook
     Route::get('/passbook/{year}', [PassbookController::class, 'getMatrix']);

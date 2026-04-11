@@ -45,6 +45,14 @@ class SavingsGroupService
                 $results['members_processed']++;
                 $user = $member->user;
                 $amount = $group->monthly_contribution_amount;
+                $units = null;
+
+                if ($group->project_id) {
+                    $project = $group->project;
+                    if ($project && $project->is_unit_based && (float)$project->unit_price > 0) {
+                        $units = (int) ($amount / (float)$project->unit_price);
+                    }
+                }
 
                 // Check if already contributed for this period
                 $referencePrefix = "SG_AUTO_{$group->id}_{$period}_";
@@ -59,7 +67,7 @@ class SavingsGroupService
                 }
 
                 // Attempt to charge from wallet
-                $success = DB::transaction(function() use ($user, $group, $scheme, $amount, $period, $referencePrefix) {
+                $success = DB::transaction(function() use ($user, $group, $scheme, $amount, $period, $referencePrefix, $units) {
                     $lockedUser = User::whereKey($user->id)->lockForUpdate()->first();
 
                     if ((float) $lockedUser->balance < (float) $amount) {
@@ -75,6 +83,7 @@ class SavingsGroupService
                         'savings_group_id' => $group->id,
                         'project_id' => $group->project_id,
                         'amount' => $amount,
+                        'units' => $units,
                         'reference' => $reference,
                         'status' => 'success',
                     ]);

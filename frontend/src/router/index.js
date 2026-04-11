@@ -44,6 +44,10 @@ const Wasiyyah = () => import('../views/Wasiyyah.vue')
 const JuniorCooperative = () => import('../views/JuniorCooperative.vue')
 const GoldSavings = () => import('../views/GoldSavings.vue')
 
+const SavingsGroups = () => import('../views/SavingsGroups.vue')
+const SavingsGroupDetail = () => import('../views/SavingsGroupDetail.vue')
+const SavingsGroupCreate = () => import('../views/SavingsGroupCreate.vue')
+
 const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminRegister = () => import('../views/admin/AdminRegister.vue')
 const AdminForgot = () => import('../views/admin/AdminForgotPassword.vue')
@@ -88,6 +92,9 @@ const routes = [
   { path: '/goals', name: 'goals', component: () => import('../views/Goals.vue'), meta: { requiresAuth: true } },
   { path: '/projects', name: 'projects', component: Projects, meta: { requiresAuth: true } },
   { path: '/projects/:id', name: 'project', component: Project, meta: { requiresAuth: true } },
+  { path: '/savings-groups', name: 'savings.groups', component: SavingsGroups, meta: { requiresAuth: true } },
+  { path: '/savings-groups/create', name: 'savings.group.create', component: SavingsGroupCreate, meta: { requiresAuth: true } },
+  { path: '/savings-groups/:id', name: 'savings.group.detail', component: SavingsGroupDetail, meta: { requiresAuth: true } },
   { path: '/sadaqah', name: 'sadaqah', component: Sadaqah, meta: { requiresAuth: true } },
   { path: '/sadaqah/history', name: 'sadaqah.history', component: SadaqahHistory, meta: { requiresAuth: true } },
   { path: '/sadaqah/:id', name: 'sadaqah.detail', component: SadaqahDetail, meta: { requiresAuth: true } },

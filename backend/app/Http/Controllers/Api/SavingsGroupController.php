@@ -7,6 +7,7 @@ use App\Models\SavingsGroup;
 use App\Models\SavingsGroupMember;
 use App\Models\Project;
 use App\Models\Scheme;
+use App\Models\Contribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,20 @@ class SavingsGroupController extends Controller
 
         $groups = SavingsGroup::whereHas('members', function($query) use ($user) {
             $query->where('user_id', $user->id)->where('status', 'active');
+        })
+        ->with(['project:id,name', 'creator:id,name'])
+        ->withCount('activeMembers')
+        ->get();
+
+        return response()->json($groups);
+    }
+
+    public function invitations(Request $request)
+    {
+        $user = $request->user();
+
+        $groups = SavingsGroup::whereHas('members', function($query) use ($user) {
+            $query->where('user_id', $user->id)->where('status', 'pending');
         })
         ->with(['project:id,name', 'creator:id,name'])
         ->withCount('activeMembers')
@@ -53,6 +68,22 @@ class SavingsGroupController extends Controller
 
         $user = $request->user();
 
+        // If project is unit-based, amount must be a multiple of unit price
+        if (!empty($validated['project_id'])) {
+            $project = Project::find($validated['project_id']);
+            if ($project && $project->is_unit_based) {
+                $unitPrice = (float) $project->unit_price;
+                if ($unitPrice > 0) {
+                    $amount = (float) $validated['monthly_contribution_amount'];
+                    if (fmod($amount, $unitPrice) != 0) {
+                        return response()->json([
+                            'message' => "Monthly contribution must be a multiple of the project unit price (₦" . number_format($unitPrice, 2) . ")"
+                        ], 422);
+                    }
+                }
+            }
+        }
+
         return DB::transaction(function() use ($validated, $user) {
             $group = SavingsGroup::create([
                 'name' => $validated['name'],
@@ -87,6 +118,7 @@ class SavingsGroupController extends Controller
 
         // Check if user is a member
         $isMember = $group->members()->where('user_id', $user->id)->where('status', 'active')->exists();
+        $isPending = $group->members()->where('user_id', $user->id)->where('status', 'pending')->exists();
 
         $stats = [
             'total_contributions' => (float) $group->totalContributions(),
@@ -96,10 +128,42 @@ class SavingsGroupController extends Controller
                 ->sum('amount'),
         ];
 
+        $recentContributions = $group->contributions()
+            ->with('user:id,name')
+            ->where('status', 'success')
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get();
+
         return response()->json([
             'group' => $group,
             'is_member' => $isMember,
+            'is_pending' => $isPending,
             'stats' => $stats,
+            'recent_contributions' => $recentContributions,
+            'is_creator' => $group->creator_id === $user->id,
+        ]);
+    }
+
+    public function projects()
+    {
+        $projects = Project::where('active', true)->orderBy('name')->get(['id', 'name', 'is_unit_based', 'unit_price']);
+        return response()->json($projects);
+    }
+
+    public function getContributionData(Request $request, int $id)
+    {
+        $group = SavingsGroup::with('project')->findOrFail($id);
+        $scheme = Scheme::where('name', 'Group Savings')->first();
+
+        if (!$scheme) {
+            return response()->json(['message' => 'Group Savings scheme not found'], 404);
+        }
+
+        return response()->json([
+            'group' => $group,
+            'scheme' => $scheme,
+            'amount' => (float) $group->monthly_contribution_amount,
         ]);
     }
 
@@ -146,5 +210,90 @@ class SavingsGroupController extends Controller
         $member->update(['status' => 'left']);
 
         return response()->json(['message' => 'Successfully left the group']);
+    }
+
+    public function invite(Request $request, int $id)
+    {
+        $user = $request->user();
+        $group = SavingsGroup::findOrFail($id);
+
+        if ($group->creator_id !== $user->id) {
+            return response()->json(['message' => 'Only the creator can invite new members'], 403);
+        }
+
+        $validated = $request->validate([
+            'identifier' => 'required|string', // phone or membership number
+        ]);
+
+        $recipient = User::where('phone', $validated['identifier'])
+            ->orWhere('membership_number', $validated['identifier'])
+            ->first();
+
+        if (!$recipient) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $existingMember = $group->members()->where('user_id', $recipient->id)->first();
+        if ($existingMember) {
+            if ($existingMember->status === 'active') {
+                return response()->json(['message' => 'User is already a member'], 422);
+            }
+            if ($existingMember->status === 'pending') {
+                return response()->json(['message' => 'User already has a pending invitation'], 422);
+            }
+            $existingMember->update(['status' => 'pending']);
+        } else {
+            $group->members()->create([
+                'user_id' => $recipient->id,
+                'status' => 'pending',
+            ]);
+        }
+
+        // Notify user
+        try {
+            $recipient->notify(new \App\Notifications\GeneralNotification(
+                title: "Savings Group Invitation",
+                message: "{$user->name} has invited you to join the savings group: {$group->name}",
+                data: ['route' => "/savings-groups/{$group->id}"]
+            ));
+        } catch (\Throwable $e) {}
+
+        return response()->json(['message' => 'Invitation sent successfully']);
+    }
+
+    public function acceptInvitation(Request $request, int $id)
+    {
+        $user = $request->user();
+        $group = SavingsGroup::findOrFail($id);
+
+        $member = $group->members()->where('user_id', $user->id)->where('status', 'pending')->first();
+        if (!$member) {
+            return response()->json(['message' => 'No pending invitation found'], 404);
+        }
+
+        $member->update([
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Invitation accepted successfully']);
+    }
+
+    public function dissolve(Request $request, int $id)
+    {
+        $user = $request->user();
+        $group = SavingsGroup::findOrFail($id);
+
+        if ($group->creator_id !== $user->id) {
+            return response()->json(['message' => 'Only the creator can dissolve the group'], 403);
+        }
+
+        if ($group->totalContributions() > 0) {
+            return response()->json(['message' => 'Cannot dissolve a group with active contributions. Please contact support.'], 422);
+        }
+
+        $group->update(['status' => 'dissolved']);
+
+        return response()->json(['message' => 'Group dissolved successfully']);
     }
 }
