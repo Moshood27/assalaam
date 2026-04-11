@@ -95,6 +95,18 @@ class WalletController extends Controller
         $user = $request->user();
         $recent = $user->walletTransactions()->latest()->limit(10)->get();
 
+        // Calculate running balance for these 10 transactions
+        $currentBalance = (float) $user->balance;
+        foreach ($recent as $tx) {
+            $tx->setAttribute('balance_after', (float) $currentBalance);
+            $tx->setAttribute('running_balance', (float) $currentBalance);
+            if (strtolower((string)$tx->type) === 'credit') {
+                $currentBalance -= (float) $tx->amount;
+            } else {
+                $currentBalance += (float) $tx->amount;
+            }
+        }
+
         // Reuse helper for tiered withdrawal logic
         $breakdown = method_exists($user, 'withdrawableBreakdown') ? $user->withdrawableBreakdown() : [
             'available_for_withdrawal' => (float) $user->balance,

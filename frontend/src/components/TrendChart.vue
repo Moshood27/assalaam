@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <apexchart
-      v-if="isReady && seriesSafe.length"
+      v-if="isReady && hasData"
       type="area"
       height="160"
       :options="options"
@@ -30,6 +30,10 @@ onMounted(() => {
 })
 
 const seriesSafe = computed(() => Array.isArray(props.series) ? props.series : [])
+const hasData = computed(() => {
+  const s = seriesSafe.value
+  return s.length > 0 && Array.isArray(s[0].data) && s[0].data.length > 0
+})
 
 const options = computed(() => ({
   chart: {

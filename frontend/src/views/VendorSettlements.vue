@@ -53,7 +53,7 @@
         </div>
 
         <div v-else-if="settlements.length === 0" class="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-200">
-          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">No settlement requests yet</p>
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">{{ vendor.is_approved ? 'No settlement requests yet' : 'Approval Required for Settlements' }}</p>
         </div>
         
         <div v-else class="space-y-3">
@@ -170,14 +170,17 @@ const getStatusBadgeClass = (s) => {
 const loadData = async () => {
   loading.value = true
   try {
-    const [profRes, statsRes, settleRes] = await Promise.all([
-      axios.get('/api/vendor/profile'),
-      axios.get('/api/vendor/stats'),
-      axios.get('/api/vendor/settlements')
-    ])
+    const profRes = await axios.get('/api/vendor/profile')
     vendor.value = profRes.data
-    availableBalance.value = statsRes.data.available_balance || 0
-    settlements.value = settleRes.data.data || []
+
+    if (vendor.value.is_approved) {
+      const [statsRes, settleRes] = await Promise.all([
+        axios.get('/api/vendor/stats'),
+        axios.get('/api/vendor/settlements')
+      ])
+      availableBalance.value = statsRes.data.available_balance || 0
+      settlements.value = settleRes.data.data || []
+    }
   } catch (err) {
     console.error('Failed to load data', err)
   } finally {

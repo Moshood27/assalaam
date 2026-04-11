@@ -176,7 +176,9 @@
             </div>
           </div>
           <p class="text-xs text-slate-500 mb-4">Manage your products, track orders, and view payouts from your business.</p>
-          <button @click="$router.push('/vendor/dashboard')" class="w-full h-12 rounded-xl bg-emerald-700 text-white font-bold hover:bg-emerald-800 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-700/20">
+          <button @click="profile.vendor.is_approved ? $router.push('/vendor/dashboard') : alert('Your vendor profile is pending approval. You will be notified once approved.')" 
+                  :class="profile.vendor.is_approved ? 'bg-emerald-700 hover:bg-emerald-800 shadow-emerald-700/20' : 'bg-slate-400 cursor-not-allowed'"
+                  class="w-full h-12 rounded-xl text-white font-bold transition-colors flex items-center justify-center gap-2 shadow-lg">
             <span>Go to Vendor Portal</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />

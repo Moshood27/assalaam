@@ -67,6 +67,19 @@ class DashboardController extends Controller
                 ->orderByDesc('created_at')
                 ->take(10)
                 ->get();
+
+            // Calculate running balance for these 10 transactions
+            // Note: This is an approximation starting from current balance
+            $currentBalance = (float) $user->balance;
+            foreach ($walletTransactions as $tx) {
+                $tx->setAttribute('balance_after', (float) $currentBalance);
+                $tx->setAttribute('running_balance', (float) $currentBalance); // Alias for frontend
+                if (strtolower((string)$tx->type) === 'credit') {
+                    $currentBalance -= (float) $tx->amount;
+                } else {
+                    $currentBalance += (float) $tx->amount;
+                }
+            }
         }
 
         // Recent Utility Transactions

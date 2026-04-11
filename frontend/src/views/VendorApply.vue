@@ -8,7 +8,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 class="text-lg font-bold text-slate-800">Become a Vendor</h1>
+          <h1 class="text-lg font-bold text-slate-800">{{ isEdit ? 'Update Business Profile' : 'Become a Vendor' }}</h1>
         </div>
       </div>
     </header>
@@ -17,8 +17,8 @@
       <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
         <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
         <div class="relative z-10">
-          <h2 class="text-xl font-black text-slate-800 uppercase mb-2">Business Profile</h2>
-          <p class="text-sm text-slate-500 mb-6">Register your local business to start selling products to cooperative members.</p>
+          <h2 class="text-xl font-black text-slate-800 uppercase mb-2">{{ isEdit ? 'Edit Business' : 'Business Profile' }}</h2>
+          <p class="text-sm text-slate-500 mb-6">{{ isEdit ? 'Update your store information and settlement details.' : 'Register your local business to start selling products to cooperative members.' }}</p>
 
           <div class="space-y-4">
             <div>
@@ -107,7 +107,7 @@
         :disabled="submitting || !resolvedAccountName"
         class="w-full h-16 rounded-3xl bg-emerald-700 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-700/30 disabled:bg-slate-300 disabled:shadow-none transition-all active:scale-95"
       >
-        {{ submitting ? 'Processing...' : 'Submit Application' }}
+        {{ submitting ? 'Processing...' : (isEdit ? 'Update Profile' : 'Submit Application') }}
       </button>
 
       <p class="text-center text-[10px] text-slate-400 px-8 uppercase font-bold tracking-widest leading-relaxed">
@@ -142,6 +142,7 @@ const showBankDropdown = ref(false)
 const resolving = ref(false)
 const resolvedAccountName = ref('')
 const submitting = ref(false)
+const isEdit = ref(false)
 
 const filteredBanks = computed(() => {
   const q = bankSearch.value.toLowerCase()
@@ -183,8 +184,12 @@ const submit = async () => {
   submitting.value = true
   try {
     await axios.post('/api/vendor/profile', form.value)
-    alert('Application submitted successfully! It will be reviewed by the admin.')
-    router.push('/profile')
+    alert(isEdit.value ? 'Profile updated successfully!' : 'Application submitted successfully! It will be reviewed by the admin.')
+    if (isEdit.value) {
+      router.back()
+    } else {
+      router.push('/profile')
+    }
   } catch (err) {
     alert(err.response?.data?.message || 'Failed to submit application')
   } finally {
@@ -196,8 +201,19 @@ onMounted(async () => {
   try {
     const { data: profile } = await axios.get('/api/vendor/profile')
     if (profile && profile.id) {
-      router.replace('/vendor/dashboard')
-      return
+      isEdit.value = true
+      form.value = {
+        name: profile.name || '',
+        phone: profile.phone || '',
+        address: profile.address || '',
+        description: profile.description || '',
+        category: profile.category || '',
+        settlement_bank_name: profile.settlement_bank_name || '',
+        settlement_bank_code: profile.settlement_bank_code || '',
+        settlement_account_number: profile.settlement_account_number || '',
+        settlement_account_name: profile.settlement_account_name || ''
+      }
+      resolvedAccountName.value = profile.settlement_account_name || ''
     }
   } catch (_) {}
 

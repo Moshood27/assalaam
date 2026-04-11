@@ -19,9 +19,11 @@
       </div>
       
       <div v-else-if="orders.length === 0" class="bg-white rounded-[2rem] p-12 text-center border border-dashed border-slate-200">
-        <div class="text-4xl mb-4">📋</div>
-        <h3 class="text-sm font-bold text-slate-800 mb-1">No orders yet</h3>
-        <p class="text-xs text-slate-500">When members buy your products, they will appear here.</p>
+        <div class="text-4xl mb-4">{{ vendor.is_approved ? '📋' : '⏳' }}</div>
+        <h3 class="text-sm font-bold text-slate-800 mb-1">{{ vendor.is_approved ? 'No orders yet' : 'Approval Pending' }}</h3>
+        <p class="text-xs text-slate-500">
+          {{ vendor.is_approved ? 'When members buy your products, they will appear here.' : 'Once your vendor profile is approved, you can start receiving orders.' }}
+        </p>
       </div>
 
       <div v-else class="space-y-4">
@@ -150,11 +152,18 @@ const getStatusClass = (s) => {
   }
 }
 
+const vendor = ref({ is_approved: false })
+
 const loadOrders = async () => {
   loading.value = true
   try {
-    const { data } = await axios.get('/api/vendor/orders')
-    orders.value = data.data // Paginated response
+    const profRes = await axios.get('/api/vendor/profile')
+    vendor.value = profRes.data
+    
+    if (vendor.value.is_approved) {
+      const { data } = await axios.get('/api/vendor/orders')
+      orders.value = data.data // Paginated response
+    }
   } catch (err) {
     console.error('Failed to load vendor orders', err)
   } finally {

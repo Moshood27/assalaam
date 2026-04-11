@@ -12,6 +12,19 @@ use Illuminate\Support\Facades\DB;
 
 class VendorController extends Controller
 {
+    protected function requireVendor(Request $request): Vendor
+    {
+        $user = $request->user();
+        $vendor = Vendor::where('owner_user_id', $user->id)->first();
+        if (!$vendor) {
+            abort(403, 'Create a vendor profile first.');
+        }
+        if (!$vendor->is_approved) {
+            abort(403, 'Vendor profile pending approval.');
+        }
+        return $vendor;
+    }
+
     public function profile(Request $request)
     {
         $user = $request->user();
@@ -61,8 +74,7 @@ class VendorController extends Controller
      */
     public function orders(Request $request)
     {
-        $user = $request->user();
-        $vendor = Vendor::where('owner_user_id', $user->id)->firstOrFail();
+        $vendor = $this->requireVendor($request);
 
         $orders = StoreOrder::whereHas('items', function ($q) use ($vendor) {
                 $q->where('vendor_id', $vendor->id);
@@ -78,8 +90,8 @@ class VendorController extends Controller
 
     public function stats(Request $request)
     {
+        $vendor = $this->requireVendor($request);
         $user = $request->user();
-        $vendor = Vendor::where('owner_user_id', $user->id)->firstOrFail();
 
         $totalEarned = StoreOrderItem::where('vendor_id', $vendor->id)
             ->whereNotNull('vendor_paid_at')
@@ -151,6 +163,7 @@ class VendorController extends Controller
 
     public function settlements(Request $request)
     {
+        $this->requireVendor($request);
         $user = $request->user();
         $settlements = \App\Models\WithdrawalRequest::where('user_id', $user->id)
             ->where('meta->is_vendor_settlement', true)
@@ -219,8 +232,7 @@ class VendorController extends Controller
 
     public function updateOrderStatus(Request $request, $id)
     {
-        $user = $request->user();
-        $vendor = Vendor::where('owner_user_id', $user->id)->firstOrFail();
+        $vendor = $this->requireVendor($request);
 
         $order = StoreOrder::whereHas('items', function ($q) use ($vendor) {
             $q->where('vendor_id', $vendor->id);

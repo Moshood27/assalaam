@@ -10,7 +10,9 @@
           </button>
           <h1 class="text-lg font-bold text-slate-800">My Products</h1>
         </div>
-        <button @click="openCreateModal" class="bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-800 transition-colors">Add New</button>
+        <button @click="vendor.is_approved ? openCreateModal() : alert('Your vendor profile is pending approval. You cannot add products yet.')" 
+                :class="vendor.is_approved ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-slate-400 cursor-not-allowed'"
+                class="text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors">Add New</button>
       </div>
     </header>
 
@@ -23,7 +25,10 @@
         <div class="text-4xl mb-4">📦</div>
         <h3 class="text-sm font-bold text-slate-800 mb-1">No products yet</h3>
         <p class="text-xs text-slate-500 mb-6">Start listing your products to sell to members.</p>
-        <button @click="openCreateModal" class="px-6 py-3 rounded-2xl bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider">Add your first product</button>
+        <button v-if="vendor.is_approved" @click="openCreateModal" class="px-6 py-3 rounded-2xl bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider">Add your first product</button>
+        <div v-else class="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-700 text-xs font-bold uppercase tracking-widest">
+          Approval Required to list products
+        </div>
       </div>
 
       <div v-else class="grid gap-4">
@@ -186,6 +191,7 @@ const saving = ref(false)
 const editingId = ref(null)
 const imagePreview = ref(null)
 const selectedFile = ref(null)
+const vendor = ref({ is_approved: false })
 
 const form = ref({
   name: '',
@@ -212,12 +218,17 @@ const formatMoney = (val) => {
 const loadData = async () => {
   loading.value = true
   try {
-    const [pRes, cRes] = await Promise.all([
-      axios.get('/api/vendor/products'),
-      axios.get('/api/products/categories')
-    ])
-    products.value = pRes.data.data || pRes.data
-    categories.value = cRes.data
+    const vRes = await axios.get('/api/vendor/profile')
+    vendor.value = vRes.data
+
+    if (vendor.value.is_approved) {
+      const [pRes, cRes] = await Promise.all([
+        axios.get('/api/vendor/products'),
+        axios.get('/api/products/categories')
+      ])
+      products.value = pRes.data.data || pRes.data
+      categories.value = cRes.data
+    }
   } catch (err) {
     console.error('Failed to load products', err)
   } finally {

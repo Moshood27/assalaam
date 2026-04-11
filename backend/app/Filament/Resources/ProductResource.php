@@ -79,7 +79,7 @@ class ProductResource extends Resource
                     ->default(true),
                 Forms\Components\Toggle::make('is_approved')
                     ->label('Approved')
-                    ->disabled(!auth()->user()->is_admin) // Only admins can approve
+                    ->disabled(fn () => ! (auth()->user()->is_admin || auth()->user()->hasAnyRole(['super_admin', 'Branch Manager'])))
                     ->default(true), // Admin-created products should be approved by default
                 Forms\Components\Placeholder::make('selling_price_preview')
                     ->label('Selling Price (auto)')
@@ -127,7 +127,7 @@ class ProductResource extends Resource
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn ($record) => !$record->is_approved && auth()->user()->is_admin)
+                    ->visible(fn ($record) => !$record->is_approved && (auth()->user()->is_admin || auth()->user()->hasAnyRole(['super_admin', 'Branch Manager'])))
                     ->action(function ($record) {
                         $record->update([
                             'is_approved' => true,
@@ -152,7 +152,7 @@ class ProductResource extends Resource
                     ->label('Mark Pending')
                     ->icon('heroicon-o-x-circle')
                     ->color('warning')
-                    ->visible(fn ($record) => $record->is_approved && auth()->user()->is_admin)
+                    ->visible(fn ($record) => $record->is_approved && (auth()->user()->is_admin || auth()->user()->hasAnyRole(['super_admin', 'Branch Manager'])))
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update(['is_approved' => false]);
@@ -172,7 +172,7 @@ class ProductResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->visible(fn () => auth()->user()->is_admin)
+                        ->visible(fn () => auth()->user()->is_admin || auth()->user()->hasAnyRole(['super_admin', 'Branch Manager']))
                         ->action(function (\Illuminate\Support\Collection $records) {
                             $records->each(function ($record) {
                                 if (!$record->is_approved) {

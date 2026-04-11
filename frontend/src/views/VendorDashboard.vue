@@ -16,9 +16,21 @@
       </div>
     </header>
 
-    <div class="p-4 space-y-6">
-      <!-- Business Header -->
-      <div v-if="vendor.id" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+    <div v-if="vendor.id" class="p-4 space-y-6">
+      <!-- Pending Approval Banner -->
+      <div v-if="!vendor.is_approved" class="bg-amber-50 border border-amber-100 p-6 rounded-[2rem] text-center space-y-4">
+        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center text-3xl mx-auto">⏳</div>
+        <h2 class="text-xl font-black text-slate-800 uppercase">Approval Pending</h2>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Your vendor profile is currently being reviewed by our administrative team. 
+          You will gain full access to the vendor portal and be able to list products once your application is approved.
+        </p>
+        <button @click="$router.push('/profile')" class="px-6 py-3 bg-slate-800 text-white rounded-2xl font-bold text-xs uppercase tracking-widest">Back to Profile</button>
+      </div>
+
+      <template v-else>
+        <!-- Business Header -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
         <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
         <div class="relative z-10">
           <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1">Business Name</p>
@@ -83,34 +95,35 @@
         </button>
       </div>
 
-      <!-- Recent Payouts -->
-      <div class="space-y-4">
-        <div class="flex items-center justify-between px-2">
-          <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Activity</h3>
-          <button class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">View All</button>
-        </div>
-        
-        <div v-if="activities.length === 0" class="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200">
-          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">No recent activity</p>
-        </div>
-        
-        <div v-else class="space-y-3">
-          <div v-for="act in activities" :key="act.id" class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4">
-            <div :class="act.type === 'payout' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold">
-              {{ act.type === 'payout' ? '₦' : '📦' }}
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-slate-800 truncate">{{ act.title }}</p>
-              <p class="text-[10px] text-slate-500 font-medium">{{ act.date }}</p>
-            </div>
-            <div class="text-right">
-              <p :class="act.amount > 0 ? 'text-emerald-700' : 'text-slate-800'" class="text-sm font-black">
-                {{ act.amount > 0 ? '+' : '' }}₦{{ formatMoney(Math.abs(act.amount)) }}
-              </p>
+        <!-- Recent Payouts -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between px-2">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Activity</h3>
+            <button class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">View All</button>
+          </div>
+          
+          <div v-if="activities.length === 0" class="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200">
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">No recent activity</p>
+          </div>
+          
+          <div v-else class="space-y-3">
+            <div v-for="act in activities" :key="act.id" class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4">
+              <div :class="act.type === 'payout' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold">
+                {{ act.type === 'payout' ? '₦' : '📦' }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-800 truncate">{{ act.title }}</p>
+                <p class="text-[10px] text-slate-500 font-medium">{{ act.date }}</p>
+              </div>
+              <div class="text-right">
+                <p :class="act.amount > 0 ? 'text-emerald-700' : 'text-slate-800'" class="text-sm font-black">
+                  {{ act.amount > 0 ? '+' : '' }}₦{{ formatMoney(Math.abs(act.amount)) }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
     </div>
   </div>
 </template>
@@ -134,13 +147,14 @@ const formatMoney = (val) => {
 
 onMounted(async () => {
   try {
-    const [profRes, statsRes] = await Promise.all([
-      axios.get('/api/vendor/profile'),
-      axios.get('/api/vendor/stats')
-    ])
+    const profRes = await axios.get('/api/vendor/profile')
     vendor.value = profRes.data
-    stats.value = statsRes.data
-    activities.value = statsRes.data.activities || []
+
+    if (vendor.value.is_approved) {
+      const statsRes = await axios.get('/api/vendor/stats')
+      stats.value = statsRes.data
+      activities.value = statsRes.data.activities || []
+    }
   } catch (err) {
     console.error('Failed to load vendor data', err)
   }
