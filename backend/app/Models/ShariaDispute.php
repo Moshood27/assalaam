@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use App\Models\User;
+use App\Models\StoreOrder;
+use App\Notifications\ShariaDisputeNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ShariaDispute extends Model
 {
@@ -36,7 +40,7 @@ class ShariaDispute extends Model
             }
 
             if ($recipients->isNotEmpty()) {
-                \Illuminate\Support\Facades\Notification::send($recipients, new \App\Notifications\ShariaDisputeNotification($dispute, 'created'));
+                Notification::send($recipients, new ShariaDisputeNotification($dispute, 'created'));
             }
         });
 
@@ -48,7 +52,7 @@ class ShariaDispute extends Model
                 }
 
                 if ($dispute->user) {
-                    $dispute->user->notify(new \App\Notifications\ShariaDisputeNotification($dispute, 'updated'));
+                    $dispute->user->notify(new ShariaDisputeNotification($dispute, 'updated'));
                 }
             }
         });

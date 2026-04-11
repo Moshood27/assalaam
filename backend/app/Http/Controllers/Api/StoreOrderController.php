@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ShariaDispute;
 use App\Models\StoreOrder;
-use App\Models\StoreOrderItem;
+use App\Models\User;
 use App\Models\WalletTransaction;
+use App\Models\StoreOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -547,7 +549,7 @@ class StoreOrderController extends Controller
     public function myDisputes(Request $request)
     {
         $user = $request->user();
-        $disputes = \App\Models\ShariaDispute::with(['order:id,reference,total_amount,status,created_at'])
+        $disputes = ShariaDispute::with(['order:id,reference,total_amount,status,created_at'])
             ->where('user_id', $user->id)
             ->latest()
             ->paginate($request->query('per_page', 15));
