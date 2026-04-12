@@ -30,6 +30,7 @@ use Filament\Infolists\Components\Actions\Action as InfolistAction;
 use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -214,6 +215,17 @@ class QardHasanResource extends Resource
                     ->boolean()
                     ->getStateUsing(fn (QardHasan $record) => ! empty($record->agreement_verified_at))
                     ->sortable(),
+                TextColumn::make('approvals_count')
+                    ->label('Admin Approvals')
+                    ->getStateUsing(function (QardHasan $record) {
+                        if (!$record->isHighValue()) return 'N/A';
+                        $count = $record->transactionApprovals()->where('status', 'approved')->count();
+                        $required = config('cooperative.approvals.required_approvals_count', 2);
+                        return "{$count} / {$required}";
+                    })
+                    ->badge()
+                    ->color(fn (QardHasan $record) => $record->isHighValue() ? ($record->hasSufficientApprovals() ? 'success' : 'warning') : 'gray')
+                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -262,6 +274,30 @@ class QardHasanResource extends Resource
                             'member_id' => $record->user_id,
                             'principal' => $record->principal_amount,
                         ]);
+
+                        // Send push notifications to other admins for high-value loans
+                        if ($record->isHighValue()) {
+                            $required = config('cooperative.approvals.required_approvals_count', 2);
+                            $admins = User::where('is_admin', true)
+                                ->where('id', '!=', auth()->id())
+                                ->whereHas('roles', function($q) {
+                                    $q->whereIn('name', ['super_admin', 'Chairman', 'Sharia Auditor']);
+                                })
+                                ->get();
+
+                            foreach ($admins as $admin) {
+                                $admin->notifyMember(
+                                    'High-Value Loan Approval Required',
+                                    "A loan of ₦" . number_format($record->principal_amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
+                                    [
+                                        'type' => 'high_value_loan_approval',
+                                        'loan_id' => $record->id,
+                                        'qard_id_string' => $record->qard_id_string,
+                                    ],
+                                    ['push', 'database']
+                                );
+                            }
+                        }
 
                         $msg = "Your loan request ({$record->qard_id_string}) was approved! Please download the agreement from your dashboard, sign, and upload it back for verification.";
                         // Notify member via preferences
@@ -436,6 +472,53 @@ class QardHasanResource extends Resource
                     ->color('gray')
                     ->visible(fn (QardHasan $record) => ! empty($record->agreement_template))
                     ->url(fn (QardHasan $record) => asset('storage/'.$record->agreement_template), true),
+                Action::make('multi_sig_approve')
+                    ->label('Admin Multi-Sig Approval')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('info')
+                    ->visible(fn (QardHasan $record) => $record->status === 'pending' && $record->isHighValue() && ! $record->hasSufficientApprovals())
+                    ->requiresConfirmation()
+                    ->modalDescription('Confirm that you have reviewed this high-value loan and approve it for disbursement.')
+                    ->action(function (QardHasan $record) {
+                        $user = auth()->user();
+
+                        // Check if already approved by this user
+                        if ($record->transactionApprovals()->where('approver_id', $user->id)->exists()) {
+                            Notification::make()
+                                ->title('Already Approved')
+                                ->body('You have already signed off on this transaction.')
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+
+                        $record->transactionApprovals()->create([
+                            'approver_id' => $user->id,
+                            'status' => 'approved',
+                            'responded_at' => now(),
+                        ]);
+
+                        ShariahAudit::log($user, 'multi_sig_approve_loan', [
+                            'qard_id' => $record->id,
+                            'qard_id_string' => $record->qard_id_string,
+                            'amount' => $record->principal_amount,
+                        ]);
+
+                        Notification::make()
+                            ->title('Approval Recorded')
+                            ->body('Your approval has been recorded for this high-value loan.')
+                            ->success()
+                            ->send();
+
+                        // Notify user if now fully approved
+                        if ($record->hasSufficientApprovals()) {
+                             Notification::make()
+                                ->title('Fully Approved')
+                                ->body('This loan has now received sufficient admin approvals and can be disbursed.')
+                                ->success()
+                                ->send();
+                        }
+                    }),
                 Action::make('disburse')
                     ->label('Disburse')
                     ->icon('heroicon-o-paper-airplane')
@@ -476,6 +559,20 @@ class QardHasanResource extends Resource
                                 ->title('Cannot disburse')
                                 ->body('The agreement must be uploaded and verified before disbursement.')
                                 ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        // Enforce Multi-Sig (Four-Eyes) approval for high-value loans
+                        if ($record->isAwaitingApprovals()) {
+                            $required = config('cooperative.approvals.required_approvals_count', 2);
+                            $approved = $record->transactionApprovals()->where('status', 'approved')->count();
+
+                            Notification::make()
+                                ->title('Pending High-Value Approval')
+                                ->body("This loan requires {$required} admin approvals because it exceeds the threshold. Currently approved by: {$approved}. One of the approvers must be the Chairman or Sharia Auditor.")
+                                ->warning()
                                 ->send();
 
                             return;
@@ -685,6 +782,23 @@ class QardHasanResource extends Resource
     {
         return $infolist
             ->schema([
+                InfoSection::make('Loan Details')
+                    ->schema([
+                        TextEntry::make('qard_id_string')->label('Loan ID'),
+                        TextEntry::make('user.name')->label('Member'),
+                        TextEntry::make('principal_amount')->money('ngn'),
+                        TextEntry::make('status')->badge(),
+                    ])->columns(2),
+                InfoSection::make('Multi-Sig Approvals')
+                    ->schema([
+                        RepeatableEntry::make('transactionApprovals')
+                            ->label('Approvals Log')
+                            ->schema([
+                                TextEntry::make('approver.name')->label('Approver'),
+                                TextEntry::make('status')->badge()->color('success'),
+                                TextEntry::make('responded_at')->label('Signed At')->dateTime(),
+                            ])->columns(3)
+                    ])->visible(fn (QardHasan $record) => $record->isHighValue()),
                 InfoSection::make('Loan Documents & Verification')
                     ->schema([
                         TextEntry::make('agreement_template')

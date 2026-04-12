@@ -83,6 +83,19 @@ class Contribution extends Model
                         app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
                     } catch (\Throwable $e) {}
 
+                    // Notify admins about successful contribution
+                    try {
+                        $user = $model->user;
+                        $schemeName = $model->scheme?->name ?? 'Contribution';
+                        User::where('is_admin', true)->each(function ($admin) use ($user, $model, $schemeName) {
+                            $admin->notifyMember(
+                                "Payment Received: {$schemeName}",
+                                "Member {$user->name} successfully paid ₦" . number_format($model->amount, 2) . " for {$schemeName}.",
+                                ['type' => 'contribution_success', 'contribution_id' => $model->id]
+                            );
+                        });
+                    } catch (\Throwable $e) {}
+
                     if ($model->project_id) {
                         // Decrement available units if applicable
                         if ($model->units > 0) {

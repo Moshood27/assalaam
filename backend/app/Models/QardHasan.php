@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Models\TransactionApproval;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Activity;
@@ -239,5 +241,34 @@ class QardHasan extends Model
         $credit = $p - $fee;
 
         return $credit > 0 ? round($credit, 2) : 0.0;
+    }
+    public function transactionApprovals(): MorphMany
+    {
+        return $this->morphMany(TransactionApproval::class, 'approvable');
+    }
+
+    public function isHighValue(): bool
+    {
+        $threshold = config('cooperative.approvals.high_value_loan_threshold', 500000);
+        return (float) $this->principal_amount >= (float) $threshold;
+    }
+
+    public function hasSufficientApprovals(): bool
+    {
+        if (!$this->isHighValue()) {
+            return true;
+        }
+
+        $requiredCount = config('cooperative.approvals.required_approvals_count', 2);
+        $approvedCount = $this->transactionApprovals()
+            ->where('status', 'approved')
+            ->count();
+
+        return $approvedCount >= $requiredCount;
+    }
+
+    public function isAwaitingApprovals(): bool
+    {
+        return $this->isHighValue() && !$this->hasSufficientApprovals();
     }
 }

@@ -349,9 +349,17 @@ class MemberRegistrationController extends Controller
             'meta' => $kyc['meta'] ?? null,
         ];
         $user->save();
-
         $app->finalized_at = now();
         $app->save();
+
+        // Notify admins about new member registration
+        User::where('is_admin', true)->each(function ($admin) use ($user) {
+            $admin->notifyMember(
+                "New Member Joined",
+                "{$user->name} has completed registration and is now a member (Membership: {$user->membership_number}).",
+                ['type' => 'new_member', 'user_id' => $user->id]
+            );
+        });
 
         return response()->json([
             'message' => 'Registration complete. Welcome to the Cooperative!',

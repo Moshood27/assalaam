@@ -81,6 +81,18 @@ class RolesAndPermissionsSeeder extends Seeder
         // but it's good to have them.
         $superAdmin->givePermissionTo(Permission::all());
 
+        // Chairman
+        $chairman = Role::findOrCreate('Chairman');
+        $chairman->givePermissionTo(Permission::all());
+
+        // Sharia Auditor
+        $shariaAuditor = Role::findOrCreate('Sharia Auditor');
+        $shariaAuditor->givePermissionTo([
+            'view_any_qard_hasan', 'view_qard_hasan',
+            'view_any_shariah_audit_log', 'view_shariah_audit_log',
+            'view_any_sharia_dispute', 'view_sharia_dispute', 'update_sharia_dispute',
+        ]);
+
         // Branch Manager
         $branchManager = Role::findOrCreate('Branch Manager');
         $branchManager->givePermissionTo([

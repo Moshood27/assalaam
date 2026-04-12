@@ -63,6 +63,16 @@ class VendorController extends Controller
         }
         $vendor->save();
 
+        if ($vendor->wasRecentlyCreated) {
+            \App\Models\User::where('is_admin', true)->each(function ($admin) use ($vendor, $user) {
+                $admin->notifyMember(
+                    "New Vendor Application",
+                    "{$user->name} has submitted a new vendor application for '{$vendor->name}'.",
+                    ['type' => 'new_vendor', 'vendor_id' => $vendor->id]
+                );
+            });
+        }
+
         return response()->json([
             'message' => $vendor->wasRecentlyCreated ? 'Vendor profile created' : 'Vendor profile updated',
             'vendor' => $vendor,
@@ -223,6 +233,14 @@ class VendorController extends Controller
                 'vendor_id' => $vendor->id,
             ]
         ]);
+
+        \App\Models\User::where('is_admin', true)->each(function ($admin) use ($settlement, $user) {
+            $admin->notifyMember(
+                "Vendor Settlement Request",
+                "Vendor '{$user->name}' requested a settlement of ₦" . number_format($settlement->amount, 2),
+                ['type' => 'vendor_settlement_request', 'request_id' => $settlement->id]
+            );
+        });
 
         return response()->json([
             'message' => 'Settlement request submitted successfully.',

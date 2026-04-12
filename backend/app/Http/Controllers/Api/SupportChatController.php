@@ -59,6 +59,15 @@ class SupportChatController extends Controller
         // Broadcast in real-time
         event(new SupportMessageSent($msg));
 
+        // Notify admins about new support message
+        \App\Models\User::where('is_admin', true)->each(function ($admin) use ($user, $msg) {
+            $admin->notifyMember(
+                "New Support Message",
+                "Message from {$user->name}: " . \Illuminate\Support\Str::limit($msg->body, 50),
+                ['type' => 'support_message', 'user_id' => $user->id]
+            );
+        });
+
         return response()->json([
             'message' => 'Sent',
             'data' => [

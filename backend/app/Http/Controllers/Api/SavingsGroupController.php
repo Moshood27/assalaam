@@ -102,6 +102,15 @@ class SavingsGroupController extends Controller
                 'joined_at' => now(),
             ]);
 
+            // Notify admins about new savings group creation
+            \App\Models\User::where('is_admin', true)->each(function ($admin) use ($group, $user) {
+                $admin->notifyMember(
+                    "New Savings Group Created",
+                    "A new savings group '{$group->name}' has been created by {$user->name}.",
+                    ['type' => 'new_savings_group', 'group_id' => $group->id]
+                );
+            });
+
             return response()->json([
                 'message' => 'Savings group created successfully',
                 'group' => $group->load(['project:id,name', 'creator:id,name']),

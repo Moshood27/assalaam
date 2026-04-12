@@ -693,26 +693,16 @@ class WalletController extends Controller
             throw $e;
         }
 
-        // Best-effort alert to admins (optional)
+        // Best-effort alert to admins
         try {
-            $admins = User::query()->where('is_admin', true)->get(['id','email','device_token','fcm_token']);
-            if ($admins->isNotEmpty()) {
-                $push = app(\App\Services\PushService::class);
-                $title = 'Withdrawal Request';
-                $body = $user->name.' requested ₦'.number_format($amount, 2).' (Ref: '.$reference.').';
-                foreach ($admins as $a) {
-                    $token = $a->fcm_token ?: $a->device_token;
-                    if (!empty($token)) {
-                        $push->send($token, $title, $body, [
-                            'type' => 'withdrawal_request',
-                            'request_id' => $req->id,
-                            'member_id' => $user->id,
-                            'amount' => (float) $amount,
-                        ]);
-                    }
-                }
-            }
-        } catch (\Throwable $e) { /* ignore */ }
+            User::where('is_admin', true)->each(function ($admin) use ($user, $amount, $reference, $req) {
+                $admin->notifyMember(
+                    "New Withdrawal Request",
+                    "Member {$user->name} requested ₦" . number_format($amount, 2) . " (Ref: {$reference}).",
+                    ['type' => 'withdrawal_request', 'request_id' => $req->id]
+                );
+            });
+        } catch (\Throwable $e) {}
 
         // Notify member via preferences
         $user->notifyMember('Withdrawal Request', 'Withdrawal request received: ₦'.number_format($amount, 2).'. Ref: '.$reference.'.', [

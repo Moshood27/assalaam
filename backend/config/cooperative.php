@@ -19,4 +19,9 @@ return [
         'inactivity_months' => env('COOP_LEGACY_INACTIVITY_MONTHS', 6),
         'check_period_days' => env('COOP_LEGACY_CHECK_PERIOD_DAYS', 30), // Notify admin after this many days since wellness check if still inactive
     ],
+    'approvals' => [
+        'high_value_loan_threshold' => env('COOP_HIGH_VALUE_LOAN_THRESHOLD', 500000), // 500k NGN
+        'high_value_withdrawal_threshold' => env('COOP_HIGH_VALUE_WITHDRAWAL_THRESHOLD', 500000), // 500k NGN
+        'required_approvals_count' => env('COOP_REQUIRED_APPROVALS_COUNT', 2),
+    ],
 ];

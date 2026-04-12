@@ -4,14 +4,20 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\WithdrawalRequestResource\Pages;
 use App\Models\WithdrawalRequest;
+use App\Models\TransactionApproval;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section as InfoSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\Action;
@@ -30,8 +36,39 @@ class WithdrawalRequestResource extends Resource
     {
         return $form
             ->schema([
-                // Read-only; admin processes from the table/actions
-                Forms\Components\TextInput::make('user_id')->disabled()->dehydrated(false),
+                Forms\Components\Section::make('Withdrawal Request')
+                    ->schema([
+                        Forms\Components\TextInput::make('user_id')->disabled()->dehydrated(false),
+                        Forms\Components\TextInput::make('amount')->money('ngn')->disabled(),
+                        Forms\Components\TextInput::make('reference')->disabled(),
+                        Forms\Components\TextInput::make('status')->disabled(),
+                    ])->columns(2),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfoSection::make('Withdrawal Details')
+                    ->schema([
+                        TextEntry::make('user.name')->label('Member'),
+                        TextEntry::make('amount')->money('ngn'),
+                        TextEntry::make('reference')->label('Ref'),
+                        TextEntry::make('status')->badge(),
+                        TextEntry::make('bank_name')->label('Bank'),
+                        TextEntry::make('account_number')->label('Acct #'),
+                    ])->columns(2),
+                InfoSection::make('Multi-Sig Approvals')
+                    ->schema([
+                        RepeatableEntry::make('transactionApprovals')
+                            ->label('Approvals Log')
+                            ->schema([
+                                TextEntry::make('approver.name')->label('Approver'),
+                                TextEntry::make('status')->badge()->color('success'),
+                                TextEntry::make('responded_at')->label('Signed At')->dateTime(),
+                            ])->columns(3)
+                    ])->visible(fn (WithdrawalRequest $record) => $record->isHighValue())
             ]);
     }
 
@@ -75,6 +112,17 @@ class WithdrawalRequestResource extends Resource
                     'success' => ['paid'],
                     'danger' => ['declined'],
                 ])->sortable(),
+                TextColumn::make('approvals_count')
+                    ->label('Admin Approvals')
+                    ->getStateUsing(function (WithdrawalRequest $record) {
+                        if (!$record->isHighValue()) return 'N/A';
+                        $count = $record->transactionApprovals()->where('status', 'approved')->count();
+                        $required = config('cooperative.approvals.required_approvals_count', 2);
+                        return "{$count} / {$required}";
+                    })
+                    ->badge()
+                    ->color(fn (WithdrawalRequest $record) => $record->isHighValue() ? ($record->hasSufficientApprovals() ? 'success' : 'warning') : 'gray')
+                    ->toggleable(),
                 TextColumn::make('processed_at')->label('Processed')->dateTime()->toggleable(),
             ])
             ->filters([
@@ -102,6 +150,7 @@ class WithdrawalRequestResource extends Resource
                     ->extraAttributes(['onclick' => 'window.print()']),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 Action::make('mark_paid')
@@ -111,6 +160,20 @@ class WithdrawalRequestResource extends Resource
                     ->visible(fn (WithdrawalRequest $record) => $record->status === 'pending')
                     ->requiresConfirmation()
                     ->action(function (WithdrawalRequest $record) {
+                        // Enforce Multi-Sig (Four-Eyes) approval for high-value withdrawals
+                        if ($record->isAwaitingApprovals()) {
+                            $required = config('cooperative.approvals.required_approvals_count', 2);
+                            $approved = $record->transactionApprovals()->where('status', 'approved')->count();
+
+                            Notification::make()
+                                ->title('Pending High-Value Approval')
+                                ->body("This withdrawal requires {$required} admin approvals. Currently approved by: {$approved}.")
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
                         DB::transaction(function () use ($record) {
                             // Lock user and ensure sufficient balance
                             $user = User::where('id', $record->user_id)->lockForUpdate()->first();
@@ -206,6 +269,75 @@ class WithdrawalRequestResource extends Resource
                             ->title('Withdrawal declined')
                             ->success()
                             ->send();
+                    }),
+                Action::make('multi_sig_approve')
+                    ->label('Admin Multi-Sig Approval')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('info')
+                    ->visible(fn (WithdrawalRequest $record) => $record->status === 'pending' && $record->isHighValue() && ! $record->hasSufficientApprovals())
+                    ->requiresConfirmation()
+                    ->modalDescription('Confirm that you have reviewed this high-value withdrawal and approve it for processing.')
+                    ->action(function (WithdrawalRequest $record) {
+                        $user = auth()->user();
+
+                        // Check if already approved by this user
+                        if ($record->transactionApprovals()->where('approver_id', $user->id)->exists()) {
+                            Notification::make()
+                                ->title('Already Approved')
+                                ->body('You have already signed off on this transaction.')
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+
+                        $record->transactionApprovals()->create([
+                            'approver_id' => $user->id,
+                            'status' => 'approved',
+                            'responded_at' => now(),
+                        ]);
+
+                        ShariahAudit::log($user, 'multi_sig_approve_withdrawal', [
+                            'withdrawal_id' => $record->id,
+                            'user_id' => $record->user_id,
+                            'amount' => $record->amount,
+                        ]);
+
+                        Notification::make()
+                            ->title('Approval Recorded')
+                            ->body('Your approval has been recorded for this high-value withdrawal.')
+                            ->success()
+                            ->send();
+
+                        // Notify other admins if high value
+                        if ($record->isHighValue() && $record->transactionApprovals()->count() === 1) {
+                            $admins = User::where('is_admin', true)
+                                ->where('id', '!=', auth()->id())
+                                ->whereHas('roles', function($q) {
+                                    $q->whereIn('name', ['super_admin', 'Chairman', 'Sharia Auditor']);
+                                })
+                                ->get();
+
+                            foreach ($admins as $admin) {
+                                $admin->notifyMember(
+                                    'High-Value Withdrawal Approval Required',
+                                    "A withdrawal of ₦" . number_format((float)$record->amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
+                                    [
+                                        'type' => 'high_value_withdrawal_approval',
+                                        'withdrawal_id' => $record->id,
+                                    ],
+                                    ['push', 'database']
+                                );
+                            }
+                        }
+
+                        // Notify user if now fully approved
+                        if ($record->hasSufficientApprovals()) {
+                             Notification::make()
+                                ->title('Fully Approved')
+                                ->body('This withdrawal has now received sufficient admin approvals and can be processed.')
+                                ->success()
+                                ->send();
+                        }
                     }),
             ]);
     }
