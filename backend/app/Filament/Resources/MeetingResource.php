@@ -26,9 +26,11 @@ class MeetingResource extends Resource
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\Select::make('branch_id')
-                            ->relationship('branch', 'name')
-                            ->nullable(),
+                        Forms\Components\Select::make('branches')
+                            ->relationship('branches', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->hint('Leave empty to apply to all branches'),
                         Forms\Components\DatePicker::make('date')
                             ->required(),
                         Forms\Components\TimePicker::make('start_time')
@@ -50,17 +52,27 @@ class MeetingResource extends Resource
                             ->columnSpanFull(),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Venue & Fines')
+                Forms\Components\Section::make('Venue & Location')
                     ->schema([
+                        Forms\Components\View::make('filament.components.map-picker')
+                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('venue_lat')
                             ->numeric()
+                            ->reactive()
+                            ->afterStateUpdated(fn ($state, $set) => $set('venue_lat', $state))
                             ->step('0.00000001'),
                         Forms\Components\TextInput::make('venue_lng')
                             ->numeric()
+                            ->reactive()
+                            ->afterStateUpdated(fn ($state, $set) => $set('venue_lng', $state))
                             ->step('0.00000001'),
                         Forms\Components\TextInput::make('radius_meters')
                             ->numeric()
                             ->default(config('cooperative.attendance.radius_meters', 50)),
+                    ])->columns(2),
+
+                Forms\Components\Section::make('Fines & Fees')
+                    ->schema([
                         Forms\Components\TextInput::make('fine_amount')
                             ->numeric()
                             ->prefix('₦')
@@ -83,8 +95,10 @@ class MeetingResource extends Resource
                 Tables\Columns\TextColumn::make('date')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('branch.name')
-                    ->label('Branch')
+                Tables\Columns\TextColumn::make('branches.name')
+                    ->label('Branches')
+                    ->badge()
+                    ->placeholder('All Branches')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pin')
                     ->label('PIN'),
@@ -103,8 +117,9 @@ class MeetingResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('branch_id')
-                    ->relationship('branch', 'name'),
+                Tables\Filters\SelectFilter::make('branches')
+                    ->relationship('branches', 'name')
+                    ->multiple(),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'scheduled' => 'Scheduled',

@@ -118,8 +118,10 @@ class DashboardController extends Controller
         if (Schema::hasTable('meetings')) {
             $ongoingMeeting = Meeting::where('status', 'ongoing')
                 ->where(function ($query) use ($user) {
-                    $query->whereNull('branch_id')
-                        ->orWhere('branch_id', $user->branch_id);
+                    $query->whereDoesntHave('branches')
+                        ->orWhereHas('branches', function ($q) use ($user) {
+                            $q->where('branches.id', $user->branch_id);
+                        });
                 })
                 ->whereDoesntHave('attendanceRecords', function ($q) use ($user) {
                     $q->where('user_id', $user->id)->whereIn('status', ['present', 'apology_paid']);

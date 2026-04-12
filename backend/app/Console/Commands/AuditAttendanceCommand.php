@@ -30,8 +30,8 @@ class AuditAttendanceCommand extends Command
 
             // Define who should have attended (non-admins)
             $query = User::where('is_admin', false);
-            if ($meeting->branch_id) {
-                $query->where('branch_id', $meeting->branch_id);
+            if ($meeting->branches()->exists()) {
+                $query->whereIn('branch_id', $meeting->branches()->pluck('branches.id'));
             }
 
             $users = $query->get();

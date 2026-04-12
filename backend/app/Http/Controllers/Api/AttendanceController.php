@@ -28,8 +28,10 @@ class AttendanceController extends Controller
         // Find ongoing meeting
         $meeting = Meeting::where('status', 'ongoing')
             ->where(function ($query) use ($user) {
-                $query->whereNull('branch_id')
-                    ->orWhere('branch_id', $user->branch_id);
+                $query->whereDoesntHave('branches')
+                    ->orWhereHas('branches', function ($q) use ($user) {
+                        $q->where('branches.id', $user->branch_id);
+                    });
             })
             ->first();
 
@@ -37,8 +39,10 @@ class AttendanceController extends Controller
         if (!$meeting) {
             $meeting = Meeting::where('status', 'scheduled')
                 ->where(function ($query) use ($user) {
-                    $query->whereNull('branch_id')
-                        ->orWhere('branch_id', $user->branch_id);
+                    $query->whereDoesntHave('branches')
+                        ->orWhereHas('branches', function ($q) use ($user) {
+                            $q->where('branches.id', $user->branch_id);
+                        });
                 })
                 ->orderBy('date', 'asc')
                 ->orderBy('start_time', 'asc')

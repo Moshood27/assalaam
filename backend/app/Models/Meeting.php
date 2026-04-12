@@ -40,6 +40,11 @@ class Meeting extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function branches(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class);
+    }
+
     public function attendanceRecords(): HasMany
     {
         return $this->hasMany(AttendanceRecord::class);

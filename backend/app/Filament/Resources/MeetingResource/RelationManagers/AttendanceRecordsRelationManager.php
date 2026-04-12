@@ -84,8 +84,8 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ->action(function () {
                         $meeting = $this->getOwnerRecord();
                         $query = \App\Models\User::where('is_admin', false);
-                        if ($meeting->branch_id) {
-                            $query->where('branch_id', $meeting->branch_id);
+                        if ($meeting->branches()->exists()) {
+                            $query->whereIn('branch_id', $meeting->branches()->pluck('branches.id'));
                         }
                         $userIds = $query->pluck('id');
 
