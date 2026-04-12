@@ -4,6 +4,8 @@
         lng: @entangle('data.venue_lng'),
         map: null,
         marker: null,
+        searchQuery: '',
+        isSearching: false,
         init() {
             if (typeof L === 'undefined') {
                 if (!document.getElementById('leaflet-css')) {
@@ -48,6 +50,7 @@
             this.map.on('click', (e) => {
                 this.lat = e.latlng.lat;
                 this.lng = e.latlng.lng;
+                this.searchQuery = ''; // Clear search when manually picking
                 if (this.marker) {
                     this.marker.setLatLng(e.latlng);
                 } else {
@@ -65,16 +68,56 @@
                 }
                 this.map.panTo(latlng);
             }
+        },
+        async searchLocation() {
+            if (!this.searchQuery) return;
+            this.isSearching = true;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    this.lat = parseFloat(result.lat);
+                    this.lng = parseFloat(result.lon);
+                    this.updateFromInputs();
+                    this.map.setView([this.lat, this.lng], 15);
+                    this.searchQuery = result.display_name;
+                } else {
+                    alert('Location not found');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                alert('An error occurred while searching');
+            } finally {
+                this.isSearching = false;
+            }
         }
     }"
     x-init="$watch('lat', value => updateFromInputs()); $watch('lng', value => updateFromInputs());"
     class="w-full"
 >
-    <div x-ref="map" style="height: 400px; width: 100%; border-radius: 8px; z-index: 1;" wire:ignore></div>
-    <div class="mt-2">
+    <div class="flex items-center space-x-2 mb-2">
+        <div class="flex-1">
+            <input
+                type="text"
+                x-model="searchQuery"
+                @keydown.enter.prevent="searchLocation()"
+                placeholder="Search for street address..."
+                class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 rounded-md dark:bg-white/5 dark:text-white dark:ring-white/10"
+            >
+        </div>
         <button
             type="button"
-            class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
+            @click="searchLocation()"
+            class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 dark:bg-white/5 dark:text-white dark:ring-white/10"
+            :disabled="isSearching"
+        >
+            <span x-show="!isSearching">Search</span>
+            <span x-show="isSearching">...</span>
+        </button>
+        <button
+            type="button"
+            class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-white/5 dark:text-white dark:ring-white/10"
             x-on:click="
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(pos => {
@@ -85,8 +128,11 @@
                     });
                 }
             "
+            title="Get Current Location"
         >
-            Get Current Location
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
     </div>
+
+    <div x-ref="map" style="height: 400px; width: 100%; border-radius: 8px; z-index: 1;" wire:ignore></div>
 </div>
