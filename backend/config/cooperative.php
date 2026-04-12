@@ -22,6 +22,7 @@ return [
     'approvals' => [
         'high_value_loan_threshold' => env('COOP_HIGH_VALUE_LOAN_THRESHOLD', 500000), // 500k NGN
         'high_value_withdrawal_threshold' => env('COOP_HIGH_VALUE_WITHDRAWAL_THRESHOLD', 500000), // 500k NGN
+        'high_value_expense_threshold' => env('COOP_HIGH_VALUE_EXPENSE_THRESHOLD', 200000), // 200k NGN
         'required_approvals_count' => env('COOP_REQUIRED_APPROVALS_COUNT', 2),
     ],
 ];

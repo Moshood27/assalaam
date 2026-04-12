@@ -5,8 +5,13 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CharityEntryResource\Pages;
 use App\Models\CharityEntry;
 use App\Models\ShariahAuditLog as ShariahAudit;
+use App\Models\TransactionApproval;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section as InfoSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -16,6 +21,7 @@ use Filament\Tables\Table;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
 
@@ -50,6 +56,36 @@ class CharityEntryResource extends Resource
             ]);
     }
 
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                InfoSection::make('Charity Details')
+                    ->schema([
+                        TextEntry::make('created_at')->dateTime(),
+                        TextEntry::make('user.name')->label('Member'),
+                        TextEntry::make('source'),
+                        TextEntry::make('amount')->money('ngn'),
+                        TextEntry::make('status')->badge()
+                            ->colors([
+                                'warning' => 'pending',
+                                'success' => 'processed',
+                            ]),
+                        TextEntry::make('note')->columnSpanFull(),
+                    ])->columns(2),
+                InfoSection::make('Multi-Sig Approvals')
+                    ->schema([
+                        RepeatableEntry::make('transactionApprovals')
+                            ->label('Approvals Log')
+                            ->schema([
+                                TextEntry::make('approver.name')->label('Approver'),
+                                TextEntry::make('status')->badge()->color('success'),
+                                TextEntry::make('responded_at')->label('Signed At')->dateTime(),
+                            ])->columns(3)
+                    ])->visible(fn (CharityEntry $record) => $record->isHighValue())
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -61,6 +97,22 @@ class CharityEntryResource extends Resource
                     ->money('ngn', true)
                     ->sortable()
                     ->summarize(Sum::make()->money('ngn', true)->label('Net Balance')),
+                TextColumn::make('status')->badge()
+                    ->colors([
+                        'warning' => 'pending',
+                        'success' => 'processed',
+                    ]),
+                TextColumn::make('approvals_count')
+                    ->label('Admin Approvals')
+                    ->getStateUsing(function (CharityEntry $record) {
+                        if (!$record->isHighValue()) return 'N/A';
+                        $count = $record->transactionApprovals()->where('status', 'approved')->count();
+                        $required = config('cooperative.approvals.required_approvals_count', 2);
+                        return "{$count} / {$required}";
+                    })
+                    ->badge()
+                    ->color(fn (CharityEntry $record) => $record->isHighValue() ? ($record->hasSufficientApprovals() ? 'success' : 'warning') : 'gray')
+                    ->toggleable(),
                 TextColumn::make('note')->limit(50),
             ])
             ->headerActions([
@@ -96,11 +148,12 @@ class CharityEntryResource extends Resource
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        CharityEntry::create([
+                        $entry = CharityEntry::create([
                             'user_id' => $data['recipient_user_id'] ?? null,
                             'source' => $data['source'],
                             'amount' => -abs($data['amount']),
                             'note' => $data['note'],
+                            'status' => 'pending', // High-value disburse needs approval
                         ]);
 
                         ShariahAudit::log(auth()->user(), 'charity_disbursement_created', [
@@ -108,6 +161,17 @@ class CharityEntryResource extends Resource
                             'source' => $data['source'],
                             'amount' => -abs($data['amount']),
                         ]);
+
+                        if ($entry->isHighValue()) {
+                            Notification::make()
+                                ->title('High-value disbursement created')
+                                ->body('This disbursement requires Multi-Sig approval before being processed.')
+                                ->warning()
+                                ->send();
+                        } else {
+                            // auto-process small ones if desired, or keep as pending.
+                            // For consistency, let's keep all as pending but allow instant process for small ones.
+                        }
                     })
             ])
             ->filters([
@@ -121,7 +185,9 @@ class CharityEntryResource extends Resource
                     ->multiple(),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
+                    ->visible(fn (CharityEntry $record) => $record->status === 'pending')
                     ->after(function ($record) {
                         ShariahAudit::log(auth()->user(), 'charity_entry_updated', [
                             'id' => $record->id,
@@ -130,12 +196,66 @@ class CharityEntryResource extends Resource
                         ]);
                     }),
                 Tables\Actions\DeleteAction::make()
+                    ->visible(fn (CharityEntry $record) => $record->status === 'pending')
                     ->before(function ($record) {
                         ShariahAudit::log(auth()->user(), 'charity_entry_deleted', [
                             'id' => $record->id,
                             'source' => $record->source,
                             'amount' => $record->amount,
                         ]);
+                    }),
+                Tables\Actions\Action::make('sign')
+                    ->label('Sign Approval')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('success')
+                    ->visible(fn (CharityEntry $record) =>
+                        $record->isHighValue() &&
+                        $record->status === 'pending' &&
+                        auth()->user()->hasAnyRole(['Chairman', 'Sharia Auditor']) &&
+                        !$record->transactionApprovals()->where('approver_id', auth()->id())->exists()
+                    )
+                    ->requiresConfirmation()
+                    ->action(function (CharityEntry $record) {
+                        $record->transactionApprovals()->create([
+                            'approver_id' => auth()->id(),
+                            'role' => auth()->user()->roles->first()?->name ?? 'Admin',
+                            'status' => 'approved',
+                            'responded_at' => now(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Disbursement signature recorded')
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('process')
+                    ->label('Process Disbursement')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('primary')
+                    ->visible(fn (CharityEntry $record) =>
+                        $record->status === 'pending' &&
+                        auth()->user()->can('update_charity_entry')
+                    )
+                    ->requiresConfirmation()
+                    ->action(function (CharityEntry $record) {
+                        if ($record->isAwaitingApprovals()) {
+                            Notification::make()
+                                ->title('Multi-Sig Required')
+                                ->body('This high-value disbursement requires more admin signatures before processing.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $record->update([
+                            'status' => 'processed',
+                            'processed_at' => now(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Disbursement marked as processed')
+                            ->success()
+                            ->send();
                     }),
             ])
             ->bulkActions([
