@@ -52,7 +52,6 @@ class ShariaDisputeResource extends Resource
                 Forms\Components\Section::make('Order Items')
                     ->schema([
                         Forms\Components\Repeater::make('orderItems')
-                            ->relationship()
                             ->schema([
                                 Forms\Components\TextInput::make('product_name')
                                     ->label('Product')
@@ -64,6 +63,11 @@ class ShariaDisputeResource extends Resource
                                     ->formatStateUsing(fn ($state) => number_format($state, 2))
                                     ->disabled(),
                             ])
+                            ->afterStateHydrated(function (Forms\Components\Repeater $component, ?ShariaDispute $record) {
+                                if (!$record) return;
+                                $component->state($record->orderItems->toArray());
+                            })
+                            ->dehydrated(false)
                             ->columns(3)
                             ->disabled()
                             ->deletable(false)
