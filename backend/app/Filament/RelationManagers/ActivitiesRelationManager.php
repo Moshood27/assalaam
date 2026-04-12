@@ -12,6 +12,8 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivitiesRelationManager extends RelationManager
 {
@@ -84,13 +86,20 @@ class ActivitiesRelationManager extends RelationManager
                                     return [];
                                 }
 
+                                $user = auth()->user();
+                                $isSuperAdmin = $user && $user->hasRole('super_admin');
+
+                                $sensitive = ['bvn', 'membership_number', 'account_number', 'password'];
+
                                 foreach ($state as $key => $value) {
-                                    if (is_array($value) || is_object($value)) {
+                                    if (!$isSuperAdmin && in_array($key, $sensitive)) {
+                                        $state[$key] = is_string($value) ? Str::mask($value, '*', 2, -2) : '*******';
+                                    } elseif (is_array($value) || is_object($value)) {
                                         $state[$key] = json_encode($value);
                                     }
                                 }
 
-                                return $state;
+                                return array_filter($state, fn($value) => $value !== null);
                             }),
                         KeyValueEntry::make('properties.attributes')
                             ->label('After')
@@ -105,13 +114,20 @@ class ActivitiesRelationManager extends RelationManager
                                     return [];
                                 }
 
+                                $user = auth()->user();
+                                $isSuperAdmin = $user && $user->hasRole('super_admin');
+
+                                $sensitive = ['bvn', 'membership_number', 'account_number', 'password'];
+
                                 foreach ($state as $key => $value) {
-                                    if (is_array($value) || is_object($value)) {
+                                    if (!$isSuperAdmin && in_array($key, $sensitive)) {
+                                        $state[$key] = is_string($value) ? Str::mask($value, '*', 2, -2) : '*******';
+                                    } elseif (is_array($value) || is_object($value)) {
                                         $state[$key] = json_encode($value);
                                     }
                                 }
 
-                                return $state;
+                                return array_filter($state, fn($value) => $value !== null);
                             }),
                     ])->columns(2),
             ]);
