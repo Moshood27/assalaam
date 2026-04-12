@@ -43,6 +43,7 @@ const VendorSettlements = () => import('../views/VendorSettlements.vue')
 const Wasiyyah = () => import('../views/Wasiyyah.vue')
 const JuniorCooperative = () => import('../views/JuniorCooperative.vue')
 const GoldSavings = () => import('../views/GoldSavings.vue')
+const Attendance = () => import('../views/Attendance.vue')
 
 const SavingsGroups = () => import('../views/SavingsGroups.vue')
 const SavingsGroupDetail = () => import('../views/SavingsGroupDetail.vue')
@@ -86,6 +87,7 @@ const routes = [
   { path: '/vendor/settlements', name: 'vendor.settlements', component: VendorSettlements, meta: { requiresAuth: true } },
 
   { path: '/wasiyyah', name: 'wasiyyah', component: Wasiyyah, meta: { requiresAuth: true } },
+  { path: '/attendance', name: 'attendance', component: Attendance, meta: { requiresAuth: true } },
   { path: '/junior-cooperative', name: 'junior.cooperative', component: JuniorCooperative, meta: { requiresAuth: true } },
   { path: '/gold', name: 'gold', component: GoldSavings, meta: { requiresAuth: true } },
 

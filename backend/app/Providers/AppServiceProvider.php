@@ -35,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
 
         \App\Models\StoreOrder::observe(\App\Observers\StoreOrderObserver::class);
         \App\Models\SadaqahProject::observe(\App\Observers\SadaqahProjectObserver::class);
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
 
         // Global API rate limiter
         RateLimiter::for('api', function (Request $request) {

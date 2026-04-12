@@ -25,4 +25,9 @@ return [
         'high_value_expense_threshold' => env('COOP_HIGH_VALUE_EXPENSE_THRESHOLD', 200000), // 200k NGN
         'required_approvals_count' => env('COOP_REQUIRED_APPROVALS_COUNT', 2),
     ],
+    'attendance' => [
+        'default_fine' => env('COOP_ATTENDANCE_FINE', 500),
+        'default_apology_fee' => env('COOP_ATTENDANCE_APOLOGY_FEE', 200),
+        'radius_meters' => env('COOP_ATTENDANCE_RADIUS', 50),
+    ],
 ];

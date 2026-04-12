@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Jobs\AutoRecoverOverdueLoans;
+use App\Jobs\RecoverOutstandingFines;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Support\LogOptions;
@@ -39,9 +40,10 @@ class WalletTransaction extends Model
     protected static function booted(): void
     {
         static::created(function (WalletTransaction $tx) {
-            // Trigger The Hunter on any wallet credit after the surrounding DB transaction commits
+            // Trigger recoveries on any wallet credit after the surrounding DB transaction commits
             if (strtolower((string) $tx->type) === 'credit' && ! empty($tx->user_id)) {
                 AutoRecoverOverdueLoans::dispatch((int) $tx->user_id)->afterCommit();
+                RecoverOutstandingFines::dispatch((int) $tx->user_id)->afterCommit();
             }
         });
     }

@@ -7,6 +7,7 @@ use App\Models\QardHasan;
 use App\Models\Contribution;
 use App\Http\Controllers\Api\ZakatController;
 use App\Http\Controllers\Controller;
+use App\Models\Meeting;
 use App\Services\GoldSilverPriceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -112,6 +113,20 @@ class DashboardController extends Controller
             $activeDisputesCount = $user->shariaDisputes()->whereIn('status', ['pending', 'mediation'])->count();
         }
 
+        // Attendance
+        $ongoingMeeting = null;
+        if (Schema::hasTable('meetings')) {
+            $ongoingMeeting = Meeting::where('status', 'ongoing')
+                ->where(function ($query) use ($user) {
+                    $query->whereNull('branch_id')
+                        ->orWhere('branch_id', $user->branch_id);
+                })
+                ->whereDoesntHave('attendanceRecords', function ($q) use ($user) {
+                    $q->where('user_id', $user->id)->whereIn('status', ['present', 'apology_paid']);
+                })
+                ->first();
+        }
+
         $vendor = $user->vendor;
         $vendorStatus = null;
         if ($vendor) {
@@ -137,7 +152,9 @@ class DashboardController extends Controller
             'gold_value_naira' => $goldSellPrice ? round($user->gold_balance * $goldSellPrice, 2) : null,
             'gold_price_per_gram' => $goldBasePrice,
             'vendor' => $vendorStatus,
-            'active_disputes_count' => $activeDisputesCount
+            'active_disputes_count' => $activeDisputesCount,
+            'outstanding_fines' => (float) $user->outstanding_fines,
+            'has_ongoing_meeting' => (bool) $ongoingMeeting,
         ];
 
         return response()->json([

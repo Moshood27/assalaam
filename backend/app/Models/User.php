@@ -49,6 +49,7 @@ class User extends Authenticatable implements FilamentUser
         'branch_id',
         'membership_number',
         'balance',
+        'outstanding_fines',
         'created_at',
         'is_admin',
         'is_defaulter',
@@ -107,6 +108,7 @@ class User extends Authenticatable implements FilamentUser
             'is_admin' => 'boolean',
             'is_defaulter' => 'boolean',
             'balance' => 'decimal:2',
+            'outstanding_fines' => 'decimal:2',
             'bvn_verified_at' => 'datetime',
             'dva_verification_meta' => 'array',
             'pin_set_at' => 'datetime',
@@ -283,6 +285,11 @@ class User extends Authenticatable implements FilamentUser
     public function savingsGroups()
     {
         return $this->hasManyThrough(SavingsGroup::class, SavingsGroupMember::class, 'user_id', 'id', 'id', 'savings_group_id');
+    }
+
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
     }
 
     public function createdSavingsGroups()

@@ -58,6 +58,30 @@
         <div class="text-amber-400">➡️</div>
       </div>
 
+      <!-- Attendance Reminder -->
+      <div v-if="dashboardData.kpis && dashboardData.kpis.has_ongoing_meeting"
+           class="mt-4 p-4 rounded-3xl bg-emerald-900 text-white flex items-center gap-3 shadow-lg shadow-emerald-200 cursor-pointer"
+           @click="$router.push('/attendance')">
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-pulse">📍</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold">Meeting Ongoing</p>
+          <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Tap to mark attendance</p>
+        </div>
+        <div class="text-white/40">➡️</div>
+      </div>
+
+      <!-- Outstanding Fines Warning -->
+      <div v-if="dashboardData.kpis && dashboardData.kpis.outstanding_fines > 0"
+           class="mt-4 p-4 rounded-3xl bg-rose-50 border border-rose-200 flex items-center gap-3"
+           @click="$router.push('/passbook')">
+        <div class="text-2xl">⚠️</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-rose-900">Outstanding Fines: ₦{{ formatMoney(dashboardData.kpis.outstanding_fines) }}</p>
+          <p class="text-xs text-rose-700">These will be deducted from your next wallet funding.</p>
+        </div>
+        <div class="text-rose-400">➡️</div>
+      </div>
+
       <!-- Tahkim Dispute Warning -->
       <div v-if="kpis.active_disputes_count > 0"
            class="mt-4 p-4 rounded-3xl bg-slate-900 text-white flex items-center gap-3 shadow-lg shadow-slate-200 cursor-pointer"
@@ -99,6 +123,10 @@
       <button @click="$router.push('/sadaqah')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl">🌙</div>
         <span class="text-sm font-bold text-slate-700">Sadaqah</span>
+      </button>
+      <button @click="$router.push('/attendance')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">📍</div>
+        <span class="text-sm font-bold text-slate-700">Attendance</span>
       </button>
       <button @click="$router.push('/savings-groups')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">🤝</div>

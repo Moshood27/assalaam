@@ -48,6 +48,12 @@ class Kernel extends ConsoleKernel
         // Reconcile pending VTU transactions every 5 minutes and refund failures
         $schedule->job(new \App\Jobs\ReconcileUtilityTransactions)->everyFiveMinutes();
 
+        // Update meeting statuses every minute
+        $schedule->command('app:update-meeting-statuses')->everyMinute();
+
+        // Audit attendance every hour (will only process meetings marked as completed)
+        $schedule->command('app:audit-attendance')->hourly();
+
         // Automated daily backups of MySQL database to an external location (like AWS S3 or Dropbox)
         // Cleanup old backups daily at midnight
         $schedule->command('backup:clean')->dailyAt('00:00');

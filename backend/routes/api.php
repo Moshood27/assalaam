@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\SupportChatController;
 use App\Http\Controllers\Api\ScoreController;
 use App\Http\Controllers\Api\GoldController;
 use App\Http\Controllers\Api\SavingsGroupController;
+use App\Http\Controllers\Api\AttendanceController;
 
 Route::get('/health', function () {
     return response()
@@ -191,6 +192,11 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Virtual Account (Paystack DVA)
     Route::get('/virtual-account', [\App\Http\Controllers\Api\VirtualAccountController::class, 'show']);
     Route::post('/virtual-account/assign', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assign']);
+
+    // Attendance
+    Route::get('/attendance/current', [AttendanceController::class, 'current']);
+    Route::post('/meetings/{meeting}/mark-attendance', [AttendanceController::class, 'markAttendance']);
+    Route::post('/meetings/{meeting}/pay-apology', [AttendanceController::class, 'payApologyFee']);
 
     // VTU (Airtime, Data, Electricity, Cable TV)
     Route::get('/vtu/transactions', [\App\Http\Controllers\Api\UtilityController::class, 'transactions']);
