@@ -271,163 +271,178 @@ class ExportController extends Controller
 
     public function downloadLoanSchedule(Request $request, int $id)
     {
-        // Increase execution time to 2 minutes for this specific request
-        set_time_limit(120);
-        $user = $request->user();
+        try {
+            // Increase execution time to 2 minutes for this specific request
+            set_time_limit(120);
+            $user = $request->user();
 
-        $loan = QardHasan::query()
-            ->where('id', $id)
-            ->where('user_id', $user->id)
-            ->firstOrFail();
+            $loan = QardHasan::query()
+                ->where('id', $id)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
 
-        $repayments = QardHasanRepayment::query()
-            ->where('qard_hasan_id', $loan->id)
-            ->where('status', 'success')
-            ->orderBy('paid_at')
-            ->get();
+            $repayments = QardHasanRepayment::query()
+                ->where('qard_hasan_id', $loan->id)
+                ->where('status', 'success')
+                ->orderBy('paid_at')
+                ->get();
 
-        $paidTotal = (float) $repayments->sum('amount');
+            $paidTotal = (float) $repayments->sum('amount');
 
-        // Build schedule (same logic as API schedule)
-        $interval = strtolower((string) $loan->interval);
-        $cursor = $loan->created_at ? $loan->created_at->copy() : now();
-        $add = function ($date) use ($interval) {
-            return match ($interval) {
-                'weekly' => $date->copy()->addWeek(),
-                'daily' => $date->copy()->addDay(),
-                'quarterly' => $date->copy()->addQuarter(),
-                'yearly' => $date->copy()->addYear(),
-                default => $date->copy()->addMonth(),
+            // Build schedule (same logic as API schedule)
+            $interval = strtolower((string) $loan->interval);
+            $cursor = $loan->created_at ? $loan->created_at->copy() : now();
+            $add = function ($date) use ($interval) {
+                return match ($interval) {
+                    'weekly' => $date->copy()->addWeek(),
+                    'daily' => $date->copy()->addDay(),
+                    'quarterly' => $date->copy()->addQuarter(),
+                    'yearly' => $date->copy()->addYear(),
+                    default => $date->copy()->addMonth(),
+                };
             };
-        };
 
-        $schedule = [];
-        $balance = (float) $loan->principal_amount;
-        $installment = (float) $loan->per_installment;
-        $totalInstallments = (int) $loan->total_installments;
+            $schedule = [];
+            $balance = (float) $loan->principal_amount;
+            $installment = (float) $loan->per_installment;
+            $totalInstallments = (int) $loan->total_installments;
 
-        for ($i = 1; $i <= $totalInstallments; $i++) {
-            $cursor = $add($cursor);
-            $applied = min($installment, $balance);
-            $schedule[] = [
-                'sequence' => $i,
-                'due_date' => $cursor->toDateString(),
-                'installment_amount' => round($applied, 2),
-            ];
-            $balance -= $applied;
-        }
-
-        // Mark paid installments by applying repayments in order
-        $remainingToApply = $paidTotal;
-        foreach ($schedule as &$item) {
-            if ($remainingToApply <= 0) {
-                $item['status'] = 'pending';
-                $item['paid_amount'] = 0.0;
-                continue;
+            for ($i = 1; $i <= $totalInstallments; $i++) {
+                $cursor = $add($cursor);
+                $applied = min($installment, $balance);
+                $schedule[] = [
+                    'sequence' => $i,
+                    'due_date' => $cursor->toDateString(),
+                    'installment_amount' => round($applied, 2),
+                ];
+                $balance -= $applied;
             }
-            $apply = min($item['installment_amount'], $remainingToApply);
-            $remainingToApply -= $apply;
-            $item['paid_amount'] = round($apply, 2);
-            $item['status'] = $apply >= $item['installment_amount'] ? 'paid' : 'partial';
+
+            // Mark paid installments by applying repayments in order
+            $remainingToApply = $paidTotal;
+            foreach ($schedule as &$item) {
+                if ($remainingToApply <= 0) {
+                    $item['status'] = 'pending';
+                    $item['paid_amount'] = 0.0;
+                    continue;
+                }
+                $apply = min($item['installment_amount'], $remainingToApply);
+                $remainingToApply -= $apply;
+                $item['paid_amount'] = round($apply, 2);
+                $item['status'] = $apply >= $item['installment_amount'] ? 'paid' : 'partial';
+            }
+            unset($item);
+
+            $data = [
+                'user' => $user,
+                'loan' => $loan,
+                'schedule' => $schedule,
+                'paid_total' => $paidTotal,
+                'remaining_principal' => round(max(0.0, (float) $loan->principal_amount - $paidTotal), 2),
+            ];
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_schedule', $data);
+            $filename = 'Loan_Schedule_' . $loan->qard_id_string . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadLoanSchedule error', ['exception' => $e->getMessage(), 'loan_id' => $id]);
+            return response()->json(['message' => 'Unable to generate Loan Schedule PDF.'], 422);
         }
-        unset($item);
-
-        $data = [
-            'user' => $user,
-            'loan' => $loan,
-            'schedule' => $schedule,
-            'paid_total' => $paidTotal,
-            'remaining_principal' => round(max(0.0, (float) $loan->principal_amount - $paidTotal), 2),
-        ];
-
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_schedule', $data);
-        $filename = 'Loan_Schedule_' . $loan->qard_id_string . '.pdf';
-        return $pdf->download($filename);
     }
 
     public function downloadLoanAgreement(Request $request, int $id)
     {
-        set_time_limit(120);
-        $user = $request->user();
+        try {
+            set_time_limit(120);
+            $user = $request->user();
 
-        $q = QardHasan::query()->where('id', $id);
+            $q = QardHasan::query()->where('id', $id);
 
-        // If not admin, restrict to own loan
-        if (!$user->is_admin) {
-            $q->where('user_id', $user->id);
-        }
+            // If not admin, restrict to own loan
+            if (!$user->is_admin) {
+                $q->where('user_id', $user->id);
+            }
 
-        $loan = $q->firstOrFail();
-        $borrower = $loan->user;
+            $loan = $q->firstOrFail();
+            $borrower = $loan->user;
 
-        // Generate schedule (simplified for agreement)
-        $interval = strtolower((string) $loan->interval);
-        $cursor = ($loan->approved_at ?: ($loan->created_at ?: now()))->copy();
+            // Generate schedule (simplified for agreement)
+            $interval = strtolower((string) $loan->interval);
+            $cursor = ($loan->approved_at ?: ($loan->created_at ?: now()))->copy();
 
-        $add = function ($date) use ($interval) {
-            return match ($interval) {
-                'weekly' => $date->copy()->addWeek(),
-                'daily' => $date->copy()->addDay(),
-                'quarterly' => $date->copy()->addQuarter(),
-                'yearly' => $date->copy()->addYear(),
-                default => $date->copy()->addMonth(),
+            $add = function ($date) use ($interval) {
+                return match ($interval) {
+                    'weekly' => $date->copy()->addWeek(),
+                    'daily' => $date->copy()->addDay(),
+                    'quarterly' => $date->copy()->addQuarter(),
+                    'yearly' => $date->copy()->addYear(),
+                    default => $date->copy()->addMonth(),
+                };
             };
-        };
 
-        $schedule = [];
-        $balance = (float) $loan->principal_amount;
-        $installment = (float) $loan->per_installment;
-        $totalInstallments = (int) $loan->total_installments;
+            $schedule = [];
+            $balance = (float) $loan->principal_amount;
+            $installment = (float) $loan->per_installment;
+            $totalInstallments = (int) $loan->total_installments;
 
-        for ($i = 1; $i <= $totalInstallments; $i++) {
-            $cursor = $add($cursor);
-            $applied = min($installment, $balance);
-            $schedule[] = [
-                'sequence' => $i,
-                'due_date' => $cursor->toDateString(),
-                'installment_amount' => round($applied, 2),
+            for ($i = 1; $i <= $totalInstallments; $i++) {
+                $cursor = $add($cursor);
+                $applied = min($installment, $balance);
+                $schedule[] = [
+                    'sequence' => $i,
+                    'due_date' => $cursor->toDateString(),
+                    'installment_amount' => round($applied, 2),
+                ];
+                $balance -= $applied;
+            }
+
+            $data = [
+                'user' => $borrower,
+                'loan' => $loan,
+                'schedule' => $schedule,
             ];
-            $balance -= $applied;
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $data);
+            $filename = 'Loan_Agreement_' . $loan->qard_id_string . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadLoanAgreement error', ['exception' => $e->getMessage(), 'loan_id' => $id]);
+            return response()->json(['message' => 'Unable to generate Loan Agreement PDF.'], 422);
         }
-
-        $data = [
-            'user' => $borrower,
-            'loan' => $loan,
-            'schedule' => $schedule,
-        ];
-
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $data);
-        $filename = 'Loan_Agreement_' . $loan->qard_id_string . '.pdf';
-        return $pdf->download($filename);
     }
 
     public function downloadMurabahahAgreement(Request $request, int $id)
     {
-        set_time_limit(120);
-        $user = $request->user();
+        try {
+            set_time_limit(120);
+            $user = $request->user();
 
-        $q = StoreOrder::with('items')->where('id', $id);
+            $q = StoreOrder::with('items')->where('id', $id);
 
-        // If not admin, restrict to own order
-        if (!$user->is_admin) {
-            $q->where('user_id', $user->id);
+            // If not admin, restrict to own order
+            if (!$user->is_admin) {
+                $q->where('user_id', $user->id);
+            }
+
+            $order = $q->firstOrFail();
+
+            $meta = is_array($order->meta) ? $order->meta : [];
+            if (($meta['financing']['type'] ?? null) !== 'murabaha') {
+                return response()->json(['message' => 'This order is not under Murabahah financing'], 422);
+            }
+
+            $data = [
+                'user' => $order->user,
+                'order' => $order,
+            ];
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.murabahah_agreement', $data);
+            $filename = 'Murabahah_Agreement_' . $order->reference . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadMurabahahAgreement error', ['exception' => $e->getMessage(), 'order_id' => $id]);
+            return response()->json(['message' => 'Unable to generate Murabahah Agreement PDF.'], 422);
         }
-
-        $order = $q->firstOrFail();
-
-        $meta = is_array($order->meta) ? $order->meta : [];
-        if (($meta['financing']['type'] ?? null) !== 'murabaha') {
-            return response()->json(['message' => 'This order is not under Murabahah financing'], 422);
-        }
-
-        $data = [
-            'user' => $order->user,
-            'order' => $order,
-        ];
-
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.murabahah_agreement', $data);
-        $filename = 'Murabahah_Agreement_' . $order->reference . '.pdf';
-        return $pdf->download($filename);
     }
 
     public function downloadDividend(Request $request, int $year)
@@ -463,170 +478,236 @@ class ExportController extends Controller
 
     public function downloadAppropriation(Request $request, int $year)
     {
-        $from = Carbon::create($year, 1, 1)->toDateString();
-        $to = Carbon::create($year, 12, 31)->toDateString();
-        $data = $this->accountingService->buildAppropriationAccount($from, $to);
-        $data['user'] = $request->user();
-        $data['year'] = $year;
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.appropriation', $data);
-        $filename = 'Appropriation_Account_' . $year . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $from = Carbon::create($year, 1, 1)->toDateString();
+            $to = Carbon::create($year, 12, 31)->toDateString();
+            $data = $this->accountingService->buildAppropriationAccount($from, $to);
+            $data['user'] = $request->user();
+            $data['year'] = $year;
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.appropriation', $data);
+            $filename = 'Appropriation_Account_' . $year . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadAppropriation error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Appropriation PDF.'], 422);
+        }
     }
 
     public function downloadFinancials(Request $request, int $year)
     {
-        $from = Carbon::create($year, 1, 1)->toDateString();
-        $to = Carbon::create($year, 12, 31)->toDateString();
-        $ie = $this->accountingService->buildIncomeAndExpenditure($from, $to);
-        $bs = $this->accountingService->buildBalanceSheet($to);
-        $cf = $this->accountingService->buildStatementOfCashFlows($from, $to);
-        $data = [
-            'user' => $request->user(),
-            'year' => $year,
-            'income_expenditure' => $ie,
-            'balance_sheet' => $bs,
-            'cash_flow' => $cf,
-        ];
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.financials', $data);
-        $filename = 'Financial_Statements_' . $year . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $from = Carbon::create($year, 1, 1)->toDateString();
+            $to = Carbon::create($year, 12, 31)->toDateString();
+            $ie = $this->accountingService->buildIncomeAndExpenditure($from, $to);
+            $bs = $this->accountingService->buildBalanceSheet($to);
+            $cf = $this->accountingService->buildStatementOfCashFlows($from, $to);
+            $data = [
+                'user' => $request->user(),
+                'year' => $year,
+                'income_expenditure' => $ie,
+                'balance_sheet' => $bs,
+                'cash_flow' => $cf,
+            ];
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.financials', $data);
+            $filename = 'Financial_Statements_' . $year . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadFinancials error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Financials PDF.'], 422);
+        }
     }
 
     public function downloadCashFlow(Request $request, int $year)
     {
-        $from = Carbon::create($year, 1, 1)->toDateString();
-        $to = Carbon::create($year, 12, 31)->toDateString();
-        $data = $this->accountingService->buildStatementOfCashFlows($from, $to);
-        $data['user'] = $request->user();
-        $data['year'] = $year;
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.cash_flow', $data);
-        $filename = 'Cash_Flow_Statement_' . $year . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $from = Carbon::create($year, 1, 1)->toDateString();
+            $to = Carbon::create($year, 12, 31)->toDateString();
+            $data = $this->accountingService->buildStatementOfCashFlows($from, $to);
+            $data['user'] = $request->user();
+            $data['year'] = $year;
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.cash_flow', $data);
+            $filename = 'Cash_Flow_Statement_' . $year . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadCashFlow error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Cash Flow PDF.'], 422);
+        }
     }
 
     public function downloadCharityReport(Request $request, int $year)
     {
-        $from = Carbon::create($year, 1, 1)->toDateString();
-        $to = Carbon::create($year, 12, 31)->toDateString();
-        $data = $this->accountingService->buildCharityFundReport($from, $to);
-        $data['user'] = $request->user();
-        $data['year'] = $year;
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.charity_report', $data);
-        $filename = 'Charity_Fund_Report_' . $year . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $from = Carbon::create($year, 1, 1)->toDateString();
+            $to = Carbon::create($year, 12, 31)->toDateString();
+            $data = $this->accountingService->buildCharityFundReport($from, $to);
+            $data['user'] = $request->user();
+            $data['year'] = $year;
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.charity_report', $data);
+            $filename = 'Charity_Fund_Report_' . $year . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadCharityReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Charity Report PDF.'], 422);
+        }
     }
 
     public function downloadProjectRoiReport(Request $request)
     {
-        $data = [
-            'projects' => $this->accountingService->buildProjectRoiReport(),
-            'user' => $request->user(),
-            'date' => now()->toDateString(),
-        ];
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.project_roi', $data);
-        $filename = 'Project_ROI_Report_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $data = [
+                'projects' => $this->accountingService->buildProjectRoiReport(),
+                'user' => $request->user(),
+                'date' => now()->toDateString(),
+            ];
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.project_roi', $data);
+            $filename = 'Project_ROI_Report_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadProjectRoiReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Project ROI PDF.'], 422);
+        }
     }
 
     public function downloadVendorSettlementReport(Request $request)
     {
-        $data = [
-            'vendors' => $this->accountingService->buildVendorSettlementReport(),
-            'user' => $request->user(),
-            'date' => now()->toDateString(),
-        ];
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.vendor_settlement', $data);
-        $filename = 'Vendor_Settlement_Report_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $data = [
+                'vendors' => $this->accountingService->buildVendorSettlementReport(),
+                'user' => $request->user(),
+                'date' => now()->toDateString(),
+            ];
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.vendor_settlement', $data);
+            $filename = 'Vendor_Settlement_Report_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadVendorSettlementReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Vendor Settlement PDF.'], 422);
+        }
     }
 
     public function downloadAttendanceReport(Request $request, int $year)
     {
-        $from = Carbon::create($year, 1, 1)->toDateString();
-        $to = Carbon::create($year, 12, 31)->toDateString();
-        $data = [
-            'meetings' => $this->accountingService->buildAttendanceReport($from, $to),
-            'user' => $request->user(),
-            'year' => $year,
-        ];
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.attendance_report', $data);
-        $filename = 'Attendance_Fine_Summary_' . $year . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $from = Carbon::create($year, 1, 1)->toDateString();
+            $to = Carbon::create($year, 12, 31)->toDateString();
+            $data = [
+                'meetings' => $this->accountingService->buildAttendanceReport($from, $to),
+                'user' => $request->user(),
+                'year' => $year,
+            ];
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.attendance_report', $data);
+            $filename = 'Attendance_Fine_Summary_' . $year . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadAttendanceReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Attendance Report PDF.'], 422);
+        }
     }
 
     public function downloadShariaAuditReport(Request $request, int $year)
     {
-        $from = Carbon::create($year, 1, 1)->toDateString();
-        $to = Carbon::create($year, 12, 31)->toDateString();
-        $data = $this->accountingService->buildShariaAuditReport($from, $to);
-        $data['user'] = $request->user();
-        $data['year'] = $year;
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.sharia_audit', $data);
-        $filename = 'Sharia_Audit_Report_' . $year . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $from = Carbon::create($year, 1, 1)->toDateString();
+            $to = Carbon::create($year, 12, 31)->toDateString();
+            $data = $this->accountingService->buildShariaAuditReport($from, $to);
+            $data['user'] = $request->user();
+            $data['year'] = $year;
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.sharia_audit', $data);
+            $filename = 'Sharia_Audit_Report_' . $year . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadShariaAuditReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Sharia Audit PDF.'], 422);
+        }
     }
 
     public function downloadLoanAgingReport(Request $request)
     {
-        $data = [
-            'loans' => $this->accountingService->buildLoanAgingReport(),
-            'user' => $request->user(),
-            'date' => now()->toDateString(),
-        ];
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_aging', $data);
-        $filename = 'Loan_Aging_Report_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $data = [
+                'loans' => $this->accountingService->buildLoanAgingReport(),
+                'user' => $request->user(),
+                'date' => now()->toDateString(),
+            ];
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_aging', $data);
+            $filename = 'Loan_Aging_Report_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadLoanAgingReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Loan Aging PDF.'], 422);
+        }
     }
 
     public function downloadTakafulReport(Request $request)
     {
-        $data = $this->accountingService->buildTakafulPoolReport();
-        $data['user'] = $request->user();
-        $data['date'] = now()->toDateString();
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.takaful_summary', $data);
-        $filename = 'Takaful_Pool_Report_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $data = $this->accountingService->buildTakafulPoolReport();
+            $data['user'] = $request->user();
+            $data['date'] = now()->toDateString();
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.takaful_summary', $data);
+            $filename = 'Takaful_Pool_Report_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadTakafulReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Takaful Report PDF.'], 422);
+        }
     }
 
     public function downloadGoldReport(Request $request)
     {
-        $goldPrice = $this->goldPriceService->getGoldPrice() ?: (float)$request->query('gold_price', 100000);
-        $data = $this->accountingService->buildGoldSavingsReport($goldPrice);
-        $data['user'] = $request->user();
-        $data['date'] = now()->toDateString();
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.gold_valuation', $data);
-        $filename = 'Gold_Savings_Report_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $goldPrice = $this->goldPriceService->getGoldPrice() ?: (float)$request->query('gold_price', 100000);
+            $data = $this->accountingService->buildGoldSavingsReport($goldPrice);
+            $data['user'] = $request->user();
+            $data['date'] = now()->toDateString();
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.gold_valuation', $data);
+            $filename = 'Gold_Savings_Report_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadGoldReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Gold Valuation PDF.'], 422);
+        }
     }
 
     public function downloadCoopZakatReport(Request $request)
     {
-        $goldPrice = $this->goldPriceService->getGoldPrice() ?: (float)$request->query('gold_price', 100000);
-        $data = $this->accountingService->buildZakatReport($goldPrice);
-        $data['user'] = $request->user();
-        $data['date'] = now()->toDateString();
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_coop_report', $data);
-        $filename = 'Cooperative_Zakat_Report_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+        try {
+            $goldPrice = $this->goldPriceService->getGoldPrice() ?: (float)$request->query('gold_price', 100000);
+            $data = $this->accountingService->buildZakatReport($goldPrice);
+            $data['user'] = $request->user();
+            $data['date'] = now()->toDateString();
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_coop_report', $data);
+            $filename = 'Cooperative_Zakat_Report_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadCoopZakatReport error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Coop Zakat PDF.'], 422);
+        }
     }
 
     public function downloadAuditTrail(Request $request)
     {
-        $days = (int)$request->query('days', 30);
-        $activities = \Spatie\Activitylog\Models\Activity::where('created_at', '>=', now()->subDays($days))
-            ->with('causer')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        try {
+            $days = (int)$request->query('days', 30);
+            $activities = \Spatie\Activitylog\Models\Activity::where('created_at', '>=', now()->subDays($days))
+                ->with('causer')
+                ->orderBy('created_at', 'desc')
+                ->limit(500)
+                ->get();
 
-        $data = [
-            'activities' => $activities,
-            'user' => $request->user(),
-            'days' => $days,
-            'date' => now()->toDateString(),
-        ];
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.audit_trail', $data);
-        $filename = 'Audit_Trail_Report_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+            $data = [
+                'activities' => $activities,
+                'user' => $request->user(),
+                'days' => $days,
+                'date' => now()->toDateString(),
+            ];
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.audit_trail', $data);
+            $filename = 'Audit_Trail_Report_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadAuditTrail error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Audit Trail PDF. It might be too large for the current timeframe.'], 422);
+        }
     }
 
     public function downloadWalletReceipt(Request $request, int $id)
@@ -705,46 +786,61 @@ class ExportController extends Controller
 
     public function downloadMemberZakatPortfolio(Request $request)
     {
-        $year = (int)$request->query('year', now()->year);
-        $from = Carbon::create($year, 1, 1)->toDateString();
-        $to = Carbon::create($year, 12, 31)->toDateString();
+        try {
+            $year = (int)$request->query('year', now()->year);
+            $from = Carbon::create($year, 1, 1)->toDateString();
+            $to = Carbon::create($year, 12, 31)->toDateString();
 
-        $data = $this->accountingService->buildMemberZakatPortfolio($from, $to);
-        $data['user'] = $request->user();
-        $data['year'] = $year;
+            $data = $this->accountingService->buildMemberZakatPortfolio($from, $to);
+            $data['user'] = $request->user();
+            $data['year'] = $year;
 
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_portfolio', $data);
-        $filename = 'Member_Zakat_Portfolio_' . $year . '.pdf';
-        return $pdf->download($filename);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_portfolio', $data);
+            $filename = 'Member_Zakat_Portfolio_' . $year . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadMemberZakatPortfolio error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Member Zakat Portfolio PDF.'], 422);
+        }
     }
 
     public function downloadProjectDistribution(Request $request, int $id)
     {
-        $data = $this->accountingService->buildProjectDistributionReport($id);
-        $data['user'] = $request->user();
-        $data['date'] = now()->toDateString();
+        try {
+            $data = $this->accountingService->buildProjectDistributionReport($id);
+            $data['user'] = $request->user();
+            $data['date'] = now()->toDateString();
 
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.project_distribution', $data);
-        $filename = 'Project_Distribution_Report_' . $id . '_' . now()->format('Ymd') . '.pdf';
-        return $pdf->download($filename);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.project_distribution', $data);
+            $filename = 'Project_Distribution_Report_' . $id . '_' . now()->format('Ymd') . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadProjectDistribution error', ['exception' => $e->getMessage(), 'project_id' => $id]);
+            return response()->json(['message' => 'Unable to generate Project Distribution PDF.'], 422);
+        }
     }
 
     public function downloadMemberSavingsLedger(Request $request, ?int $userId = null)
     {
-        $user = $request->user();
-        $targetId = $userId ?: $user->id;
+        try {
+            $user = $request->user();
+            $targetId = $userId ?: $user->id;
 
-        if (!$user->is_admin && $user->id != $targetId) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            if (!$user->is_admin && $user->id != $targetId) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+
+            $data = $this->accountingService->buildMemberSavingsLedger($targetId);
+            $data['admin_user'] = $user;
+            $data['date'] = now()->toDateString();
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.savings_ledger', $data);
+            $filename = 'Savings_Ledger_' . $data['membership_number'] . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadMemberSavingsLedger error', ['exception' => $e->getMessage(), 'user_id' => $userId]);
+            return response()->json(['message' => 'Unable to generate Member Savings Ledger PDF.'], 422);
         }
-
-        $data = $this->accountingService->buildMemberSavingsLedger($targetId);
-        $data['admin_user'] = $user;
-        $data['date'] = now()->toDateString();
-
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.savings_ledger', $data);
-        $filename = 'Savings_Ledger_' . $data['membership_number'] . '.pdf';
-        return $pdf->download($filename);
     }
 
     public function downloadMembershipForm(Request $request)

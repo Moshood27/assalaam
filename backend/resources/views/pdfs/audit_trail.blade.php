@@ -38,7 +38,7 @@
                 <td>{{ $a->description }}</td>
                 <td>
                     @if(!empty($a->properties))
-                        <pre style="font-size: 8px;">{{ json_encode($a->properties, JSON_PRETTY_PRINT) }}</pre>
+                        <pre style="font-size: 8px;">{{ Str::limit(json_encode($a->properties, JSON_PRETTY_PRINT), 500) }}</pre>
                     @endif
                 </td>
             </tr>
