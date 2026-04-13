@@ -118,6 +118,8 @@ class MemberRegistrationController extends Controller
             'proof_of_address' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:7168'],
             'guarantor_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'guarantor_signature_base64' => ['nullable', 'string'],
+            'imam_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'imam_signature_base64' => ['nullable', 'string'],
             'spouse_father_consent_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'spouse_father_consent_signature_base64' => ['nullable', 'string'],
         ]);
@@ -165,6 +167,23 @@ class MemberRegistrationController extends Controller
             $file->move($baseDir, $name);
             $app->guarantor_signature_path = 'upload/apps/'.$app->token.'/'.$name;
             $updated['guarantor_signature_path'] = $app->guarantor_signature_path;
+        }
+
+        if ($base64 = $request->input('imam_signature_base64')) {
+            $data = explode(',', $base64);
+            if (count($data) > 1) {
+                $content = base64_decode($data[1]);
+                $name = 'imam-sig-'.time().'.png';
+                file_put_contents($baseDir.'/'.$name, $content);
+                $app->imam_signature_path = 'upload/apps/'.$app->token.'/'.$name;
+                $updated['imam_signature_path'] = $app->imam_signature_path;
+            }
+        } elseif ($file = $request->file('imam_signature')) {
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+            $name = 'imam-sig-'.time().'.'.$ext;
+            $file->move($baseDir, $name);
+            $app->imam_signature_path = 'upload/apps/'.$app->token.'/'.$name;
+            $updated['imam_signature_path'] = $app->imam_signature_path;
         }
 
         if ($base64 = $request->input('spouse_father_consent_signature_base64')) {
@@ -397,11 +416,61 @@ class MemberRegistrationController extends Controller
         // Create the user
         $user = new User();
         $user->name = $app->name;
+        $user->surname = $app->surname;
+        $user->other_names = $app->other_names;
+        $user->gender = $app->gender;
+        $user->native_place = $app->native_place;
+        $user->dob = $app->dob;
+        $user->marital_status = $app->marital_status;
+        $user->occupation = $app->occupation;
         $user->email = $app->email;
         $user->phone = $app->phone;
+        $user->secondary_phone = $app->secondary_phone;
         $user->address = $app->address;
+        $user->residential_address = $app->residential_address;
+        $user->permanent_address = $app->permanent_address;
         $user->branch_id = $app->branch_id;
         $user->membership_number = $membership;
+
+        // Business & Kin
+        $user->nature_of_business = $app->nature_of_business;
+        $user->business_address = $app->business_address;
+        $user->has_other_cooperatives = $app->has_other_cooperatives;
+        $user->other_cooperative_details = $app->other_cooperative_details;
+        $user->nok_name = $app->nok_name;
+        $user->nok_address = $app->nok_address;
+        $user->nok_phone = $app->nok_phone;
+        $user->nok_relationship = $app->nok_relationship;
+
+        // Guarantor
+        $user->guarantor_name = $app->guarantor_name;
+        $user->guarantor_address = $app->guarantor_address;
+        $user->guarantor_phone = $app->guarantor_phone;
+        $user->guarantor_occupation = $app->guarantor_occupation;
+        $user->guarantor_signature_path = $app->guarantor_signature_path;
+
+        // Religious & Imam
+        $user->religious_society_name = $app->religious_society_name;
+        $user->imam_name = $app->imam_name;
+        $user->mosque_address = $app->mosque_address;
+        $user->imam_phone = $app->imam_phone;
+        $user->duration_of_jamma_membership = $app->duration_of_jamma_membership;
+        $user->imam_approval_status = $app->imam_approval_status;
+        $user->imam_approved_at = $app->imam_approved_at;
+        $user->imam_signature_path = $app->imam_signature_path;
+
+        // Female / Wali
+        $user->spouse_father_name = $app->spouse_father_name;
+        $user->spouse_father_address = $app->spouse_father_address;
+        $user->spouse_father_business_address = $app->spouse_father_business_address;
+        $user->spouse_father_phone = $app->spouse_father_phone;
+        $user->spouse_father_consent_signature_path = $app->spouse_father_consent_signature_path;
+
+        // Official Use
+        $user->approval_status = 'approved'; // Successfully finalized via KYC means approved
+        $user->admission_date = now();
+        $user->admission_officer_name = 'System/KYC';
+
         // Decrypt the stored application password and let the User model hash it once
         try {
             $plain = Crypt::decryptString($app->password_hash);
@@ -410,6 +479,8 @@ class MemberRegistrationController extends Controller
         }
         $user->password = $plain;
         $user->passport_path = $app->passport_path; // keep uploaded path
+        $user->id_card_path = $app->id_card_path;
+        $user->proof_of_address_path = $app->proof_of_address_path;
         // Persist BVN verification results
         $user->bvn = $bvn;
         $user->bvn_verified_at = now();

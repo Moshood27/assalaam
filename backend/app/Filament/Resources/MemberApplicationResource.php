@@ -113,7 +113,10 @@ class MemberApplicationResource extends Resource
                                         Forms\Components\Textarea::make('mosque_address')->rows(2),
                                         Forms\Components\Toggle::make('imam_approval_status')->label('Imam\'s Approval Status'),
                                         Forms\Components\DateTimePicker::make('imam_approved_at'),
-                                    ])->columns(2),
+                                        Forms\Components\FileUpload::make('imam_signature_path')
+                                            ->label('Imam Signature')
+                                            ->image(),
+                                    ])->columns(3),
                             ]),
 
                         Forms\Components\Tabs\Tab::make('Female Members & Documents')
@@ -166,12 +169,23 @@ class MemberApplicationResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('created_at')->dateTime()->sortable(),
-                TextColumn::make('name')->searchable(),
+                Tables\Columns\ImageColumn::make('passport_path')
+                    ->label('Photo')
+                    ->circular(),
+                TextColumn::make('surname')->searchable()->sortable(),
+                TextColumn::make('name')->label('First Name')->searchable()->sortable(),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('phone')->searchable(),
+                Tables\Columns\TextColumn::make('approval_status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'recommended' => 'info',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    }),
                 TextColumn::make('submitted_at')->dateTime()->sortable(),
-                TextColumn::make('finalized_at')->dateTime()->sortable(),
             ])
             ->filters([
                 Tables\Filters\Filter::make('submitted')
@@ -190,6 +204,13 @@ class MemberApplicationResource extends Resource
                     ->action(fn (MemberApplication $record) => response()->streamDownload(function () use ($record) {
                         echo Pdf::loadView('pdfs.membership_application', ['application' => $record])->output();
                     }, "membership-application-{$record->id}.pdf")),
+                Tables\Actions\Action::make('download_imam')
+                    ->label('Download Imam Attestation')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(fn (MemberApplication $record) => response()->streamDownload(function () use ($record) {
+                        echo Pdf::loadView('pdfs.imam_attestation', ['application' => $record])->output();
+                    }, "imam-attestation-{$record->id}.pdf")),
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-badge')
@@ -198,6 +219,21 @@ class MemberApplicationResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (MemberApplication $record) {
                         $user = DB::transaction(function () use ($record) {
+                            $now = now();
+                            $admissionDate = $record->admission_date ?? $now;
+                            $admissionOfficer = $record->admission_officer_name ?? auth()->user()->name;
+
+                            // Decrypt the stored password
+                            $password = null;
+                            if ($record->password_hash) {
+                                try {
+                                    $password = \Illuminate\Support\Facades\Crypt::decryptString($record->password_hash);
+                                } catch (\Throwable $e) {
+                                    // Fallback if decryption fails (though it shouldn't)
+                                    $password = \Illuminate\Support\Str::random(12);
+                                }
+                            }
+
                             // Generate a unique membership number within the branch (6 digits)
                             $membership = User::generateMembershipNumber((int) $record->branch_id);
 
@@ -238,28 +274,34 @@ class MemberApplicationResource extends Resource
                                 'duration_of_jamma_membership' => $record->duration_of_jamma_membership,
                                 'imam_approval_status' => $record->imam_approval_status,
                                 'imam_approved_at' => $record->imam_approved_at,
+                                'imam_signature_path' => $record->imam_signature_path,
                                 'spouse_father_name' => $record->spouse_father_name,
                                 'spouse_father_address' => $record->spouse_father_address,
                                 'spouse_father_business_address' => $record->spouse_father_business_address,
                                 'spouse_father_phone' => $record->spouse_father_phone,
                                 'spouse_father_consent_signature_path' => $record->spouse_father_consent_signature_path,
                                 'admission_form_number' => $record->admission_form_number,
-                                'admission_date' => $record->admission_date,
-                                'admission_officer_name' => $record->admission_officer_name,
+                                'admission_date' => $admissionDate,
+                                'admission_officer_name' => $admissionOfficer,
                                 'officer_recommendation' => $record->officer_recommendation,
-                                'approval_status' => $record->approval_status,
+                                'approval_status' => 'approved',
                                 'president_signature_path' => $record->president_signature_path,
                                 'president_signed_at' => $record->president_signed_at,
                                 'secretary_general_signature_path' => $record->secretary_general_signature_path,
                                 'secretary_general_signed_at' => $record->secretary_general_signed_at,
                                 'membership_number' => $membership,
-                                'password' => $record->password_hash, // Already hashed during app submission
+                                'password' => $password,
                                 'email_verified_at' => $record->email_verified_at,
                                 'passport_path' => $record->passport_path,
+                                'id_card_path' => $record->id_card_path,
+                                'proof_of_address_path' => $record->proof_of_address_path,
                                 'balance' => 0,
                             ]);
 
-                            $record->finalized_at = now();
+                            $record->approval_status = 'approved';
+                            $record->admission_date = $admissionDate;
+                            $record->admission_officer_name = $admissionOfficer;
+                            $record->finalized_at = $now;
                             $record->save();
 
                             ShariahAudit::log(auth()->user(), 'approve_member_application', [
@@ -297,6 +339,9 @@ class MemberApplicationResource extends Resource
                     ])
                     ->requiresConfirmation()
                     ->action(function (MemberApplication $record, array $data) {
+                        $record->approval_status = 'rejected';
+                        $record->officer_recommendation = $data['reason'];
+                        $record->admission_officer_name = auth()->user()->name;
                         $record->finalized_at = now();
                         $record->save();
 

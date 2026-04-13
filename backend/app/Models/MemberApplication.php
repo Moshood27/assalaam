@@ -47,6 +47,7 @@ class MemberApplication extends Model
         'duration_of_jamma_membership',
         'imam_approval_status',
         'imam_approved_at',
+        'imam_signature_path',
         'spouse_father_name',
         'spouse_father_address',
         'spouse_father_business_address',

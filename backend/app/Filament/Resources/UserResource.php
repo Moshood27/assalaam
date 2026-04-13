@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\PushService;
 use App\Services\SmsService;
 use App\Services\TakafulService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Form;
@@ -49,231 +50,408 @@ class UserResource extends Resource
                         return new \Illuminate\Support\HtmlString('<div class="p-4 bg-danger-500/10 text-danger-700 rounded-lg border border-danger-500/20"><strong>DECEASED:</strong> This member is marked as deceased. Please see the <strong>Wasiyyah (Beneficiaries)</strong> tab below for distribution instructions.</div>');
                     })
                     ->columnSpanFull(),
-                Forms\Components\Section::make('Profile')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')->required()->maxLength(255),
-                        Forms\Components\TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
-                        Forms\Components\TextInput::make('phone')
-                            ->label('Phone')
-                            ->tel()
-                            ->maxLength(20)
-                            ->helperText('Used for SMS notifications'),
-                        Forms\Components\TextInput::make('address')
-                            ->label('Address')
-                            ->maxLength(255)
-                            ->columnSpanFull(),
-                        Forms\Components\FileUpload::make('passport_path')
-                            ->label('Passport / Profile Photo')
-                            ->image()
-                            // Store directly in public/upload so it's accessible at /upload/... in dev and prod
-                            ->disk('public_root')
-                            ->directory('upload')
-                            ->visibility('public')
-                            // Don't let Filament filter out existing values just because they are on another disk
-                            ->fetchFileInformation(false)
-                            // Build a correct preview URL whether the file lives in public/ or storage/app/public
-                            ->getUploadedFileUsing(function (BaseFileUpload $component, string $file, string|array|null $storedFileNames) {
-                                $raw = (string) $file;
-                                $path = ltrim($raw, '/');
-                                $wasStoragePrefixed = false;
-                                if (str_starts_with($path, 'storage/')) {
-                                    $path = substr($path, strlen('storage/'));
-                                    $wasStoragePrefixed = true;
-                                }
 
-                                $url = null;
-                                $publicFull = public_path($path);
-                                if (is_file($publicFull)) {
-                                    $url = '/'.ltrim($path, '/');
-                                } else {
-                                    // If original value started with `storage/`, avoid creating `/storage/storage/...`
-                                    $url = $wasStoragePrefixed
-                                        ? ('/storage/'.ltrim($path, '/'))
-                                        : Storage::disk('public')->url($path);
-
-                                    if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
-                                        $parsed = parse_url($url);
-                                        $url = ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
-                                    }
-                                }
-
-                                return [
-                                    'name' => basename($path),
-                                    'size' => 0,
-                                    'type' => null,
-                                    'url' => $url,
-                                ];
-                            })
-                            ->imageEditor()
-                            ->downloadable()
-                            ->openable(),
-                        Forms\Components\DatePicker::make('created_at')
-                            ->label('Date Joined')
-                            ->displayFormat('Y-m-d')
-                            ->maxDate(now())
-                            ->rule('before_or_equal:today')
-                            ->dehydrateStateUsing(function ($state) {
-                                if (empty($state)) {
-                                    return null;
-                                }
-                                try {
-                                    return Carbon::parse($state)->startOfDay();
-                                } catch (\Throwable $e) {
-                                    return $state;
-                                }
-                            }),
-                        Forms\Components\TextInput::make('password')
-                            ->password()
-                            ->revealable()
-                            ->dehydrateStateUsing(fn ($state) => filled($state) ? $state : null)
-                            ->dehydrated(fn ($state) => filled($state))
-                            ->maxLength(255),
-                    ])->columns(3),
-                Forms\Components\Section::make('Identity & KYC')
-                    ->schema([
-                        Forms\Components\TextInput::make('bvn')
-                            ->label('BVN')
-                            ->maxLength(11)
-                            ->password()
-                            ->revealable(fn () => auth()->user()->hasRole('super_admin')),
-                        Forms\Components\DateTimePicker::make('bvn_verified_at')
-                            ->label('BVN Verified At')
-                            ->disabled(),
-                        Forms\Components\Toggle::make('is_admin')
-                            ->label('Administrator')
-                            ->helperText('Grants access to this admin panel')
-                            ->visible(fn () => auth()->user()->can('manage_admins')),
-                        // Add this Role Selector
-                        Select::make('roles')
-                            ->relationship('roles', 'name')
-                            ->multiple() // Allow a user to have multiple roles if needed
-                            ->preload()
-                            ->searchable(),
-                        Forms\Components\Toggle::make('is_defaulter')
-                            ->label('Defaulter')
-                            ->helperText('Restricts certain features for the member'),
-                    ])->columns(2),
-                Forms\Components\Section::make('Membership')
-                    ->schema([
-                        Forms\Components\Select::make('branch_id')
-                            ->label('Branch')
-                            ->options(Branch::query()->pluck('name', 'id'))
-                            ->searchable()
-                            ->required(),
-                        Forms\Components\TextInput::make('membership_number')
-                            ->password()
-                            ->revealable(fn () => auth()->user()->hasRole('super_admin'))
-                            ->maxLength(255)
-                            ->rule(function (Get $get, ?User $record) {
-                                $branchId = $get('branch_id');
-                                $number = $get('membership_number');
-                                if (blank($branchId) || blank($number)) {
-                                    return null;
-                                }
-                                $rule = Rule::unique('users', 'membership_number')
-                                    ->where(fn ($q) => $q->where('branch_id', $branchId));
-                                if ($record) {
-                                    $rule = $rule->ignore($record->id);
-                                }
-
-                                return $rule;
-                            }),
-                        Forms\Components\TextInput::make('balance')
-                            ->numeric()
-                            ->prefix('₦')
-                            ->default(0),
-                    ])->columns(3),
-                Forms\Components\Section::make('Passbook Balances')
-                    ->description('Combined balance for loan eligibility')
-                    ->schema([
-                        Forms\Components\TextInput::make('ordinary_savings')
-                            ->numeric()
-                            ->prefix('₦')
-                            ->label('Ordinary Savings')
-                            ->default(0),
-                        Forms\Components\TextInput::make('shares_capital')
-                            ->numeric()
-                            ->prefix('₦')
-                            ->label('Shares Capital')
-                            ->default(0),
-                        Forms\Components\Placeholder::make('passbook_total')
-                            ->label('Passbook Total')
-                            ->content(function ($record) {
-                                if (!$record) return '₦0.00';
-                                try {
-                                    $savings = (float)($record->ordinary_savings ?? 0);
-                                    $shares = (float)($record->shares_capital ?? 0);
-                                    if ($savings == 0 && $shares == 0) {
-                                        // Fallback if columns empty/missing
-                                        $calc = $record->savingsSharesEligibility();
-                                        return '₦' . number_format($calc['base'], 2);
-                                    }
-                                    return '₦' . number_format($savings + $shares, 2);
-                                } catch (\Throwable $e) {
-                                    return '₦0.00';
-                                }
-                            })
-                            ->columnSpanFull(),
-                    ])->columns(2),
-                Forms\Components\Section::make('Bank Details')
-                    ->schema([
-                        Forms\Components\TextInput::make('bank_name')
-                            ->label('Bank Name')
-                            ->maxLength(120)
-                            ->disabled()
-                            ->helperText('Set by member via mobile app after verification'),
-                        Forms\Components\TextInput::make('bank_code')
-                            ->label('Bank Code')
-                            ->maxLength(20)
-                            ->disabled(),
-                        Forms\Components\TextInput::make('account_number')
-                            ->label('Account Number')
-                            ->password()
-                            ->revealable(fn () => auth()->user()->hasRole('super_admin'))
-                            ->maxLength(20)
-                            ->disabled(),
-                        Forms\Components\TextInput::make('account_name')
-                            ->label('Account Name (Verified)')
-                            ->maxLength(255)
-                            ->disabled(),
-                    ])->columns(2),
-                Forms\Components\Section::make('Administrative Charges')
-                    ->schema([
-                        Forms\Components\TextInput::make('admin_charge_balance')
-                            ->label('Outstanding Balance')
-                            ->numeric()
-                            ->prefix('₦')
-                            ->default(0),
-                        Forms\Components\Toggle::make('admin_charge_auto_deduct')
-                            ->label('Auto-Deduct Monthly Charge')
-                            ->default(true),
-                        Forms\Components\DateTimePicker::make('last_admin_charge_at')
-                            ->label('Last Processed At')
-                            ->native(false)
-                            ->readOnly(),
-                    ])->columns(3),
-                Forms\Components\Section::make('Takaful & Notifications')
-                    ->schema([
-                        Forms\Components\Toggle::make('takaful_exempt')->label('Exempt from Takaful charges'),
-                        Forms\Components\Toggle::make('takaful_notify_contacts')->label('Notify guarantors/next-of-kin on settlement')->default(true),
-                        Forms\Components\Group::make([
-                            Forms\Components\Toggle::make('notify_email')->label('Email Notifications')->default(true),
-                            Forms\Components\Toggle::make('notify_sms')->label('SMS Notifications')->default(true),
-                            Forms\Components\Toggle::make('notify_push')->label('Push Notifications')->default(true),
-                        ])->columns(3)->columnSpanFull(),
-                        Forms\Components\Section::make('Zakat Information')
+                Forms\Components\Tabs::make('Member Details')
+                    ->tabs([
+                        Forms\Components\Tabs\Tab::make('Personal & Profile')
                             ->schema([
-                                Forms\Components\DateTimePicker::make('zakat_nisab_crossed_at')
-                                    ->label('Nisab Crossed At')
-                                    ->helperText('The date when the user wealth first crossed the Nisab threshold.')
-                                    ->native(false),
-                                Forms\Components\DateTimePicker::make('zakat_last_paid_at')
-                                    ->label('Last Zakat Paid At')
-                                    ->native(false),
-                            ])->columns(2),
-                        Forms\Components\DateTimePicker::make('deceased_at')->label('Deceased At')->native(false)->seconds(false),
-                        Forms\Components\DateTimePicker::make('major_loss_at')->label('Major Loss At')->native(false)->seconds(false),
-                    ])->columns(2),
+                                Forms\Components\Section::make('Basic Personal Information')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('First Name')
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('surname')
+                                            ->label('Surname (Last Name)')
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('other_names')
+                                            ->label('Other Names')
+                                            ->maxLength(255),
+                                        Forms\Components\Select::make('gender')
+                                            ->options([
+                                                'male' => 'Male',
+                                                'female' => 'Female',
+                                            ]),
+                                        Forms\Components\TextInput::make('native_place')
+                                            ->label('Native (State or Town of Origin)'),
+                                        Forms\Components\DatePicker::make('dob')
+                                            ->label('Date of Birth'),
+                                        Forms\Components\Select::make('marital_status')
+                                            ->options([
+                                                'single' => 'Single',
+                                                'married' => 'Married',
+                                                'divorced' => 'Divorced',
+                                                'widow' => 'Widow',
+                                            ]),
+                                        Forms\Components\TextInput::make('occupation'),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Contact Information')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('email')
+                                            ->email()
+                                            ->required()
+                                            ->unique(ignoreRecord: true),
+                                        Forms\Components\TextInput::make('phone')
+                                            ->label('Primary Phone')
+                                            ->tel()
+                                            ->required()
+                                            ->maxLength(20)
+                                            ->helperText('Used for SMS notifications'),
+                                        Forms\Components\TextInput::make('secondary_phone')
+                                            ->label('Secondary Phone')
+                                            ->tel()
+                                            ->maxLength(20),
+                                        Forms\Components\Textarea::make('address')
+                                            ->label('Contact Address')
+                                            ->maxLength(255)
+                                            ->rows(2),
+                                        Forms\Components\Textarea::make('residential_address')
+                                            ->label('Residential Address')
+                                            ->rows(2),
+                                        Forms\Components\Textarea::make('permanent_address')
+                                            ->label('Permanent Home Address')
+                                            ->rows(2),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Profile Photo & Auth')
+                                    ->schema([
+                                        Forms\Components\FileUpload::make('passport_path')
+                                            ->label('Passport / Profile Photo')
+                                            ->image()
+                                            // Store directly in public/upload so it's accessible at /upload/... in dev and prod
+                                            ->disk('public_root')
+                                            ->directory('upload')
+                                            ->visibility('public')
+                                            // Don't let Filament filter out existing values just because they are on another disk
+                                            ->fetchFileInformation(false)
+                                            // Build a correct preview URL whether the file lives in public/ or storage/app/public
+                                            ->getUploadedFileUsing(function (BaseFileUpload $component, string $file, string|array|null $storedFileNames) {
+                                                $raw = (string) $file;
+                                                $path = ltrim($raw, '/');
+                                                $wasStoragePrefixed = false;
+                                                if (str_starts_with($path, 'storage/')) {
+                                                    $path = substr($path, strlen('storage/'));
+                                                    $wasStoragePrefixed = true;
+                                                }
+
+                                                $url = null;
+                                                $publicFull = public_path($path);
+                                                if (is_file($publicFull)) {
+                                                    $url = '/'.ltrim($path, '/');
+                                                } else {
+                                                    // If original value started with `storage/`, avoid creating `/storage/storage/...`
+                                                    $url = $wasStoragePrefixed
+                                                        ? ('/storage/'.ltrim($path, '/'))
+                                                        : Storage::disk('public')->url($path);
+
+                                                    if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+                                                        $parsed = parse_url($url);
+                                                        $url = ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
+                                                    }
+                                                }
+
+                                                return [
+                                                    'name' => basename($path),
+                                                    'size' => 0,
+                                                    'type' => null,
+                                                    'url' => $url,
+                                                ];
+                                            })
+                                            ->imageEditor()
+                                            ->downloadable()
+                                            ->openable(),
+                                        Forms\Components\Group::make([
+                                            Forms\Components\TextInput::make('password')
+                                                ->password()
+                                                ->revealable()
+                                                ->dehydrateStateUsing(fn ($state) => filled($state) ? $state : null)
+                                                ->dehydrated(fn ($state) => filled($state))
+                                                ->maxLength(255),
+                                            Forms\Components\DatePicker::make('created_at')
+                                                ->label('Date Joined')
+                                                ->displayFormat('Y-m-d')
+                                                ->maxDate(now())
+                                                ->rule('before_or_equal:today')
+                                                ->dehydrateStateUsing(function ($state) {
+                                                    if (empty($state)) {
+                                                        return null;
+                                                    }
+                                                    try {
+                                                        return Carbon::parse($state)->startOfDay();
+                                                    } catch (\Throwable $e) {
+                                                        return $state;
+                                                    }
+                                                }),
+                                        ])->columnSpan(2),
+                                    ])->columns(3),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Financials')
+                            ->schema([
+                                Forms\Components\Section::make('Membership')
+                                    ->schema([
+                                        Forms\Components\Select::make('branch_id')
+                                            ->label('Branch')
+                                            ->options(Branch::query()->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->required(),
+                                        Forms\Components\TextInput::make('membership_number')
+                                            ->password()
+                                            ->revealable(fn () => auth()->user()->hasRole('super_admin'))
+                                            ->maxLength(255)
+                                            ->rule(function (Get $get, ?User $record) {
+                                                $branchId = $get('branch_id');
+                                                $number = $get('membership_number');
+                                                if (blank($branchId) || blank($number)) {
+                                                    return null;
+                                                }
+                                                $rule = Rule::unique('users', 'membership_number')
+                                                    ->where(fn ($q) => $q->where('branch_id', $branchId));
+                                                if ($record) {
+                                                    $rule = $rule->ignore($record->id);
+                                                }
+
+                                                return $rule;
+                                            }),
+                                        Forms\Components\TextInput::make('balance')
+                                            ->numeric()
+                                            ->prefix('₦')
+                                            ->default(0),
+                                    ])->columns(3),
+
+                                Forms\Components\Section::make('Passbook Balances')
+                                    ->description('Combined balance for loan eligibility')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('ordinary_savings')
+                                            ->numeric()
+                                            ->prefix('₦')
+                                            ->label('Ordinary Savings')
+                                            ->default(0),
+                                        Forms\Components\TextInput::make('shares_capital')
+                                            ->numeric()
+                                            ->prefix('₦')
+                                            ->label('Shares Capital')
+                                            ->default(0),
+                                        Forms\Components\Placeholder::make('passbook_total')
+                                            ->label('Passbook Total')
+                                            ->content(function ($record) {
+                                                if (!$record) return '₦0.00';
+                                                try {
+                                                    $savings = (float)($record->ordinary_savings ?? 0);
+                                                    $shares = (float)($record->shares_capital ?? 0);
+                                                    if ($savings == 0 && $shares == 0) {
+                                                        // Fallback if columns empty/missing
+                                                        $calc = $record->savingsSharesEligibility();
+                                                        return '₦' . number_format($calc['base'] ?? 0, 2);
+                                                    }
+                                                    return '₦' . number_format($savings + $shares, 2);
+                                                } catch (\Throwable $e) {
+                                                    return '₦0.00';
+                                                }
+                                            })
+                                            ->columnSpanFull(),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Bank Details')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('bank_name')
+                                            ->label('Bank Name')
+                                            ->maxLength(120)
+                                            ->disabled()
+                                            ->helperText('Set by member via mobile app after verification'),
+                                        Forms\Components\TextInput::make('bank_code')
+                                            ->label('Bank Code')
+                                            ->maxLength(20)
+                                            ->disabled(),
+                                        Forms\Components\TextInput::make('account_number')
+                                            ->label('Account Number')
+                                            ->password()
+                                            ->revealable(fn () => auth()->user()->hasRole('super_admin'))
+                                            ->maxLength(20)
+                                            ->disabled(),
+                                        Forms\Components\TextInput::make('account_name')
+                                            ->label('Account Name (Verified)')
+                                            ->maxLength(255)
+                                            ->disabled(),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Administrative Charges')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('admin_charge_balance')
+                                            ->label('Outstanding Balance')
+                                            ->numeric()
+                                            ->prefix('₦')
+                                            ->default(0),
+                                        Forms\Components\Toggle::make('admin_charge_auto_deduct')
+                                            ->label('Auto-Deduct Monthly Charge')
+                                            ->default(true),
+                                        Forms\Components\DateTimePicker::make('last_admin_charge_at')
+                                            ->label('Last Processed At')
+                                            ->native(false)
+                                            ->readOnly(),
+                                    ])->columns(3),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Business & Kin')
+                            ->schema([
+                                Forms\Components\Section::make('Business & Professional Information')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('nature_of_business'),
+                                        Forms\Components\Textarea::make('business_address')->rows(2),
+                                        Forms\Components\Toggle::make('has_other_cooperatives')
+                                            ->label('Other Cooperative Affiliations'),
+                                        Forms\Components\Textarea::make('other_cooperative_details')
+                                            ->visible(fn (callable $get) => $get('has_other_cooperatives'))
+                                            ->rows(2),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Next of Kin')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('nok_name')->label('Next of Kin Name'),
+                                        Forms\Components\TextInput::make('nok_phone')->label('Next of Kin Phone'),
+                                        Forms\Components\TextInput::make('nok_relationship')->label('Relationship'),
+                                        Forms\Components\Textarea::make('nok_address')->label('Next of Kin Address')->rows(2),
+                                    ])->columns(2),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Guarantor & Religious')
+                            ->schema([
+                                Forms\Components\Section::make('Guarantor Details')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('guarantor_name'),
+                                        Forms\Components\TextInput::make('guarantor_phone'),
+                                        Forms\Components\TextInput::make('guarantor_occupation'),
+                                        Forms\Components\Textarea::make('guarantor_address')->rows(2),
+                                        Forms\Components\FileUpload::make('guarantor_signature_path')
+                                            ->label('Guarantor Signature')
+                                            ->image(),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Religious Information & Imam\'s Attestation')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('religious_society_name'),
+                                        Forms\Components\TextInput::make('imam_name')->label('Imam/Amir Name'),
+                                        Forms\Components\TextInput::make('imam_phone')->label('Imam/Amir Phone'),
+                                        Forms\Components\TextInput::make('duration_of_jamma_membership'),
+                                        Forms\Components\Textarea::make('mosque_address')->rows(2),
+                                        Forms\Components\Toggle::make('imam_approval_status')->label('Imam\'s Approval Status'),
+                                        Forms\Components\DateTimePicker::make('imam_approved_at'),
+                                        Forms\Components\FileUpload::make('imam_signature_path')
+                                            ->label('Imam Signature')
+                                            ->disk('public_root')
+                                            ->directory('upload')
+                                            ->image(),
+                                    ])->columns(3),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Female Members & Documents')
+                            ->schema([
+                                Forms\Components\Section::make('Information for Female Members (Wali/Spouse Details)')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('spouse_father_name')->label('Father/Spouse Name'),
+                                        Forms\Components\TextInput::make('spouse_father_phone')->label('Father/Spouse Phone'),
+                                        Forms\Components\Textarea::make('spouse_father_address')->label('Residential Address')->rows(2),
+                                        Forms\Components\Textarea::make('spouse_father_business_address')->label('Business Address')->rows(2),
+                                        Forms\Components\FileUpload::make('spouse_father_consent_signature_path')
+                                            ->label('Consent Signature')
+                                            ->disk('public_root')
+                                            ->directory('upload')
+                                            ->image(),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Documents')
+                                    ->schema([
+                                        Forms\Components\FileUpload::make('passport_path')
+                                            ->label('Passport Photo')
+                                            ->disk('public_root')
+                                            ->directory('upload')
+                                            ->image(),
+                                        Forms\Components\FileUpload::make('id_card_path')
+                                            ->label('ID Card')
+                                            ->disk('public_root')
+                                            ->directory('upload'),
+                                        Forms\Components\FileUpload::make('proof_of_address_path')
+                                            ->label('Proof of Address')
+                                            ->disk('public_root')
+                                            ->directory('upload'),
+                                    ])->columns(3),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Settings & KYC')
+                            ->schema([
+                                Forms\Components\Section::make('Identity & KYC')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('bvn')
+                                            ->label('BVN')
+                                            ->maxLength(11)
+                                            ->password()
+                                            ->revealable(fn () => auth()->user()->hasRole('super_admin')),
+                                        Forms\Components\DateTimePicker::make('bvn_verified_at')
+                                            ->label('BVN Verified At')
+                                            ->disabled(),
+                                        Forms\Components\Toggle::make('is_admin')
+                                            ->label('Administrator')
+                                            ->helperText('Grants access to this admin panel')
+                                            ->visible(fn () => auth()->user()->can('manage_admins')),
+                                        // Add this Role Selector
+                                        Select::make('roles')
+                                            ->relationship('roles', 'name')
+                                            ->multiple() // Allow a user to have multiple roles if needed
+                                            ->preload()
+                                            ->searchable(),
+                                        Forms\Components\Toggle::make('is_defaulter')
+                                            ->label('Defaulter')
+                                            ->helperText('Restricts certain features for the member'),
+                                    ])->columns(2),
+
+                                Forms\Components\Section::make('Takaful & Notifications')
+                                    ->schema([
+                                        Forms\Components\Toggle::make('takaful_exempt')->label('Exempt from Takaful charges'),
+                                        Forms\Components\Toggle::make('takaful_notify_contacts')->label('Notify guarantors/next-of-kin on settlement')->default(true),
+                                        Forms\Components\Group::make([
+                                            Forms\Components\Toggle::make('notify_email')->label('Email Notifications')->default(true),
+                                            Forms\Components\Toggle::make('notify_sms')->label('SMS Notifications')->default(true),
+                                            Forms\Components\Toggle::make('notify_push')->label('Push Notifications')->default(true),
+                                        ])->columns(3)->columnSpanFull(),
+                                        Forms\Components\Section::make('Zakat Information')
+                                            ->schema([
+                                                Forms\Components\DateTimePicker::make('zakat_nisab_crossed_at')
+                                                    ->label('Nisab Crossed At')
+                                                    ->helperText('The date when the user wealth first crossed the Nisab threshold.')
+                                                    ->native(false),
+                                                Forms\Components\DateTimePicker::make('zakat_last_paid_at')
+                                                    ->label('Last Zakat Paid At')
+                                                    ->native(false),
+                                            ])->columns(2),
+                                        Forms\Components\DateTimePicker::make('deceased_at')->label('Deceased At')->native(false)->seconds(false),
+                                        Forms\Components\DateTimePicker::make('major_loss_at')->label('Major Loss At')->native(false)->seconds(false),
+                                    ])->columns(2),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Official Use')
+                            ->schema([
+                                Forms\Components\Section::make('Official Use Only (Membership History)')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('admission_form_number'),
+                                        Forms\Components\DatePicker::make('admission_date'),
+                                        Forms\Components\TextInput::make('admission_officer_name'),
+                                        Forms\Components\Select::make('approval_status')
+                                            ->options([
+                                                'pending' => 'Pending',
+                                                'recommended' => 'Recommended',
+                                                'approved' => 'Approved',
+                                                'rejected' => 'Rejected',
+                                            ]),
+                                        Forms\Components\Textarea::make('officer_recommendation')->rows(3)->columnSpanFull(),
+                                        Forms\Components\FileUpload::make('president_signature_path')->label('President\'s Signature')->image(),
+                                        Forms\Components\DateTimePicker::make('president_signed_at'),
+                                        Forms\Components\FileUpload::make('secretary_general_signature_path')->label('Secretary General\'s Signature')->image(),
+                                        Forms\Components\DateTimePicker::make('secretary_general_signed_at'),
+                                    ])->columns(2),
+                            ]),
+                    ])->columnSpanFull(),
             ]);
     }
 
@@ -855,6 +1033,13 @@ class UserResource extends Resource
                             ->send();
                     })
                     ->requiresConfirmation(),
+                Action::make('download')
+                    ->label('Download Form')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('info')
+                    ->action(fn (User $record) => response()->streamDownload(function () use ($record) {
+                        echo Pdf::loadView('pdfs.membership_application', ['application' => $record])->output();
+                    }, "membership-form-{$record->membership_number}.pdf")),
                 Action::make('verifyKyc')
                     ->label('Verify KYC')
                     ->icon('heroicon-o-shield-check')

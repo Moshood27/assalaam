@@ -349,6 +349,13 @@
                 hint="Sign inside the box above"
               />
             </div>
+            <div class="space-y-2">
+              <SignaturePad 
+                v-model="signatures.imam"
+                label="Imam/Amir Signature"
+                hint="Attestation by your Mosque leader"
+              />
+            </div>
             <div v-if="form.gender === 'female'" class="sm:col-span-2 space-y-2 animate-in fade-in slide-in-from-top-4 duration-500">
               <SignaturePad 
                 v-model="signatures.spouse_father"
@@ -575,7 +582,8 @@ const files = ref({
 })
 const signatures = ref({
   guarantor: '',
-  spouse_father: ''
+  spouse_father: '',
+  imam: ''
 })
 const uploaded = ref({
   passport_path: '',
@@ -713,6 +721,7 @@ async function handleUpload() {
     fd.append('id_card', files.value.id_card)
     fd.append('proof_of_address', files.value.proof_of_address)
     if (signatures.value.guarantor) fd.append('guarantor_signature_base64', signatures.value.guarantor)
+    if (signatures.value.imam) fd.append('imam_signature_base64', signatures.value.imam)
     if (signatures.value.spouse_father) fd.append('spouse_father_consent_signature_base64', signatures.value.spouse_father)
     const { data } = await axios.post('/api/register/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
     uploaded.value = data.application || {}

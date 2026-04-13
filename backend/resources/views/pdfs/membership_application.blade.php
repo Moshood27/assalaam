@@ -23,14 +23,32 @@
     </style>
 </head>
 <body>
+    @php
+        $getPath = function($path) {
+            if (!$path) return null;
+            // Handle absolute paths if they were somehow passed
+            if (str_starts_with($path, '/') && file_exists($path)) {
+                return $path;
+            }
+            // Check public root (UserResource disk)
+            if (file_exists(public_path($path))) {
+                return public_path($path);
+            }
+            // Check storage/app/public (MemberApplicationResource disk)
+            if (file_exists(storage_path('app/public/' . $path))) {
+                return storage_path('app/public/' . $path);
+            }
+            return null;
+        };
+    @endphp
     <div class="header">
         <h1>{{ config('app.name') }} COOPERATIVE SOCIETY</h1>
         <p>MEMBERSHIP ENROLMENT FORM</p>
     </div>
 
-    @if($application->passport_path)
+    @if($passport = $getPath($application->passport_path))
         <div class="photo-box">
-            <img src="{{ storage_path('app/public/' . $application->passport_path) }}" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="{{ $passport }}" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
     @else
         <div class="photo-box">PASSPORT PHOTO</div>
@@ -142,9 +160,9 @@
                 <td class="value">{{ $application->guarantor_address }}</td>
             </tr>
         </table>
-        @if($application->guarantor_signature_path)
+        @if($sig = $getPath($application->guarantor_signature_path))
             <div class="signature-box" style="float: right; width: 200px;">
-                <img src="{{ storage_path('app/public/' . $application->guarantor_signature_path) }}" class="signature-image">
+                <img src="{{ $sig }}" class="signature-image">
                 <p>Guarantor's Signature</p>
             </div>
         @endif
@@ -187,6 +205,9 @@
         @if($application->imam_approval_status)
             <div class="signature-box" style="float: right; width: 200px; margin-top: 20px;">
                 <p style="font-size: 14px; font-weight: bold; color: green;">APPROVED</p>
+                @if($sig = $getPath($application->imam_signature_path))
+                    <img src="{{ $sig }}" class="signature-image">
+                @endif
                 <p>Date: {{ $application->imam_approved_at ? $application->imam_approved_at->format('d/m/Y') : '' }}</p>
                 <p>Imam's Signature/Stamp</p>
             </div>
@@ -213,9 +234,9 @@
                 <td class="value" colspan="3">{{ $application->spouse_father_business_address }}</td>
             </tr>
         </table>
-        @if($application->spouse_father_consent_signature_path)
+        @if($sig = $getPath($application->spouse_father_consent_signature_path))
             <div class="signature-box" style="float: right; width: 200px; margin-top: 10px;">
-                <img src="{{ storage_path('app/public/' . $application->spouse_father_consent_signature_path) }}" class="signature-image">
+                <img src="{{ $sig }}" class="signature-image">
                 <p>Father/Spouse Consent Signature</p>
             </div>
         @endif
@@ -248,16 +269,16 @@
 
         <div style="margin-top: 30px; display: flex; justify-content: space-between;">
             <div class="signature-box" style="width: 45%; float: left;">
-                @if($application->president_signature_path)
-                    <img src="{{ storage_path('app/public/' . $application->president_signature_path) }}" class="signature-image">
+                @if($sig = $getPath($application->president_signature_path))
+                    <img src="{{ $sig }}" class="signature-image">
                 @else
                     <div style="height: 60px; border-bottom: 1px solid #000;"></div>
                 @endif
                 <p>President's Signature/Date</p>
             </div>
             <div class="signature-box" style="width: 45%; float: right;">
-                @if($application->secretary_general_signature_path)
-                    <img src="{{ storage_path('app/public/' . $application->secretary_general_signature_path) }}" class="signature-image">
+                @if($sig = $getPath($application->secretary_general_signature_path))
+                    <img src="{{ $sig }}" class="signature-image">
                 @else
                     <div style="height: 60px; border-bottom: 1px solid #000;"></div>
                 @endif

@@ -42,7 +42,7 @@ class MeetingResource extends Resource
                                 $duration = $get('duration_minutes');
                                 if ($state && $duration) {
                                     $start = \Carbon\Carbon::parse($state);
-                                    $set('end_time', $start->addMinutes($duration)->toTimeString());
+                                    $set('end_time', $start->addMinutes((int) $duration)->toTimeString());
                                 }
                             }),
                         Forms\Components\TextInput::make('duration_minutes')
@@ -53,7 +53,7 @@ class MeetingResource extends Resource
                                 $start = $get('start_time');
                                 if ($start && $state) {
                                     $startTime = \Carbon\Carbon::parse($start);
-                                    $set('end_time', $startTime->addMinutes($state)->toTimeString());
+                                    $set('end_time', $startTime->addMinutes((int) $state)->toTimeString());
                                 }
                             })
                             ->helperText('Use this to automatically set end time based on duration'),
