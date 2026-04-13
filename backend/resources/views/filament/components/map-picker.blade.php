@@ -134,7 +134,7 @@
                     }, (err) => {
                         console.error('Geolocation error:', err);
                         alert('Unable to retrieve your location: ' + (err.message || 'Permission denied'));
-                    }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+                    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
                 } else {
                     alert('Geolocation is not supported by your browser.');
                 }

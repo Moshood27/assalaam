@@ -25,7 +25,7 @@ class SecurityHeaders
             'X-Content-Type-Options' => 'nosniff',
             'Referrer-Policy' => 'no-referrer',
             // A conservative Permissions-Policy to reduce surface area; extend as needed for your app
-            'Permissions-Policy' => "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+            'Permissions-Policy' => "accelerometer=(), camera=(self), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
             // Helps isolate browsing context (good default for SPAs and APIs)
             'Cross-Origin-Opener-Policy' => 'same-origin',
         ];
