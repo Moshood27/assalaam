@@ -97,6 +97,21 @@
             } finally {
                 this.isSearching = false;
             }
+        },
+        getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    this.lat = pos.coords.latitude;
+                    this.lng = pos.coords.longitude;
+                    this.updateFromInputs();
+                    this.map.setView([this.lat, this.lng], 15);
+                }, (err) => {
+                    console.error('Geolocation error:', err);
+                    alert('Unable to retrieve your location: ' + (err.message || 'Permission denied'));
+                }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
         }
     }"
     x-init="$watch('lat', value => updateFromInputs()); $watch('lng', value => updateFromInputs());"
@@ -124,21 +139,7 @@
         <button
             type="button"
             class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-white/5 dark:text-white dark:ring-white/10"
-            x-on:click="
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(pos => {
-                        this.lat = pos.coords.latitude;
-                        this.lng = pos.coords.longitude;
-                        this.updateFromInputs();
-                        this.map.setView([this.lat, this.lng], 15);
-                    }, (err) => {
-                        console.error('Geolocation error:', err);
-                        alert('Unable to retrieve your location: ' + (err.message || 'Permission denied'));
-                    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-                } else {
-                    alert('Geolocation is not supported by your browser.');
-                }
-            "
+            @click="getCurrentLocation()"
             title="Get Current Location"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
