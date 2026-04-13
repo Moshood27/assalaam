@@ -128,5 +128,39 @@
             </tr>
         </tfoot>
     </table>
+
+    <div class="section-title">Statement of Cash Flows</div>
+    @php($cf = $cash_flow ?? [])
+    <table>
+        <thead>
+            <tr>
+                <th>Activities</th>
+                <th class="right">Amount (₦)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="2" class="muted">Operating Activities</td></tr>
+            <tr class="total-row">
+                <td>Net cash provided by operating activities</td>
+                <td class="right">₦ {{ number_format((float)($cf['operating']['net'] ?? 0), 2) }}</td>
+            </tr>
+            <tr><td colspan="2" class="muted">Investing Activities</td></tr>
+            <tr class="total-row">
+                <td>Net cash used in investing activities</td>
+                <td class="right">₦ {{ number_format((float)($cf['investing']['net'] ?? 0), 2) }}</td>
+            </tr>
+            <tr><td colspan="2" class="muted">Financing Activities</td></tr>
+            <tr class="total-row">
+                <td>Net cash from financing activities</td>
+                <td class="right">₦ {{ number_format((float)($cf['financing']['net'] ?? 0), 2) }}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr style="background-color: #111827; color: white;">
+                <td>NET INCREASE / (DECREASE) IN CASH</td>
+                <td class="right">₦ {{ number_format((float)($cf['net_increase'] ?? 0), 2) }}</td>
+            </tr>
+        </tfoot>
+    </table>
 </body>
 </html>

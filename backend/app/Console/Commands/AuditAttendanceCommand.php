@@ -51,7 +51,7 @@ class AuditAttendanceCommand extends Command
                     ->first();
 
                 // If no record, or status is still 'absent', charge fine
-                // Status could be 'present', 'apology_paid', 'fine_paid', or 'absent'
+                // Possible statuses are 'present', 'fine_paid', 'fine_pending', or 'absent'
                 if (!$record || $record->status === 'absent') {
                     $this->chargeFine($user, $meeting, $record);
                 } else {
@@ -93,6 +93,17 @@ class AuditAttendanceCommand extends Command
 
                 $status = 'fine_paid';
                 $paidAt = now();
+
+                // Record in Charity Ledger (Sadaqah fund)
+                \App\Models\CharityEntry::create([
+                    'user_id' => $lockedUser->id,
+                    'source' => 'Attendance Fine',
+                    'amount' => $amount,
+                    'note' => "Fine for meeting: {$meeting->name} (ID: {$meeting->id})",
+                    'status' => 'processed',
+                    'processed_at' => now(),
+                ]);
+
                 $this->line("Charged fine of {$amount} to User: {$user->name} (ID: {$user->id})");
             } else {
                 // Not enough balance, add to outstanding fines

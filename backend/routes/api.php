@@ -49,6 +49,7 @@ Route::get('/health', function () {
 
 // Public endpoints (rate limited)
 Route::middleware('throttle:api')->group(function () {
+    Route::get('/status', [AuthController::class, 'status']);
     Route::get('/branches', [AuthController::class, 'branches']);
 
     // Member self-registration (multi-step) endpoints
@@ -199,7 +200,6 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/attendance/current', [AttendanceController::class, 'current']);
     Route::get('/attendance/history', [AttendanceController::class, 'history']);
     Route::post('/meetings/{meeting}/mark-attendance', [AttendanceController::class, 'markAttendance']);
-    Route::post('/meetings/{meeting}/pay-apology', [AttendanceController::class, 'payApologyFee']);
 
     // VTU (Airtime, Data, Electricity, Cable TV)
     Route::get('/vtu/transactions', [\App\Http\Controllers\Api\UtilityController::class, 'transactions']);
@@ -282,17 +282,35 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/reports/dividend/{year}', [ReportsController::class, 'dividend']);
 
     // PDF export
-    Route::get('/download-passbook', [ExportController::class, 'downloadPassbook']);
-    Route::get('/download-passbook-csv', [ExportController::class, 'downloadPassbookCsv']);
-    Route::get('/download-statement', [ExportController::class, 'downloadStatement']);
-    Route::get('/download-loan-schedule/{id}', [ExportController::class, 'downloadLoanSchedule']);
+    Route::get('/download-passbook', [ExportController::class, 'downloadPassbook'])->name('download-passbook');
+    Route::get('/download-passbook-csv', [ExportController::class, 'downloadPassbookCsv'])->name('download-passbook-csv');
+    Route::get('/download-statement', [ExportController::class, 'downloadStatement'])->name('download-statement');
+    Route::get('/download-loan-schedule/{id}', [ExportController::class, 'downloadLoanSchedule'])->name('download-loan-schedule');
     Route::get('/download-loan-agreement/{id}', [ExportController::class, 'downloadLoanAgreement'])->name('download-loan-agreement');
     Route::get('/download-murabahah-agreement/{id}', [ExportController::class, 'downloadMurabahahAgreement'])->name('download-murabahah-agreement');
-    Route::get('/download-dividend/{year}', [ExportController::class, 'downloadDividend']);
-    Route::get('/download-appropriation/{year}', [ExportController::class, 'downloadAppropriation']);
-    Route::get('/download-financials/{year}', [ExportController::class, 'downloadFinancials']);
-    Route::get('/download-order-receipt/{id}', [ExportController::class, 'downloadOrderReceipt']);
-    Route::get('/download-zakat-report', [ExportController::class, 'downloadZakatReport']);
+    Route::get('/download-dividend/{year}', [ExportController::class, 'downloadDividend'])->name('download-dividend');
+    Route::get('/download-appropriation/{year}', [ExportController::class, 'downloadAppropriation'])->name('download-appropriation');
+    Route::get('/download-financials/{year}', [ExportController::class, 'downloadFinancials'])->name('download-financials');
+    Route::get('/download-cash-flow/{year}', [ExportController::class, 'downloadCashFlow'])->name('download-cash-flow');
+    Route::get('/download-charity-report/{year}', [ExportController::class, 'downloadCharityReport'])->name('download-charity-report');
+    Route::get('/download-project-roi', [ExportController::class, 'downloadProjectRoiReport'])->name('download-project-roi');
+    Route::get('/download-vendor-settlement', [ExportController::class, 'downloadVendorSettlementReport'])->name('download-vendor-settlement');
+    Route::get('/download-attendance-report/{year}', [ExportController::class, 'downloadAttendanceReport'])->name('download-attendance-report');
+    Route::get('/download-sharia-audit/{year}', [ExportController::class, 'downloadShariaAuditReport'])->name('download-sharia-audit');
+    Route::get('/download-loan-aging', [ExportController::class, 'downloadLoanAgingReport'])->name('download-loan-aging');
+    // Takaful Pool Report
+    Route::get('/download-takaful-report', [ExportController::class, 'downloadTakafulReport'])->name('download-takaful-report');
+    // Gold Savings Valuation Report
+    Route::get('/download-gold-report', [ExportController::class, 'downloadGoldReport'])->name('download-gold-report');
+    // Cooperative Zakat Report
+    Route::get('/download-coop-zakat-report', [ExportController::class, 'downloadCoopZakatReport'])->name('download-coop-zakat-report');
+    // Audit Trail
+    Route::get('/download-audit-trail', [ExportController::class, 'downloadAuditTrail'])->name('download-audit-trail');
+    Route::get('/download-order-receipt/{id}', [ExportController::class, 'downloadOrderReceipt'])->name('download-order-receipt');
+    Route::get('/download-zakat-report', [ExportController::class, 'downloadZakatReport'])->name('download-zakat-report');
+    Route::get('/download-zakat-portfolio', [ExportController::class, 'downloadMemberZakatPortfolio'])->name('download-zakat-portfolio');
+    Route::get('/download-project-distribution/{id}', [ExportController::class, 'downloadProjectDistribution'])->name('download-project-distribution');
+    Route::get('/download-savings-ledger/{userId?}', [ExportController::class, 'downloadMemberSavingsLedger'])->name('download-savings-ledger');
 
     // Zakat
     Route::get('/zakat/estimate', [ZakatController::class, 'estimate']);

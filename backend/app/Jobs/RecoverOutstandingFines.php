@@ -54,6 +54,16 @@ class RecoverOutstandingFines implements ShouldQueue
                 ],
             ]);
 
+            // Record in Charity Ledger (Sadaqah fund)
+            \App\Models\CharityEntry::create([
+                'user_id' => $lockedUser->id,
+                'source' => 'Attendance Fine Collection',
+                'amount' => $deduction,
+                'note' => 'Automatic collection of accumulated attendance fines',
+                'status' => 'processed',
+                'processed_at' => now(),
+            ]);
+
             // Try to mark pending records as paid
             $pendingRecords = AttendanceRecord::where('user_id', $lockedUser->id)
                 ->where('status', 'fine_pending')

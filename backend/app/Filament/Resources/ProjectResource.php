@@ -123,6 +123,14 @@ class ProjectResource extends Resource
                 Tables\Filters\TernaryFilter::make('active')->label('Active'),
             ])
             ->actions([
+                Tables\Actions\Action::make('downloadDistribution')
+                    ->label('Profit Dist.')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('emerald')
+                    ->url(fn (Project $record) => route('download-project-distribution', [
+                        'id' => $record->id,
+                        'token' => auth()->user()->createToken('FilamentProjectReport', ['*'], now()->addMinutes(5))->plainTextToken
+                    ])),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

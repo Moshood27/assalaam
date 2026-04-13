@@ -28,13 +28,11 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ->options([
                         'present' => 'Present',
                         'absent' => 'Absent',
-                        'apology_paid' => 'Apology Paid',
                         'fine_paid' => 'Fine Paid',
                         'fine_pending' => 'Fine Pending',
                     ])
                     ->required(),
                 Forms\Components\DateTimePicker::make('attended_at'),
-                Forms\Components\DateTimePicker::make('apology_paid_at'),
                 Forms\Components\DateTimePicker::make('fine_paid_at'),
             ]);
     }
@@ -56,7 +54,6 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ->color(fn (string $state): string => match ($state) {
                         'present' => 'success',
                         'absent' => 'danger',
-                        'apology_paid' => 'info',
                         'fine_paid' => 'warning',
                         'fine_pending' => 'danger',
                         default => 'gray',
@@ -70,7 +67,6 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ->options([
                         'present' => 'Present',
                         'absent' => 'Absent',
-                        'apology_paid' => 'Apology Paid',
                         'fine_paid' => 'Fine Paid',
                         'fine_pending' => 'Fine Pending',
                     ]),

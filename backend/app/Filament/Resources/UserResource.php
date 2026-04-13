@@ -16,6 +16,7 @@ use App\Services\TakafulService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Components\Select;
@@ -23,12 +24,15 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -639,8 +643,132 @@ class UserResource extends Resource
                     }),
             ])
             ->headerActions([
+                Action::make('downloadTemplate')
+                    ->label('CSV Template')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('info')
+                    ->action(function () {
+                        $headers = [
+                            'name', 'surname', 'other_names', 'email', 'phone', 'secondary_phone', 'gender',
+                            'dob', 'native_place', 'marital_status', 'occupation',
+                            'residential_address', 'permanent_address', 'address', 'membership_number', 'branch_id',
+                            'nature_of_business', 'business_address', 'has_other_cooperatives', 'other_cooperative_details',
+                            'nok_name', 'nok_phone', 'nok_relationship', 'nok_address',
+                            'guarantor_name', 'guarantor_phone', 'guarantor_occupation', 'guarantor_address',
+                            'religious_society_name', 'imam_name', 'imam_phone', 'duration_of_jamma_membership', 'mosque_address',
+                            'spouse_father_name', 'spouse_father_phone', 'spouse_father_address', 'spouse_father_business_address',
+                            'admission_form_number', 'admission_date', 'admission_officer_name'
+                        ];
+                        $callback = function () use ($headers) {
+                            $file = fopen('php://output', 'w');
+                            fputcsv($file, $headers);
+                            fclose($file);
+                        };
+
+                        return response()->streamDownload($callback, 'members_import_template.csv');
+                    }),
+                Action::make('importCsv')
+                    ->label('Import Members')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('success')
+                    ->form([
+                        FileUpload::make('file')
+                            ->label('CSV File')
+                            ->disk('public')
+                            ->directory('imports')
+                            ->acceptedFileTypes(['text/csv', 'application/csv', 'text/plain'])
+                            ->required(),
+                    ])
+                    ->action(function (array $data) {
+                        $filePath = Storage::disk('public')->path($data['file']);
+                        if (!file_exists($filePath)) {
+                            Notification::make()->title('File not found')->danger()->send();
+                            return;
+                        }
+
+                        $file = fopen($filePath, 'r');
+                        $header = fgetcsv($file);
+
+                        if (!$header) {
+                            Notification::make()->title('Empty CSV')->danger()->send();
+                            fclose($file);
+                            return;
+                        }
+
+                        $count = 0;
+                        $errors = 0;
+
+                        while ($row = fgetcsv($file)) {
+                            try {
+                                $rowData = array_combine($header, $row);
+                                // Simple validation/creation logic
+                                $user = User::where('email', $rowData['email'])->first();
+                                $updateData = [
+                                    'name' => $rowData['name'] ?? '',
+                                    'surname' => $rowData['surname'] ?? '',
+                                    'other_names' => $rowData['other_names'] ?? null,
+                                    'phone' => $rowData['phone'] ?? '',
+                                    'secondary_phone' => $rowData['secondary_phone'] ?? null,
+                                    'gender' => strtolower($rowData['gender'] ?? 'male'),
+                                    'dob' => !empty($rowData['dob']) ? Carbon::parse($rowData['dob']) : null,
+                                    'native_place' => $rowData['native_place'] ?? null,
+                                    'marital_status' => strtolower($rowData['marital_status'] ?? 'single'),
+                                    'occupation' => $rowData['occupation'] ?? null,
+                                    'residential_address' => $rowData['residential_address'] ?? null,
+                                    'permanent_address' => $rowData['permanent_address'] ?? null,
+                                    'address' => $rowData['address'] ?? ($rowData['residential_address'] ?? null),
+                                    'membership_number' => $rowData['membership_number'] ?? null,
+                                    'branch_id' => $rowData['branch_id'] ?? null,
+                                    'nature_of_business' => $rowData['nature_of_business'] ?? null,
+                                    'business_address' => $rowData['business_address'] ?? null,
+                                    'has_other_cooperatives' => (bool) ($rowData['has_other_cooperatives'] ?? false),
+                                    'other_cooperative_details' => $rowData['other_cooperative_details'] ?? null,
+                                    'nok_name' => $rowData['nok_name'] ?? null,
+                                    'nok_phone' => $rowData['nok_phone'] ?? null,
+                                    'nok_relationship' => $rowData['nok_relationship'] ?? null,
+                                    'nok_address' => $rowData['nok_address'] ?? null,
+                                    'guarantor_name' => $rowData['guarantor_name'] ?? null,
+                                    'guarantor_phone' => $rowData['guarantor_phone'] ?? null,
+                                    'guarantor_occupation' => $rowData['guarantor_occupation'] ?? null,
+                                    'guarantor_address' => $rowData['guarantor_address'] ?? null,
+                                    'religious_society_name' => $rowData['religious_society_name'] ?? null,
+                                    'imam_name' => $rowData['imam_name'] ?? null,
+                                    'imam_phone' => $rowData['imam_phone'] ?? null,
+                                    'duration_of_jamma_membership' => $rowData['duration_of_jamma_membership'] ?? null,
+                                    'mosque_address' => $rowData['mosque_address'] ?? null,
+                                    'spouse_father_name' => $rowData['spouse_father_name'] ?? null,
+                                    'spouse_father_phone' => $rowData['spouse_father_phone'] ?? null,
+                                    'spouse_father_address' => $rowData['spouse_father_address'] ?? null,
+                                    'spouse_father_business_address' => $rowData['spouse_father_business_address'] ?? null,
+                                    'admission_form_number' => $rowData['admission_form_number'] ?? null,
+                                    'admission_date' => !empty($rowData['admission_date']) ? Carbon::parse($rowData['admission_date']) : null,
+                                    'admission_officer_name' => $rowData['admission_officer_name'] ?? null,
+                                ];
+
+                                if (!$user) {
+                                    $updateData['password'] = Hash::make('password123');
+                                }
+
+                                User::updateOrCreate(
+                                    ['email' => $rowData['email']],
+                                    $updateData
+                                );
+                                $count++;
+                            } catch (\Throwable $e) {
+                                $errors++;
+                            }
+                        }
+                        fclose($file);
+                        Storage::disk('public')->delete($data['file']);
+
+                        Notification::make()
+                            ->title("Import Completed")
+                            ->body("Successfully imported/updated $count members. Errors: $errors")
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('print')
-                    ->label('Print')
+                    ->label('Print List')
                     ->icon('heroicon-o-printer')
                     ->extraAttributes(['onclick' => 'window.print()']),
                 Action::make('bulkCommunicate')
@@ -687,9 +815,19 @@ class UserResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
+                Tables\Actions\ActionGroup::make([
+                    Action::make('downloadLedger')
+                        ->label('Savings Ledger')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('amber')
+                        ->url(fn (User $record) => route('download-savings-ledger', [
+                            'userId' => $record->id,
+                            'token' => auth()->user()->createToken('FilamentUserReport', ['*'], now()->addMinutes(5))->plainTextToken
+                        ])),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                ]),
                 Action::make('creditWallet')
                     ->label('Credit Wallet')
                     ->icon('heroicon-o-banknotes')
@@ -1040,6 +1178,13 @@ class UserResource extends Resource
                     ->action(fn (User $record) => response()->streamDownload(function () use ($record) {
                         echo Pdf::loadView('pdfs.membership_application', ['application' => $record])->output();
                     }, "membership-form-{$record->membership_number}.pdf")),
+                Action::make('download_imam')
+                    ->label('Download Imam Attestation')
+                    ->icon('heroicon-o-document-text')
+                    ->color('success')
+                    ->action(fn (User $record) => response()->streamDownload(function () use ($record) {
+                        echo Pdf::loadView('pdfs.imam_attestation', ['application' => $record])->output();
+                    }, "imam-attestation-{$record->membership_number}.pdf")),
                 Action::make('verifyKyc')
                     ->label('Verify KYC')
                     ->icon('heroicon-o-shield-check')
@@ -1073,6 +1218,13 @@ class UserResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    BulkAction::make('bulkPrintForms')
+                        ->label('Print Forms')
+                        ->icon('heroicon-o-printer')
+                        ->action(fn (Collection $records) => response()->streamDownload(function () use ($records) {
+                            $pdf = Pdf::loadView('pdfs.bulk_membership_applications', ['users' => $records]);
+                            echo $pdf->output();
+                        }, "membership-forms-bulk.pdf")),
                     Tables\Actions\DeleteBulkAction::make()
                         ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 ]),

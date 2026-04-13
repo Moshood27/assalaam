@@ -1,67 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Takaful Summary</title>
+    <meta charset="UTF-8">
+    <title>Takaful Pool Report - {{ $date }}</title>
     <style>
-        body { font-family: DejaVu Sans, Helvetica, Arial, sans-serif; font-size: 12px; }
-        h1 { font-size: 18px; margin: 0 0 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        th { background: #f3f4f6; }
-        .small { color: #6b7280; font-size: 11px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #111827; padding-bottom: 10px; }
+        .title { font-size: 16px; font-weight: bold; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .right { text-align: right; }
+        .summary-box { border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; background-color: #f9f9f9; }
     </style>
 </head>
 <body>
-    <h1>Monthly Takaful Summary ({{ $period }})</h1>
+    <div class="header">
+        <div class="title">Takaful (Welfare) Pool Report</div>
+        <div>At-Taqwa Osogbo CICS Ltd</div>
+        <div>As of Date: {{ $date }}</div>
+    </div>
 
-    <p>
-        Total members: {{ (int)($count ?? 0) }}<br/>
-        Total amount: ₦ {{ number_format((float)($sum ?? 0), 2) }}
-    </p>
+    <div class="summary-box">
+        <strong>Community Insurance Fund Health</strong><br>
+        Total Contributions: ₦ {{ number_format($total_contributions, 2) }}<br>
+        Total Claims Paid: ₦ {{ number_format($total_claims_paid, 2) }}<br>
+        <strong>Net Pool Balance: ₦ {{ number_format($net_pool_balance, 2) }}</strong>
+    </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Status</th>
-                <th>Count</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach(($by_status ?? []) as $status => $c)
-                <tr>
-                    <td>{{ $status }}</td>
-                    <td>{{ $c }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <h3>Contributions</h3>
+    <div style="font-weight: bold; margin-top: 20px;">Recent Pool Activity</div>
     <table>
         <thead>
             <tr>
                 <th>Date</th>
-                <th>User ID</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Reference</th>
+                <th>Member</th>
+                <th>Type</th>
+                <th class="right">Amount (₦)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse(($rows ?? []) as $r)
-                <tr>
-                    <td>{{ $r->created_at }}</td>
-                    <td>{{ $r->user_id }}</td>
-                    <td>₦ {{ number_format((float)$r->amount, 2) }}</td>
-                    <td>{{ $r->status }}</td>
-                    <td>{{ $r->reference }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" class="small">No contributions</td>
-                </tr>
-            @endforelse
+            @foreach($recent_activity as $a)
+            <tr>
+                <td>{{ $a['date'] }}</td>
+                <td>{{ $a['member'] }}</td>
+                <td>{{ $a['type'] }}</td>
+                <td class="right" style="color: {{ $a['amount'] < 0 ? 'red' : 'green' }}">
+                    {{ number_format($a['amount'], 2) }}
+                </td>
+            </tr>
+            @endforeach
         </tbody>
     </table>
 </body>

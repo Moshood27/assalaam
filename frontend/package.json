@@ -15,15 +15,16 @@
     "cap:open:ios": "npx cap open ios"
   },
   "dependencies": {
+    "@capacitor-mlkit/barcode-scanning": "^6.2.0",
     "@capacitor/android": "^6.2.1",
     "@capacitor/app": "^6.0.3",
+    "@capacitor/browser": "^6.0.6",
     "@capacitor/cli": "^6.2.1",
     "@capacitor/clipboard": "^6.0.3",
     "@capacitor/core": "^6.2.1",
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",
     "@capacitor/splash-screen": "^6.0.4",
-    "@capacitor-mlkit/barcode-scanning": "^6.2.0",
     "@capgo/capacitor-native-biometric": "^6.0.4",
     "@tailwindcss/postcss": "^4.2.1",
     "apexcharts": "^5.10.4",

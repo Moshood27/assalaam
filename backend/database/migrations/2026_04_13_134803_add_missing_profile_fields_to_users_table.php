@@ -30,6 +30,12 @@ return new class extends Migration
             $table->string('duration_of_jamma_membership')->nullable();
             $table->boolean('imam_approval_status')->default(false);
             $table->timestamp('imam_approved_at')->nullable();
+            $table->string('imam_signature_path')->nullable();
+
+            // Documents
+            $table->string('passport_path')->nullable();
+            $table->string('id_card_path')->nullable();
+            $table->string('proof_of_address_path')->nullable();
 
             // Information for Female Members
             $table->string('spouse_father_name')->nullable();
@@ -58,7 +64,8 @@ return new class extends Migration
             $table->dropColumn([
                 'has_other_cooperatives', 'other_cooperative_details',
                 'guarantor_name', 'guarantor_address', 'guarantor_phone', 'guarantor_occupation', 'guarantor_signature_path',
-                'imam_name', 'mosque_address', 'imam_phone', 'duration_of_jamma_membership', 'imam_approval_status', 'imam_approved_at',
+                'imam_name', 'mosque_address', 'imam_phone', 'duration_of_jamma_membership', 'imam_approval_status', 'imam_approved_at', 'imam_signature_path',
+                'passport_path', 'id_card_path', 'proof_of_address_path',
                 'spouse_father_name', 'spouse_father_address', 'spouse_father_business_address', 'spouse_father_phone', 'spouse_father_consent_signature_path',
                 'admission_officer_name', 'officer_recommendation', 'approval_status',
                 'president_signature_path', 'president_signed_at', 'secretary_general_signature_path', 'secretary_general_signed_at'

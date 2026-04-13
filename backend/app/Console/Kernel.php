@@ -54,6 +54,9 @@ class Kernel extends ConsoleKernel
         // Update meeting statuses every minute
         $schedule->command('app:update-meeting-statuses')->everyMinute();
 
+        // Send meeting reminders every minute
+        $schedule->command('app:send-meeting-reminders')->everyMinute();
+
         // Audit attendance every hour (will only process meetings marked as completed)
         $schedule->command('app:audit-attendance')->hourly();
 

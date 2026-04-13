@@ -162,6 +162,52 @@
         <div class="mt-3 text-xs text-gray-500">KYC status is used to prevent fraud and verify identity.</div>
       </div>
 
+      <!-- Membership Documents -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Membership Documents</p>
+        <div class="space-y-3">
+          <button @click="downloadMembershipForm" :disabled="downloadingDoc" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 group transition-colors hover:border-emerald-200">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="text-left">
+                <p class="text-sm font-bold text-slate-800">Membership Enrolment Form</p>
+                <p class="text-[10px] text-slate-500 uppercase font-black tracking-widest">Download PDF</p>
+              </div>
+            </div>
+            <div class="text-emerald-700">
+              <svg v-if="!downloadingForm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span v-else class="text-[10px] font-bold animate-pulse">...</span>
+            </div>
+          </button>
+
+          <button @click="downloadImamAttestation" :disabled="downloadingDoc" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 group transition-colors hover:border-emerald-200">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="text-left">
+                <p class="text-sm font-bold text-slate-800">Attestation of Imam</p>
+                <p class="text-[10px] text-slate-500 uppercase font-black tracking-widest">Download PDF</p>
+              </div>
+            </div>
+            <div class="text-emerald-700">
+              <svg v-if="!downloadingImam" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span v-else class="text-[10px] font-bold animate-pulse">...</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
       <!-- Vendor Portal -->
       <div v-if="profile.vendor" class="bg-white rounded-3xl shadow-sm border border-emerald-100 p-5 overflow-hidden relative group">
         <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
@@ -629,6 +675,48 @@ const copy = async (text) => {
 
 const goToWallet = () => router.push('/wallet')
 
+
+const downloadingForm = ref(false)
+const downloadingImam = ref(false)
+const downloadingDoc = computed(() => downloadingForm.value || downloadingImam.value)
+
+const downloadMembershipForm = async () => {
+  downloadingForm.value = true
+  try {
+    const resp = await axios.get('/api/download-membership-form', { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([resp.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `Membership_Form_${profile.value.membership_id}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    alert('Failed to download membership form.')
+  } finally {
+    downloadingForm.value = false
+  }
+}
+
+const downloadImamAttestation = async () => {
+  downloadingImam.value = true
+  try {
+    const resp = await axios.get('/api/download-imam-attestation', { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([resp.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `Imam_Attestation_${profile.value.membership_id}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    alert('Failed to download Imam attestation.')
+  } finally {
+    downloadingImam.value = false
+  }
+}
 
 const chooseFile = () => fileInput.value && fileInput.value.click()
 

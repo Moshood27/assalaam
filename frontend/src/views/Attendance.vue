@@ -55,11 +55,6 @@
           <p class="text-emerald-50 text-xs mt-2 font-medium">You successfully marked your attendance at {{ formatTime(record.attended_at) }}.</p>
         </div>
 
-        <div v-else-if="record && record.status === 'apology_paid'" class="bg-slate-900 p-8 rounded-[2.5rem] text-center shadow-xl shadow-slate-200 text-white">
-          <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">✉️</div>
-          <h3 class="text-xl font-black uppercase tracking-tight">Apology Paid</h3>
-          <p class="text-slate-400 text-xs mt-2 font-medium">You have paid the apology fee for this meeting.</p>
-        </div>
 
         <!-- Mark Attendance Form -->
         <div v-else class="space-y-4">
@@ -98,21 +93,6 @@
               </button>
             </div>
           </div>
-
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
-             <div class="absolute -left-4 -bottom-4 w-16 h-16 bg-slate-50 rounded-full opacity-50" />
-            <div class="flex items-center gap-2 mb-2 relative z-10">
-               <div class="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-lg">🤝</div>
-               <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Apology with Fee</h3>
-            </div>
-            <p class="text-[11px] text-slate-500 mb-6 font-medium leading-relaxed relative z-10">If you cannot attend, pay ₦{{ formatMoney(meeting.apology_fee_amount) }} now to avoid the full ₦{{ formatMoney(meeting.fine_amount) }} absence fine.</p>
-            
-            <button @click="payApology" :disabled="payingApology" 
-                    class="w-full border-2 border-slate-100 bg-white py-4 rounded-2xl font-black text-slate-700 text-[10px] uppercase tracking-widest active:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 relative z-10">
-              <span v-if="payingApology" class="animate-spin rounded-full h-4 w-4 border-2 border-slate-700 border-t-transparent"></span>
-              <span v-else>✉️ Pay Apology Fee</span>
-            </button>
-          </div>
         </div>
 
         <!-- History -->
@@ -132,11 +112,10 @@
                <div :class="[
                  'w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm',
                  item.status === 'present' ? 'bg-emerald-50 text-emerald-600' : 
-                 item.status === 'apology_paid' ? 'bg-blue-50 text-blue-600' :
                  item.status === 'fine_paid' ? 'bg-orange-50 text-orange-600' :
                  item.status === 'fine_pending' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-400'
                ]">
-                 {{ item.status === 'present' ? '✅' : item.status === 'apology_paid' ? '✉️' : item.status === 'fine_paid' ? '💰' : '❌' }}
+                 {{ item.status === 'present' ? '✅' : item.status === 'fine_paid' ? '💰' : '❌' }}
                </div>
                
                <div class="flex-1 min-w-0">
@@ -152,7 +131,6 @@
                   <p :class="[
                     'text-[10px] font-black uppercase tracking-tight',
                     item.status === 'present' ? 'text-emerald-600' : 
-                    item.status === 'apology_paid' ? 'text-blue-600' :
                     item.status === 'fine_paid' ? 'text-orange-600' : 'text-red-600'
                   ]">
                     {{ item.status.replace('_', ' ') }}
@@ -187,7 +165,6 @@ const pin = ref('')
 const location = ref(null)
 const locating = ref(false)
 const submitting = ref(false)
-const payingApology = ref(false)
 const timeRemaining = ref('')
 const countdownInterval = ref(null)
 const refreshingStatus = ref(false)
@@ -309,26 +286,6 @@ const submitAttendance = async () => {
     modal.alert(err.response?.data?.message || "Failed to mark attendance")
   } finally {
     submitting.value = false
-  }
-}
-
-const payApology = async () => {
-  const confirmed = await modal.confirm(`Pay ₦${formatMoney(meeting.value.apology_fee_amount)} apology fee for this meeting?`, {
-    title: 'Confirm Apology Fee',
-    confirmText: 'Pay Fee'
-  })
-  if (!confirmed) return
-  
-  payingApology.value = true
-  try {
-    const res = await axios.post(`/api/meetings/${meeting.value.id}/pay-apology`)
-    record.value = res.data.record
-    modal.alert("Apology fee paid successfully!")
-    fetchHistory()
-  } catch (err) {
-    modal.alert(err.response?.data?.message || "Failed to pay apology fee")
-  } finally {
-    payingApology.value = false
   }
 }
 

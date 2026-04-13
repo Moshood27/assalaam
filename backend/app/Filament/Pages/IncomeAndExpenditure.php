@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Services\AccountingReportService;
 use Filament\Pages\Page;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Filament\Actions\Action;
 
 class IncomeAndExpenditure extends Page
 {
@@ -14,6 +15,20 @@ class IncomeAndExpenditure extends Page
     protected static ?int $navigationSort = 11;
 
     protected static string $view = 'filament.pages.income-and-expenditure';
+
+    public function getHeaderActions(): array
+    {
+        return [
+            Action::make('downloadPdf')
+                ->label('Download PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('amber')
+                ->url(fn () => route('download-financials', [
+                    'year' => (int)date('Y', strtotime($this->to)),
+                    'token' => auth()->user()->createToken('FilamentReport', ['*'], now()->addMinutes(5))->plainTextToken
+                ])),
+        ];
+    }
 
     public function getSubheading(): ?string
     {

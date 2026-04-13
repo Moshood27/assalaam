@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +16,21 @@ use Illuminate\Support\Facades\Mail;
 class AuthController extends Controller
 {
     // List of branches for the login dropdown
+    public function status()
+    {
+        return response()->json([
+            'status' => 'ok',
+            'mobile_min_version' => Setting::get('mobile_min_version', config('cooperative.mobile_min_version')),
+            'mobile_current_version' => Setting::get('mobile_current_version', config('cooperative.mobile_current_version')),
+            'maintenance_mode' => (bool) Setting::get('maintenance_mode', config('cooperative.maintenance_mode')),
+            'maintenance_message' => Setting::get('maintenance_message', config('cooperative.maintenance_message')),
+            'maintenance_until' => Setting::get('maintenance_until', config('cooperative.maintenance_until')),
+            'system_announcement' => Setting::get('system_announcement', config('cooperative.system_announcement')),
+            'play_store_url' => Setting::get('play_store_url', config('cooperative.play_store_url')),
+            'app_name' => config('app.name'),
+        ]);
+    }
+
     public function branches()
     {
         return response()->json(Branch::orderBy('name')->get());

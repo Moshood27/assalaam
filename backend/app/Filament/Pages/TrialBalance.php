@@ -43,7 +43,9 @@ class TrialBalance extends Page
     {
         /** @var AccountingReportService $svc */
         $svc = app(AccountingReportService::class);
-        $this->report = $svc->buildTrialBalance($this->from, $this->to);
+        $goldSvc = app(\App\Services\GoldSilverPriceService::class);
+        $goldPrice = $goldSvc->getGoldPrice();
+        $this->report = $svc->buildTrialBalance($this->from, $this->to, $goldPrice);
     }
 
     public function exportCsv(): StreamedResponse

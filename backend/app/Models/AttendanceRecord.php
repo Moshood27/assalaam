@@ -15,7 +15,6 @@ class AttendanceRecord extends Model
         'meeting_id',
         'status',
         'attended_at',
-        'apology_paid_at',
         'lat',
         'lng',
         'fine_paid_at',
@@ -23,7 +22,6 @@ class AttendanceRecord extends Model
 
     protected $casts = [
         'attended_at' => 'datetime',
-        'apology_paid_at' => 'datetime',
         'fine_paid_at' => 'datetime',
         'lat' => 'decimal:8',
         'lng' => 'decimal:8',

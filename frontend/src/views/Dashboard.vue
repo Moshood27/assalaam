@@ -17,6 +17,30 @@
     </header>
 
     <div class="p-4">
+      <!-- System Announcement -->
+      <div v-if="systemAnnouncement" class="mb-4 p-4 rounded-3xl bg-blue-600 text-white flex items-start gap-3 shadow-lg shadow-blue-200">
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shrink-0">📢</div>
+        <div class="flex-1">
+          <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">System Announcement</p>
+          <p class="text-sm font-bold leading-tight mt-0.5">{{ systemAnnouncement }}</p>
+        </div>
+      </div>
+
+      <!-- Soft Update Notice -->
+      <div v-if="isUpdateAvailable" class="mb-4 p-4 rounded-3xl bg-amber-100 border border-amber-200 text-amber-900 flex items-center gap-3">
+        <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white shrink-0">🚀</div>
+        <div class="flex-1">
+          <p class="text-xs font-bold">New Version Available ({{ currentVersion }})</p>
+          <p class="text-[10px]">Get the latest features and improvements.</p>
+        </div>
+        <button 
+          @click="openStore"
+          class="bg-amber-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm"
+        >
+          Update Now
+        </button>
+      </div>
+
       <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
         <div class="flex items-center gap-2 mb-2 relative z-10">
@@ -331,6 +355,18 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from '../http'
+import { useAppStatusStore } from '../stores/appStatus'
+import { Browser } from '@capacitor/browser'
+
+const appStatusStore = useAppStatusStore()
+const systemAnnouncement = computed(() => appStatusStore.systemAnnouncement)
+const isUpdateAvailable = computed(() => appStatusStore.isUpdateAvailable)
+const currentVersion = computed(() => appStatusStore.currentVersion)
+
+const openStore = async () => {
+  const url = appStatusStore.playStoreUrl || 'https://play.google.com/store/apps/details?id=com.attaqwa.app'
+  await Browser.open({ url })
+}
 import getImageUrl from '../utils/image'
 import { useModal } from '../composables/useModal'
 import CustomNotice from '../components/CustomNotice.vue'

@@ -11,6 +11,7 @@ use App\Models\WalletTransaction;
 use App\Services\AccountingReportService;
 use App\Models\Scheme;
 use App\Services\ZakatService;
+use App\Services\GoldSilverPriceService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,10 +19,14 @@ use Illuminate\Support\Carbon;
 class ExportController extends Controller
 {
     protected $zakatService;
+    protected $accountingService;
+    protected $goldPriceService;
 
-    public function __construct(ZakatService $zakatService)
+    public function __construct(ZakatService $zakatService, AccountingReportService $accountingService, GoldSilverPriceService $goldPriceService)
     {
         $this->zakatService = $zakatService;
+        $this->accountingService = $accountingService;
+        $this->goldPriceService = $goldPriceService;
     }
 
     public function downloadPassbook(Request $request)
@@ -458,11 +463,9 @@ class ExportController extends Controller
 
     public function downloadAppropriation(Request $request, int $year)
     {
-        /** @var AccountingReportService $svc */
-        $svc = app(AccountingReportService::class);
         $from = Carbon::create($year, 1, 1)->toDateString();
         $to = Carbon::create($year, 12, 31)->toDateString();
-        $data = $svc->buildAppropriationAccount($from, $to);
+        $data = $this->accountingService->buildAppropriationAccount($from, $to);
         $data['user'] = $request->user();
         $data['year'] = $year;
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.appropriation', $data);
@@ -472,20 +475,157 @@ class ExportController extends Controller
 
     public function downloadFinancials(Request $request, int $year)
     {
-        /** @var AccountingReportService $svc */
-        $svc = app(AccountingReportService::class);
         $from = Carbon::create($year, 1, 1)->toDateString();
         $to = Carbon::create($year, 12, 31)->toDateString();
-        $ie = $svc->buildIncomeAndExpenditure($from, $to);
-        $bs = $svc->buildBalanceSheet($to);
+        $ie = $this->accountingService->buildIncomeAndExpenditure($from, $to);
+        $bs = $this->accountingService->buildBalanceSheet($to);
+        $cf = $this->accountingService->buildStatementOfCashFlows($from, $to);
         $data = [
             'user' => $request->user(),
             'year' => $year,
             'income_expenditure' => $ie,
             'balance_sheet' => $bs,
+            'cash_flow' => $cf,
         ];
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.financials', $data);
         $filename = 'Financial_Statements_' . $year . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadCashFlow(Request $request, int $year)
+    {
+        $from = Carbon::create($year, 1, 1)->toDateString();
+        $to = Carbon::create($year, 12, 31)->toDateString();
+        $data = $this->accountingService->buildStatementOfCashFlows($from, $to);
+        $data['user'] = $request->user();
+        $data['year'] = $year;
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.cash_flow', $data);
+        $filename = 'Cash_Flow_Statement_' . $year . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadCharityReport(Request $request, int $year)
+    {
+        $from = Carbon::create($year, 1, 1)->toDateString();
+        $to = Carbon::create($year, 12, 31)->toDateString();
+        $data = $this->accountingService->buildCharityFundReport($from, $to);
+        $data['user'] = $request->user();
+        $data['year'] = $year;
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.charity_report', $data);
+        $filename = 'Charity_Fund_Report_' . $year . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadProjectRoiReport(Request $request)
+    {
+        $data = [
+            'projects' => $this->accountingService->buildProjectRoiReport(),
+            'user' => $request->user(),
+            'date' => now()->toDateString(),
+        ];
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.project_roi', $data);
+        $filename = 'Project_ROI_Report_' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadVendorSettlementReport(Request $request)
+    {
+        $data = [
+            'vendors' => $this->accountingService->buildVendorSettlementReport(),
+            'user' => $request->user(),
+            'date' => now()->toDateString(),
+        ];
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.vendor_settlement', $data);
+        $filename = 'Vendor_Settlement_Report_' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadAttendanceReport(Request $request, int $year)
+    {
+        $from = Carbon::create($year, 1, 1)->toDateString();
+        $to = Carbon::create($year, 12, 31)->toDateString();
+        $data = [
+            'meetings' => $this->accountingService->buildAttendanceReport($from, $to),
+            'user' => $request->user(),
+            'year' => $year,
+        ];
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.attendance_report', $data);
+        $filename = 'Attendance_Fine_Summary_' . $year . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadShariaAuditReport(Request $request, int $year)
+    {
+        $from = Carbon::create($year, 1, 1)->toDateString();
+        $to = Carbon::create($year, 12, 31)->toDateString();
+        $data = $this->accountingService->buildShariaAuditReport($from, $to);
+        $data['user'] = $request->user();
+        $data['year'] = $year;
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.sharia_audit', $data);
+        $filename = 'Sharia_Audit_Report_' . $year . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadLoanAgingReport(Request $request)
+    {
+        $data = [
+            'loans' => $this->accountingService->buildLoanAgingReport(),
+            'user' => $request->user(),
+            'date' => now()->toDateString(),
+        ];
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_aging', $data);
+        $filename = 'Loan_Aging_Report_' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadTakafulReport(Request $request)
+    {
+        $data = $this->accountingService->buildTakafulPoolReport();
+        $data['user'] = $request->user();
+        $data['date'] = now()->toDateString();
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.takaful_summary', $data);
+        $filename = 'Takaful_Pool_Report_' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadGoldReport(Request $request)
+    {
+        $goldPrice = $this->goldPriceService->getGoldPrice() ?: (float)$request->query('gold_price', 100000);
+        $data = $this->accountingService->buildGoldSavingsReport($goldPrice);
+        $data['user'] = $request->user();
+        $data['date'] = now()->toDateString();
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.gold_valuation', $data);
+        $filename = 'Gold_Savings_Report_' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadCoopZakatReport(Request $request)
+    {
+        $goldPrice = $this->goldPriceService->getGoldPrice() ?: (float)$request->query('gold_price', 100000);
+        $data = $this->accountingService->buildZakatReport($goldPrice);
+        $data['user'] = $request->user();
+        $data['date'] = now()->toDateString();
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_coop_report', $data);
+        $filename = 'Cooperative_Zakat_Report_' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadAuditTrail(Request $request)
+    {
+        $days = (int)$request->query('days', 30);
+        $activities = \Spatie\Activitylog\Models\Activity::where('created_at', '>=', now()->subDays($days))
+            ->with('causer')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $data = [
+            'activities' => $activities,
+            'user' => $request->user(),
+            'days' => $days,
+            'date' => now()->toDateString(),
+        ];
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.audit_trail', $data);
+        $filename = 'Audit_Trail_Report_' . now()->format('Ymd') . '.pdf';
         return $pdf->download($filename);
     }
 
@@ -560,6 +700,84 @@ class ExportController extends Controller
         } catch (\Throwable $e) {
             \Log::error('downloadZakatReport error', ['exception' => $e->getMessage(), 'user_id' => $user->id]);
             return response()->json(['message' => 'Unable to generate Zakat report at the moment.'], 422);
+        }
+    }
+
+    public function downloadMemberZakatPortfolio(Request $request)
+    {
+        $year = (int)$request->query('year', now()->year);
+        $from = Carbon::create($year, 1, 1)->toDateString();
+        $to = Carbon::create($year, 12, 31)->toDateString();
+
+        $data = $this->accountingService->buildMemberZakatPortfolio($from, $to);
+        $data['user'] = $request->user();
+        $data['year'] = $year;
+
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_portfolio', $data);
+        $filename = 'Member_Zakat_Portfolio_' . $year . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadProjectDistribution(Request $request, int $id)
+    {
+        $data = $this->accountingService->buildProjectDistributionReport($id);
+        $data['user'] = $request->user();
+        $data['date'] = now()->toDateString();
+
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.project_distribution', $data);
+        $filename = 'Project_Distribution_Report_' . $id . '_' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadMemberSavingsLedger(Request $request, ?int $userId = null)
+    {
+        $user = $request->user();
+        $targetId = $userId ?: $user->id;
+
+        if (!$user->is_admin && $user->id != $targetId) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $data = $this->accountingService->buildMemberSavingsLedger($targetId);
+        $data['admin_user'] = $user;
+        $data['date'] = now()->toDateString();
+
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.savings_ledger', $data);
+        $filename = 'Savings_Ledger_' . $data['membership_number'] . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function downloadMembershipForm(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.membership_application', ['application' => $user]);
+            $filename = 'Membership_Form_' . $user->membership_number . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadMembershipForm error', ['exception' => $e->getMessage(), 'user_id' => $user->id]);
+            return response()->json(['message' => 'Unable to generate Membership Form at the moment.'], 422);
+        }
+    }
+
+    public function downloadImamAttestation(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.imam_attestation', ['application' => $user]);
+            $filename = 'Imam_Attestation_' . $user->membership_number . '.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadImamAttestation error', ['exception' => $e->getMessage(), 'user_id' => $user->id]);
+            return response()->json(['message' => 'Unable to generate Imam Attestation at the moment.'], 422);
         }
     }
 }

@@ -15,9 +15,26 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        // If balance increased and there are outstanding fines
-        if ($user->wasChanged('balance') && $user->balance > $user->getOriginal('balance') && $user->outstanding_fines > 0) {
-            $this->processOutstandingFines($user);
+        // If balance increased
+        if ($user->wasChanged('balance') && $user->balance > $user->getOriginal('balance')) {
+            // 1. Process outstanding fines
+            if ($user->outstanding_fines > 0) {
+                $this->processOutstandingFines($user);
+            }
+
+            // 2. Retry pending Takaful contributions
+            $this->retryTakaful($user);
+        }
+    }
+
+    protected function retryTakaful(User $user): void
+    {
+        try {
+            $takaful = app(\App\Services\TakafulService::class);
+            $takaful->retryPendingForUser($user);
+        } catch (\Throwable $e) {
+            // Log or ignore
+            \Illuminate\Support\Facades\Log::error('Failed to retry Takaful: ' . $e->getMessage());
         }
     }
 
@@ -54,6 +71,16 @@ class UserObserver
                     'description' => 'Automatic collection of accumulated attendance fines',
                     'amount_collected' => $deduction
                 ],
+            ]);
+
+            // Record in Charity Ledger (Sadaqah fund)
+            \App\Models\CharityEntry::create([
+                'user_id' => $lockedUser->id,
+                'source' => 'Attendance Fine Collection',
+                'amount' => $deduction,
+                'note' => 'Automatic collection of accumulated attendance fines',
+                'status' => 'processed',
+                'processed_at' => now(),
             ]);
 
             // Try to mark pending records as paid

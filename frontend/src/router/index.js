@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import { checkAppStatus } from '../services/appStatus'
+import { useAppStatusStore } from '../stores/appStatus'
 
 // Views (lazy-loaded)
 const Login = () => import('../views/Login.vue')
@@ -44,6 +46,8 @@ const Wasiyyah = () => import('../views/Wasiyyah.vue')
 const JuniorCooperative = () => import('../views/JuniorCooperative.vue')
 const GoldSavings = () => import('../views/GoldSavings.vue')
 const Attendance = () => import('../views/Attendance.vue')
+const MaintenanceMode = () => import('../views/MaintenanceMode.vue')
+const UpdateRequired = () => import('../views/UpdateRequired.vue')
 
 const SavingsGroups = () => import('../views/SavingsGroups.vue')
 const SavingsGroupDetail = () => import('../views/SavingsGroupDetail.vue')
@@ -88,6 +92,8 @@ const routes = [
 
   { path: '/wasiyyah', name: 'wasiyyah', component: Wasiyyah, meta: { requiresAuth: true } },
   { path: '/attendance', name: 'attendance', component: Attendance, meta: { requiresAuth: true } },
+  { path: '/maintenance', name: 'maintenance', component: MaintenanceMode, meta: { skipOnboarding: true, skipStatusCheck: true } },
+  { path: '/update-required', name: 'update-required', component: UpdateRequired, meta: { skipOnboarding: true, skipStatusCheck: true }, props: route => ({ url: route.query.url }) },
   { path: '/junior-cooperative', name: 'junior.cooperative', component: JuniorCooperative, meta: { requiresAuth: true } },
   { path: '/gold', name: 'gold', component: GoldSavings, meta: { requiresAuth: true } },
 
@@ -146,7 +152,32 @@ const router = createRouter({
   }
 })
 
-router.beforeEach((to) => {
+let lastStatusCheck = 0
+const STATUS_CHECK_INTERVAL = 60000 // 1 minute
+
+router.beforeEach(async (to) => {
+  // 1. App Status Check (Maintenance & Forced Update)
+  const now = Date.now()
+  if (now - lastStatusCheck > STATUS_CHECK_INTERVAL && !to.meta.skipStatusCheck) {
+    const status = await checkAppStatus()
+    lastStatusCheck = now
+
+    // Update global store
+    try {
+      const appStatusStore = useAppStatusStore()
+      appStatusStore.setStatus(status)
+    } catch (e) {
+      console.error('Failed to update appStatus store', e)
+    }
+
+    if (status.maintenanceMode) {
+      return { name: 'maintenance' }
+    }
+    if (status.isOutdated) {
+      return { name: 'update-required', query: { url: status.playStoreUrl } }
+    }
+  }
+
   const token = localStorage.getItem('token')
   const adminToken = localStorage.getItem('admin_token')
 

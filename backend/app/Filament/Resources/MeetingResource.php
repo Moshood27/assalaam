@@ -99,11 +99,7 @@ class MeetingResource extends Resource
                             ->numeric()
                             ->prefix('₦')
                             ->default(config('cooperative.attendance.default_fine', 500)),
-                        Forms\Components\TextInput::make('apology_fee_amount')
-                            ->numeric()
-                            ->prefix('₦')
-                            ->default(config('cooperative.attendance.default_apology_fee', 500)),
-                    ])->columns(2),
+                    ]),
             ]);
     }
 

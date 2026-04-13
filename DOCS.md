@@ -7,6 +7,8 @@ Start here
 - BUILD_AND_DEPLOY.md – Build, run, and deploy instructions.
 - DEPLOYMENT.md – Server environment and deployment checklist.
 - MOBILE_BUILD_SYNC.md – Capacitor mobile projects: syncing and assets.
+- MOBILE_VERSIONING.md – Managing app versions and forced updates.
+- PLAYSTORE_DEPLOYMENT.md – Google Play Store publishing guide.
 
 Feature guides
 - STORE_ECOMMERCE.md – Coop Store & E-Commerce (member catalog, cart, Murabaha financing, and admin order management).

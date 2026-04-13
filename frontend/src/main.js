@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import './style.css'
 
 /**
@@ -59,7 +60,7 @@ import router from './router/index.js'
 import VueApexCharts from 'vue3-apexcharts'
 
 // Simple global idle timer: logs out after X ms of no activity (configurable via VITE_IDLE_TIMEOUT_MS)
-function setupIdleLogout(router, timeoutMs = 120000) {
+function setupIdleLogout(router, timeoutMs = 600000) {
   let timerId = null
   const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll']
   const LAST_ACTIVITY_KEY = 'last_activity_ts'
@@ -171,6 +172,7 @@ function setupIdleLogout(router, timeoutMs = 120000) {
 import { useModal } from './composables/useModal'
 
 const app = createApp(App)
+app.use(createPinia())
 app.use(router)
 app.use(VueApexCharts)
 
@@ -191,8 +193,8 @@ try {
 
 // Start idle logout after router is ready
 router.isReady().then(async () => {
-  const envMs = Number(import.meta?.env?.VITE_IDLE_TIMEOUT_MS ?? 120000)
-  const idleMs = isNaN(envMs) ? 120000 : envMs
+  const envMs = Number(import.meta?.env?.VITE_IDLE_TIMEOUT_MS ?? 600000)
+  const idleMs = isNaN(envMs) ? 600000 : envMs
   setupIdleLogout(router, idleMs)
 
   // Push notification startup is handled sequentially in App.vue to avoid overlapping system dialogs and race conditions.

@@ -590,6 +590,7 @@ const uploaded = ref({
   id_card_path: '',
   proof_of_address_path: '',
   guarantor_signature_path: '',
+  imam_signature_path: '',
   spouse_father_consent_signature_path: '',
 })
 
@@ -633,6 +634,7 @@ onMounted(async () => {
         id_card_path: app.id_card_path || '',
         proof_of_address_path: app.proof_of_address_path || '',
         guarantor_signature_path: app.guarantor_signature_path || '',
+        imam_signature_path: app.imam_signature_path || '',
         spouse_father_consent_signature_path: app.spouse_father_consent_signature_path || ''
       }
       // Determine next step: 3 if all docs present, else 2
@@ -683,6 +685,7 @@ async function handleStart() {
         id_card_path: app.id_card_path || '',
         proof_of_address_path: app.proof_of_address_path || '',
         guarantor_signature_path: app.guarantor_signature_path || '',
+        imam_signature_path: app.imam_signature_path || '',
         spouse_father_consent_signature_path: app.spouse_father_consent_signature_path || ''
       }
       const docsComplete = !!(uploaded.value.passport_path && uploaded.value.id_card_path && uploaded.value.proof_of_address_path)

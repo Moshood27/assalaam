@@ -111,6 +111,43 @@
         </div>
         <p class="text-[12px] text-slate-500">Export your transaction history for the last 6 months. Ideal for proof of funds and business records.</p>
       </section>
+
+      <!-- Islamic & Sharia Reports -->
+      <section class="card card-elevated p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="section-title">Islamic Finance Reports</h2>
+          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Sharia Compliance</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <a :href="getReportUrl('download-zakat-report')" target="_blank" class="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl flex flex-col items-center gap-2 hover:bg-emerald-100 transition-all">
+            <span class="text-xl">🕌</span>
+            <span class="text-xs font-bold text-emerald-800">My Zakat Report</span>
+          </a>
+          <a :href="getReportUrl('download-takaful-report')" target="_blank" class="p-3 bg-cyan-50 border border-cyan-100 rounded-2xl flex flex-col items-center gap-2 hover:bg-cyan-100 transition-all">
+            <span class="text-xl">🛡️</span>
+            <span class="text-xs font-bold text-cyan-800">Takaful Pool Health</span>
+          </a>
+          <a :href="getReportUrl('download-gold-report')" target="_blank" class="p-3 bg-amber-50 border border-amber-100 rounded-2xl flex flex-col items-center gap-2 hover:bg-amber-100 transition-all">
+            <span class="text-xl">🪙</span>
+            <span class="text-xs font-bold text-amber-800">Gold Valuation</span>
+          </a>
+          <a :href="getReportUrl(`download-sharia-audit/${divYear}`)" target="_blank" class="p-3 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-2 hover:bg-slate-100 transition-all">
+            <span class="text-xl">⚖️</span>
+            <span class="text-xs font-bold text-slate-800">Sharia Audit</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Detailed Savings Ledger -->
+      <section class="card card-elevated p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="section-title">Detailed Ledger</h2>
+          <a :href="getLedgerUrl()" target="_blank" class="btn-primary text-xs px-3 py-1.5 rounded-full flex items-center gap-1">
+            Download Ledger
+          </a>
+        </div>
+        <p class="text-[12px] text-slate-500">Get a comprehensive, itemized history of your savings, shares, and gold contributions across all schemes.</p>
+      </section>
     </div>
 
     <nav class="bottom-nav">
@@ -213,6 +250,19 @@ const getStatementUrl = (format) => {
   const token = localStorage.getItem('token')
   const baseUrl = axios.defaults.baseURL || ''
   return `${baseUrl}/api/download-statement?format=${format}&token=${encodeURIComponent(token)}`
+}
+
+const getReportUrl = (endpoint) => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/${endpoint}?token=${encodeURIComponent(token)}`
+}
+
+const getLedgerUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  // No need for userId, backend defaults to auth user
+  return `${baseUrl}/api/download-savings-ledger?token=${encodeURIComponent(token)}`
 }
 
 onMounted(() => { loadMix(); loadDividend() })

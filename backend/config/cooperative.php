@@ -27,7 +27,6 @@ return [
     ],
     'attendance' => [
         'default_fine' => env('COOP_ATTENDANCE_FINE', 500),
-        'default_apology_fee' => env('COOP_ATTENDANCE_APOLOGY_FEE', 500),
         'radius_meters' => env('COOP_ATTENDANCE_RADIUS', 50),
     ],
     'wallet' => [
@@ -39,5 +38,20 @@ return [
     'admin_charges' => [
         'amount' => env('COOP_ADMIN_CHARGE', 300),
     ],
+    'appropriation' => [
+        'ratios' => [
+            ['name' => 'Statutory Reserve', 'percent' => 25],
+            ['name' => 'Education Fund', 'percent' => 2.5],
+            ['name' => 'Dividend to Members', 'percent' => 50],
+            ['name' => 'Honorarium to Officers', 'percent' => 10],
+        ],
+    ],
     'timezone' => env('COOP_TIMEZONE', 'Africa/Lagos'),
+    'mobile_min_version' => env('MOBILE_MIN_VERSION', '1.0.0'),
+    'mobile_current_version' => env('MOBILE_CURRENT_VERSION', '1.0.0'),
+    'maintenance_mode' => env('MAINTENANCE_MODE', false),
+    'maintenance_message' => env('MAINTENANCE_MESSAGE', 'We are currently performing scheduled maintenance to improve our services. We\'ll be back shortly.'),
+    'maintenance_until' => env('MAINTENANCE_UNTIL', 'Approximately 1 hour'),
+    'system_announcement' => env('SYSTEM_ANNOUNCEMENT', null),
+    'play_store_url' => env('PLAY_STORE_URL', 'https://play.google.com/store/apps/details?id=com.attaqwa.app'),
 ];

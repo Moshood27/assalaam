@@ -5,6 +5,8 @@ namespace App\Filament\Pages;
 use App\Services\AccountingReportService;
 use Filament\Pages\Page;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Filament\Actions\Action;
+use Illuminate\Http\Response;
 
 class AppropriationAccount extends Page
 {
@@ -14,6 +16,20 @@ class AppropriationAccount extends Page
     protected static ?int $navigationSort = 13;
 
     protected static string $view = 'filament.pages.appropriation-account';
+
+    public function getHeaderActions(): array
+    {
+        return [
+            Action::make('downloadPdf')
+                ->label('Download PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('amber')
+                ->url(fn () => route('download-appropriation', [
+                    'year' => (int)date('Y', strtotime($this->to)),
+                    'token' => auth()->user()->createToken('FilamentReport', ['*'], now()->addMinutes(5))->plainTextToken
+                ])),
+        ];
+    }
 
     public function getSubheading(): ?string
     {
