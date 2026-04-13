@@ -154,20 +154,12 @@ class ZakatResource extends Resource
                         TextEntry::make('balance')
                             ->label('Wallet Balance')
                             ->money('ngn'),
-                        TextEntry::make('savings_balance')
+                        TextEntry::make('ordinary_savings')
                             ->label('Savings Balance')
-                            ->money('ngn')
-                            ->getStateUsing(function (User $record) {
-                                $scheme = Scheme::where('name', 'Savings')->first();
-                                return (float) $record->contributions()->where('status', 'success')->where('scheme_id', $scheme?->id)->sum('amount');
-                            }),
-                        TextEntry::make('shares_balance')
+                            ->money('ngn'),
+                        TextEntry::make('shares_capital')
                             ->label('Shares Balance')
-                            ->money('ngn')
-                            ->getStateUsing(function (User $record) {
-                                $scheme = Scheme::where('name', 'Shares')->first();
-                                return (float) $record->contributions()->where('status', 'success')->where('scheme_id', $scheme?->id)->sum('amount');
-                            }),
+                            ->money('ngn'),
                         TextEntry::make('gold_value')
                             ->label('Digital Gold Value')
                             ->money('ngn')

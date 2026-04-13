@@ -189,7 +189,7 @@ class AccountingReportService
 
         // Total Member Savings & Shares (Current Liabilities)
         $memberStats = User::query()
-            ->selectRaw('SUM(savings_balance) as total_savings, SUM(shares_balance) as total_shares, SUM(gold_balance) as total_gold')
+            ->selectRaw('SUM(ordinary_savings) as total_savings, SUM(shares_capital) as total_shares, SUM(gold_balance) as total_gold')
             ->first();
 
         $post('Member Savings Payable', 0, (float) $memberStats->total_savings);
@@ -652,8 +652,8 @@ class AccountingReportService
         return [
             'member_name' => $user->name,
             'membership_number' => $user->membership_number,
-            'current_savings' => (float)$user->savings_balance,
-            'current_shares' => (float)$user->shares_balance,
+            'current_savings' => (float)$user->ordinary_savings,
+            'current_shares' => (float)$user->shares_capital,
             'current_gold' => (float)$user->gold_balance,
             'total_takaful_paid' => (float)$takafulEntries->sum('amount'),
             'history' => $history,
