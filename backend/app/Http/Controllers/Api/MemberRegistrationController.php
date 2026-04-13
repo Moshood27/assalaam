@@ -22,12 +22,53 @@ class MemberRegistrationController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'surname' => ['required', 'string', 'max:255'],
+            'other_names' => ['required', 'string', 'max:255'],
+            'gender' => ['required', 'string', 'in:male,female'],
+            'native_place' => ['nullable', 'string', 'max:255'],
+            'dob' => ['required', 'date'],
+            'marital_status' => ['required', 'string', 'in:single,married,divorced,widow'],
+            'occupation' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email:rfc,dns', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['required', 'string', 'max:30'],
+            'secondary_phone' => ['nullable', 'string', 'max:30'],
             'address' => ['required', 'string', 'max:1000'],
+            'residential_address' => ['required', 'string', 'max:1000'],
+            'permanent_address' => ['required', 'string', 'max:1000'],
             'branch_id' => ['required', 'exists:branches,id'],
             'password' => ['required', 'string', 'min:6'],
             'confirm_password' => ['required', 'same:password'],
+
+            // Business & Professional Information
+            'nature_of_business' => ['required', 'string', 'max:255'],
+            'business_address' => ['required', 'string', 'max:1000'],
+            'has_other_cooperatives' => ['required', 'boolean'],
+            'other_cooperative_details' => ['nullable', 'string', 'max:1000'],
+
+            // Next of Kin
+            'nok_name' => ['required', 'string', 'max:255'],
+            'nok_address' => ['required', 'string', 'max:1000'],
+            'nok_phone' => ['required', 'string', 'max:30'],
+            'nok_relationship' => ['required', 'string', 'max:100'],
+
+            // Guarantor Details
+            'guarantor_name' => ['required', 'string', 'max:255'],
+            'guarantor_address' => ['required', 'string', 'max:1000'],
+            'guarantor_phone' => ['required', 'string', 'max:30'],
+            'guarantor_occupation' => ['required', 'string', 'max:255'],
+
+            // Religious Information & Imam's Attestation
+            'religious_society_name' => ['required', 'string', 'max:255'],
+            'imam_name' => ['required', 'string', 'max:255'],
+            'mosque_address' => ['required', 'string', 'max:1000'],
+            'imam_phone' => ['required', 'string', 'max:30'],
+            'duration_of_jamma_membership' => ['required', 'string', 'max:100'],
+
+            // Information for Female Members
+            'spouse_father_name' => ['nullable', 'string', 'max:255'],
+            'spouse_father_address' => ['nullable', 'string', 'max:1000'],
+            'spouse_father_business_address' => ['nullable', 'string', 'max:1000'],
+            'spouse_father_phone' => ['nullable', 'string', 'max:30'],
         ]);
 
         // If there's an existing non-finalized application for this email, reuse it
@@ -38,14 +79,10 @@ class MemberRegistrationController extends Controller
 
         if ($existing) {
             // Update details to latest submission
-            $existing->fill([
-                'name' => $data['name'],
-                'phone' => $data['phone'],
-                'address' => $data['address'],
-                'branch_id' => $data['branch_id'],
+            $existing->fill(array_merge($data, [
                 'password_hash' => Crypt::encryptString($data['password']), // store encrypted; will hash once on User model
                 'submitted_at' => now(),
-            ]);
+            ]));
             $existing->save();
 
             return response()->json([
@@ -57,16 +94,11 @@ class MemberRegistrationController extends Controller
         // Create a short token the frontend will keep to continue the process
         $token = Str::uuid()->toString();
 
-        $app = MemberApplication::create([
+        $app = MemberApplication::create(array_merge($data, [
             'token' => $token,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'address' => $data['address'],
-            'branch_id' => $data['branch_id'],
             'password_hash' => Crypt::encryptString($data['password']), // store encrypted; will hash once on User model
             'submitted_at' => now(),
-        ]);
+        ]));
 
         return response()->json([
             'message' => 'Application started. Please upload required documents and complete verification.',
@@ -84,6 +116,10 @@ class MemberRegistrationController extends Controller
             'passport' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'id_card' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:7168'],
             'proof_of_address' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:7168'],
+            'guarantor_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'guarantor_signature_base64' => ['nullable', 'string'],
+            'spouse_father_consent_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'spouse_father_consent_signature_base64' => ['nullable', 'string'],
         ]);
 
         $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
@@ -114,6 +150,39 @@ class MemberRegistrationController extends Controller
             $app->proof_of_address_path = 'upload/apps/'.$app->token.'/'.$name;
             $updated['proof_of_address_path'] = $app->proof_of_address_path;
         }
+        if ($base64 = $request->input('guarantor_signature_base64')) {
+            $data = explode(',', $base64);
+            if (count($data) > 1) {
+                $content = base64_decode($data[1]);
+                $name = 'guarantor-sig-'.time().'.png';
+                file_put_contents($baseDir.'/'.$name, $content);
+                $app->guarantor_signature_path = 'upload/apps/'.$app->token.'/'.$name;
+                $updated['guarantor_signature_path'] = $app->guarantor_signature_path;
+            }
+        } elseif ($file = $request->file('guarantor_signature')) {
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+            $name = 'guarantor-sig-'.time().'.'.$ext;
+            $file->move($baseDir, $name);
+            $app->guarantor_signature_path = 'upload/apps/'.$app->token.'/'.$name;
+            $updated['guarantor_signature_path'] = $app->guarantor_signature_path;
+        }
+
+        if ($base64 = $request->input('spouse_father_consent_signature_base64')) {
+            $data = explode(',', $base64);
+            if (count($data) > 1) {
+                $content = base64_decode($data[1]);
+                $name = 'spouse-father-sig-'.time().'.png';
+                file_put_contents($baseDir.'/'.$name, $content);
+                $app->spouse_father_consent_signature_path = 'upload/apps/'.$app->token.'/'.$name;
+                $updated['spouse_father_consent_signature_path'] = $app->spouse_father_consent_signature_path;
+            }
+        } elseif ($file = $request->file('spouse_father_consent_signature')) {
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+            $name = 'spouse-father-sig-'.time().'.'.$ext;
+            $file->move($baseDir, $name);
+            $app->spouse_father_consent_signature_path = 'upload/apps/'.$app->token.'/'.$name;
+            $updated['spouse_father_consent_signature_path'] = $app->spouse_father_consent_signature_path;
+        }
 
         $app->save();
 
@@ -123,6 +192,8 @@ class MemberRegistrationController extends Controller
                 'passport_path' => $app->passport_path,
                 'id_card_path' => $app->id_card_path,
                 'proof_of_address_path' => $app->proof_of_address_path,
+                'guarantor_signature_path' => $app->guarantor_signature_path,
+                'spouse_father_consent_signature_path' => $app->spouse_father_consent_signature_path,
             ],
         ]);
     }

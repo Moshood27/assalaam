@@ -73,7 +73,13 @@
             if (!this.searchQuery) return;
             this.isSearching = true;
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}`);
+                // Using Nominatim with country preference for Nigeria (NG)
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}&countrycodes=ng&limit=1`;
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Attaqwa-Cooperative-Admin-Map-Picker'
+                    }
+                });
                 const data = await response.json();
                 if (data && data.length > 0) {
                     const result = data[0];
@@ -83,11 +89,11 @@
                     this.map.setView([this.lat, this.lng], 15);
                     this.searchQuery = result.display_name;
                 } else {
-                    alert('Location not found');
+                    alert('Location not found for: ' + this.searchQuery + '. Please try a more specific search (e.g. Street, Town).');
                 }
             } catch (error) {
                 console.error('Search error:', error);
-                alert('An error occurred while searching');
+                alert('An error occurred while searching. Please check your internet connection.');
             } finally {
                 this.isSearching = false;
             }
@@ -121,11 +127,16 @@
             x-on:click="
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(pos => {
-                        lat = pos.coords.latitude;
-                        lng = pos.coords.longitude;
-                        updateFromInputs();
-                        map.setView([lat, lng], 15);
-                    });
+                        this.lat = pos.coords.latitude;
+                        this.lng = pos.coords.longitude;
+                        this.updateFromInputs();
+                        this.map.setView([this.lat, this.lng], 15);
+                    }, (err) => {
+                        console.error('Geolocation error:', err);
+                        alert('Unable to retrieve your location: ' + (err.message || 'Permission denied'));
+                    }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+                } else {
+                    alert('Geolocation is not supported by your browser.');
                 }
             "
             title="Get Current Location"

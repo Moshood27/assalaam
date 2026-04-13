@@ -44,6 +44,10 @@
         <!-- Step 1: Details -->
         <div v-if="step === 1" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="sm:col-span-2">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">1. Basic Personal Information</h3>
+          </div>
+
+          <div class="sm:col-span-2">
             <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Your Branch</label>
             <SearchableSelect v-model="form.branch_id" :items="branches" placeholder="Select your branch" searchPlaceholder="Search branches…" />
           </div>
@@ -56,8 +60,61 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </span>
-              <input v-model="form.name" type="text" placeholder="Jane Doe" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+              <input v-model="form.name" type="text" placeholder="First Name" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
             </div>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Surname (Last Name)</label>
+            <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+              <input v-model="form.surname" type="text" placeholder="Surname" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+            </div>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Other Names</label>
+            <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+              <input v-model="form.other_names" type="text" placeholder="Middle Names" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+            </div>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Gender</label>
+            <select v-model="form.gender" class="input h-14 font-semibold bg-slate-50/50 border-slate-200/60">
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Native (State/Town)</label>
+            <input v-model="form.native_place" type="text" placeholder="State or Town of Origin" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Date of Birth</label>
+            <input v-model="form.dob" type="date" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Marital Status</label>
+            <select v-model="form.marital_status" class="input h-14 font-semibold bg-slate-50/50 border-slate-200/60">
+              <option value="">Select Status</option>
+              <option value="single">Single</option>
+              <option value="married">Married</option>
+              <option value="divorced">Divorced</option>
+              <option value="widow">Widow</option>
+            </select>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Occupation</label>
+            <input v-model="form.occupation" type="text" placeholder="Your Job" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="sm:col-span-2 mt-4">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">2. Contact Information</h3>
           </div>
 
           <div class="relative group">
@@ -73,7 +130,7 @@
           </div>
 
           <div class="relative group">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Phone Number</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Primary Phone</label>
             <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -85,16 +142,146 @@
           </div>
 
           <div class="relative group">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Home Address</label>
-            <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </span>
-              <input v-model="form.address" type="text" placeholder="House/Street/City" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Secondary Phone</label>
+            <input v-model="form.secondary_phone" type="tel" placeholder="Optional" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Residential Address</label>
+            <textarea v-model="form.residential_address" placeholder="Current living address" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Permanent Home Address</label>
+            <textarea v-model="form.permanent_address" placeholder="Hometown address" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+            <input v-model="form.address" type="hidden" />
+          </div>
+
+          <div class="sm:col-span-2 mt-4">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">3. Business & Professional Information</h3>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Nature of Business</label>
+            <input v-model="form.nature_of_business" type="text" placeholder="Type of trade or profession" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Business Address</label>
+            <input v-model="form.business_address" type="text" placeholder="Office/Shop address" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="sm:col-span-2 flex items-center gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/60">
+            <input v-model="form.has_other_cooperatives" type="checkbox" id="has_coop" class="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+            <label for="has_coop" class="text-xs font-bold text-slate-600 uppercase tracking-wider">Other Cooperative Affiliations?</label>
+          </div>
+
+          <div v-if="form.has_other_cooperatives" class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Other Cooperative Details</label>
+            <textarea v-model="form.other_cooperative_details" placeholder="Specify names and details" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+          </div>
+
+          <div class="sm:col-span-2 mt-4">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">4. Next of Kin</h3>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Next of Kin Name</label>
+            <input v-model="form.nok_name" type="text" placeholder="Full Name" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Relationship</label>
+            <input v-model="form.nok_relationship" type="text" placeholder="e.g. Spouse, Brother" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Next of Kin Phone</label>
+            <input v-model="form.nok_phone" type="tel" placeholder="080..." class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Next of Kin Address</label>
+            <textarea v-model="form.nok_address" placeholder="Residential address of Next of Kin" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+          </div>
+
+          <div class="sm:col-span-2 mt-4">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">5. Guarantor Details</h3>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Guarantor Name</label>
+            <input v-model="form.guarantor_name" type="text" placeholder="Full Name" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Guarantor Phone</label>
+            <input v-model="form.guarantor_phone" type="tel" placeholder="080..." class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Guarantor Occupation</label>
+            <input v-model="form.guarantor_occupation" type="text" placeholder="Profession" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Guarantor Address</label>
+            <textarea v-model="form.guarantor_address" placeholder="Guarantor's home/office address" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+          </div>
+
+          <div class="sm:col-span-2 mt-4">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">6. Religious Information</h3>
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Religious Society Name</label>
+            <input v-model="form.religious_society_name" type="text" placeholder="Group within CICN" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Imam/Amir Name</label>
+            <input v-model="form.imam_name" type="text" placeholder="Name" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Imam/Amir Phone</label>
+            <input v-model="form.imam_phone" type="tel" placeholder="080..." class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="relative group">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Duration of Jamma Membership</label>
+            <input v-model="form.duration_of_jamma_membership" type="text" placeholder="e.g. 5 years" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Mosque Address</label>
+            <textarea v-model="form.mosque_address" placeholder="Address of the mosque group" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+          </div>
+
+          <div v-if="form.gender === 'female'" class="sm:col-span-2 mt-4 animate-in fade-in slide-in-from-top-4 duration-500">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">7. Wali/Spouse Details</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div class="relative group">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Father/Spouse Name</label>
+                <input v-model="form.spouse_father_name" type="text" placeholder="Full Name" class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+              </div>
+              <div class="relative group">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Father/Spouse Phone</label>
+                <input v-model="form.spouse_father_phone" type="tel" placeholder="080..." class="input px-6 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Residential Address</label>
+                <textarea v-model="form.spouse_father_address" placeholder="Residential address" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Business Address</label>
+                <textarea v-model="form.spouse_father_business_address" placeholder="Business address" class="input p-4 h-24 font-semibold bg-slate-50/50 border-slate-200/60"></textarea>
+              </div>
             </div>
+          </div>
+
+          <div class="sm:col-span-2 mt-4">
+            <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2">8. Security</h3>
           </div>
 
           <div class="relative group">
@@ -124,7 +311,7 @@
           <div class="sm:col-span-2 flex flex-col sm:flex-row gap-4 pt-4">
             <button @click="handleStart" :disabled="loadingStart" class="flex-1 h-14 text-lg rounded-2xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] disabled:opacity-50">
               <span v-if="loadingStart" class="inline-block animate-spin border-3 border-white/30 border-t-white rounded-full w-6 h-6 mr-2 align-middle"></span>
-              <span>{{ loadingStart ? 'Submitting…' : 'Get Started' }}</span>
+              <span>{{ loadingStart ? 'Submitting…' : 'Next: Upload Documents' }}</span>
             </button>
             <button @click="goLogin" type="button" class="h-14 px-8 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold transition-all">Back to Login</button>
           </div>
@@ -135,7 +322,7 @@
         <div v-if="step === 2" class="space-y-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div class="space-y-2">
-              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Passport Photo</label>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Profile Passport Photo</label>
               <div class="relative group">
                 <input @change="e => files.passport = e.target.files?.[0] || null" type="file" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all border border-slate-200/60 rounded-2xl bg-slate-50/30 p-2" />
                 <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">JPEG/PNG up to 5MB.</p>
@@ -148,12 +335,26 @@
                 <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">NIN/Passport/DL (Max 7MB)</p>
               </div>
             </div>
-            <div class="sm:col-span-2 space-y-2">
+            <div class="space-y-2">
               <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Proof of Address</label>
               <div class="relative group">
                 <input @change="e => files.proof_of_address = e.target.files?.[0] || null" type="file" accept="image/*,application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all border border-slate-200/60 rounded-2xl bg-slate-50/30 p-2" />
                 <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">Utility bill or Letter (Max 7MB)</p>
               </div>
+            </div>
+            <div class="space-y-2">
+              <SignaturePad 
+                v-model="signatures.guarantor"
+                label="Guarantor Signature"
+                hint="Sign inside the box above"
+              />
+            </div>
+            <div v-if="form.gender === 'female'" class="sm:col-span-2 space-y-2 animate-in fade-in slide-in-from-top-4 duration-500">
+              <SignaturePad 
+                v-model="signatures.spouse_father"
+                label="Father/Spouse Consent Signature"
+                hint="Required for female members"
+              />
             </div>
           </div>
 
@@ -165,7 +366,7 @@
             <button @click="() => step = 1" type="button" class="h-14 px-8 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold transition-all">Back</button>
           </div>
           <p v-if="errorUpload" class="text-center p-3 bg-rose-50 rounded-xl text-rose-600 text-sm font-medium">{{ errorUpload }}</p>
-          <div v-if="uploaded.passport_path || uploaded.id_card_path || uploaded.proof_of_address_path" class="text-center text-xs text-emerald-700 font-bold bg-emerald-50 p-2 rounded-lg">All documents uploaded successfully ✓</div>
+          <div v-if="uploaded.passport_path && uploaded.id_card_path && uploaded.proof_of_address_path" class="text-center text-xs text-emerald-700 font-bold bg-emerald-50 p-2 rounded-lg">Required documents uploaded successfully ✓</div>
         </div>
 
         <!-- Step 3: Verify -->
@@ -291,6 +492,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import axios from '../http.js'
 import SearchableSelect from '../components/SearchableSelect.vue'
+import SignaturePad from '../components/SignaturePad.vue'
 import SupportContacts from '../components/SupportContacts.vue'
 import brand from '../brand'
 import { useRouter } from 'vue-router'
@@ -318,15 +520,70 @@ const errorSendOtps = ref('')
 const form = ref({
   branch_id: '',
   name: '',
+  surname: '',
+  other_names: '',
+  gender: '',
+  native_place: '',
+  dob: '',
+  marital_status: '',
+  occupation: '',
   email: '',
   phone: '',
+  secondary_phone: '',
   address: '',
+  residential_address: '',
+  permanent_address: '',
   password: '',
   confirm_password: '',
+
+  // Business & Professional Information
+  nature_of_business: '',
+  business_address: '',
+  has_other_cooperatives: false,
+  other_cooperative_details: '',
+
+  // Next of Kin
+  nok_name: '',
+  nok_address: '',
+  nok_phone: '',
+  nok_relationship: '',
+
+  // Guarantor Details
+  guarantor_name: '',
+  guarantor_address: '',
+  guarantor_phone: '',
+  guarantor_occupation: '',
+
+  // Religious Information & Imam's Attestation
+  religious_society_name: '',
+  imam_name: '',
+  mosque_address: '',
+  imam_phone: '',
+  duration_of_jamma_membership: '',
+
+  // Information for Female Members
+  spouse_father_name: '',
+  spouse_father_address: '',
+  spouse_father_business_address: '',
+  spouse_father_phone: '',
 })
 
-const files = ref({ passport: null, id_card: null, proof_of_address: null })
-const uploaded = ref({ passport_path: '', id_card_path: '', proof_of_address_path: '' })
+const files = ref({
+  passport: null,
+  id_card: null,
+  proof_of_address: null,
+})
+const signatures = ref({
+  guarantor: '',
+  spouse_father: ''
+})
+const uploaded = ref({
+  passport_path: '',
+  id_card_path: '',
+  proof_of_address_path: '',
+  guarantor_signature_path: '',
+  spouse_father_consent_signature_path: '',
+})
 
 const emailCode = ref('')
 const smsCode = ref('')
@@ -366,7 +623,9 @@ onMounted(async () => {
       uploaded.value = {
         passport_path: app.passport_path || '',
         id_card_path: app.id_card_path || '',
-        proof_of_address_path: app.proof_of_address_path || ''
+        proof_of_address_path: app.proof_of_address_path || '',
+        guarantor_signature_path: app.guarantor_signature_path || '',
+        spouse_father_consent_signature_path: app.spouse_father_consent_signature_path || ''
       }
       // Determine next step: 3 if all docs present, else 2
       const docsComplete = !!(uploaded.value.passport_path && uploaded.value.id_card_path && uploaded.value.proof_of_address_path)
@@ -396,6 +655,12 @@ function goLogin() { router.push({ name: 'login' }) }
 async function handleStart() {
   loadingStart.value = true
   errorStart.value = ''
+  
+  // Sync residential_address to address if needed
+  if (!form.value.address && form.value.residential_address) {
+    form.value.address = form.value.residential_address
+  }
+
   try {
     const { data } = await axios.post('/api/register/start', form.value)
     token.value = data.token
@@ -408,7 +673,9 @@ async function handleStart() {
       uploaded.value = {
         passport_path: app.passport_path || '',
         id_card_path: app.id_card_path || '',
-        proof_of_address_path: app.proof_of_address_path || ''
+        proof_of_address_path: app.proof_of_address_path || '',
+        guarantor_signature_path: app.guarantor_signature_path || '',
+        spouse_father_consent_signature_path: app.spouse_father_consent_signature_path || ''
       }
       const docsComplete = !!(uploaded.value.passport_path && uploaded.value.id_card_path && uploaded.value.proof_of_address_path)
       step.value = docsComplete ? 3 : 2
@@ -445,6 +712,8 @@ async function handleUpload() {
     fd.append('passport', files.value.passport)
     fd.append('id_card', files.value.id_card)
     fd.append('proof_of_address', files.value.proof_of_address)
+    if (signatures.value.guarantor) fd.append('guarantor_signature_base64', signatures.value.guarantor)
+    if (signatures.value.spouse_father) fd.append('spouse_father_consent_signature_base64', signatures.value.spouse_father)
     const { data } = await axios.post('/api/register/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
     uploaded.value = data.application || {}
     await handleSendOtps()
