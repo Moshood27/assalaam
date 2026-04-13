@@ -34,26 +34,36 @@
           </div>
 
           <div class="relative group">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Membership Number</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Membership Number / Phone Number</label>
             <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                 </svg>
               </span>
-              <input v-model="form.membership_number" type="text" placeholder="e.g. 052286" class="input pl-12 h-14 text-lg font-semibold bg-slate-50/50 border-slate-200/60" />
+              <input v-model="form.membership_number" type="text" placeholder="e.g. 052286 or 08012345678" class="input pl-12 h-14 text-lg font-semibold bg-slate-50/50 border-slate-200/60" />
             </div>
           </div>
 
           <div class="relative group">
-            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Phone Number</label>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Secure Password</label>
             <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </span>
-              <input v-model="form.phone" type="tel" placeholder="e.g. 08012345678" class="input pl-12 h-14 text-lg font-semibold bg-slate-50/50 border-slate-200/60" />
+              <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" class="input pl-12 pr-14 h-14 text-lg font-semibold bg-slate-50/50 border-slate-200/60" />
+              <button @click="showPassword = !showPassword" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors p-1" aria-label="Toggle password visibility">
+                <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.076m3.313-3.313A9.959 9.959 0 0112 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-1.447 0-2.811-.31-4.04-.864m1.107-1.107l1.107-1.107m2.774-2.774l.553-.553m2.21-2.21l.553-.553" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -94,6 +104,15 @@
       </div>
 
       <div class="mt-8 text-center text-sm text-slate-500 space-y-3 font-medium relative">
+        <p>
+          <router-link to="/forgot" class="text-emerald-700 font-bold hover:text-emerald-800 flex items-center justify-center gap-1">
+            <span>Forgot password?</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </router-link>
+        </p>
+        <div class="w-12 h-px bg-slate-200 mx-auto"></div>
         <p>New to the Cooperative?
           <router-link to="/register" class="text-emerald-700 font-bold hover:text-emerald-800 ml-1">Create membership</router-link>
         </p>
@@ -155,8 +174,7 @@ const quickLoading = ref(false)
 const form = ref({
   branch_id: '',
   membership_number: '',
-  phone: '',
-  password: '123'
+  password: ''
 })
 
 onMounted(async () => {
@@ -222,7 +240,6 @@ const handleLogin = async () => {
         await storeBiometricCredentials({
           membership_number: form.value.membership_number,
           branch_id: form.value.branch_id,
-          phone: form.value.phone,
           password: form.value.password,
         })
       } catch (_) {}

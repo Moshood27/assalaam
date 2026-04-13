@@ -69,7 +69,7 @@
                   <div class="w-full border-t border-slate-100"></div>
                 </div>
                 <div class="relative flex justify-center text-xs uppercase font-black tracking-widest text-slate-300">
-                  <span class="bg-white px-3">or identify via branch</span>
+                  <span class="bg-white px-3">or identify via branch & membership</span>
                 </div>
               </div>
 
@@ -84,14 +84,14 @@
                   />
                 </div>
                 <div class="relative group">
-                  <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Membership Number</label>
+                  <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Membership Number / Phone Number</label>
                   <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                       </svg>
                     </span>
-                    <input v-model="requestForm.membership_number" type="text" placeholder="e.g. 052286" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+                    <input v-model="requestForm.membership_number" type="text" placeholder="e.g. 052286 or 08012345678" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
                   </div>
                 </div>
               </div>

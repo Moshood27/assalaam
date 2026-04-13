@@ -54,7 +54,11 @@ class AttendanceController extends Controller
         }
 
         if (!$meeting) {
-            return response()->json(['message' => 'No active or upcoming meeting found'], 404);
+            return response()->json([
+                'meeting' => null,
+                'attendance_record' => null,
+                'message' => 'No active or upcoming meeting found'
+            ]);
         }
 
         $record = $user->attendanceRecords()->where('meeting_id', $meeting->id)->first();

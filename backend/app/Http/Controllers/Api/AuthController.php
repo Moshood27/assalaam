@@ -26,27 +26,17 @@ class AuthController extends Controller
         $validated = $request->validate([
             'branch_id' => 'required|exists:branches,id',
             'membership_number' => 'required',
-            'password' => 'nullable',
-            'phone' => 'nullable',
+            'password' => 'required',
         ]);
-
-        $password = $validated['password'] ?? '123';
 
         $user = User::where('branch_id', $validated['branch_id'])
             ->where(function ($query) use ($validated) {
-                if (!empty($validated['phone'])) {
-                    $query->where('membership_number', $validated['membership_number'])
-                        ->where('phone', $validated['phone']);
-                } else {
-                    $query->where(function ($q) use ($validated) {
-                        $q->where('membership_number', $validated['membership_number'])
-                            ->orWhere('phone', $validated['membership_number']);
-                    });
-                }
+                $query->where('membership_number', $validated['membership_number'])
+                    ->orWhere('phone', $validated['membership_number']);
             })
             ->first();
 
-        if (! $user || ! Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'membership_number' => ['The credentials do not match our records for this branch.'],
             ]);
@@ -82,7 +72,10 @@ class AuthController extends Controller
             $user = User::where('phone', $data['phone'])->first();
         } elseif (!empty($data['branch_id']) && !empty($data['membership_number'])) {
             $user = User::where('branch_id', $data['branch_id'])
-                ->where('membership_number', $data['membership_number'])
+                ->where(function ($query) use ($data) {
+                    $query->where('membership_number', $data['membership_number'])
+                        ->orWhere('phone', $data['membership_number']);
+                })
                 ->first();
         }
 
@@ -171,7 +164,10 @@ class AuthController extends Controller
             $user = User::where('phone', $data['phone'])->first();
         } elseif (!empty($data['branch_id']) && !empty($data['membership_number'])) {
             $user = User::where('branch_id', $data['branch_id'])
-                ->where('membership_number', $data['membership_number'])
+                ->where(function ($query) use ($data) {
+                    $query->where('membership_number', $data['membership_number'])
+                        ->orWhere('phone', $data['membership_number']);
+                })
                 ->first();
         }
         if (!$user) {
