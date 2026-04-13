@@ -29,7 +29,7 @@ class WasiyyahController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
             'percentage' => 'required|numeric|min:0.01|max:100',
-            'asset_type' => 'nullable|string|in:all,shares,savings,takaful',
+            'asset_type' => 'nullable|string|in:all,shares,savings,takaful,passbook',
         ]);
 
         $assetType = $validated['asset_type'] ?? 'all';
@@ -64,7 +64,7 @@ class WasiyyahController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
             'percentage' => 'sometimes|required|numeric|min:0.01|max:100',
-            'asset_type' => 'nullable|string|in:all,shares,savings,takaful',
+            'asset_type' => 'nullable|string|in:all,shares,savings,takaful,passbook',
         ]);
 
         if (isset($validated['percentage']) || isset($validated['asset_type'])) {

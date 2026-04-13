@@ -128,6 +128,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/profile/email', [ProfileController::class, 'updateEmail']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::post('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences']);
+    Route::post('/profile/admin-charge-preference', [ProfileController::class, 'updateAdminChargePreference']);
     // Banks directory (dynamic list from provider)
     Route::get('/banks', [ProfileController::class, 'banks']);
     // Bank details: resolve and save (2-step with confirm flag)
@@ -160,6 +161,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/wallet/withdraw', [\App\Http\Controllers\Api\WalletController::class, 'withdraw'])->middleware('throttle:5,1');
     Route::get('/wallet/withdrawals', [\App\Http\Controllers\Api\WalletController::class, 'withdrawals']);
     Route::post('/wallet/withdrawals/{id}/cancel', [\App\Http\Controllers\Api\WalletController::class, 'cancelWithdrawal'])->middleware('throttle:5,1');
+    Route::post('/wallet/admin-charge/pay', [\App\Http\Controllers\Api\WalletController::class, 'payAdminCharge']);
 
     // Merchant Pay (QR)
     Route::get('/merchant/pay/qr', [MerchantPayController::class, 'generateQr']);
@@ -195,6 +197,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
 
     // Attendance
     Route::get('/attendance/current', [AttendanceController::class, 'current']);
+    Route::get('/attendance/history', [AttendanceController::class, 'history']);
     Route::post('/meetings/{meeting}/mark-attendance', [AttendanceController::class, 'markAttendance']);
     Route::post('/meetings/{meeting}/pay-apology', [AttendanceController::class, 'payApologyFee']);
 

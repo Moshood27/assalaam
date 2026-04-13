@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\WalletTransaction;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -43,9 +44,23 @@ class WalletTransactionResource extends Resource
                             ])
                             ->required(),
                         Forms\Components\TextInput::make('amount')
+                            ->label('Net Amount')
                             ->numeric()
                             ->prefix('₦')
-                            ->required(),
+                            ->required()
+                            ->helperText('The actual amount to be added to or removed from the user balance.'),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('meta.gross_amount')
+                                    ->label('Gross Amount')
+                                    ->numeric()
+                                    ->prefix('₦'),
+                                Forms\Components\TextInput::make('meta.maintenance_charge')
+                                    ->label('Maintenance Charge')
+                                    ->numeric()
+                                    ->prefix('₦'),
+                            ])
+                            ->visible(fn (Get $get) => $get('type') === 'credit'),
                         Forms\Components\TextInput::make('reference')
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
@@ -95,7 +110,18 @@ class WalletTransactionResource extends Resource
                         'success' => 'credit',
                         'danger' => 'debit',
                     ]),
-                TextColumn::make('amount')->money('ngn', true)->sortable(),
+                TextColumn::make('amount')
+                    ->label('Net Amount')
+                    ->money('ngn', true)
+                    ->sortable(),
+                TextColumn::make('meta.gross_amount')
+                    ->label('Gross')
+                    ->money('ngn', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('meta.maintenance_charge')
+                    ->label('Fee')
+                    ->money('ngn', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('reference')->searchable(),
                 TextColumn::make('source')->searchable(),
                 IconColumn::make('withdrawable')->boolean()->toggleable(isToggledHiddenByDefault: true),

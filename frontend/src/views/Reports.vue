@@ -61,7 +61,7 @@
         <div v-else-if="divError" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ divError }}</div>
         <div v-else class="space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] text-slate-500 uppercase font-black tracking-widest">Total Savings ({{ divYear }})</span>
+            <span class="text-[11px] text-slate-500 uppercase font-black tracking-widest">Passbook Savings ({{ divYear }})</span>
             <span class="font-black text-slate-900">₦ {{ money(divData.total_savings) }}</span>
           </div>
           <div class="flex items-center justify-between">

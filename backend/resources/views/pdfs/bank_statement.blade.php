@@ -65,13 +65,18 @@
                     $currentBalance += ($isCredit ? $amt : -$amt);
 
                     $desc = ucwords(str_replace('_', ' ', (string)$tx->source));
+                    $meta = is_array($tx->meta) ? $tx->meta : json_decode((string)$tx->meta, true);
+
                     if ($tx->source === 'p2p_transfer') {
-                        $meta = $tx->meta;
                         if ($isCredit && isset($meta['from_name'])) {
                             $desc .= " from " . $meta['from_name'];
                         } elseif (!$isCredit && isset($meta['to_name'])) {
                             $desc .= " to " . $meta['to_name'];
                         }
+                    }
+
+                    if (!empty($meta['maintenance_charge'])) {
+                        $desc .= " (Net of ₦" . number_format((float)$meta['maintenance_charge'], 2) . " fee)";
                     }
                 @endphp
                 <tr>

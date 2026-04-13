@@ -26,14 +26,27 @@ class AuthController extends Controller
         $validated = $request->validate([
             'branch_id' => 'required|exists:branches,id',
             'membership_number' => 'required',
-            'password' => 'required',
+            'password' => 'nullable',
+            'phone' => 'nullable',
         ]);
 
-        $user = User::where('membership_number', $validated['membership_number'])
-            ->where('branch_id', $validated['branch_id'])
+        $password = $validated['password'] ?? '123';
+
+        $user = User::where('branch_id', $validated['branch_id'])
+            ->where(function ($query) use ($validated) {
+                if (!empty($validated['phone'])) {
+                    $query->where('membership_number', $validated['membership_number'])
+                        ->where('phone', $validated['phone']);
+                } else {
+                    $query->where(function ($q) use ($validated) {
+                        $q->where('membership_number', $validated['membership_number'])
+                            ->orWhere('phone', $validated['membership_number']);
+                    });
+                }
+            })
             ->first();
 
-        if (! $user || ! Hash::check($validated['password'], $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'membership_number' => ['The credentials do not match our records for this branch.'],
             ]);

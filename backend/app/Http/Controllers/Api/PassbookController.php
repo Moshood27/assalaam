@@ -49,14 +49,39 @@ class PassbookController extends Controller
                 }
             }
 
+            $row['total'] += $row['bf']; // Include BF in total
+
             return $row;
         });
+
+        // Combine Savings and Shares into "Passbook" for the member-facing view
+        $savingsRowIdx = $matrix->search(fn($r) => $r['scheme_name'] === 'Savings');
+        $sharesRowIdx = $matrix->search(fn($r) => $r['scheme_name'] === 'Shares');
+
+        if ($savingsRowIdx !== false && $sharesRowIdx !== false) {
+            $savings = $matrix[$savingsRowIdx];
+            $shares = $matrix[$sharesRowIdx];
+
+            $passbookRow = [
+                'scheme_name' => 'Passbook (Savings + Shares)',
+                'bf' => $savings['bf'] + $shares['bf'],
+                'months' => array_fill(1, 12, 0),
+                'total' => $savings['total'] + $shares['total'],
+            ];
+            for ($m = 1; $m <= 12; $m++) {
+                $passbookRow['months'][$m] = $savings['months'][$m] + $shares['months'][$m];
+            }
+
+            // Remove originals and add combined at the top
+            $matrix->forget($savingsRowIdx);
+            $matrix->forget($sharesRowIdx);
+            $matrix = collect([$passbookRow])->concat($matrix->values());
+        }
 
         return response()->json([
             'year' => $year,
             'matrix' => $matrix,
             'grand_total' => $matrix->sum('total'),
-            'bf_total' => $matrix->sum('bf'),
         ]);
     }
 }

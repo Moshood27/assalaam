@@ -27,6 +27,8 @@ class Meeting extends Model
         'status',
     ];
 
+    protected $appends = ['start_at', 'end_at'];
+
     protected $casts = [
         'date' => 'date',
         'venue_lat' => 'decimal:8',
@@ -34,6 +36,18 @@ class Meeting extends Model
         'fine_amount' => 'decimal:2',
         'apology_fee_amount' => 'decimal:2',
     ];
+
+    public function getStartAtAttribute()
+    {
+        $timezone = config('cooperative.timezone', 'Africa/Lagos');
+        return \Carbon\Carbon::parse($this->date->format('Y-m-d') . ' ' . $this->start_time, $timezone)->toIso8601String();
+    }
+
+    public function getEndAtAttribute()
+    {
+        $timezone = config('cooperative.timezone', 'Africa/Lagos');
+        return \Carbon\Carbon::parse($this->date->format('Y-m-d') . ' ' . $this->end_time, $timezone)->toIso8601String();
+    }
 
     public function branch(): BelongsTo
     {

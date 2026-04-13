@@ -47,30 +47,54 @@ class Contribution extends Model
         });
 
         static::created(function (self $model) {
-            // If created already successful and linked to a project (e.g., wallet allocation), create investment
-            try {
-                if ($model->project_id && $model->status === 'success') {
-                    // Decrement available units if applicable
-                    if ($model->units > 0) {
-                        $project = Project::find($model->project_id);
-                        if ($project && $project->is_unit_based) {
-                            $project->decrement('available_units', $model->units);
+            // If created already successful (e.g., wallet allocation)
+            if ($model->status === 'success') {
+                // Update Attaqwa Score
+                try {
+                    app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
+                } catch (\Throwable $e) {}
+
+                // Update User's specific balance columns (Savings/Shares)
+                try {
+                    $user = $model->user;
+                    $scheme = $model->scheme;
+                    if ($scheme) {
+                        if ($scheme->name === 'Savings') {
+                            $user->increment('ordinary_savings', $model->amount);
+                        } elseif ($scheme->name === 'Shares') {
+                            $user->increment('shares_capital', $model->amount);
+                        } elseif ($scheme->name === 'Passbook') {
+                            $half = round($model->amount / 2, 2);
+                            $otherHalf = max(0, $model->amount - $half);
+                            $user->increment('ordinary_savings', $half);
+                            $user->increment('shares_capital', $otherHalf);
                         }
                     }
+                } catch (\Throwable $e) {}
 
-                    if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
-                        ProjectInvestment::create([
-                            'user_id' => $model->user_id,
-                            'project_id' => $model->project_id,
-                            'contribution_id' => $model->id,
-                            'amount' => $model->amount,
-                            'units' => $model->units,
-                            'reference' => $model->reference,
-                        ]);
+                // If linked to a project, create investment
+                try {
+                    if ($model->project_id) {
+                        // Decrement available units if applicable
+                        if ($model->units > 0) {
+                            $project = Project::find($model->project_id);
+                            if ($project && $project->is_unit_based) {
+                                $project->decrement('available_units', $model->units);
+                            }
+                        }
+
+                        if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
+                            ProjectInvestment::create([
+                                'user_id' => $model->user_id,
+                                'project_id' => $model->project_id,
+                                'contribution_id' => $model->id,
+                                'amount' => $model->amount,
+                                'units' => $model->units,
+                                'reference' => $model->reference,
+                            ]);
+                        }
                     }
-                }
-            } catch (\Throwable $e) {
-                // Don’t block creation on investment linkage failures
+                } catch (\Throwable $e) {}
             }
         });
 
@@ -81,6 +105,24 @@ class Contribution extends Model
                     // Update Attaqwa Score
                     try {
                         app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
+                    } catch (\Throwable $e) {}
+
+                    // Update User's specific balance columns (Savings/Shares)
+                    try {
+                        $user = $model->user;
+                        $scheme = $model->scheme;
+                        if ($scheme) {
+                            if ($scheme->name === 'Savings') {
+                                $user->increment('ordinary_savings', $model->amount);
+                            } elseif ($scheme->name === 'Shares') {
+                                $user->increment('shares_capital', $model->amount);
+                            } elseif ($scheme->name === 'Passbook') {
+                                $half = round($model->amount / 2, 2);
+                                $otherHalf = max(0, $model->amount - $half);
+                                $user->increment('ordinary_savings', $half);
+                                $user->increment('shares_capital', $otherHalf);
+                            }
+                        }
                     } catch (\Throwable $e) {}
 
                     // Notify admins about successful contribution

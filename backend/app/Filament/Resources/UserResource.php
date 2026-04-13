@@ -183,6 +183,38 @@ class UserResource extends Resource
                             ->prefix('₦')
                             ->default(0),
                     ])->columns(3),
+                Forms\Components\Section::make('Passbook Balances')
+                    ->description('Combined balance for loan eligibility')
+                    ->schema([
+                        Forms\Components\TextInput::make('ordinary_savings')
+                            ->numeric()
+                            ->prefix('₦')
+                            ->label('Ordinary Savings')
+                            ->default(0),
+                        Forms\Components\TextInput::make('shares_capital')
+                            ->numeric()
+                            ->prefix('₦')
+                            ->label('Shares Capital')
+                            ->default(0),
+                        Forms\Components\Placeholder::make('passbook_total')
+                            ->label('Passbook Total')
+                            ->content(function ($record) {
+                                if (!$record) return '₦0.00';
+                                try {
+                                    $savings = (float)($record->ordinary_savings ?? 0);
+                                    $shares = (float)($record->shares_capital ?? 0);
+                                    if ($savings == 0 && $shares == 0) {
+                                        // Fallback if columns empty/missing
+                                        $calc = $record->savingsSharesEligibility();
+                                        return '₦' . number_format($calc['base'], 2);
+                                    }
+                                    return '₦' . number_format($savings + $shares, 2);
+                                } catch (\Throwable $e) {
+                                    return '₦0.00';
+                                }
+                            })
+                            ->columnSpanFull(),
+                    ])->columns(2),
                 Forms\Components\Section::make('Bank Details')
                     ->schema([
                         Forms\Components\TextInput::make('bank_name')
@@ -205,6 +237,21 @@ class UserResource extends Resource
                             ->maxLength(255)
                             ->disabled(),
                     ])->columns(2),
+                Forms\Components\Section::make('Administrative Charges')
+                    ->schema([
+                        Forms\Components\TextInput::make('admin_charge_balance')
+                            ->label('Outstanding Balance')
+                            ->numeric()
+                            ->prefix('₦')
+                            ->default(0),
+                        Forms\Components\Toggle::make('admin_charge_auto_deduct')
+                            ->label('Auto-Deduct Monthly Charge')
+                            ->default(true),
+                        Forms\Components\DateTimePicker::make('last_admin_charge_at')
+                            ->label('Last Processed At')
+                            ->native(false)
+                            ->readOnly(),
+                    ])->columns(3),
                 Forms\Components\Section::make('Takaful & Notifications')
                     ->schema([
                         Forms\Components\Toggle::make('takaful_exempt')->label('Exempt from Takaful charges'),
@@ -298,6 +345,21 @@ class UserResource extends Resource
                     ->getStateUsing(fn (User $record) => $record->bvn_verified_at !== null)
                     ->sortable(),
                 TextColumn::make('balance')->money('ngn', true)->sortable(),
+                TextColumn::make('admin_charge_balance')
+                    ->label('Admin Due')
+                    ->money('ngn', true)
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('ordinary_savings')
+                    ->label('Savings')
+                    ->money('ngn', true)
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('shares_capital')
+                    ->label('Shares')
+                    ->money('ngn', true)
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('gold_balance')
                     ->label('Gold Balance')
                     ->suffix(' g')
@@ -455,11 +517,50 @@ class UserResource extends Resource
                     ->icon('heroicon-o-banknotes')
                     ->form([
                         Forms\Components\TextInput::make('amount')
-                            ->label('Amount to credit')
+                            ->label('Gross Amount')
                             ->numeric()
                             ->minValue(0.01)
                             ->required()
-                            ->prefix('₦'),
+                            ->prefix('₦')
+                            ->live(),
+                        Forms\Components\Toggle::make('apply_maintenance_charge')
+                            ->label('Apply System Maintenance Charge')
+                            ->helperText('0.1% of amount, capped at 500 NGN')
+                            ->default(false)
+                            ->live(),
+                        Forms\Components\Placeholder::make('charge_display')
+                            ->label('Maintenance Charge')
+                            ->content(function (Get $get) {
+                                $amount = (float) $get('amount');
+                                $apply = (bool) $get('apply_maintenance_charge');
+                                if (!$apply || $amount <= 0) return '₦0.00';
+
+                                $percentage = config('cooperative.wallet.maintenance_charge.percentage', 0.1) / 100;
+                                $maxCharge = config('cooperative.wallet.maintenance_charge.max_amount', 500);
+                                $charge = round(min($amount * $percentage, (float) $maxCharge), 2);
+
+                                return '₦' . number_format($charge, 2);
+                            })
+                            ->visible(fn (Get $get) => (bool) $get('apply_maintenance_charge')),
+                        Forms\Components\Placeholder::make('net_amount_display')
+                            ->label('Net Credit to Wallet')
+                            ->content(function (Get $get) {
+                                $amount = (float) $get('amount');
+                                $apply = (bool) $get('apply_maintenance_charge');
+                                if ($amount <= 0) return '₦0.00';
+
+                                if ($apply) {
+                                    $percentage = config('cooperative.wallet.maintenance_charge.percentage', 0.1) / 100;
+                                    $maxCharge = config('cooperative.wallet.maintenance_charge.max_amount', 500);
+                                    $charge = round(min($amount * $percentage, (float) $maxCharge), 2);
+                                    $net = max(0, $amount - $charge);
+                                } else {
+                                    $net = $amount;
+                                }
+
+                                return '₦' . number_format($net, 2);
+                            })
+                            ->extraAttributes(['class' => 'font-bold text-emerald-600']),
                         Forms\Components\TextInput::make('note')
                             ->label('Note')
                             ->maxLength(255)
@@ -467,47 +568,89 @@ class UserResource extends Resource
                     ])
                     ->action(function (User $record, array $data) {
                         DB::transaction(function () use ($record, $data) {
-                            $amount = (float) ($data['amount'] ?? 0);
-                            if ($amount <= 0) {
+                            $grossAmount = (float) ($data['amount'] ?? 0);
+                            if ($grossAmount <= 0) {
                                 return;
                             }
 
-                            $record->increment('balance', $amount);
+                            $maintenanceCharge = 0;
+                            if (!empty($data['apply_maintenance_charge'])) {
+                                $percentage = config('cooperative.wallet.maintenance_charge.percentage', 0.1) / 100;
+                                $maxCharge = config('cooperative.wallet.maintenance_charge.max_amount', 500);
+                                $maintenanceCharge = round(min($grossAmount * $percentage, (float) $maxCharge), 2);
+                            }
+
+                            $netAmount = round(max(0, $grossAmount - $maintenanceCharge), 2);
+
+                            $record->increment('balance', $netAmount);
                             $newBalance = (float) $record->fresh()->balance;
 
-                            DB::afterCommit(function () use ($record, $amount, $data, $newBalance) {
+                            // Create a WalletTransaction record for transparency
+                            \App\Models\WalletTransaction::create([
+                                'user_id' => $record->id,
+                                'type' => 'credit',
+                                'amount' => $netAmount,
+                                'reference' => 'MAN_'.strtoupper(bin2hex(random_bytes(4))),
+                                'source' => 'manual_credit',
+                                'meta' => [
+                                    'gross_amount' => $grossAmount,
+                                    'maintenance_charge' => $maintenanceCharge,
+                                    'note' => $data['note'] ?? null,
+                                    'admin_id' => auth()->id(),
+                                ],
+                            ]);
+
+                            DB::afterCommit(function () use ($record, $netAmount, $maintenanceCharge, $data, $newBalance) {
                                 ShariahAudit::log(auth()->user(), 'credit_wallet_manual', [
                                     'user_id' => $record->id,
-                                    'amount' => $amount,
+                                    'gross_amount' => (float)($data['amount'] ?? 0),
+                                    'maintenance_charge' => $maintenanceCharge,
+                                    'net_amount' => $netAmount,
                                     'note' => $data['note'] ?? null,
                                     'new_balance' => $newBalance,
                                 ]);
+
                                 if ($record->notify_email && ! empty($record->email)) {
                                     try {
-                                        Mail::to($record->email)->send(new WalletCredited($record, $amount, $data['note'] ?? null, $newBalance));
+                                        // Update message to include charge if applied
+                                        $msg = "Your wallet has been credited with ₦" . number_format($netAmount, 2);
+                                        if ($maintenanceCharge > 0) {
+                                            $msg .= " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2);
+                                        }
+                                        $msg .= ".";
+                                        if (!empty($data['note'])) {
+                                            $msg .= " Note: " . $data['note'];
+                                        }
+
+                                        Mail::to($record->email)->send(new WalletCredited($record, $netAmount, $msg, $newBalance));
                                     } catch (\Throwable $e) {
-                                        // Swallow email errors to avoid blocking the admin action
+                                        // Swallow email errors
                                     }
                                 }
                                 // Best-effort SMS notification
                                 if ($record->notify_sms) {
                                     try {
                                         $sms = app(SmsService::class);
-                                        $msg = 'Wallet credited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
+                                        $msg = 'Wallet credited: ₦'.number_format($netAmount, 2);
+                                        if ($maintenanceCharge > 0) {
+                                            $msg .= ' (Fee: ₦'.number_format($maintenanceCharge, 2).')';
+                                        }
+                                        $msg .= '. New bal: ₦'.number_format($newBalance, 2).'.';
                                         $sms->send($record->phone ?? null, $msg);
                                     } catch (\Throwable $e) {
                                         // ignore SMS errors
                                     }
                                 }
 
-                                // Best-effort Push notification to the member's device
+                                // Best-effort Push notification
                                 if ($record->notify_push) {
                                     try {
                                         $push = app(PushService::class);
                                         $token = $record->fcm_token ?: ($record->device_token ?? null);
                                         $push->send($token, 'Wallet Credited', 'Your wallet has been credited successfully.', [
                                             'type' => 'wallet_credit',
-                                            'amount' => (float) $amount,
+                                            'amount' => (float) $netAmount,
+                                            'maintenance_charge' => (float) $maintenanceCharge,
                                             'balance' => (float) $newBalance,
                                         ]);
                                     } catch (\Throwable $e) {

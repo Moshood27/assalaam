@@ -185,6 +185,8 @@ class ProfileController extends Controller
                 'description' => $b->description,
                 'earned_at' => $b->earned_at->toDateTimeString(),
             ]),
+            'admin_charge_balance' => (float) ($user->admin_charge_balance ?? 0),
+            'admin_charge_auto_deduct' => (bool) ($user->admin_charge_auto_deduct ?? true),
         ]);
     }
 
@@ -501,6 +503,31 @@ class ProfileController extends Controller
                 'notify_sms' => (bool) $user->notify_sms,
                 'notify_push' => (bool) $user->notify_push,
             ],
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's administrative charge auto-deduction preference.
+     */
+    public function updateAdminChargePreference(Request $request)
+    {
+        $user = $request->user();
+
+        // Restrict this endpoint to non-admin members only
+        if (method_exists($user, 'getAttribute') && (bool) ($user->is_admin ?? false)) {
+            return response()->json(['message' => 'Admins must use /api/admin/profile endpoints.'], 403);
+        }
+
+        $validated = $request->validate([
+            'admin_charge_auto_deduct' => 'required|boolean',
+        ]);
+
+        $user->admin_charge_auto_deduct = $validated['admin_charge_auto_deduct'];
+        $user->save();
+
+        return response()->json([
+            'message' => 'Administrative charge preference updated successfully.',
+            'admin_charge_auto_deduct' => (bool) $user->admin_charge_auto_deduct,
         ]);
     }
 }

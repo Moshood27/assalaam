@@ -38,6 +38,16 @@
           </div>
         </div>
 
+        <!-- Timer -->
+        <div v-if="meeting.status === 'scheduled' || meeting.status === 'ongoing'" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-4 flex items-center justify-between relative overflow-hidden">
+           <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-slate-50 rounded-full opacity-50" />
+           <div class="relative z-10">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ meeting.status === 'scheduled' ? 'Starts In' : 'Ends In' }}</p>
+            <p class="text-3xl font-black text-slate-800 tabular-nums tracking-tight">{{ timeRemaining || '--:--:--' }}</p>
+          </div>
+          <div class="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl relative z-10">⏳</div>
+        </div>
+
         <!-- Already Marked -->
         <div v-if="record && record.status === 'present'" class="bg-emerald-600 p-8 rounded-[2.5rem] text-center shadow-xl shadow-emerald-100 text-white">
           <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">✅</div>
@@ -104,13 +114,63 @@
             </button>
           </div>
         </div>
+
+        <!-- History -->
+        <div class="mt-10 mb-6">
+          <h3 class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Recent History</h3>
+          
+          <div v-if="loadingHistory && history.length === 0" class="space-y-3">
+             <div v-for="i in 3" :key="i" class="h-20 bg-slate-100 rounded-3xl animate-pulse"></div>
+          </div>
+          
+          <div v-else-if="history.length === 0" class="bg-white p-8 rounded-3xl border border-dashed border-slate-200 text-center">
+             <p class="text-xs text-slate-400 font-bold uppercase">No history records yet</p>
+          </div>
+
+          <div v-else class="space-y-3">
+            <div v-for="item in history" :key="item.id" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+               <div :class="[
+                 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm',
+                 item.status === 'present' ? 'bg-emerald-50 text-emerald-600' : 
+                 item.status === 'apology_paid' ? 'bg-blue-50 text-blue-600' :
+                 item.status === 'fine_paid' ? 'bg-orange-50 text-orange-600' :
+                 item.status === 'fine_pending' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-400'
+               ]">
+                 {{ item.status === 'present' ? '✅' : item.status === 'apology_paid' ? '✉️' : item.status === 'fine_paid' ? '💰' : '❌' }}
+               </div>
+               
+               <div class="flex-1 min-w-0">
+                 <h4 class="text-sm font-black text-slate-800 truncate">{{ item.meeting?.name || 'Unknown Meeting' }}</h4>
+                 <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase">{{ formatDate(item.created_at) }}</span>
+                    <span v-if="item.status === 'fine_pending'" class="text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full uppercase">Fine Pending</span>
+                    <span v-if="item.status === 'fine_paid'" class="text-[8px] font-black bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase">Fine Paid</span>
+                 </div>
+               </div>
+               
+               <div class="text-right">
+                  <p :class="[
+                    'text-[10px] font-black uppercase tracking-tight',
+                    item.status === 'present' ? 'text-emerald-600' : 
+                    item.status === 'apology_paid' ? 'text-blue-600' :
+                    item.status === 'fine_paid' ? 'text-orange-600' : 'text-red-600'
+                  ]">
+                    {{ item.status.replace('_', ' ') }}
+                  </p>
+                  <p v-if="item.status === 'fine_pending' || item.status === 'fine_paid'" class="text-[9px] text-slate-400 font-bold mt-0.5">
+                    ₦{{ formatMoney(item.meeting?.fine_amount) }}
+                  </p>
+               </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import axios from '../http'
 import { useRouter } from 'vue-router'
 import { useModal } from '../composables/useModal'
@@ -121,15 +181,56 @@ const modal = useModal()
 const loading = ref(true)
 const meeting = ref(null)
 const record = ref(null)
+const history = ref([])
+const loadingHistory = ref(false)
 const pin = ref('')
 const location = ref(null)
 const locating = ref(false)
 const submitting = ref(false)
 const payingApology = ref(false)
+const timeRemaining = ref('')
+const countdownInterval = ref(null)
+const refreshingStatus = ref(false)
 
 const formatMoney = (val) => Number(val ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 const formatTime = (val) => val ? new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+
+const updateCountdown = () => {
+  if (!meeting.value) return
+  
+  const now = new Date()
+  const targetIso = meeting.value.status === 'scheduled' ? meeting.value.start_at : meeting.value.end_at
+  const target = new Date(targetIso)
+  const diff = target - now
+  
+  if (diff <= 0) {
+    timeRemaining.value = '00:00:00'
+    if (meeting.value.status !== 'completed' && meeting.value.status !== 'audited') {
+       if (!refreshingStatus.value) {
+         refreshingStatus.value = true
+         setTimeout(() => {
+           fetchCurrentMeeting().then(() => {
+             refreshingStatus.value = false
+           })
+         }, 10000) // Wait 10s before next refresh if status didn't change
+       }
+    }
+    return
+  }
+  
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  const s = Math.floor((diff % 60000) / 1000)
+  
+  timeRemaining.value = [h, m, s].map(v => v.toString().padStart(2, '0')).join(':')
+}
+
+const startCountdown = () => {
+  if (countdownInterval.value) clearInterval(countdownInterval.value)
+  updateCountdown()
+  countdownInterval.value = setInterval(updateCountdown, 1000)
+}
 
 const fetchCurrentMeeting = async () => {
   loading.value = true
@@ -142,10 +243,27 @@ const fetchCurrentMeeting = async () => {
     if (meeting.value && meeting.value.status === 'ongoing' && (!record.value || record.value.status !== 'present')) {
       getLocation()
     }
+
+    if (meeting.value) {
+      startCountdown()
+    }
   } catch (err) {
     console.error('Attendance Check:', err)
   } finally {
     loading.value = false
+    fetchHistory()
+  }
+}
+
+const fetchHistory = async () => {
+  loadingHistory.value = true
+  try {
+    const res = await axios.get('/api/attendance/history')
+    history.value = res.data.data
+  } catch (err) {
+    console.error('Attendance History:', err)
+  } finally {
+    loadingHistory.value = false
   }
 }
 
@@ -186,6 +304,7 @@ const submitAttendance = async () => {
     })
     record.value = res.data.record
     modal.alert("Attendance marked successfully!")
+    fetchHistory()
   } catch (err) {
     modal.alert(err.response?.data?.message || "Failed to mark attendance")
   } finally {
@@ -205,6 +324,7 @@ const payApology = async () => {
     const res = await axios.post(`/api/meetings/${meeting.value.id}/pay-apology`)
     record.value = res.data.record
     modal.alert("Apology fee paid successfully!")
+    fetchHistory()
   } catch (err) {
     modal.alert(err.response?.data?.message || "Failed to pay apology fee")
   } finally {
@@ -213,4 +333,7 @@ const payApology = async () => {
 }
 
 onMounted(fetchCurrentMeeting)
+onUnmounted(() => {
+  if (countdownInterval.value) clearInterval(countdownInterval.value)
+})
 </script>

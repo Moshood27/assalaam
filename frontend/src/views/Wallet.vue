@@ -98,6 +98,24 @@
             </div>
           </div>
           <p class="text-[11px] text-slate-500 text-center px-4">Transfer funds to this account to top up your wallet instantly.</p>
+          <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 0.1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+        </div>
+
+        <!-- Administrative Charges Section -->
+        <div v-if="wallet.admin_charge_balance > 0" class="bg-rose-50 p-6 rounded-[2rem] border border-rose-100 shadow-sm relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-24 h-24 bg-rose-100 rounded-full -mr-12 -mt-12 opacity-50" />
+          <div class="relative z-10 flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-rose-900">Administrative Charges</h3>
+              <p class="text-2xl font-black text-rose-700 mt-1">₦ {{ formatMoney(wallet.admin_charge_balance) }}</p>
+              <p class="text-[10px] text-rose-500 font-bold uppercase mt-1 tracking-wider">Accumulated Balance</p>
+            </div>
+            <button @click="payAdminCharge" :disabled="payingAdminCharge" 
+                    class="bg-rose-600 text-white px-5 py-3 rounded-2xl text-xs font-black uppercase shadow-lg active:scale-95 disabled:opacity-50 transition-all">
+              {{ payingAdminCharge ? 'Paying…' : 'Pay Now' }}
+            </button>
+          </div>
+          <p class="text-[11px] text-rose-600 mt-3 leading-relaxed opacity-80 italic">A monthly administrative charge of ₦300 applies. You can enable auto-deduction in settings.</p>
         </div>
         <div v-else class="space-y-3">
           <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
@@ -128,6 +146,18 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400 font-bold">₦</div>
               <input v-model.number="topupAmount" type="number" min="1" placeholder="0.00"
                      class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+            </div>
+
+            <!-- Maintenance Charge Display -->
+            <div v-if="topupAmount > 0 && wallet?.maintenance_charge_config" class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+              <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                <span class="text-slate-500">System Maintenance Charge</span>
+                <span class="text-rose-600">₦ {{ formatMoney(calculatedCharge) }}</span>
+              </div>
+              <div class="flex justify-between text-xs font-black uppercase tracking-wider pt-2 border-t border-slate-200">
+                <span class="text-slate-800">Net Credit to Wallet</span>
+                <span class="text-emerald-700 font-black">₦ {{ formatMoney(Math.max(0, topupAmount - calculatedCharge)) }}</span>
+              </div>
             </div>
           </div>
           <button @click="initTopup" :disabled="loading || !topupAmount"
@@ -328,7 +358,13 @@
               </div>
               <div class="min-w-0">
                 <p class="text-sm font-bold text-slate-800 truncate leading-none mb-1">{{ titleFor(tx) }}</p>
-                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{{ new Date(tx.created_at).toLocaleDateString() }} • {{ tx.reference.slice(0, 12) }}...</p>
+                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter leading-relaxed">
+                  {{ new Date(tx.created_at).toLocaleDateString() }} • {{ tx.reference.slice(0, 12) }}...
+                </p>
+                <div v-if="tx.meta?.maintenance_charge" class="mt-1 flex gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-tighter bg-slate-50 px-2 py-1 rounded-lg w-fit">
+                  <span>Gross: ₦{{ formatMoney(tx.meta.gross_amount) }}</span>
+                  <span class="text-rose-600">Fee: ₦{{ formatMoney(tx.meta.maintenance_charge) }}</span>
+                </div>
               </div>
             </div>
             <div class="text-right shrink-0">
@@ -416,10 +452,34 @@ const { notice, showNotice, closeNotice } = useNotice()
 // Balance visibility
 const { hideBalances } = useBalanceVisibility()
 
-const wallet = ref({ balance: 0, virtual_account: {} })
+const wallet = ref({ balance: 0, virtual_account: {}, admin_charge_balance: 0 })
 const transactions = ref([])
 const page = ref(1)
 const perPage = 10
+
+// Administrative Charges state
+const payingAdminCharge = ref(false)
+const payAdminCharge = async () => {
+  if (wallet.value.admin_charge_balance <= 0) return
+  if (wallet.value.balance < wallet.value.admin_charge_balance) {
+    showNotice('Insufficient wallet balance to pay administrative charge.', 'error')
+    return
+  }
+  
+  if (!confirm(`Are you sure you want to pay ₦${formatMoney(wallet.value.admin_charge_balance)} for outstanding administrative charges?`)) return
+
+  payingAdminCharge.value = true
+  try {
+    const resp = await axios.post('/api/wallet/admin-charge/pay')
+    showNotice(resp.data.message || 'Paid successfully', 'success')
+    await loadWallet()
+  } catch (e) {
+    console.error(e)
+    showNotice(e.response?.data?.message || 'Failed to pay administrative charge', 'error')
+  } finally {
+    payingAdminCharge.value = false
+  }
+}
 
 // Withdrawal requests listing
 const withdrawals = ref([])
@@ -428,6 +488,13 @@ const withdrawalsPerPage = 10
 const withdrawalsLastPage = ref(1)
 const topupAmount = ref('')
 const loading = ref(false)
+const calculatedCharge = computed(() => {
+  const amount = Number(topupAmount.value || 0)
+  if (!amount || !wallet.value?.maintenance_charge_config) return 0
+  const { percentage, max_amount } = wallet.value.maintenance_charge_config
+  const charge = (amount * (percentage / 100))
+  return Math.min(charge, max_amount)
+})
 const assigning = ref(false)
 const showFund = ref(true)
 const showTransfer = ref(false)

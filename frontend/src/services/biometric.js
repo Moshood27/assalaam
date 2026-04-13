@@ -100,12 +100,12 @@ export async function canQuickLogin() {
   }
 }
 
-export async function storeBiometricCredentials({ membership_number, branch_id, password }) {
+export async function storeBiometricCredentials({ membership_number, branch_id, password, phone }) {
   if (!(await isBiometricAvailable())) return false
   const plugin = await loadPlugin()
   if (!plugin?.setCredentials) return false
   try {
-    const username = JSON.stringify({ membership_number, branch_id })
+    const username = JSON.stringify({ membership_number, branch_id, phone })
     await plugin.setCredentials({ server: SERVICE, username, password })
     return true
   } catch (_) {
@@ -159,6 +159,7 @@ export async function quickLoginViaBiometric() {
     const payload = {
       branch_id: creds.branch_id,
       membership_number: creds.membership_number,
+      phone: creds.phone,
       password: password,
     }
 

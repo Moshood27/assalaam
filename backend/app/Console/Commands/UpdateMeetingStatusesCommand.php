@@ -12,11 +12,12 @@ class UpdateMeetingStatusesCommand extends Command
 
     public function handle()
     {
-        $now = now();
+        $timezone = config('cooperative.timezone', 'Africa/Lagos');
+        $now = now($timezone);
         $todayStr = $now->toDateString();
         $nowStr = $now->toTimeString();
 
-        $this->info("Current time: {$todayStr} {$nowStr}");
+        $this->info("Current time ({$timezone}): {$todayStr} {$nowStr}");
 
         // Mark as ongoing if current time is within window
         $ongoingCount = Meeting::where('status', 'scheduled')
@@ -42,6 +43,8 @@ class UpdateMeetingStatusesCommand extends Command
 
         if ($completedCount > 0) {
             $this->info("Marked {$completedCount} meetings as completed.");
+            // Immediately audit completed meetings to charge fines
+            $this->call('app:audit-attendance');
         }
     }
 }

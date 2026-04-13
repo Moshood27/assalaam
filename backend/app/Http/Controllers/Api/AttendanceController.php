@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\GeoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
 class AttendanceController extends Controller
@@ -24,6 +25,9 @@ class AttendanceController extends Controller
     public function current(Request $request)
     {
         $user = $request->user();
+
+        // Ensure meetings statuses are up-to-date for accurate "auto-start/stop"
+        $this->syncStatuses();
 
         // Find ongoing meeting
         $meeting = Meeting::where('status', 'ongoing')
@@ -59,6 +63,48 @@ class AttendanceController extends Controller
             'meeting' => $meeting,
             'attendance_record' => $record,
         ]);
+    }
+
+    public function history(Request $request)
+    {
+        $user = $request->user();
+        $history = $user->attendanceRecords()
+            ->with('meeting')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return response()->json($history);
+    }
+
+    private function syncStatuses()
+    {
+        $timezone = config('cooperative.timezone', 'Africa/Lagos');
+        $now = now($timezone);
+        $todayStr = $now->toDateString();
+        $nowStr = $now->toTimeString();
+
+        // Start meetings that should be ongoing
+        Meeting::where('status', 'scheduled')
+            ->where('date', '<=', $todayStr)
+            ->where('start_time', '<=', $nowStr)
+            ->where('end_time', '>', $nowStr)
+            ->update(['status' => 'ongoing']);
+
+        // End meetings that should be completed
+        $completedCount = Meeting::whereIn('status', ['scheduled', 'ongoing'])
+            ->where(function ($query) use ($todayStr, $nowStr) {
+                $query->where('date', '<', $todayStr)
+                    ->orWhere(function ($q) use ($todayStr, $nowStr) {
+                        $q->where('date', $todayStr)
+                            ->where('end_time', '<=', $nowStr);
+                    });
+            })
+            ->update(['status' => 'completed']);
+
+        if ($completedCount > 0) {
+            // Immediately audit completed meetings to charge fines
+            Artisan::call('app:audit-attendance');
+        }
     }
 
     public function markAttendance(Request $request, Meeting $meeting)

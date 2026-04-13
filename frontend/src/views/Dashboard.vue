@@ -94,6 +94,25 @@
         <div class="text-white/40">➡️</div>
       </div>
 
+      <!-- Passbook Snapshot -->
+      <div v-if="kpis.passbook_balance > 0" class="mt-4 p-5 rounded-[2rem] bg-white border border-slate-100 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Passbook Balance</p>
+          <button @click="$router.push('/passbook')" class="text-emerald-700 text-[11px] font-bold uppercase">View Ledger</button>
+        </div>
+        <h2 class="text-2xl font-black text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.passbook_balance) }}</h2>
+        <div class="mt-3 grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase font-bold">Ordinary Savings</p>
+            <p class="text-sm font-bold text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.ordinary_savings) }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase font-bold">Shares Capital</p>
+            <p class="text-sm font-bold text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.shares_capital) }}</p>
+          </div>
+        </div>
+      </div>
+
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />

@@ -27,7 +27,17 @@ return [
     ],
     'attendance' => [
         'default_fine' => env('COOP_ATTENDANCE_FINE', 500),
-        'default_apology_fee' => env('COOP_ATTENDANCE_APOLOGY_FEE', 200),
+        'default_apology_fee' => env('COOP_ATTENDANCE_APOLOGY_FEE', 500),
         'radius_meters' => env('COOP_ATTENDANCE_RADIUS', 50),
     ],
+    'wallet' => [
+        'maintenance_charge' => [
+            'percentage' => env('COOP_WALLET_MAINTENANCE_CHARGE_PERCENTAGE', 0.1), // 0.1%
+            'max_amount' => env('COOP_WALLET_MAINTENANCE_CHARGE_MAX', 500),
+        ],
+    ],
+    'admin_charges' => [
+        'amount' => env('COOP_ADMIN_CHARGE', 300),
+    ],
+    'timezone' => env('COOP_TIMEZONE', 'Africa/Lagos'),
 ];

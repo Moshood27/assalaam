@@ -129,6 +129,11 @@ class WalletController extends Controller
                     : null,
             ],
             'recent_transactions' => $recent,
+            'admin_charge_balance' => (float) ($user->admin_charge_balance ?? 0),
+            'maintenance_charge_config' => [
+                'percentage' => (float) config('cooperative.wallet.maintenance_charge.percentage', 0.1),
+                'max_amount' => (float) config('cooperative.wallet.maintenance_charge.max_amount', 500),
+            ],
         ]);
     }
 
@@ -346,7 +351,36 @@ class WalletController extends Controller
                 return;
             }
 
+            $savingsScheme = Scheme::where('name', 'Savings')->first();
+            $sharesScheme = Scheme::where('name', 'Shares')->first();
+
             foreach ($items as $item) {
+                $scheme = Scheme::find($item['scheme_id']);
+
+                if ($scheme && $scheme->name === 'Passbook' && $savingsScheme && $sharesScheme) {
+                    $half = round($item['amount'] / 2, 2);
+                    $otherHalf = max(0, $item['amount'] - $half);
+
+                    // Create Savings piece
+                    Contribution::create([
+                        'user_id' => $lockedUser->id,
+                        'scheme_id' => $savingsScheme->id,
+                        'amount' => $half,
+                        'reference' => $reference,
+                        'status' => 'success',
+                    ]);
+
+                    // Create Shares piece
+                    Contribution::create([
+                        'user_id' => $lockedUser->id,
+                        'scheme_id' => $sharesScheme->id,
+                        'amount' => $otherHalf,
+                        'reference' => $reference,
+                        'status' => 'success',
+                    ]);
+                    continue;
+                }
+
                 $row = [
                     'user_id' => $lockedUser->id,
                     'scheme_id' => $item['scheme_id'],
@@ -773,5 +807,30 @@ class WalletController extends Controller
             'status' => $wr->status,
             'reference' => $wr->reference,
         ]);
+    }
+
+    /**
+     * Pay outstanding administrative charges from the member's wallet.
+     */
+    public function payAdminCharge(Request $request)
+    {
+        $user = $request->user();
+        $service = app(\App\Services\AdministrativeChargeService::class);
+
+        if ($user->admin_charge_balance <= 0) {
+            return response()->json(['message' => 'No outstanding administrative charges.'], 400);
+        }
+
+        if ($service->attemptDeduction($user)) {
+            return response()->json([
+                'message' => 'Administrative charge paid successfully.',
+                'admin_charge_balance' => (float)$user->admin_charge_balance,
+                'wallet_balance' => (float)$user->balance
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Insufficient wallet balance to pay administrative charge.'
+        ], 422);
     }
 }

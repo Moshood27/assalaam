@@ -26,6 +26,15 @@ class AuditAttendanceCommand extends Command
         }
 
         foreach ($meetings as $meeting) {
+            // Use atomic update to prevent concurrent auditing if multiple instances are running
+            $claimed = Meeting::where('id', $meeting->id)
+                ->where('status', 'completed')
+                ->update(['status' => 'audited']); // We mark as audited immediately to claim it
+
+            if (!$claimed) {
+                continue;
+            }
+
             $this->info("Auditing meeting: {$meeting->name} (ID: {$meeting->id})");
 
             // Define who should have attended (non-admins)
@@ -50,7 +59,6 @@ class AuditAttendanceCommand extends Command
                 }
             }
 
-            $meeting->update(['status' => 'audited']);
             $this->info("Meeting {$meeting->name} audited successfully.");
         }
     }

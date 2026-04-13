@@ -7,9 +7,11 @@ use App\Filament\Resources\MeetingResource\RelationManagers;
 use App\Models\Meeting;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Artisan;
 
 class MeetingResource extends Resource
 {
@@ -34,7 +36,27 @@ class MeetingResource extends Resource
                         Forms\Components\DatePicker::make('date')
                             ->required(),
                         Forms\Components\TimePicker::make('start_time')
-                            ->required(),
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, $get, $set) {
+                                $duration = $get('duration_minutes');
+                                if ($state && $duration) {
+                                    $start = \Carbon\Carbon::parse($state);
+                                    $set('end_time', $start->addMinutes($duration)->toTimeString());
+                                }
+                            }),
+                        Forms\Components\TextInput::make('duration_minutes')
+                            ->label('Duration (Minutes)')
+                            ->numeric()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, $get, $set) {
+                                $start = $get('start_time');
+                                if ($start && $state) {
+                                    $startTime = \Carbon\Carbon::parse($start);
+                                    $set('end_time', $startTime->addMinutes($state)->toTimeString());
+                                }
+                            })
+                            ->helperText('Use this to automatically set end time based on duration'),
                         Forms\Components\TimePicker::make('end_time')
                             ->required(),
                         Forms\Components\TextInput::make('pin')
@@ -80,7 +102,7 @@ class MeetingResource extends Resource
                         Forms\Components\TextInput::make('apology_fee_amount')
                             ->numeric()
                             ->prefix('₦')
-                            ->default(config('cooperative.attendance.default_apology_fee', 200)),
+                            ->default(config('cooperative.attendance.default_apology_fee', 500)),
                     ])->columns(2),
             ]);
     }
@@ -129,6 +151,19 @@ class MeetingResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('audit')
+                    ->label('Audit Now')
+                    ->icon('heroicon-o-document-check')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->visible(fn (Meeting $record): bool => $record->status === 'completed')
+                    ->action(function () {
+                        Artisan::call('app:audit-attendance');
+                        Notification::make()
+                            ->title('Meeting Audit processed')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

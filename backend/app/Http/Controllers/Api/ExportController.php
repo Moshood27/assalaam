@@ -76,8 +76,32 @@ class ExportController extends Controller
                         $row['total'] += (float) $con->amount;
                     }
                 }
+                $row['total'] += $row['bf']; // Include BF in total
                 return $row;
             });
+
+            // Combine Savings and Shares into "Passbook" for the member-facing view
+            $savingsRowIdx = $matrix->search(fn($r) => $r['scheme_name'] === 'Savings');
+            $sharesRowIdx = $matrix->search(fn($r) => $r['scheme_name'] === 'Shares');
+
+            if ($savingsRowIdx !== false && $sharesRowIdx !== false) {
+                $savings = $matrix[$savingsRowIdx];
+                $shares = $matrix[$sharesRowIdx];
+
+                $passbookRow = [
+                    'scheme_name' => 'Passbook (Savings + Shares)',
+                    'bf' => $savings['bf'] + $shares['bf'],
+                    'months' => array_fill(1, 12, 0),
+                    'total' => $savings['total'] + $shares['total'],
+                ];
+                for ($m = 1; $m <= 12; $m++) {
+                    $passbookRow['months'][$m] = $savings['months'][$m] + $shares['months'][$m];
+                }
+
+                $matrix->forget($savingsRowIdx);
+                $matrix->forget($sharesRowIdx);
+                $matrix = collect([$passbookRow])->concat($matrix->values());
+            }
 
             $data = [
                 'user' => $user,
@@ -210,13 +234,18 @@ class ExportController extends Controller
                 $currentBalance += ($isCredit ? $amt : -$amt);
 
                 $desc = ucwords(str_replace('_', ' ', (string) $tx->source));
+                $meta = is_array($tx->meta) ? $tx->meta : json_decode((string)$tx->meta, true);
+
                 if ($tx->source === 'p2p_transfer') {
-                    $meta = $tx->meta;
                     if ($isCredit && isset($meta['from_name'])) {
                         $desc .= " from " . $meta['from_name'];
                     } elseif (!$isCredit && isset($meta['to_name'])) {
                         $desc .= " to " . $meta['to_name'];
                     }
+                }
+
+                if (!empty($meta['maintenance_charge'])) {
+                    $desc .= " (Net of ₦" . number_format((float)$meta['maintenance_charge'], 2) . " fee)";
                 }
 
                 fputcsv($file, [

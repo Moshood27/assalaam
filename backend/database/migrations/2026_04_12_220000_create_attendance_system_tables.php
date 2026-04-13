@@ -24,7 +24,7 @@ return new class extends Migration
             $blueprint->integer('radius_meters')->default(50);
             $blueprint->string('pin');
             $blueprint->decimal('fine_amount', 12, 2)->default(500);
-            $blueprint->decimal('apology_fee_amount', 12, 2)->default(200);
+            $blueprint->decimal('apology_fee_amount', 12, 2)->default(500);
             $blueprint->enum('status', ['scheduled', 'ongoing', 'completed', 'audited'])->default('scheduled');
             $blueprint->timestamps();
         });

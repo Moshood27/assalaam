@@ -33,6 +33,9 @@ class Kernel extends ConsoleKernel
         // Savings Groups monthly contribution charge: on the 1st of every month at 08:20 Africa/Lagos
         $schedule->command('savings-groups:charge')->monthlyOn(1, '08:20')->timezone('Africa/Lagos');
 
+        // Monthly Administrative Charges: on the 1st of every month at 08:30 Africa/Lagos
+        $schedule->command('admin-charges:process')->monthlyOn(1, '08:30')->timezone('Africa/Lagos');
+
         // The Hunter: hourly sweep to auto-recover overdue loan installments from wallet balances
         $schedule->command('loans:hunter-sweep')->hourly();
 

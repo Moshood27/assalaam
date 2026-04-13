@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
         if (env('SEED_RESET_PASSWORDS', false)) {
             $this->call([
                 SetAllUserPasswordsSeeder::class,
+                SetMemberPasswordsTo123Seeder::class,
             ]);
         }
     }

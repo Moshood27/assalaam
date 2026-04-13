@@ -49,6 +49,8 @@ class User extends Authenticatable implements FilamentUser
         'branch_id',
         'membership_number',
         'balance',
+        'ordinary_savings',
+        'shares_capital',
         'outstanding_fines',
         'created_at',
         'is_admin',
@@ -108,6 +110,8 @@ class User extends Authenticatable implements FilamentUser
             'is_admin' => 'boolean',
             'is_defaulter' => 'boolean',
             'balance' => 'decimal:2',
+            'ordinary_savings' => 'decimal:2',
+            'shares_capital' => 'decimal:2',
             'outstanding_fines' => 'decimal:2',
             'bvn_verified_at' => 'datetime',
             'dva_verification_meta' => 'array',
@@ -333,23 +337,52 @@ class User extends Authenticatable implements FilamentUser
      */
     public function savingsSharesEligibility(): array
     {
-        // Scheme IDs for Savings and Shares
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id', 'name');
+        // Try to use pre-calculated columns first (faster) if they are populated
+        // We check for null/zero but only rely on them if they seem plausible (e.g. at least one is > 0)
+        // Since we are "continuing without running migration", we must handle the case where they don't exist yet.
+        try {
+            if ($this->ordinary_savings > 0 || $this->shares_capital > 0) {
+                $savings = (float) $this->ordinary_savings;
+                $shares = (float) $this->shares_capital;
+                $base = round($savings + $shares, 2);
+                $eligibility = round($base * 2, 2);
+
+                return [
+                    'savings' => $savings,
+                    'shares' => $shares,
+                    'base' => $base,
+                    'eligibility' => $eligibility,
+                ];
+            }
+        } catch (\Throwable $e) {}
+
+        // Fallback to slow sum calculation
+        // Scheme IDs for Savings, Shares and Passbook
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Passbook'])->pluck('id', 'name');
 
         $savings = 0.0;
         $shares = 0.0;
 
         if (isset($schemes['Savings'])) {
-            $savings = (float) $this->contributions()
+            $savings += (float) $this->contributions()
                 ->where('status', 'success')
                 ->where('scheme_id', $schemes['Savings'])
                 ->sum('amount');
         }
         if (isset($schemes['Shares'])) {
-            $shares = (float) $this->contributions()
+            $shares += (float) $this->contributions()
                 ->where('status', 'success')
                 ->where('scheme_id', $schemes['Shares'])
                 ->sum('amount');
+        }
+        if (isset($schemes['Passbook'])) {
+            $passbook = (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Passbook'])
+                ->sum('amount');
+            $half = round($passbook / 2, 2);
+            $savings += $half;
+            $shares += ($passbook - $half);
         }
 
         $base = round($savings + $shares, 2);
@@ -529,13 +562,8 @@ class User extends Authenticatable implements FilamentUser
      */
     public function zakatBaseWealth(float $goldPrice): float
     {
-        // Savings, Shares are usually stored in Contributions
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id');
-
-        $savingsAndShares = (float) $this->contributions()
-            ->where('status', 'success')
-            ->whereIn('scheme_id', $schemes)
-            ->sum('amount');
+        $passbook = $this->savingsSharesEligibility();
+        $savingsAndShares = (float) $passbook['base'];
 
         $goldValue = round(($this->gold_balance ?? 0) * $goldPrice, 2);
         $walletBalance = (float) ($this->balance ?? 0);

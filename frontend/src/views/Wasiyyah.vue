@@ -100,8 +100,7 @@
             <label class="lbl">Asset Type</label>
             <select v-model="form.asset_type" class="inp">
               <option value="all">General (All Assets)</option>
-              <option value="shares">Shares Only</option>
-              <option value="savings">Savings Only</option>
+              <option value="passbook">Passbook (Savings + Shares)</option>
               <option value="takaful">Takaful Benefit</option>
             </select>
           </div>

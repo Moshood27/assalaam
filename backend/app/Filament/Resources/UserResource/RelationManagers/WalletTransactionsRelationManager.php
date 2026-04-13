@@ -66,7 +66,18 @@ class WalletTransactionsRelationManager extends RelationManager
                     'success' => ['credit'],
                     'danger' => ['debit'],
                 ]),
-                TextColumn::make('amount')->money('ngn', true)->sortable(),
+                TextColumn::make('amount')
+                    ->label('Net Amount')
+                    ->money('ngn', true)
+                    ->sortable(),
+                TextColumn::make('meta.gross_amount')
+                    ->label('Gross')
+                    ->money('ngn', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('meta.maintenance_charge')
+                    ->label('Fee')
+                    ->money('ngn', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('reference')->searchable(),
                 TextColumn::make('source')->label('Source'),
             ])

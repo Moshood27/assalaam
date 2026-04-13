@@ -27,7 +27,24 @@ class ReportsController extends Controller
             ->get();
 
         $total = (float) $rows->sum('total');
-        $data = $rows->map(function ($r) use ($total) {
+
+        // Combine Savings and Shares into "Passbook"
+        $savingsScheme = Scheme::where('name', 'Savings')->first();
+        $sharesScheme = Scheme::where('name', 'Shares')->first();
+
+        $combinedAmount = 0;
+        $otherRows = collect();
+
+        foreach ($rows as $row) {
+            $name = optional($row->scheme)->name;
+            if ($name === 'Savings' || $name === 'Shares') {
+                $combinedAmount += (float) $row->total;
+            } else {
+                $otherRows->push($row);
+            }
+        }
+
+        $data = $otherRows->map(function ($r) use ($total) {
             $pct = $total > 0 ? round(((float)$r->total / $total) * 100, 2) : 0.0;
             return [
                 'scheme_id' => $r->scheme_id,
@@ -36,6 +53,15 @@ class ReportsController extends Controller
                 'percentage' => $pct,
             ];
         })->values();
+
+        if ($combinedAmount > 0) {
+            $data->prepend([
+                'scheme_id' => 0, // Virtual ID for combined
+                'scheme_name' => 'Passbook (Savings + Shares)',
+                'amount' => $combinedAmount,
+                'percentage' => $total > 0 ? round(($combinedAmount / $total) * 100, 2) : 0.0,
+            ]);
+        }
 
         return response()->json([
             'total' => $total,
@@ -133,10 +159,13 @@ class ReportsController extends Controller
         $user = $request->user();
         $rate = (float) config('coop.dividend_rate', env('DIVIDEND_RATE', 0.05));
 
+        $passbookSchemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id');
+
         $totalSavings = Contribution::query()
             ->where('user_id', $user->id)
             ->where('status', 'success')
             ->whereYear('created_at', $year)
+            ->whereIn('scheme_id', $passbookSchemes)
             ->sum('amount');
 
         $dividend = round((float)$totalSavings * $rate, 2);

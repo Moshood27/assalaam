@@ -86,7 +86,7 @@
           </div>
 
           <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-            Your score is based on your cooperative behavior, consistent savings, and loan repayments. High scores unlock larger interest-free loans.
+            Your score is based on your cooperative behavior, consistent passbook contributions, and loan repayments. High scores unlock larger interest-free loans.
           </p>
 
           <div v-if="profile.attaqwa_tips && profile.attaqwa_tips.length > 0" class="mb-4 space-y-2">
@@ -346,6 +346,22 @@
         <p v-if="notifBusy" class="text-[10px] text-emerald-700 mt-3 font-bold">Saving preferences...</p>
       </div>
 
+      <!-- Administrative Charges Preference -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Administrative Charges</p>
+        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 transition-colors hover:border-emerald-200">
+          <div class="pr-4 flex-1">
+            <p class="text-sm font-bold text-slate-700">Auto-Deduct Monthly Charge</p>
+            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Automatically deduct the monthly ₦300 administrative charge from your wallet balance.</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" v-model="profile.admin_charge_auto_deduct" class="sr-only peer" @change="toggleAdminCharge" :disabled="updatingAdminCharge">
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-700"></div>
+          </label>
+        </div>
+        <p v-if="updatingAdminCharge" class="text-[10px] text-emerald-700 mt-3 font-bold uppercase tracking-wider">Updating preference...</p>
+      </div>
+
       <!-- Change Email -->
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Update Email</p>
@@ -580,6 +596,27 @@ const resetForm = ref({ code: '', new_pin: '', confirm_pin: '' })
 // Notification preferences state
 const notifPrefs = ref({ notify_email: true, notify_sms: true, notify_push: true })
 const notifBusy = ref(false)
+
+// Administrative Charges state
+const updatingAdminCharge = ref(false)
+const toggleAdminCharge = async () => {
+  updatingAdminCharge.value = true
+  const newValue = !!profile.value.admin_charge_auto_deduct
+  try {
+    const resp = await axios.post('/api/profile/admin-charge-preference', {
+      admin_charge_auto_deduct: newValue
+    })
+    profile.value.admin_charge_auto_deduct = !!resp.data.admin_charge_auto_deduct
+    // Success - no alert needed if it's a toggle, or optional
+  } catch (err) {
+    console.error(err)
+    // Revert on error
+    profile.value.admin_charge_auto_deduct = !newValue
+    alert(err?.response?.data?.message || 'Failed to update preference.')
+  } finally {
+    updatingAdminCharge.value = false
+  }
+}
 
 const copy = async (text) => {
   try {

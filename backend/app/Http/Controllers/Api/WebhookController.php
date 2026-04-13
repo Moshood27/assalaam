@@ -318,6 +318,10 @@ class WebhookController extends Controller
                 // Amount in Naira
                 $amountNgn = round(((int) ($vd['amount'] ?? 0)) / 100, 2);
                 $currency = $vd['currency'] ?? 'NGN';
+
+                $maintenanceCharge = $this->calculateMaintenanceCharge($amountNgn);
+                $netAmount = round(max(0, $amountNgn - $maintenanceCharge), 2);
+
                 if ($currency !== 'NGN' || $amountNgn <= 0) {
                     Log::warning('Paystack webhook: invalid currency/amount for wallet topup', [
                         'reference' => $reference,
@@ -332,7 +336,7 @@ class WebhookController extends Controller
                     return response()->json(['status' => 'ok']);
                 }
 
-                DB::transaction(function () use ($topupUser, $amountNgn, $reference, $vdChannel, $vd, $customerCode, $metadata) {
+                DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vdChannel, $vd, $customerCode, $metadata) {
                     // Persist Paystack customer code and authorization code for future lookups/charges
                     $dirty = false;
                     if (empty($topupUser->paystack_customer_code) && !empty($customerCode)) {
@@ -347,7 +351,7 @@ class WebhookController extends Controller
                     if ($dirty) { $topupUser->save(); }
 
                     // Credit wallet
-                    $topupUser->increment('balance', $amountNgn);
+                    $topupUser->increment('balance', $netAmount);
 
                     // Detect autosave via metadata
                     $isAutosave = is_array($metadata) && (($metadata['type'] ?? null) === 'autosave');
@@ -357,13 +361,15 @@ class WebhookController extends Controller
                     WalletTransaction::create([
                         'user_id' => $topupUser->id,
                         'type' => 'credit',
-                        'amount' => $amountNgn,
+                        'amount' => $netAmount,
                         'reference' => $reference,
                         'source' => $source,
                         'meta' => [
                             'channel' => $vdChannel,
                             'customer_code' => $vd['customer']['customer_code'] ?? null,
                             'receiver_account' => $vd['authorization']['receiver_bank_account_number'] ?? ($vd['authorization']['account_number'] ?? null),
+                            'maintenance_charge' => $maintenanceCharge,
+                            'gross_amount' => $amountNgn,
                             'metadata' => $metadata,
                         ],
                     ]);
@@ -397,8 +403,8 @@ class WebhookController extends Controller
                 try {
                     $topupUser->notify(new PaymentNotification(
                         title: 'Wallet Top-up Successful',
-                        message: 'Your wallet has been credited successfully.',
-                        amount: $amountNgn,
+                        message: "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+                        amount: $netAmount,
                         reference: $reference,
                         source: 'wallet_topup'
                     ));
@@ -409,12 +415,16 @@ class WebhookController extends Controller
                             Mail::to($topupUser->email)->send(new PaymentStatusMail(
                                 status: 'success',
                                 title: 'Wallet Top-up Successful',
-                                message: 'Your wallet has been credited successfully.',
-                                amount: $amountNgn,
+                                message: "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+                                amount: $netAmount,
                                 reference: $reference,
                                 channel: $vdChannel,
                                 route: '/wallet',
-                                meta: ['provider' => 'paystack']
+                                meta: [
+                                    'provider' => 'paystack',
+                                    'maintenance_charge' => $maintenanceCharge,
+                                    'gross_amount' => $amountNgn
+                                ]
                             ));
                         }
                     } catch (\Throwable $e) {}
@@ -424,11 +434,10 @@ class WebhookController extends Controller
                     $fresh = $topupUser->fresh();
                     $newBal = (float) ($fresh->balance ?? 0);
                     $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
-                    $push->send($token, 'Wallet Top-up Successful', 'Your wallet has been credited successfully.', [
+                    $push->send($token, 'Wallet Top-up Successful', "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " (Maintenance: ₦" . number_format($maintenanceCharge, 2) . ").", [
                         'type' => 'wallet_topup',
-                        'amount' => (float) $amountNgn,
+                        'amount' => (float) $netAmount,
                         'reference' => (string) $reference,
-                        'balance' => $newBal,
                         'route' => '/wallet',
                     ]);
                 } catch (\Throwable $e) {
@@ -698,6 +707,9 @@ class WebhookController extends Controller
         $amountNgn = (float) ($vd['amount'] ?? $vd['charged_amount'] ?? 0);
         $currency = $vd['currency'] ?? 'NGN';
 
+        $maintenanceCharge = $this->calculateMaintenanceCharge($amountNgn);
+        $netAmount = round(max(0, $amountNgn - $maintenanceCharge), 2);
+
         // 1) Loan Repayment path: our loan repayment init uses reference stored in qard_hasan_repayments.reference
         $loanRep = QardHasanRepayment::where('reference', $reference)->first();
         if ($loanRep) {
@@ -956,24 +968,29 @@ class WebhookController extends Controller
             return response()->json(['status' => 'ignored']);
         }
 
+        $maintenanceCharge = $this->calculateMaintenanceCharge($amountNgn);
+        $netAmount = round(max(0, $amountNgn - $maintenanceCharge), 2);
+
         // Idempotency check
         if (WalletTransaction::where('reference', $reference)->exists()) {
             return response()->json(['status' => 'ok']);
         }
 
-        DB::transaction(function () use ($topupUser, $amountNgn, $reference, $vd) {
-            $topupUser->increment('balance', $amountNgn);
+        DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vd) {
+            $topupUser->increment('balance', $netAmount);
 
             WalletTransaction::create([
                 'user_id' => $topupUser->id,
                 'type' => 'credit',
-                'amount' => $amountNgn,
+                'amount' => $netAmount,
                 'reference' => $reference,
                 'source' => 'flutterwave_charge',
                 'meta' => [
                     'channel' => $vd['payment_type'] ?? null,
                     'flw_ref' => $vd['flw_ref'] ?? null,
                     'processor' => 'flutterwave',
+                    'maintenance_charge' => $maintenanceCharge,
+                    'gross_amount' => $amountNgn,
                 ],
             ]);
         });
@@ -1005,8 +1022,8 @@ class WebhookController extends Controller
         try {
             $topupUser->notify(new PaymentNotification(
                 title: 'Wallet Top-up Successful',
-                message: 'Your wallet has been credited successfully.',
-                amount: $amountNgn,
+                message: "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+                amount: $netAmount,
                 reference: $reference,
                 source: 'wallet_topup'
             ));
@@ -1023,12 +1040,27 @@ class WebhookController extends Controller
             $fresh = $topupUser->fresh();
             $newBal = (float) ($fresh->balance ?? 0);
             $sms = app(\App\Services\SmsService::class);
-            $msg = 'Wallet top-up: ₦'.number_format($amountNgn, 2).". New bal: ₦".number_format($newBal, 2).'. Ref: '.$reference;
+            $msg = 'Wallet top-up: ₦'.number_format($netAmount, 2)." (Maintenance: ₦".number_format($maintenanceCharge, 2)."). New bal: ₦".number_format($newBal, 2).'. Ref: '.$reference;
             $sms->send($fresh->phone ?? null, $msg);
         } catch (\Throwable $e) {
             // ignore SMS errors
         }
 
         return response()->json(['status' => 'success']);
+    }
+
+    /**
+     * Calculate system maintenance charge for wallet top-ups.
+     * 0.1% of the amount, capped at 500.
+     *
+     * @param float $amount
+     * @return float
+     */
+    private function calculateMaintenanceCharge(float $amount): float
+    {
+        $percentage = config('cooperative.wallet.maintenance_charge.percentage', 0.1) / 100;
+        $maxCharge = config('cooperative.wallet.maintenance_charge.max_amount', 500);
+
+        return round(min($amount * $percentage, (float) $maxCharge), 2);
     }
 }
