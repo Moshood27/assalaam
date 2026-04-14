@@ -17,30 +17,6 @@
     </header>
 
     <div class="p-4">
-      <!-- System Announcement -->
-      <div v-if="systemAnnouncement" class="mb-4 p-4 rounded-3xl bg-blue-600 text-white flex items-start gap-3 shadow-lg shadow-blue-200">
-        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shrink-0">📢</div>
-        <div class="flex-1">
-          <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">System Announcement</p>
-          <p class="text-sm font-bold leading-tight mt-0.5">{{ systemAnnouncement }}</p>
-        </div>
-      </div>
-
-      <!-- Soft Update Notice -->
-      <div v-if="isUpdateAvailable" class="mb-4 p-4 rounded-3xl bg-amber-100 border border-amber-200 text-amber-900 flex items-center gap-3">
-        <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white shrink-0">🚀</div>
-        <div class="flex-1">
-          <p class="text-xs font-bold">New Version Available ({{ currentVersion }})</p>
-          <p class="text-[10px]">Get the latest features and improvements.</p>
-        </div>
-        <button 
-          @click="openStore"
-          class="bg-amber-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm"
-        >
-          Update Now
-        </button>
-      </div>
-
       <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
         <div class="flex items-center gap-2 mb-2 relative z-10">
@@ -116,48 +92,6 @@
           <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Sharia Board Mediation in progress</p>
         </div>
         <div class="text-white/40">➡️</div>
-      </div>
-
-      <!-- Migration Verification Warning -->
-      <div v-if="dashboardData.migrated_at && !dashboardData.verified_at && !dashboardData.discrepancy_reported_at"
-           class="mt-4 p-4 rounded-3xl bg-emerald-50 border border-emerald-200 flex items-center gap-3"
-           @click="verifyMigration()">
-        <div class="text-2xl">✅</div>
-        <div class="flex-1">
-          <p class="text-sm font-bold text-emerald-900">Verify Opening Balances</p>
-          <p class="text-xs text-emerald-700 uppercase tracking-widest font-black">Action Required</p>
-          <p class="text-xs text-emerald-800 mt-1">Your total balance (Savings + Shares + Wallet) is ₦{{ formatMoney(dashboardData.total_balance) }}. Tap to verify.</p>
-        </div>
-        <div class="text-emerald-400">➡️</div>
-      </div>
-
-      <!-- Migration Discrepancy Reported Notice -->
-      <div v-if="dashboardData.migrated_at && !dashboardData.verified_at && dashboardData.discrepancy_reported_at"
-           class="mt-4 p-4 rounded-3xl bg-amber-50 border border-amber-200 flex items-center gap-3">
-        <div class="text-2xl">⏳</div>
-        <div class="flex-1">
-          <p class="text-sm font-bold text-amber-900">Discrepancy Reported</p>
-          <p class="text-xs text-amber-700">An admin is reviewing your opening balances. We will contact you soon.</p>
-        </div>
-      </div>
-
-      <!-- Passbook Snapshot -->
-      <div v-if="kpis.passbook_balance > 0" class="mt-4 p-5 rounded-[2rem] bg-white border border-slate-100 shadow-sm">
-        <div class="flex items-center justify-between mb-3">
-          <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Passbook Balance</p>
-          <button @click="$router.push('/passbook')" class="text-emerald-700 text-[11px] font-bold uppercase">View Ledger</button>
-        </div>
-        <h2 class="text-2xl font-black text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.passbook_balance) }}</h2>
-        <div class="mt-3 grid grid-cols-2 gap-4">
-          <div>
-            <p class="text-[10px] text-slate-400 uppercase font-bold">Ordinary Savings</p>
-            <p class="text-sm font-bold text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.ordinary_savings) }}</p>
-          </div>
-          <div>
-            <p class="text-[10px] text-slate-400 uppercase font-bold">Shares Capital</p>
-            <p class="text-sm font-bold text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.shares_capital) }}</p>
-          </div>
-        </div>
       </div>
 
       <!-- KPI row -->
@@ -378,18 +312,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from '../http'
-import { useAppStatusStore } from '../stores/appStatus'
-import { Browser } from '@capacitor/browser'
-
-const appStatusStore = useAppStatusStore()
-const systemAnnouncement = computed(() => appStatusStore.systemAnnouncement)
-const isUpdateAvailable = computed(() => appStatusStore.isUpdateAvailable)
-const currentVersion = computed(() => appStatusStore.currentVersion)
-
-const openStore = async () => {
-  const url = appStatusStore.playStoreUrl || 'https://play.google.com/store/apps/details?id=com.attaqwa.app'
-  await Browser.open({ url })
-}
 import getImageUrl from '../utils/image'
 import { useModal } from '../composables/useModal'
 import CustomNotice from '../components/CustomNotice.vue'
@@ -474,48 +396,6 @@ const utilLabel = (ux) => {
   if (type === 'airtime') return `Airtime — ${net} (${phone})`
   if (type === 'data') return `Data — ${net} (${phone})`
   return `${type || 'utility'} — ${net} (${phone})`
-}
-
-const verifyMigration = async () => {
-  const options = [
-    { label: 'Yes, it is correct', value: 'verify', primary: true },
-    { label: 'No, report discrepancy', value: 'report', danger: true },
-    { label: 'Cancel', value: 'cancel' }
-  ]
-
-  const choice = await modal.prompt(
-    'Verify Opening Balances',
-    `Welcome to Attaqwa Pay. Our records show your total balance (Savings + Shares + Wallet) is ₦${formatMoney(dashboardData.value.total_balance)}. Is this correct?`,
-    options
-  )
-
-  if (!choice || choice === 'cancel') return
-
-  if (choice === 'verify') {
-    try {
-      const { data } = await axios.post('/api/profile/verify-migration')
-      await modal.alert(data.message)
-      dashboardData.value.verified_at = data.verified_at
-    } catch (err) {
-      await modal.alert(err.response?.data?.message || 'Verification failed')
-    }
-  } else if (choice === 'report') {
-    const details = await modal.promptText(
-      'Report Discrepancy',
-      'Please describe the discrepancy in your records. What should your balance be?',
-      { placeholder: 'e.g. My savings should be ₦50,000 not ₦45,000...' }
-    )
-    if (!details) return
-
-    try {
-      const { data } = await axios.post('/api/profile/report-migration-error', { details })
-      await modal.alert(data.message)
-      // Update local state to show "Discrepancy Reported" status
-      dashboardData.value.discrepancy_reported_at = new Date().toISOString()
-    } catch (err) {
-      await modal.alert(err.response?.data?.message || 'Failed to submit report')
-    }
-  }
 }
 
 const load = async () => {

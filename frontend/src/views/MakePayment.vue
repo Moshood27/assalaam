@@ -210,17 +210,7 @@ const removeFromList = (idx) => paymentList.value.splice(idx, 1)
 
 const loadSchemes = async () => {
   const { data } = await axios.get('/api/schemes')
-  // Combine Savings and Shares into "Passbook" for the member-facing page
-  const savings = data.find(s => s.name === 'Savings')
-  const shares = data.find(s => s.name === 'Shares')
-  const passbook = data.find(s => s.name === 'Passbook')
-
-  if (savings && shares && passbook) {
-    // Show Passbook instead of Savings/Shares
-    schemes.value = data.filter(s => s.name !== 'Savings' && s.name !== 'Shares')
-  } else {
-    schemes.value = data
-  }
+  schemes.value = data
 }
 
 const loadProjects = async () => {

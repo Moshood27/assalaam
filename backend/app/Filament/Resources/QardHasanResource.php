@@ -103,7 +103,7 @@ class QardHasanResource extends Resource
                     ->required()
                     ->disabled()
                     ->dehydrated()
-                    ->helperText('Auto: 5% on first loan; 2 × thereafter (Passbook = Savings + Shares)'),
+                    ->helperText('Auto: 5% on first loan; 2 × thereafter (Savings + Shares)'),
                 Forms\Components\TextInput::make('total_installments')
                     ->numeric()
                     ->minValue(1)

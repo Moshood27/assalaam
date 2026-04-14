@@ -86,7 +86,7 @@
           </div>
 
           <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-            Your score is based on your cooperative behavior, consistent passbook contributions, and loan repayments. High scores unlock larger interest-free loans.
+            Your score is based on your cooperative behavior, consistent savings, and loan repayments. High scores unlock larger interest-free loans.
           </p>
 
           <div v-if="profile.attaqwa_tips && profile.attaqwa_tips.length > 0" class="mb-4 space-y-2">
@@ -160,52 +160,6 @@
           </div>
         </div>
         <div class="mt-3 text-xs text-gray-500">KYC status is used to prevent fraud and verify identity.</div>
-      </div>
-
-      <!-- Membership Documents -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Membership Documents</p>
-        <div class="space-y-3">
-          <button @click="downloadMembershipForm" :disabled="downloadingDoc" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 group transition-colors hover:border-emerald-200">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div class="text-left">
-                <p class="text-sm font-bold text-slate-800">Membership Enrolment Form</p>
-                <p class="text-[10px] text-slate-500 uppercase font-black tracking-widest">Download PDF</p>
-              </div>
-            </div>
-            <div class="text-emerald-700">
-              <svg v-if="!downloadingForm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span v-else class="text-[10px] font-bold animate-pulse">...</span>
-            </div>
-          </button>
-
-          <button @click="downloadImamAttestation" :disabled="downloadingDoc" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 group transition-colors hover:border-emerald-200">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div class="text-left">
-                <p class="text-sm font-bold text-slate-800">Attestation of Imam</p>
-                <p class="text-[10px] text-slate-500 uppercase font-black tracking-widest">Download PDF</p>
-              </div>
-            </div>
-            <div class="text-emerald-700">
-              <svg v-if="!downloadingImam" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span v-else class="text-[10px] font-bold animate-pulse">...</span>
-            </div>
-          </button>
-        </div>
       </div>
 
       <!-- Vendor Portal -->
@@ -390,22 +344,6 @@
           </div>
         </div>
         <p v-if="notifBusy" class="text-[10px] text-emerald-700 mt-3 font-bold">Saving preferences...</p>
-      </div>
-
-      <!-- Administrative Charges Preference -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Administrative Charges</p>
-        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 transition-colors hover:border-emerald-200">
-          <div class="pr-4 flex-1">
-            <p class="text-sm font-bold text-slate-700">Auto-Deduct Monthly Charge</p>
-            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Automatically deduct the monthly ₦300 administrative charge from your wallet balance.</p>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" v-model="profile.admin_charge_auto_deduct" class="sr-only peer" @change="toggleAdminCharge" :disabled="updatingAdminCharge">
-            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-700"></div>
-          </label>
-        </div>
-        <p v-if="updatingAdminCharge" class="text-[10px] text-emerald-700 mt-3 font-bold uppercase tracking-wider">Updating preference...</p>
       </div>
 
       <!-- Change Email -->
@@ -643,27 +581,6 @@ const resetForm = ref({ code: '', new_pin: '', confirm_pin: '' })
 const notifPrefs = ref({ notify_email: true, notify_sms: true, notify_push: true })
 const notifBusy = ref(false)
 
-// Administrative Charges state
-const updatingAdminCharge = ref(false)
-const toggleAdminCharge = async () => {
-  updatingAdminCharge.value = true
-  const newValue = !!profile.value.admin_charge_auto_deduct
-  try {
-    const resp = await axios.post('/api/profile/admin-charge-preference', {
-      admin_charge_auto_deduct: newValue
-    })
-    profile.value.admin_charge_auto_deduct = !!resp.data.admin_charge_auto_deduct
-    // Success - no alert needed if it's a toggle, or optional
-  } catch (err) {
-    console.error(err)
-    // Revert on error
-    profile.value.admin_charge_auto_deduct = !newValue
-    alert(err?.response?.data?.message || 'Failed to update preference.')
-  } finally {
-    updatingAdminCharge.value = false
-  }
-}
-
 const copy = async (text) => {
   try {
     await navigator.clipboard.writeText(String(text || ''))
@@ -675,48 +592,6 @@ const copy = async (text) => {
 
 const goToWallet = () => router.push('/wallet')
 
-
-const downloadingForm = ref(false)
-const downloadingImam = ref(false)
-const downloadingDoc = computed(() => downloadingForm.value || downloadingImam.value)
-
-const downloadMembershipForm = async () => {
-  downloadingForm.value = true
-  try {
-    const resp = await axios.get('/api/download-membership-form', { responseType: 'blob' })
-    const url = window.URL.createObjectURL(new Blob([resp.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `Membership_Form_${profile.value.membership_id}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    alert('Failed to download membership form.')
-  } finally {
-    downloadingForm.value = false
-  }
-}
-
-const downloadImamAttestation = async () => {
-  downloadingImam.value = true
-  try {
-    const resp = await axios.get('/api/download-imam-attestation', { responseType: 'blob' })
-    const url = window.URL.createObjectURL(new Blob([resp.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `Imam_Attestation_${profile.value.membership_id}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    alert('Failed to download Imam attestation.')
-  } finally {
-    downloadingImam.value = false
-  }
-}
 
 const chooseFile = () => fileInput.value && fileInput.value.click()
 

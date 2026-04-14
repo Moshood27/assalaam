@@ -157,7 +157,7 @@
               <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Wealth Breakdown</h4>
               <div class="bg-slate-50 rounded-2xl p-4 space-y-3">
                 <div class="flex justify-between text-sm">
-                  <span class="text-slate-500">Passbook Balance</span>
+                  <span class="text-slate-500">Savings & Shares</span>
                   <span class="font-bold text-slate-800">₦{{ formatMoney(goldData.zakat.report.savings + goldData.zakat.report.shares) }}</span>
                 </div>
                 <div class="flex justify-between text-sm">

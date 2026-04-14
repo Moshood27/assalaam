@@ -23,14 +23,22 @@
                   <h3 class="section-title">Qard Hasan Eligibility</h3>
                   <button class="text-xs font-bold text-slate-500 hover:text-slate-700" @click="fetchEligibility">Refresh</button>
                 </div>
-                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+                <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Passbook Balance (Savings + Shares)</p>
-                    <p class="text-2xl font-black text-slate-800">₦ {{ n(eligibility.base) }}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">Savings</p>
+                    <p class="money">₦ {{ n(eligibility.savings) }}</p>
                   </div>
-                  <div class="sm:text-right">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Max Eligible Loan</p>
-                    <p class="font-black text-emerald-700 text-2xl">₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
+                  <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">Shares</p>
+                    <p class="money">₦ {{ n(eligibility.shares) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">Base (S + Sh)</p>
+                    <p class="money">₦ {{ n(eligibility.base) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">Eligible (policy + score)</p>
+                    <p class="font-black text-emerald-700 text-lg">₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
                   </div>
                 </div>
                 <div class="px-5 pb-5 pt-0">
@@ -51,7 +59,7 @@
                     Trust boost applied: +{{ eligibility.limit_boost_pct }}% to your loan limit.
                   </p>
                   <p class="text-[11px] text-slate-500 mb-2">
-                    <span v-if="eligibility.is_first_loan">First loan is capped at 5% of your Passbook balance.</span>
+                    <span v-if="eligibility.is_first_loan">First loan is capped at 5% of your base (Savings + Shares).</span>
                     <span v-else>Eligible up to 2 × your base.</span>
                     <span class="font-semibold"> Eligible now: ₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}.</span>
                   </p>

@@ -40,27 +40,15 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $fillable = [
         'name',
-        'surname',
-        'other_names',
-        'gender',
-        'native_place',
-        'dob',
-        'marital_status',
-        'occupation',
         'email',
         'phone',
-        'secondary_phone',
         'address',
-        'residential_address',
-        'permanent_address',
         'device_token',
         'fcm_token',
         'password',
         'branch_id',
         'membership_number',
         'balance',
-        'ordinary_savings',
-        'shares_capital',
         'outstanding_fines',
         'created_at',
         'is_admin',
@@ -71,8 +59,6 @@ class User extends Authenticatable implements FilamentUser
         'dva_bank_name',
         'dva_account_name',
         'passport_path',
-        'id_card_path',
-        'proof_of_address_path',
         'bvn',
         'bvn_verified_at',
         'dva_verification_meta',
@@ -96,44 +82,6 @@ class User extends Authenticatable implements FilamentUser
         'wellness_check_notified_at',
         'zakat_nisab_crossed_at',
         'zakat_last_paid_at',
-        'nature_of_business',
-        'business_address',
-        'has_other_cooperatives',
-        'other_cooperative_details',
-        'nok_name',
-        'nok_address',
-        'nok_phone',
-        'nok_relationship',
-        'guarantor_name',
-        'guarantor_address',
-        'guarantor_phone',
-        'guarantor_occupation',
-        'guarantor_signature_path',
-        'religious_society_name',
-        'imam_name',
-        'mosque_address',
-        'imam_phone',
-        'duration_of_jamma_membership',
-        'imam_approval_status',
-        'imam_approved_at',
-        'imam_signature_path',
-        'spouse_father_name',
-        'spouse_father_address',
-        'spouse_father_business_address',
-        'spouse_father_phone',
-        'spouse_father_consent_signature_path',
-        'admission_form_number',
-        'admission_date',
-        'admission_officer_name',
-        'officer_recommendation',
-        'approval_status',
-        'president_signature_path',
-        'president_signed_at',
-        'secretary_general_signature_path',
-        'secretary_general_signed_at',
-        'migrated_at',
-        'verified_at',
-        'discrepancy_reported_at',
     ];
 
     /**
@@ -160,8 +108,6 @@ class User extends Authenticatable implements FilamentUser
             'is_admin' => 'boolean',
             'is_defaulter' => 'boolean',
             'balance' => 'decimal:2',
-            'ordinary_savings' => 'decimal:2',
-            'shares_capital' => 'decimal:2',
             'outstanding_fines' => 'decimal:2',
             'bvn_verified_at' => 'datetime',
             'dva_verification_meta' => 'array',
@@ -182,16 +128,6 @@ class User extends Authenticatable implements FilamentUser
             'wellness_check_notified_at' => 'datetime',
             'zakat_nisab_crossed_at' => 'datetime',
             'zakat_last_paid_at' => 'datetime',
-            'dob' => 'date',
-            'admission_date' => 'date',
-            'has_other_cooperatives' => 'boolean',
-            'imam_approval_status' => 'boolean',
-            'imam_approved_at' => 'datetime',
-            'president_signed_at' => 'datetime',
-            'secretary_general_signed_at' => 'datetime',
-            'migrated_at' => 'datetime',
-            'verified_at' => 'datetime',
-            'discrepancy_reported_at' => 'datetime',
         ];
     }
 
@@ -397,52 +333,23 @@ class User extends Authenticatable implements FilamentUser
      */
     public function savingsSharesEligibility(): array
     {
-        // Try to use pre-calculated columns first (faster) if they are populated
-        // We check for null/zero but only rely on them if they seem plausible (e.g. at least one is > 0)
-        // Since we are "continuing without running migration", we must handle the case where they don't exist yet.
-        try {
-            if ($this->ordinary_savings > 0 || $this->shares_capital > 0) {
-                $savings = (float) $this->ordinary_savings;
-                $shares = (float) $this->shares_capital;
-                $base = round($savings + $shares, 2);
-                $eligibility = round($base * 2, 2);
-
-                return [
-                    'savings' => $savings,
-                    'shares' => $shares,
-                    'base' => $base,
-                    'eligibility' => $eligibility,
-                ];
-            }
-        } catch (\Throwable $e) {}
-
-        // Fallback to slow sum calculation
-        // Scheme IDs for Savings, Shares and Passbook
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Passbook'])->pluck('id', 'name');
+        // Scheme IDs for Savings and Shares
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id', 'name');
 
         $savings = 0.0;
         $shares = 0.0;
 
         if (isset($schemes['Savings'])) {
-            $savings += (float) $this->contributions()
+            $savings = (float) $this->contributions()
                 ->where('status', 'success')
                 ->where('scheme_id', $schemes['Savings'])
                 ->sum('amount');
         }
         if (isset($schemes['Shares'])) {
-            $shares += (float) $this->contributions()
+            $shares = (float) $this->contributions()
                 ->where('status', 'success')
                 ->where('scheme_id', $schemes['Shares'])
                 ->sum('amount');
-        }
-        if (isset($schemes['Passbook'])) {
-            $passbook = (float) $this->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Passbook'])
-                ->sum('amount');
-            $half = round($passbook / 2, 2);
-            $savings += $half;
-            $shares += ($passbook - $half);
         }
 
         $base = round($savings + $shares, 2);
@@ -622,8 +529,13 @@ class User extends Authenticatable implements FilamentUser
      */
     public function zakatBaseWealth(float $goldPrice): float
     {
-        $passbook = $this->savingsSharesEligibility();
-        $savingsAndShares = (float) $passbook['base'];
+        // Savings, Shares are usually stored in Contributions
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id');
+
+        $savingsAndShares = (float) $this->contributions()
+            ->where('status', 'success')
+            ->whereIn('scheme_id', $schemes)
+            ->sum('amount');
 
         $goldValue = round(($this->gold_balance ?? 0) * $goldPrice, 2);
         $walletBalance = (float) ($this->balance ?? 0);

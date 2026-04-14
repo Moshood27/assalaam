@@ -143,8 +143,6 @@ class DashboardController extends Controller
             ];
         }
 
-        $passbook = $user->savingsSharesEligibility();
-
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
@@ -155,9 +153,6 @@ class DashboardController extends Controller
             'gold_balance' => (float) $user->gold_balance,
             'gold_value_naira' => $goldSellPrice ? round($user->gold_balance * $goldSellPrice, 2) : null,
             'gold_price_per_gram' => $goldBasePrice,
-            'ordinary_savings' => (float) $passbook['savings'],
-            'shares_capital' => (float) $passbook['shares'],
-            'passbook_balance' => (float) $passbook['base'],
             'vendor' => $vendorStatus,
             'active_disputes_count' => $activeDisputesCount,
             'outstanding_fines' => (float) $user->outstanding_fines,
@@ -170,10 +165,6 @@ class DashboardController extends Controller
             'membership_id' => $user->membership_number,
             'passport_url' => $passportUrl,
             'balance' => (float) $user->balance,
-            'total_balance' => (float) ($user->balance + $passbook['base']),
-            'migrated_at' => optional($user->migrated_at)->toISOString(),
-            'verified_at' => optional($user->verified_at)->toISOString(),
-            'discrepancy_reported_at' => optional($user->discrepancy_reported_at)->toISOString(),
             'joined_at' => optional($user->created_at)->toISOString(),
             'branch' => $user->branch ? [
                 'id' => $user->branch->id,

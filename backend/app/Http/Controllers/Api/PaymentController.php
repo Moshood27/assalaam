@@ -124,34 +124,6 @@ class PaymentController extends Controller
 
         // Pre-create pending contributions for each scheme (idempotent distribution record)
         foreach ($sanitized as $item) {
-            $scheme = Scheme::find($item['scheme_id']);
-
-            if ($scheme && $scheme->name === 'Passbook') {
-                $savingsScheme = Scheme::where('name', 'Savings')->first();
-                $sharesScheme = Scheme::where('name', 'Shares')->first();
-
-                if ($savingsScheme && $sharesScheme) {
-                    $amount = (float) $item['amount'];
-                    $savingsAmount = round($amount / 2, 2);
-                    $sharesAmount = $amount - $savingsAmount;
-
-                    $user->contributions()->create([
-                        'scheme_id' => $savingsScheme->id,
-                        'amount' => $savingsAmount,
-                        'reference' => $reference,
-                        'status' => 'pending',
-                    ]);
-
-                    $user->contributions()->create([
-                        'scheme_id' => $sharesScheme->id,
-                        'amount' => $sharesAmount,
-                        'reference' => $reference,
-                        'status' => 'pending',
-                    ]);
-                    continue;
-                }
-            }
-
             $payloadData = [
                 'scheme_id' => $item['scheme_id'],
                 'amount' => $item['amount'],
