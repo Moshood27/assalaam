@@ -1,26 +1,16 @@
-# System Migration (Opening Balance Strategy) – Guide
+# System Migration Strategy
 
-Applicable date: 2026-04-14
+> **Note:** For detailed step-by-step instructions on how to use the migration tools in the Admin Panel, please refer to the **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)**.
 
 ## 1) Concept Overview
 - The "Opening Balance" migration strategy is designed to transition Attaqwa Cooperative from paper/Excel records to the digital platform without importing every historical transaction.
 - **Amanah (Trust):** Maintaining accuracy is paramount. The system creates a clear audit trail for every migrated balance so members can verify their starting point.
 - **Cut-off Date:** A specific date (e.g., Dec 31st) where paper books are closed and digital records begin.
 
----
-
-## 2) Data Model & Audit Trail
-The migration affects several core tables to ensure financial integrity.
-
-- **User Flags:**
-  - `users.migrated_at`: Timestamp when the user was imported.
-  - `users.verified_at`: Timestamp when the member confirmed their opening balance.
-  - `users.discrepancy_reported_at`: Timestamp if a member flagged an error.
-
-- **Financial Records (Audit Trail):**
-  - **Wallet:** A `WalletTransaction` is created with `type = 'migration_credit'`.
-  - **Schemes (Savings, Shares, etc.):** A `Contribution` record is created with `status = 'success'` and a reference indicating it's an opening balance.
-  - **Backdating:** All migration records are backdated to the selected **Migration Cut-off Date**.
+## 2) The "Delete and Reset" Approach (v2.0)
+- In addition to standard imports, we've implemented a **"Delete and Reset"** strategy to handle transition from testing/demo phases to a Live environment.
+- This ensures any demo funds created by members are wiped before the official migration data is loaded.
+- History is rebuilt from monthly Excel "Passbook Master" files to ensure a clean history view for members.
 
 ---
 

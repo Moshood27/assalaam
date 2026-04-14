@@ -4,6 +4,7 @@ Date: 2026-04-04
 
 Start here
 - README.md – High‑level overview, architecture notes, and setup guidance.
+- MIGRATION_GUIDE.md – **NEW:** Comprehensive step-by-step guide for the "Delete and Reset" system migration.
 - BUILD_AND_DEPLOY.md – Build, run, and deploy instructions.
 - DEPLOYMENT.md – Server environment and deployment checklist.
 - VPS_UPGRADE_GUIDE.md – **NEW:** Steps to update the existing VPS with new implementation features.
