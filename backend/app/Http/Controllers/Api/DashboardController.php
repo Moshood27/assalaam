@@ -188,6 +188,7 @@ class DashboardController extends Controller
                 'total_balance' => (float) $user->balance +
                                   (float) $user->ordinary_savings +
                                   (float) $user->shares_capital +
+                                  (float) $user->takafulContributions()->where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount') +
                                   (float) $user->building_balance +
                                   (float) $user->development_fund_balance +
                                   (float) $user->agm_balance +

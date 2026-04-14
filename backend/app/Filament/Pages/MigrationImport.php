@@ -139,7 +139,7 @@ class MigrationImport extends Page implements HasForms
         }
 
         // Add Takaful migration contributions
-        $otherFunds += \App\Models\TakafulContribution::where('type', 'migration')->sum('amount');
+        $otherFunds += \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
 
         $data = [
             'date' => now()->format('d M, Y H:i'),
@@ -233,7 +233,7 @@ class MigrationImport extends Page implements HasForms
         }
 
         // Add Takaful migration contributions
-        $otherFunds += \App\Models\TakafulContribution::where('type', 'migration')->sum('amount');
+        $otherFunds += \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
 
         $totalLoans = QardHasan::where('status', 'active')->sum('principal_amount');
         $paidLoans = QardHasan::where('status', 'active')->sum('paid_amount');
