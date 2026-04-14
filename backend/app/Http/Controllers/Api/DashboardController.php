@@ -173,6 +173,7 @@ class DashboardController extends Controller
             'total_balance' => (float) ($user->balance + $passbook['base']),
             'migrated_at' => optional($user->migrated_at)->toISOString(),
             'verified_at' => optional($user->verified_at)->toISOString(),
+            'discrepancy_reported_at' => optional($user->discrepancy_reported_at)->toISOString(),
             'joined_at' => optional($user->created_at)->toISOString(),
             'branch' => $user->branch ? [
                 'id' => $user->branch->id,

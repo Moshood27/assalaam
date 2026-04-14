@@ -50,6 +50,15 @@ docker exec -it islamcoop-app php artisan optimize
 docker exec -it islamcoop-app php artisan filament:assets
 ```
 
+### Step F: Clear Filament-Specific Caches (Important)
+If you encounter `RouteNotFoundException` or the new page is missing from the sidebar, run:
+```bash
+docker exec -it islamcoop-app php artisan route:clear
+docker exec -it islamcoop-app php artisan config:clear
+docker exec -it islamcoop-app php artisan filament:clear-cached-components
+docker exec -it islamcoop-app php artisan view:clear
+```
+
 ---
 
 ## 3) Post-Update Checklist

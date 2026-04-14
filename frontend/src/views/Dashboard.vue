@@ -119,7 +119,7 @@
       </div>
 
       <!-- Migration Verification Warning -->
-      <div v-if="dashboardData.migrated_at && !dashboardData.verified_at"
+      <div v-if="dashboardData.migrated_at && !dashboardData.verified_at && !dashboardData.discrepancy_reported_at"
            class="mt-4 p-4 rounded-3xl bg-emerald-50 border border-emerald-200 flex items-center gap-3"
            @click="verifyMigration()">
         <div class="text-2xl">✅</div>
@@ -129,6 +129,16 @@
           <p class="text-xs text-emerald-800 mt-1">Your total balance (Savings + Shares + Wallet) is ₦{{ formatMoney(dashboardData.total_balance) }}. Tap to verify.</p>
         </div>
         <div class="text-emerald-400">➡️</div>
+      </div>
+
+      <!-- Migration Discrepancy Reported Notice -->
+      <div v-if="dashboardData.migrated_at && !dashboardData.verified_at && dashboardData.discrepancy_reported_at"
+           class="mt-4 p-4 rounded-3xl bg-amber-50 border border-amber-200 flex items-center gap-3">
+        <div class="text-2xl">⏳</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-amber-900">Discrepancy Reported</p>
+          <p class="text-xs text-amber-700">An admin is reviewing your opening balances. We will contact you soon.</p>
+        </div>
       </div>
 
       <!-- Passbook Snapshot -->
@@ -500,6 +510,8 @@ const verifyMigration = async () => {
     try {
       const { data } = await axios.post('/api/profile/report-migration-error', { details })
       await modal.alert(data.message)
+      // Update local state to show "Discrepancy Reported" status
+      dashboardData.value.discrepancy_reported_at = new Date().toISOString()
     } catch (err) {
       await modal.alert(err.response?.data?.message || 'Failed to submit report')
     }
