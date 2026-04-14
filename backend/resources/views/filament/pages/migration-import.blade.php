@@ -23,6 +23,13 @@
             </x-slot>
             <p class="text-sm text-gray-500 mb-4">Import Name, Membership No, Phone, Email, Branch, Address.</p>
 
+            <div class="mb-4">
+                <a href="/admin/templates/migration-users.xlsx" class="text-primary-600 hover:underline flex items-center gap-1 text-sm font-medium">
+                    <x-heroicon-o-document-arrow-down class="w-4 h-4" />
+                    Download User Template (Excel)
+                </a>
+            </div>
+
             <form wire:submit.prevent="importMembers">
                 <div class="mb-4">
                     <input type="file" wire:model="membersFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-gray-700 dark:file:text-gray-300">
@@ -40,6 +47,13 @@
             </x-slot>
             <p class="text-sm text-gray-500 mb-4">Import Savings, Shares, Takaful, Building, Development, AGM, Welfare, H Savings, Gold, and all other cooperative funds.</p>
 
+            <div class="mb-4">
+                <a href="/admin/templates/migration-balances.xlsx" class="text-primary-600 hover:underline flex items-center gap-1 text-sm font-medium">
+                    <x-heroicon-o-document-arrow-down class="w-4 h-4" />
+                    Download Balance Template (Excel)
+                </a>
+            </div>
+
             <form wire:submit.prevent="importBalances">
                 <div class="mb-4">
                     <input type="file" wire:model="balancesFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-gray-700 dark:file:text-gray-300">
@@ -56,6 +70,13 @@
                 3. Loan Master
             </x-slot>
             <p class="text-sm text-gray-500 mb-4">Import Remaining Principal and Next Installment Amounts.</p>
+
+            <div class="mb-4">
+                <a href="/admin/templates/migration-loans.xlsx" class="text-primary-600 hover:underline flex items-center gap-1 text-sm font-medium">
+                    <x-heroicon-o-document-arrow-down class="w-4 h-4" />
+                    Download Loan Template (Excel)
+                </a>
+            </div>
 
             <form wire:submit.prevent="importLoans">
                 <div class="mb-4">
@@ -78,9 +99,9 @@
                     <li><strong>Step 1: Cleanup:</strong> Ensure Excel data matches the physical paper passbooks.</li>
                     <li><strong>Step 2: Template:</strong> Format Excel to match headings:
                         <ul>
-                            <li><strong>Members:</strong> <code>name, membership_no, phone, email, branch, address</code></li>
-                            <li><strong>Balances:</strong> <code>member_no, savings_balance, shares_balance, takaful_balance, development_fund_balance, wallet_balance, building_balance, agm_balance, loan_repayment_balance, fine_balance, welfare_balance, lateness_balance, stationery_balance, loan_form_balance, others_balance, id_card_balance, emergency_balance, entrance_balance, h_savings_balance, investment_balance, digital_gold_balance, group_savings_balance, outstanding_fines</code></li>
-                            <li><strong>Loans:</strong> <code>member_no, original_loan_amount, total_repaid_to_date, remaining_principal, next_installment_amount</code></li>
+                            <li><strong>Members:</strong> <code>name, membership_no, phone, email, address, branch</code></li>
+                            <li><strong>Balances:</strong> <code>membership_no, savings_balance, shares_balance, takaful_balance, development_fund_balance, outstanding_fines, wallet_balance, building_balance, agm_balance, loan_repayment_balance, fine_balance, welfare_balance, lateness_balance, stationery_balance, loan_form_balance, others_balance, id_card_balance, emergency_balance, entrance_balance, h_savings_balance, investment_balance, digital_gold_balance, group_savings_balance</code></li>
+                            <li><strong>Loans:</strong> <code>membership_no, original_loan_amount, total_repaid_to_date, remaining_principal, next_installment_amount</code></li>
                         </ul>
                     </li>
                     <li><strong>Step 3: Reconciliation:</strong> After each import, run the reconciliation report to verify totals match your paper records.</li>
