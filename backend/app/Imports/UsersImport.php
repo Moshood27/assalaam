@@ -8,15 +8,21 @@ use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Support\Str;
 
-class UsersImport implements ToModel, WithHeadingRow, WithValidation
+class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithChunkReading
 {
     protected $migrationDate;
 
     public function __construct($migrationDate = null)
     {
         $this->migrationDate = $migrationDate ?: now();
+    }
+
+    public function chunkSize(): int
+    {
+        return 100;
     }
 
     /**

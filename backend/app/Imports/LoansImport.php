@@ -7,15 +7,21 @@ use App\Models\User;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Support\Str;
 
-class LoansImport implements ToModel, WithHeadingRow, WithValidation
+class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkReading
 {
     protected $migrationDate;
 
     public function __construct($migrationDate = null)
     {
         $this->migrationDate = $migrationDate ?: now();
+    }
+
+    public function chunkSize(): int
+    {
+        return 100;
     }
 
     /**

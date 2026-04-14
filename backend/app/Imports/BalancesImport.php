@@ -13,15 +13,23 @@ use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Row;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
-class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
+class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithChunkReading
 {
     protected $migrationDate;
+    protected static $schemesCache = [];
 
     public function __construct($migrationDate = null)
     {
         $this->migrationDate = $migrationDate ?: now();
+    }
+
+    public function chunkSize(): int
+    {
+        return 100;
     }
 
     public function onRow(Row $row)
@@ -40,211 +48,419 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
                     ->exists();
             };
 
+            // Safety: Ensure user balance columns are not NULL before incrementing
+            $ensureNotNull = function ($column) use ($user) {
+                if (is_null($user->{$column})) {
+                    $user->{$column} = 0;
+                    $user->save();
+                }
+            };
+
             // 1. Savings
-            if ($savings = (float) ($data['savings_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Savings')) {
-                    $user->increment('ordinary_savings', $savings);
-                    $this->processOpeningBalance($user, 'Savings', $savings);
+            $savings = (float) ($data['savings_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Savings')) {
+                $ensureNotNull('ordinary_savings');
+
+                // Reconciliation: Set balance to exactly what's in Excel
+                $currentBalance = (float) $user->ordinary_savings;
+                $diff = $savings - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('ordinary_savings', $diff);
+                    $this->processOpeningBalance($user, 'Savings', $savings, $diff);
+                } else {
+                    // Even if diff is 0, we mark it as migrated to avoid future re-processing
+                    $this->markAsMigrated($user, 'Savings', $savings);
+                    $user->save();
                 }
             }
 
             // 2. Shares
-            if ($shares = (float) ($data['shares_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Shares')) {
-                    $user->increment('shares_capital', $shares);
-                    $this->processOpeningBalance($user, 'Shares', $shares);
+            $shares = (float) ($data['shares_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Shares')) {
+                $ensureNotNull('shares_capital');
+
+                $currentBalance = (float) $user->shares_capital;
+                $diff = $shares - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('shares_capital', $diff);
+                    $this->processOpeningBalance($user, 'Shares', $shares, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Shares', $shares);
+                    $user->save();
                 }
             }
 
             // 3. Takaful
-            if ($takaful = (float) ($data['takaful_balance'] ?? 0)) {
-                // Takaful has its own check inside processTakafulOpening
-                $this->processTakafulOpening($user, $takaful);
-            }
+            $takaful = (float) ($data['takaful_balance'] ?? 0);
+            // Takaful has its own check inside processTakafulOpening
+            $this->processTakafulOpening($user, $takaful);
 
             // 4. Development Fund
-            if ($dev = (float) ($data['development_fund_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Development')) {
-                    $user->increment('development_fund_balance', $dev);
-                    $this->processOpeningBalance($user, 'Development', $dev);
+            $dev = (float) ($data['development_fund_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Development')) {
+                $ensureNotNull('development_fund_balance');
+
+                $currentBalance = (float) $user->development_fund_balance;
+                $diff = $dev - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('development_fund_balance', $diff);
+                    $this->processOpeningBalance($user, 'Development', $dev, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Development', $dev);
+                    $user->save();
                 }
             }
 
             // 5. Outstanding Fines
-            if ($fines = (float) ($data['outstanding_fines'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Outstanding Fines')) {
-                    $user->increment('outstanding_fines', $fines);
+            $fines = (float) ($data['outstanding_fines'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Outstanding Fines')) {
+                $ensureNotNull('outstanding_fines');
+
+                $currentBalance = (float) $user->outstanding_fines;
+                $diff = $fines - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('outstanding_fines', $diff);
                     // Create a transaction to mark it as done
                     WalletTransaction::create([
                         'user_id' => $user->id,
-                        'amount' => $fines,
-                        'type' => 'debit', // Fines are usually debits, but here we are setting an outstanding balance
+                        'amount' => abs($diff),
+                        'type' => $diff > 0 ? 'debit' : 'credit', // Increasing debt is debit, decreasing is credit
                         'source' => 'migration',
                         'reference' => 'MIG-FINE-OUT-' . Str::random(6),
-                        'meta' => ['description' => 'System Migration Opening Balance for Outstanding Fines'],
+                        'meta' => [
+                            'description' => 'System Migration Opening Balance for Outstanding Fines',
+                            'final_balance' => $fines,
+                            'adjustment' => $diff
+                        ],
                         'created_at' => $this->migrationDate,
                     ]);
+                } else {
+                    $this->markAsMigrated($user, 'Outstanding Fines', $fines, 'MIG-FINE-OUT-');
+                    $user->save();
                 }
             }
 
             // 6. Wallet Balance
-            if ($wallet = (float) ($data['wallet_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Wallet Balance')) {
-                    $user->increment('balance', $wallet);
+            $wallet = (float) ($data['wallet_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Wallet Balance')) {
+                $ensureNotNull('balance');
+
+                $currentBalance = (float) $user->balance;
+                $diff = $wallet - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('balance', $diff);
                     WalletTransaction::create([
                         'user_id' => $user->id,
-                        'amount' => $wallet,
-                        'type' => 'credit',
+                        'amount' => abs($diff),
+                        'type' => $diff > 0 ? 'credit' : 'debit',
                         'source' => 'migration',
                         'reference' => 'MIG-WLT-' . Str::random(6),
-                        'meta' => ['description' => 'System Migration Opening Wallet Balance'],
+                        'meta' => [
+                            'description' => 'System Migration Opening Wallet Balance',
+                            'final_balance' => $wallet,
+                            'adjustment' => $diff
+                        ],
                         'created_at' => $this->migrationDate,
                     ]);
+                } else {
+                    $this->markAsMigrated($user, 'Wallet Balance', $wallet, 'MIG-WLT-');
+                    $user->save();
                 }
             }
 
             // 7. Building
-            if ($building = (float) ($data['building_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Building')) {
-                    $user->increment('building_balance', $building);
-                    $this->processOpeningBalance($user, 'Building', $building);
+            $building = (float) ($data['building_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Building')) {
+                $ensureNotNull('building_balance');
+
+                $currentBalance = (float) $user->building_balance;
+                $diff = $building - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('building_balance', $diff);
+                    $this->processOpeningBalance($user, 'Building', $building, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Building', $building);
+                    $user->save();
                 }
             }
 
             // 8. AGM
-            if ($agm = (float) ($data['agm_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for AGM')) {
-                    $user->increment('agm_balance', $agm);
-                    $this->processOpeningBalance($user, 'AGM', $agm);
+            $agm = (float) ($data['agm_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for AGM')) {
+                $ensureNotNull('agm_balance');
+
+                $currentBalance = (float) $user->agm_balance;
+                $diff = $agm - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('agm_balance', $diff);
+                    $this->processOpeningBalance($user, 'AGM', $agm, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'AGM', $agm);
+                    $user->save();
                 }
             }
 
             // 9. Loan Repayment
-            if ($loanRepay = (float) ($data['loan_repayment_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Loan Repayment')) {
-                    $user->increment('loan_repayment_balance', $loanRepay);
-                    $this->processOpeningBalance($user, 'Loan Repayment', $loanRepay);
+            $loanRepay = (float) ($data['loan_repayment_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Loan Repayment')) {
+                $ensureNotNull('loan_repayment_balance');
+
+                $currentBalance = (float) $user->loan_repayment_balance;
+                $diff = $loanRepay - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('loan_repayment_balance', $diff);
+                    $this->processOpeningBalance($user, 'Loan Repayment', $loanRepay, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Loan Repayment', $loanRepay);
+                    $user->save();
                 }
             }
 
             // 10. Fine (as a scheme/contribution)
-            if ($fine = (float) ($data['fine_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Fine')) {
-                    $user->increment('fine_balance', $fine);
-                    $this->processOpeningBalance($user, 'Fine', $fine);
+            $fine = (float) ($data['fine_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Fine')) {
+                $ensureNotNull('fine_balance');
+
+                $currentBalance = (float) $user->fine_balance;
+                $diff = $fine - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('fine_balance', $diff);
+                    $this->processOpeningBalance($user, 'Fine', $fine, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Fine', $fine);
+                    $user->save();
                 }
             }
 
             // 11. Welfare
-            if ($welfare = (float) ($data['welfare_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Welfare')) {
-                    $user->increment('welfare_balance', $welfare);
-                    $this->processOpeningBalance($user, 'Welfare', $welfare);
+            $welfare = (float) ($data['welfare_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Welfare')) {
+                $ensureNotNull('welfare_balance');
+
+                $currentBalance = (float) $user->welfare_balance;
+                $diff = $welfare - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('welfare_balance', $diff);
+                    $this->processOpeningBalance($user, 'Welfare', $welfare, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Welfare', $welfare);
+                    $user->save();
                 }
             }
 
             // 12. Lateness
-            if ($lateness = (float) ($data['lateness_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Lateness')) {
-                    $user->increment('lateness_balance', $lateness);
-                    $this->processOpeningBalance($user, 'Lateness', $lateness);
+            $lateness = (float) ($data['lateness_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Lateness')) {
+                $ensureNotNull('lateness_balance');
+
+                $currentBalance = (float) $user->lateness_balance;
+                $diff = $lateness - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('lateness_balance', $diff);
+                    $this->processOpeningBalance($user, 'Lateness', $lateness, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Lateness', $lateness);
+                    $user->save();
                 }
             }
 
             // 13. Stationery
-            if ($stationery = (float) ($data['stationery_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Stationery')) {
-                    $user->increment('stationery_balance', $stationery);
-                    $this->processOpeningBalance($user, 'Stationery', $stationery);
+            $stationery = (float) ($data['stationery_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Stationery')) {
+                $ensureNotNull('stationery_balance');
+
+                $currentBalance = (float) $user->stationery_balance;
+                $diff = $stationery - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('stationery_balance', $diff);
+                    $this->processOpeningBalance($user, 'Stationery', $stationery, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Stationery', $stationery);
+                    $user->save();
                 }
             }
 
             // 14. Loan Form
-            if ($loanForm = (float) ($data['loan_form_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Loan Form')) {
-                    $user->increment('loan_form_balance', $loanForm);
-                    $this->processOpeningBalance($user, 'Loan Form', $loanForm);
+            $loanForm = (float) ($data['loan_form_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Loan Form')) {
+                $ensureNotNull('loan_form_balance');
+
+                $currentBalance = (float) $user->loan_form_balance;
+                $diff = $loanForm - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('loan_form_balance', $diff);
+                    $this->processOpeningBalance($user, 'Loan Form', $loanForm, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Loan Form', $loanForm);
+                    $user->save();
                 }
             }
 
             // 15. Others
-            if ($others = (float) ($data['others_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Others')) {
-                    $user->increment('others_balance', $others);
-                    $this->processOpeningBalance($user, 'Others', $others);
+            $others = (float) ($data['others_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Others')) {
+                $ensureNotNull('others_balance');
+
+                $currentBalance = (float) $user->others_balance;
+                $diff = $others - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('others_balance', $diff);
+                    $this->processOpeningBalance($user, 'Others', $others, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Others', $others);
+                    $user->save();
                 }
             }
 
             // 16. ID Card
-            if ($idCard = (float) ($data['id_card_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for ID Card')) {
-                    $user->increment('id_card_balance', $idCard);
-                    $this->processOpeningBalance($user, 'ID Card', $idCard);
+            $idCard = (float) ($data['id_card_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for ID Card')) {
+                $ensureNotNull('id_card_balance');
+
+                $currentBalance = (float) $user->id_card_balance;
+                $diff = $idCard - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('id_card_balance', $diff);
+                    $this->processOpeningBalance($user, 'ID Card', $idCard, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'ID Card', $idCard);
+                    $user->save();
                 }
             }
 
             // 17. Emergency
-            if ($emergency = (float) ($data['emergency_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Emergency')) {
-                    $user->increment('emergency_balance', $emergency);
-                    $this->processOpeningBalance($user, 'Emergency', $emergency);
+            $emergency = (float) ($data['emergency_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Emergency')) {
+                $ensureNotNull('emergency_balance');
+
+                $currentBalance = (float) $user->emergency_balance;
+                $diff = $emergency - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('emergency_balance', $diff);
+                    $this->processOpeningBalance($user, 'Emergency', $emergency, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Emergency', $emergency);
+                    $user->save();
                 }
             }
 
             // 18. Entrance
-            if ($entrance = (float) ($data['entrance_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Entrance')) {
-                    $user->increment('entrance_balance', $entrance);
-                    $this->processOpeningBalance($user, 'Entrance', $entrance);
+            $entrance = (float) ($data['entrance_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Entrance')) {
+                $ensureNotNull('entrance_balance');
+
+                $currentBalance = (float) $user->entrance_balance;
+                $diff = $entrance - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('entrance_balance', $diff);
+                    $this->processOpeningBalance($user, 'Entrance', $entrance, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Entrance', $entrance);
+                    $user->save();
                 }
             }
 
             // 19. H Savings
-            if ($hSavings = (float) ($data['h_savings_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for H Savings')) {
-                    $user->increment('h_savings_balance', $hSavings);
-                    $this->processOpeningBalance($user, 'H Savings', $hSavings);
+            $hSavings = (float) ($data['h_savings_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for H Savings')) {
+                $ensureNotNull('h_savings_balance');
+
+                $currentBalance = (float) $user->h_savings_balance;
+                $diff = $hSavings - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('h_savings_balance', $diff);
+                    $this->processOpeningBalance($user, 'H Savings', $hSavings, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'H Savings', $hSavings);
+                    $user->save();
                 }
             }
 
             // 20. Investment
-            if ($investment = (float) ($data['investment_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Investment')) {
-                    $user->increment('investment_balance', $investment);
-                    $this->processOpeningBalance($user, 'Investment', $investment);
+            $investment = (float) ($data['investment_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Investment')) {
+                $ensureNotNull('investment_balance');
+
+                $currentBalance = (float) $user->investment_balance;
+                $diff = $investment - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('investment_balance', $diff);
+                    $this->processOpeningBalance($user, 'Investment', $investment, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Investment', $investment);
+                    $user->save();
                 }
             }
 
             // 21. Digital Gold (Weight in grams)
-            if ($gold = (float) ($data['digital_gold_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Gold Balance')) {
-                    $user->increment('gold_balance', $gold);
+            $gold = (float) ($data['digital_gold_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Gold Balance')) {
+                $ensureNotNull('gold_balance');
+
+                $currentBalance = (float) $user->gold_balance;
+                $diff = $gold - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('gold_balance', $diff);
                     WalletTransaction::create([
                         'user_id' => $user->id,
                         'amount' => 0, // It's gold, not naira
-                        'type' => 'credit',
+                        'type' => $diff > 0 ? 'credit' : 'debit',
                         'source' => 'migration',
                         'reference' => 'MIG-GOLD-' . Str::random(6),
                         'meta' => [
                             'description' => 'System Migration Opening Gold Balance',
-                            'gold_weight' => $gold
+                            'gold_weight' => abs($diff),
+                            'final_balance' => $gold,
+                            'adjustment' => $diff
                         ],
                         'created_at' => $this->migrationDate,
                     ]);
+                } else {
+                    $this->markAsMigrated($user, 'Gold Balance', $gold, 'MIG-GOLD-');
+                    $user->save();
                 }
             }
 
             // 22. Group Savings
-            if ($groupSavings = (float) ($data['group_savings_balance'] ?? 0)) {
-                if (!$checkMigrated('System Migration Opening Balance for Group Savings')) {
-                    $user->increment('group_savings_balance', $groupSavings);
-                    $this->processOpeningBalance($user, 'Group Savings', $groupSavings);
+            $groupSavings = (float) ($data['group_savings_balance'] ?? 0);
+            if (!$checkMigrated('System Migration Opening Balance for Group Savings')) {
+                $ensureNotNull('group_savings_balance');
+
+                $currentBalance = (float) $user->group_savings_balance;
+                $diff = $groupSavings - $currentBalance;
+
+                if ($diff != 0) {
+                    $user->increment('group_savings_balance', $diff);
+                    $this->processOpeningBalance($user, 'Group Savings', $groupSavings, $diff);
+                } else {
+                    $this->markAsMigrated($user, 'Group Savings', $groupSavings);
+                    $user->save();
                 }
             }
         });
     }
 
-    private function processOpeningBalance(User $user, string $schemeName, float $amount)
+    private function processOpeningBalance(User $user, string $schemeName, float $finalAmount, float $adjustment)
     {
         // Avoid duplicate migration if re-running
         $alreadyDone = WalletTransaction::where('user_id', $user->id)
@@ -256,29 +472,52 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
             return;
         }
 
-        $scheme = Scheme::where('name', $schemeName)->first();
-        if (!$scheme) {
-            $scheme = Scheme::create(['name' => $schemeName]);
+        if (!isset(self::$schemesCache[$schemeName])) {
+            self::$schemesCache[$schemeName] = Scheme::firstOrCreate(['name' => $schemeName]);
         }
+        $scheme = self::$schemesCache[$schemeName];
 
-        // Create the Migration Transaction audit trail
+        // Create the Migration Transaction audit trail (The adjustment)
         WalletTransaction::create([
             'user_id' => $user->id,
-            'amount' => $amount,
-            'type' => 'credit',
+            'amount' => abs($adjustment),
+            'type' => $adjustment > 0 ? 'credit' : 'debit',
             'source' => 'migration',
             'reference' => 'MIG-' . strtoupper(substr($schemeName, 0, 3)) . '-' . Str::random(6),
-            'meta' => ['description' => "System Migration Opening Balance for {$schemeName}"],
+            'meta' => [
+                'description' => "System Migration Opening Balance for {$schemeName}",
+                'final_balance' => $finalAmount,
+                'adjustment' => $adjustment
+            ],
             'created_at' => $this->migrationDate,
         ]);
 
         // Create a Contribution record to trigger balance updates in User
+        // We use the adjustment here because Contribution logic might trigger events
         Contribution::create([
             'user_id' => $user->id,
             'scheme_id' => $scheme->id,
-            'amount' => $amount,
+            'amount' => $adjustment, // Can be negative if supported by DB/Model, or we handle it
             'status' => 'success',
             'reference' => 'MIG-CNTRB-' . strtoupper(substr($schemeName, 0, 3)) . '-' . Str::random(6),
+            'created_at' => $this->migrationDate,
+        ]);
+    }
+
+    private function markAsMigrated(User $user, string $schemeName, float $finalAmount, string $prefix = 'MIG-SKIP-')
+    {
+        WalletTransaction::create([
+            'user_id' => $user->id,
+            'amount' => 0,
+            'type' => 'credit',
+            'source' => 'migration',
+            'reference' => $prefix . strtoupper(substr($schemeName, 0, 3)) . '-' . Str::random(6),
+            'meta' => [
+                'description' => "System Migration Opening Balance for {$schemeName}",
+                'final_balance' => $finalAmount,
+                'adjustment' => 0,
+                'note' => 'Balance already matched Excel; marked as migrated.'
+            ],
             'created_at' => $this->migrationDate,
         ]);
     }
