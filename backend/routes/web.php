@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\TemplateDownloadController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Response;
@@ -99,4 +100,11 @@ Route::middleware(['auth'])->prefix('admin/takaful/export')->group(function () {
     Route::get('/print/wallet-receipt/{transaction}', [PrintController::class, 'walletReceipt'])->name('admin.print.wallet-receipt');
     Route::get('/print/contribution-receipt/{contribution}', [PrintController::class, 'contributionReceipt'])->name('admin.print.contribution-receipt');
     Route::get('/print/utility-receipt/{transaction}', [PrintController::class, 'utilityReceipt'])->name('admin.print.utility-receipt');
+});
+
+// Admin template downloads
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/templates/members-template.xlsx', [TemplateDownloadController::class, 'members'])->name('admin.templates.members');
+    Route::get('/templates/loans-template.xlsx', [TemplateDownloadController::class, 'loans'])->name('admin.templates.loans');
+    Route::get('/templates/member-balance-template.xlsx', [TemplateDownloadController::class, 'memberBalance'])->name('admin.templates.member-balance');
 });

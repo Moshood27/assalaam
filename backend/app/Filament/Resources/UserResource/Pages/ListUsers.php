@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
+use App\Exports\MemberImportTemplate;
+use App\Exports\MemberBalanceImportTemplate;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Filament\Resources\UserResource;
 use App\Services\CsvImportService;
 use Filament\Actions;
@@ -34,10 +37,10 @@ class ListUsers extends ListRecords
                         ->maxSize(10240)
                         ->storeFiles(false),
                     Forms\Components\Placeholder::make('template_info')
-                        ->content(new \Illuminate\Support\HtmlString('Download the template for the required CSV format: <a href="/templates/members-template.csv" style="color:blue;text-decoration:underline;">Download Template</a>')),
+                        ->content(new \Illuminate\Support\HtmlString('Download Excel templates: <a href="/admin/templates/members-template.xlsx" style="color:blue;text-decoration:underline;">Full Member Import</a> · <a href="/admin/templates/member-balance-template.xlsx" style="color:blue;text-decoration:underline;">Balance-Only</a><br><small>Tip: Fill in Excel, then <strong>Save As CSV</strong> and upload here.</small>')),
                 ])
                 ->modalHeading('Import Members from CSV')
-                ->modalDescription('Upload a CSV with all required member fields. This will update existing members (by email/membership) or create new ones.')
+                ->modalDescription('Upload a CSV with required member fields. This will update existing members (by email/membership) or create new ones. Tip: Use the Excel templates above, then Save As CSV before uploading.')
                 ->action(function (array $data): void {
                     try {
                         /** @var CsvImportService $svc */
@@ -52,30 +55,13 @@ class ListUsers extends ListRecords
                     }
                 }),
             Actions\Action::make('downloadTemplate')
-                ->label('Download Template')
+                ->label('Download Template (Excel)')
                 ->icon('heroicon-o-document-arrow-down')
-                ->action(function () {
-                    $headers = [
-                        'name', 'surname', 'other_names', 'email', 'phone', 'gender', 'dob', 'marital_status',
-                        'occupation', 'secondary_phone', 'residential_address', 'permanent_address',
-                        'nature_of_business', 'business_address', 'has_other_cooperatives', 'other_cooperative_details',
-                        'nok_name', 'nok_address', 'nok_phone', 'nok_relationship',
-                        'guarantor_name', 'guarantor_address', 'guarantor_phone', 'guarantor_occupation',
-                        'religious_society_name', 'imam_name', 'mosque_address', 'imam_phone', 'duration_of_jamma_membership',
-                        'spouse_father_name', 'spouse_father_phone', 'spouse_father_address', 'spouse_father_business_address',
-                        'admission_form_number', 'admission_date', 'admission_officer_name', 'approval_status',
-                        'branch_id', 'membership_number', 'balance', 'is_defaulter'
-                    ];
-                    $callback = function() use ($headers) {
-                        $file = fopen('php://output', 'w');
-                        fputcsv($file, $headers);
-                        fclose($file);
-                    };
-                    return response()->stream($callback, 200, [
-                        "Content-type"        => "text/csv",
-                        "Content-Disposition" => "attachment; filename=members_template.csv",
-                    ]);
-                }),
+                ->action(fn () => Excel::download(new MemberImportTemplate, 'members_import_template.xlsx')),
+            Actions\Action::make('downloadBalanceTemplate')
+                ->label('Download Balance Template (Excel)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->action(fn () => Excel::download(new MemberBalanceImportTemplate, 'member_balance_import_template.xlsx')),
         ];
     }
 

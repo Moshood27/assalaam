@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\QardHasanResource\Pages;
 
+use App\Exports\LoanImportTemplate;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Filament\Resources\QardHasanResource;
 use App\Services\CsvImportService;
 use Filament\Actions;
@@ -33,9 +35,11 @@ class ListQardHasans extends ListRecords
                         ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
                         ->maxSize(10240)
                         ->storeFiles(false),
+                    Forms\Components\Placeholder::make('template_info')
+                        ->content(new \Illuminate\Support\HtmlString('Download the template for the required format: <a href="/admin/templates/loans-template.xlsx" style="color:blue;text-decoration:underline;">Download Excel Template</a>')),
                 ])
                 ->modalHeading('Import Loans from CSV')
-                ->modalDescription('Upload a CSV with columns: qard_id_string (optional), user_id or membership_number or email, principal_amount, total_installments, interval, admin_fee_flat, admin_fee_pct, paid_amount, status, per_installment (optional).')
+                ->modalDescription('Upload a CSV with required loan fields. Tip: Use the Excel template below, then Save As CSV before uploading.')
                 ->action(function (array $data): void {
                     try {
                         /** @var CsvImportService $svc */
@@ -49,6 +53,10 @@ class ListQardHasans extends ListRecords
                         Notification::make()->danger()->title('Import failed')->body($e->getMessage())->send();
                     }
                 }),
+            Actions\Action::make('downloadTemplate')
+                ->label('Download Template (Excel)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->action(fn () => Excel::download(new LoanImportTemplate, 'loans_import_template.xlsx')),
         ];
     }
 
