@@ -33,9 +33,11 @@ class ListUsers extends ListRecords
                         ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
                         ->maxSize(10240)
                         ->storeFiles(false),
+                    Forms\Components\Placeholder::make('template_info')
+                        ->content(new \Illuminate\Support\HtmlString('Download the template for the required CSV format: <a href="/templates/members-template.csv" style="color:blue;text-decoration:underline;">Download Template</a>')),
                 ])
                 ->modalHeading('Import Members from CSV')
-                ->modalDescription('Upload a CSV with columns: name, email, membership_number, branch_id, balance, is_defaulter. Template: /templates/members-template.csv')
+                ->modalDescription('Upload a CSV with all required member fields. This will update existing members (by email/membership) or create new ones.')
                 ->action(function (array $data): void {
                     try {
                         /** @var CsvImportService $svc */
@@ -49,16 +51,42 @@ class ListUsers extends ListRecords
                         Notification::make()->danger()->title('Import failed')->body($e->getMessage())->send();
                     }
                 }),
+            Actions\Action::make('downloadTemplate')
+                ->label('Download Template')
+                ->icon('heroicon-o-document-arrow-down')
+                ->action(function () {
+                    $headers = [
+                        'name', 'surname', 'other_names', 'email', 'phone', 'gender', 'dob', 'marital_status',
+                        'occupation', 'secondary_phone', 'residential_address', 'permanent_address',
+                        'nature_of_business', 'business_address', 'has_other_cooperatives', 'other_cooperative_details',
+                        'nok_name', 'nok_address', 'nok_phone', 'nok_relationship',
+                        'guarantor_name', 'guarantor_address', 'guarantor_phone', 'guarantor_occupation',
+                        'religious_society_name', 'imam_name', 'mosque_address', 'imam_phone', 'duration_of_jamma_membership',
+                        'spouse_father_name', 'spouse_father_phone', 'spouse_father_address', 'spouse_father_business_address',
+                        'admission_form_number', 'admission_date', 'admission_officer_name', 'approval_status',
+                        'branch_id', 'membership_number', 'balance', 'is_defaulter'
+                    ];
+                    $callback = function() use ($headers) {
+                        $file = fopen('php://output', 'w');
+                        fputcsv($file, $headers);
+                        fclose($file);
+                    };
+                    return response()->stream($callback, 200, [
+                        "Content-type"        => "text/csv",
+                        "Content-Disposition" => "attachment; filename=members_template.csv",
+                    ]);
+                }),
         ];
     }
 
     protected function getTableHeaderActions(): array
     {
         return [
-            Tables\Actions\Action::make('print')
-                ->label('Print')
+            Tables\Actions\Action::make('print_list')
+                ->label('Print List')
                 ->icon('heroicon-o-printer')
-                ->extraAttributes(['onclick' => 'window.print()']),
+                ->url(fn () => route('admin.print.users'))
+                ->openUrlInNewTab(),
         ];
     }
 }

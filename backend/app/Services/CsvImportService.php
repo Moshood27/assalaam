@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\QardHasan;
 use App\Models\Scheme;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class CsvImportService
@@ -35,7 +36,44 @@ class CsvImportService
                 $user = User::where('email', $email)->first();
             }
 
-            $data = ['name' => $name];
+            $data = [
+                'name' => $name,
+                'surname' => $row['surname'] ?? null,
+                'other_names' => $row['other_names'] ?? null,
+                'gender' => $row['gender'] ?? null,
+                'native_place' => $row['native_place'] ?? null,
+                'dob' => $row['dob'] ?? null,
+                'marital_status' => $row['marital_status'] ?? null,
+                'occupation' => $row['occupation'] ?? null,
+                'secondary_phone' => $row['secondary_phone'] ?? null,
+                'residential_address' => $row['residential_address'] ?? null,
+                'permanent_address' => $row['permanent_address'] ?? null,
+                'nature_of_business' => $row['nature_of_business'] ?? null,
+                'business_address' => $row['business_address'] ?? null,
+                'has_other_cooperatives' => $this->toBool($row['has_other_cooperatives'] ?? null) ?? false,
+                'other_cooperative_details' => $row['other_cooperative_details'] ?? null,
+                'nok_name' => $row['nok_name'] ?? null,
+                'nok_address' => $row['nok_address'] ?? null,
+                'nok_phone' => $row['nok_phone'] ?? null,
+                'nok_relationship' => $row['nok_relationship'] ?? null,
+                'guarantor_name' => $row['guarantor_name'] ?? null,
+                'guarantor_address' => $row['guarantor_address'] ?? null,
+                'guarantor_phone' => $row['guarantor_phone'] ?? null,
+                'guarantor_occupation' => $row['guarantor_occupation'] ?? null,
+                'religious_society_name' => $row['religious_society_name'] ?? null,
+                'imam_name' => $row['imam_name'] ?? null,
+                'mosque_address' => $row['mosque_address'] ?? null,
+                'imam_phone' => $row['imam_phone'] ?? null,
+                'duration_of_jamma_membership' => $row['duration_of_jamma_membership'] ?? null,
+                'spouse_father_name' => $row['spouse_father_name'] ?? null,
+                'spouse_father_phone' => $row['spouse_father_phone'] ?? null,
+                'spouse_father_address' => $row['spouse_father_address'] ?? null,
+                'spouse_father_business_address' => $row['spouse_father_business_address'] ?? null,
+                'admission_form_number' => $row['admission_form_number'] ?? null,
+                'admission_date' => $row['admission_date'] ?? null,
+                'admission_officer_name' => $row['admission_officer_name'] ?? null,
+                'approval_status' => $row['approval_status'] ?? 'approved',
+            ];
             if ($email) $data['email'] = $email;
             if ($branchId) $data['branch_id'] = $branchId;
             if ($membership) $data['membership_number'] = $membership;
@@ -43,8 +81,7 @@ class CsvImportService
             if (!is_null($isDefaulter)) $data['is_defaulter'] = $isDefaulter;
 
             if ($user) {
-                $user->fill($data);
-                $user->save();
+                $user->update(array_filter($data, fn($v) => !is_null($v)));
                 return ['updated' => 1, 'created' => 0, 'id' => $user->id];
             }
 
@@ -54,7 +91,7 @@ class CsvImportService
                 }
                 $data['email'] = strtolower('member_'.$membership.'@example.test');
             }
-            $data['password'] = Str::random(12);
+            $data['password'] = Hash::make(Str::random(12));
             $data['is_admin'] = false;
 
             $new = User::create($data);
