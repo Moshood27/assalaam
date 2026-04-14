@@ -1,0 +1,3 @@
+name,email,membership_number,branch_id,balance,is_defaulter
+John Doe,john@example.com,MEM-001,1,0,false
+Jane Smith,jane@example.com,MEM-002,2,1000,true

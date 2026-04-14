@@ -53,10 +53,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
-import { useToast } from 'vue-toastification'
-
-const toast = useToast()
+import axios from '../http'
 const profile = ref({})
 
 const membershipSections = [
@@ -143,13 +140,13 @@ onMounted(async () => {
     const { data } = await axios.get('/api/profile')
     profile.value = data
   } catch (error) {
-    toast.error('Failed to load membership details')
+    alert('Failed to load membership details')
   }
 })
 
 const downloadEnrolment = async () => {
   try {
-    toast.info('Generating enrolment form...')
+    // toast.info('Generating enrolment form...')
     const response = await axios.get('/api/download-membership-enrolment', { responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
@@ -157,15 +154,15 @@ const downloadEnrolment = async () => {
     link.setAttribute('download', `Membership_Enrolment_${profile.value.membership_id}.pdf`)
     document.body.appendChild(link)
     link.click()
-    toast.success('Downloaded successfully')
+    alert('Downloaded successfully')
   } catch (e) {
-    toast.error('Failed to download enrolment form')
+    alert('Failed to download enrolment form')
   }
 }
 
 const downloadImamAttestation = async () => {
   try {
-    toast.info('Generating attestation...')
+    // toast.info('Generating attestation...')
     const response = await axios.get('/api/download-imam-attestation', { responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
@@ -173,14 +170,15 @@ const downloadImamAttestation = async () => {
     link.setAttribute('download', `Imam_Attestation_${profile.value.membership_id}.pdf`)
     document.body.appendChild(link)
     link.click()
-    toast.success('Downloaded successfully')
+    alert('Downloaded successfully')
   } catch (e) {
-    toast.error('Failed to download attestation')
+    alert('Failed to download attestation')
   }
 }
 </script>
 
 <style scoped>
+@reference "../style.css";
 .header-fintech {
   @apply bg-white border-b border-slate-100 sticky top-0 z-40 px-4 py-3;
 }
