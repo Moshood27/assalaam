@@ -133,6 +133,7 @@ class User extends Authenticatable implements FilamentUser
         'secretary_general_signed_at',
         'migrated_at',
         'verified_at',
+        'discrepancy_reported_at',
     ];
 
     /**
@@ -190,6 +191,7 @@ class User extends Authenticatable implements FilamentUser
             'secretary_general_signed_at' => 'datetime',
             'migrated_at' => 'datetime',
             'verified_at' => 'datetime',
+            'discrepancy_reported_at' => 'datetime',
         ];
     }
 
