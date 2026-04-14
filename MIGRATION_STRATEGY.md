@@ -28,15 +28,16 @@ The migration affects several core tables to ensure financial integrity.
 Excel sheets must be formatted exactly to match the import logic.
 
 ### Member Master
-- **Fields:** `membership_no`, `name`, `phone`, `email`, `branch_id`, `address`.
-- **Constraint:** `membership_no` must be unique.
+- **Fields:** `membership_no`, `name`, `phone`, `email`, `branch`, `address`.
+- **Constraint:** `membership_no` must be unique. `branch` should match a Branch name (e.g., Lagos).
 
 ### Balances Master
-- **Fields:** `membership_no`, `savings_balance`, `shares_balance`, `takaful_balance`, `development_fund_balance`, `wallet_balance`.
-- **Constraint:** All values must be numeric.
+- **Fields:** `membership_no`, `savings_balance`, `shares_balance`, `takaful_balance`, `development_fund_balance`, `wallet_balance`, `building_balance`, `agm_balance`, `loan_repayment_balance`, `fine_balance`, `welfare_balance`, `lateness_balance`, `stationery_balance`, `loan_form_balance`, `others_balance`, `id_card_balance`, `emergency_balance`, `entrance_balance`, `h_savings_balance`, `investment_balance`, `digital_gold_balance`, `group_savings_balance`, `outstanding_fines`.
+- **Constraint:** All values must be numeric. `digital_gold_balance` is the weight in grams (e.g., 0.50).
 
 ### Loan Master
-- **Fields:** `membership_no`, `loan_type` (Murabahah|Qard Hasan), `original_amount`, `total_repaid`, `remaining_principal`, `next_due_date`.
+- **Fields:** `membership_no`, `original_loan_amount`, `total_repaid_to_date`, `remaining_principal`, `next_installment_amount`.
+- **Constraint:** All values must be numeric. `membership_no` must exist in the system.
 
 ---
 

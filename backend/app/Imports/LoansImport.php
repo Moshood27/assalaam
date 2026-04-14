@@ -25,7 +25,7 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation
     */
     public function model(array $row)
     {
-        $user = User::where('membership_number', $row['member_no'])->first();
+        $user = User::where('membership_number', $row['membership_no'])->first();
         if (!$user) {
             return null;
         }
@@ -58,7 +58,7 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'member_no' => 'required|exists:users,membership_number',
+            'membership_no' => 'required|exists:users,membership_number',
             'original_loan_amount' => 'required|numeric',
             'remaining_principal' => 'required|numeric',
             'next_installment_amount' => 'required|numeric',

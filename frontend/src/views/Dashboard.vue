@@ -94,6 +94,16 @@
         <div class="text-white/40">➡️</div>
       </div>
 
+      <!-- Migration Discrepancy Banner -->
+      <div v-if="dashboardData.migration?.discrepancy_reported_at && !dashboardData.migration?.verified_at"
+           class="mt-4 p-4 rounded-3xl bg-blue-50 border border-blue-200 flex items-center gap-3">
+        <div class="text-2xl">⏳</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-blue-900">Balance Under Review</p>
+          <p class="text-xs text-blue-700">You reported a discrepancy. Our officers are currently reconciling your records.</p>
+        </div>
+      </div>
+
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
@@ -398,11 +408,58 @@ const utilLabel = (ux) => {
   return `${type || 'utility'} — ${net} (${phone})`
 }
 
+const checkMigration = async () => {
+  const m = dashboardData.value.migration
+  if (!m || !m.migrated_at) return
+  if (m.discrepancy_reported_at || m.verified_at) return
+
+  // Show verification modal
+  const total = formatMoney(m.total_balance)
+  const ok = await modal.prompt(
+    'Verify Opening Balance',
+    `Welcome to Attaqwa Pay. Based on our system migration from paper/Excel records, your total opening balance is ${currency} ${total}.\n\nIs this correct?`,
+    [
+      { label: 'Yes, it is correct', value: 'verify', primary: true },
+      { label: 'No, report discrepancy', value: 'report', danger: true },
+      { label: 'Ask me later', value: 'cancel' }
+    ]
+  )
+
+  const token = localStorage.getItem('token')
+  if (ok === 'verify') {
+    try {
+      await axios.post('/api/profile/verify-migration', {}, { headers: { Authorization: `Bearer ${token}` } })
+      showNotice('Success', 'Thank you! Your account is now fully verified.', 'success')
+      dashboardData.value.migration.verified_at = new Date().toISOString()
+    } catch (e) {
+      showNotice('Error', 'Failed to verify balance. Please try again.', 'error')
+    }
+  } else if (ok === 'report') {
+    const details = await modal.promptText(
+      'Report Discrepancy',
+      'Please describe the difference between your records and the amount shown above. Our officers will investigate and update your account.',
+      { placeholder: 'e.g. My savings should be N50,000 not N45,000...' }
+    )
+    if (details) {
+      try {
+        await axios.post('/api/profile/report-migration-error', { details }, { headers: { Authorization: `Bearer ${token}` } })
+        showNotice('Reported', 'Your report has been submitted. We will review it shortly.', 'info')
+        dashboardData.value.migration.discrepancy_reported_at = new Date().toISOString()
+      } catch (e) {
+        showNotice('Error', 'Failed to submit report. Please try again.', 'error')
+      }
+    }
+  }
+}
+
 const load = async () => {
   const token = localStorage.getItem('token')
   const { data } = await axios.get('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } })
   dashboardData.value = data
   
+  // Check Migration status
+  checkMigration()
+
   // Show Zakat alert if reached nisab but not yet paid (or simply reached nisab)
   if (data.zakat_status?.reached_nisab) {
     const due = formatMoney(data.zakat_status.zakat_due)

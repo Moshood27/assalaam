@@ -27,7 +27,7 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
     public function onRow(Row $row)
     {
         $data = $row->toArray();
-        $user = User::where('membership_number', $data['member_no'])->first();
+        $user = User::where('membership_number', $data['membership_no'])->first();
         if (!$user) {
             return;
         }
@@ -35,11 +35,13 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
         DB::transaction(function () use ($user, $data) {
             // 1. Savings
             if ($savings = (float) ($data['savings_balance'] ?? 0)) {
+                $user->increment('ordinary_savings', $savings);
                 $this->processOpeningBalance($user, 'Savings', $savings);
             }
 
             // 2. Shares
             if ($shares = (float) ($data['shares_balance'] ?? 0)) {
+                $user->increment('shares_capital', $shares);
                 $this->processOpeningBalance($user, 'Shares', $shares);
             }
 
@@ -50,6 +52,7 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
 
             // 4. Development Fund
             if ($dev = (float) ($data['development_fund_balance'] ?? 0)) {
+                $user->increment('development_fund_balance', $dev);
                 $this->processOpeningBalance($user, 'Development', $dev);
             }
 
@@ -70,6 +73,113 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
                     'meta' => ['description' => 'System Migration Opening Wallet Balance'],
                     'created_at' => $this->migrationDate,
                 ]);
+            }
+
+            // 7. Building
+            if ($building = (float) ($data['building_balance'] ?? 0)) {
+                $user->increment('building_balance', $building);
+                $this->processOpeningBalance($user, 'Building', $building);
+            }
+
+            // 8. AGM
+            if ($agm = (float) ($data['agm_balance'] ?? 0)) {
+                $user->increment('agm_balance', $agm);
+                $this->processOpeningBalance($user, 'AGM', $agm);
+            }
+
+            // 9. Loan Repayment
+            if ($loanRepay = (float) ($data['loan_repayment_balance'] ?? 0)) {
+                $user->increment('loan_repayment_balance', $loanRepay);
+                $this->processOpeningBalance($user, 'Loan Repayment', $loanRepay);
+            }
+
+            // 10. Fine (as a scheme/contribution if not in outstanding_fines)
+            if ($fine = (float) ($data['fine_balance'] ?? 0)) {
+                $user->increment('fine_balance', $fine);
+                $this->processOpeningBalance($user, 'Fine', $fine);
+            }
+
+            // 11. Welfare
+            if ($welfare = (float) ($data['welfare_balance'] ?? 0)) {
+                $user->increment('welfare_balance', $welfare);
+                $this->processOpeningBalance($user, 'Welfare', $welfare);
+            }
+
+            // 12. Lateness
+            if ($lateness = (float) ($data['lateness_balance'] ?? 0)) {
+                $user->increment('lateness_balance', $lateness);
+                $this->processOpeningBalance($user, 'Lateness', $lateness);
+            }
+
+            // 13. Stationery
+            if ($stationery = (float) ($data['stationery_balance'] ?? 0)) {
+                $user->increment('stationery_balance', $stationery);
+                $this->processOpeningBalance($user, 'Stationery', $stationery);
+            }
+
+            // 14. Loan Form
+            if ($loanForm = (float) ($data['loan_form_balance'] ?? 0)) {
+                $user->increment('loan_form_balance', $loanForm);
+                $this->processOpeningBalance($user, 'Loan Form', $loanForm);
+            }
+
+            // 15. Others
+            if ($others = (float) ($data['others_balance'] ?? 0)) {
+                $user->increment('others_balance', $others);
+                $this->processOpeningBalance($user, 'Others', $others);
+            }
+
+            // 16. ID Card
+            if ($idCard = (float) ($data['id_card_balance'] ?? 0)) {
+                $user->increment('id_card_balance', $idCard);
+                $this->processOpeningBalance($user, 'ID Card', $idCard);
+            }
+
+            // 17. Emergency
+            if ($emergency = (float) ($data['emergency_balance'] ?? 0)) {
+                $user->increment('emergency_balance', $emergency);
+                $this->processOpeningBalance($user, 'Emergency', $emergency);
+            }
+
+            // 18. Entrance
+            if ($entrance = (float) ($data['entrance_balance'] ?? 0)) {
+                $user->increment('entrance_balance', $entrance);
+                $this->processOpeningBalance($user, 'Entrance', $entrance);
+            }
+
+            // 19. H Savings
+            if ($hSavings = (float) ($data['h_savings_balance'] ?? 0)) {
+                $user->increment('h_savings_balance', $hSavings);
+                $this->processOpeningBalance($user, 'H Savings', $hSavings);
+            }
+
+            // 20. Investment
+            if ($investment = (float) ($data['investment_balance'] ?? 0)) {
+                $user->increment('investment_balance', $investment);
+                $this->processOpeningBalance($user, 'Investment', $investment);
+            }
+
+            // 21. Digital Gold (Weight in grams)
+            if ($gold = (float) ($data['digital_gold_balance'] ?? 0)) {
+                $user->increment('gold_balance', $gold);
+                WalletTransaction::create([
+                    'user_id' => $user->id,
+                    'amount' => 0, // It's gold, not naira
+                    'type' => 'credit',
+                    'source' => 'migration',
+                    'reference' => 'MIG-GOLD-' . Str::random(6),
+                    'meta' => [
+                        'description' => 'System Migration Opening Gold Balance',
+                        'gold_weight' => $gold
+                    ],
+                    'created_at' => $this->migrationDate,
+                ]);
+            }
+
+            // 22. Group Savings
+            if ($groupSavings = (float) ($data['group_savings_balance'] ?? 0)) {
+                $user->increment('group_savings_balance', $groupSavings);
+                $this->processOpeningBalance($user, 'Group Savings', $groupSavings);
             }
         });
     }
@@ -141,13 +251,29 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'member_no' => 'required|exists:users,membership_number',
+            'membership_no' => 'required|exists:users,membership_number',
             'savings_balance' => 'nullable|numeric|min:0',
             'shares_balance' => 'nullable|numeric|min:0',
             'takaful_balance' => 'nullable|numeric|min:0',
             'development_fund_balance' => 'nullable|numeric|min:0',
             'outstanding_fines' => 'nullable|numeric|min:0',
             'wallet_balance' => 'nullable|numeric|min:0',
+            'building_balance' => 'nullable|numeric|min:0',
+            'agm_balance' => 'nullable|numeric|min:0',
+            'loan_repayment_balance' => 'nullable|numeric|min:0',
+            'fine_balance' => 'nullable|numeric|min:0',
+            'welfare_balance' => 'nullable|numeric|min:0',
+            'lateness_balance' => 'nullable|numeric|min:0',
+            'stationery_balance' => 'nullable|numeric|min:0',
+            'loan_form_balance' => 'nullable|numeric|min:0',
+            'others_balance' => 'nullable|numeric|min:0',
+            'id_card_balance' => 'nullable|numeric|min:0',
+            'emergency_balance' => 'nullable|numeric|min:0',
+            'entrance_balance' => 'nullable|numeric|min:0',
+            'h_savings_balance' => 'nullable|numeric|min:0',
+            'investment_balance' => 'nullable|numeric|min:0',
+            'digital_gold_balance' => 'nullable|numeric|min:0',
+            'group_savings_balance' => 'nullable|numeric|min:0',
         ];
     }
 }

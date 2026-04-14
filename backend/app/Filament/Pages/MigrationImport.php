@@ -116,11 +116,30 @@ class MigrationImport extends Page implements HasForms
         $totalShares = User::sum('shares_capital');
         $totalFines = User::sum('outstanding_fines');
         $totalWallet = User::sum('balance');
+        $totalGold = User::sum('gold_balance');
 
         $loanCount = QardHasan::where('status', 'active')->count();
         $totalLoans = QardHasan::where('status', 'active')->sum('principal_amount');
         $paidLoans = QardHasan::where('status', 'active')->sum('paid_amount');
         $remainingLoans = $totalLoans - $paidLoans;
+
+        // Sum other funds directly from User columns for accuracy
+        $otherFundsColumns = [
+            'building_balance', 'development_fund_balance', 'agm_balance',
+            'loan_repayment_balance', 'fine_balance', 'welfare_balance',
+            'lateness_balance', 'stationery_balance', 'loan_form_balance',
+            'others_balance', 'id_card_balance', 'emergency_balance',
+            'entrance_balance', 'h_savings_balance', 'investment_balance',
+            'group_savings_balance'
+        ];
+
+        $otherFunds = 0;
+        foreach ($otherFundsColumns as $col) {
+            $otherFunds += User::sum($col);
+        }
+
+        // Add Takaful migration contributions
+        $otherFunds += \App\Models\TakafulContribution::where('type', 'migration')->sum('amount');
 
         $data = [
             'date' => now()->format('d M, Y H:i'),
@@ -129,6 +148,8 @@ class MigrationImport extends Page implements HasForms
             'totalSavings' => $totalSavings,
             'totalShares' => $totalShares,
             'totalFines' => $totalFines,
+            'totalGold' => $totalGold,
+            'otherFunds' => $otherFunds,
             'loanCount' => $loanCount,
             'totalLoans' => $totalLoans,
             'paidLoans' => $paidLoans,
@@ -194,6 +215,25 @@ class MigrationImport extends Page implements HasForms
         $totalShares = User::sum('shares_capital');
         $totalFines = User::sum('outstanding_fines');
         $totalWallet = User::sum('balance');
+        $totalGold = User::sum('gold_balance');
+
+        // Sum other funds directly from User columns
+        $otherFundsColumns = [
+            'building_balance', 'development_fund_balance', 'agm_balance',
+            'loan_repayment_balance', 'fine_balance', 'welfare_balance',
+            'lateness_balance', 'stationery_balance', 'loan_form_balance',
+            'others_balance', 'id_card_balance', 'emergency_balance',
+            'entrance_balance', 'h_savings_balance', 'investment_balance',
+            'group_savings_balance'
+        ];
+
+        $otherFunds = 0;
+        foreach ($otherFundsColumns as $col) {
+            $otherFunds += User::sum($col);
+        }
+
+        // Add Takaful migration contributions
+        $otherFunds += \App\Models\TakafulContribution::where('type', 'migration')->sum('amount');
 
         $totalLoans = QardHasan::where('status', 'active')->sum('principal_amount');
         $paidLoans = QardHasan::where('status', 'active')->sum('paid_amount');
@@ -204,6 +244,8 @@ class MigrationImport extends Page implements HasForms
             ->body("Total Wallet Balance: ₦" . number_format($totalWallet, 2) . "\n" .
                   "Total Savings: ₦" . number_format($totalSavings, 2) . "\n" .
                   "Total Shares: ₦" . number_format($totalShares, 2) . "\n" .
+                  "Total Other Funds: ₦" . number_format($otherFunds, 2) . "\n" .
+                  "Total Digital Gold: " . number_format($totalGold, 4) . "g\n" .
                   "Total Outstanding Fines: ₦" . number_format($totalFines, 2) . "\n" .
                   "Outstanding Loans: ₦" . number_format($remainingLoans, 2))
             ->success()

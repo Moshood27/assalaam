@@ -181,6 +181,30 @@ class DashboardController extends Controller
                     ))
                     : null,
             ],
+            'migration' => [
+                'migrated_at' => $user->migrated_at,
+                'verified_at' => $user->verified_at,
+                'discrepancy_reported_at' => $user->discrepancy_reported_at,
+                'total_balance' => (float) $user->balance +
+                                  (float) $user->ordinary_savings +
+                                  (float) $user->shares_capital +
+                                  (float) $user->building_balance +
+                                  (float) $user->development_fund_balance +
+                                  (float) $user->agm_balance +
+                                  (float) $user->loan_repayment_balance +
+                                  (float) $user->fine_balance +
+                                  (float) $user->welfare_balance +
+                                  (float) $user->lateness_balance +
+                                  (float) $user->stationery_balance +
+                                  (float) $user->loan_form_balance +
+                                  (float) $user->others_balance +
+                                  (float) $user->id_card_balance +
+                                  (float) $user->emergency_balance +
+                                  (float) $user->entrance_balance +
+                                  (float) $user->h_savings_balance +
+                                  (float) $user->investment_balance +
+                                  (float) $user->group_savings_balance,
+            ],
             'kpis' => $kpis,
             'zakat_status' => $zakatStatus,
             'is_ramadan' => $this->priceService->isRamadan(),

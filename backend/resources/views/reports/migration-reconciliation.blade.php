@@ -57,12 +57,20 @@
                     <td>₦ {{ number_format($totalShares, 2) }}</td>
                 </tr>
                 <tr>
+                    <td>Total Other Funds/Schemes</td>
+                    <td>₦ {{ number_format($otherFunds, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Total Digital Gold</td>
+                    <td>{{ number_format($totalGold, 4) }} g</td>
+                </tr>
+                <tr>
                     <td>Total Outstanding Fines</td>
                     <td>₦ {{ number_format($totalFines, 2) }}</td>
                 </tr>
                 <tr class="total-row">
-                    <td>Total Liabilities (Wallet + Savings + Shares)</td>
-                    <td>₦ {{ number_format($totalWallet + $totalSavings + $totalShares, 2) }}</td>
+                    <td>Total Liabilities (Wallet + Savings + Shares + Others)</td>
+                    <td>₦ {{ number_format($totalWallet + $totalSavings + $totalShares + $otherFunds, 2) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -100,7 +108,8 @@
 
     <div class="summary-box">
         <h2>Grand Total Reconciliation</h2>
-        <p>Total Member Wealth: ₦ {{ number_format($totalWallet + $totalSavings + $totalShares, 2) }}</p>
+        <p>Total Member Wealth (Naira): ₦ {{ number_format($totalWallet + $totalSavings + $totalShares + $otherFunds, 2) }}</p>
+        <p style="font-size: 16px; margin-top: 5px;">Total Gold Weight: {{ number_format($totalGold, 4) }} g</p>
     </div>
 
     <div class="footer">

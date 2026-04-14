@@ -38,7 +38,7 @@
             <x-slot name="heading">
                 2. Balances Master
             </x-slot>
-            <p class="text-sm text-gray-500 mb-4">Import Savings, Shares, Takaful, and Development Fund balances.</p>
+            <p class="text-sm text-gray-500 mb-4">Import Savings, Shares, Takaful, Building, Development, AGM, Welfare, H Savings, Gold, and all other cooperative funds.</p>
 
             <form wire:submit.prevent="importBalances">
                 <div class="mb-4">
@@ -79,7 +79,7 @@
                     <li><strong>Step 2: Template:</strong> Format Excel to match headings:
                         <ul>
                             <li><strong>Members:</strong> <code>name, membership_no, phone, email, branch, address</code></li>
-                            <li><strong>Balances:</strong> <code>member_no, savings_balance, shares_balance, takaful_balance, development_fund_balance, outstanding_fines</code></li>
+                            <li><strong>Balances:</strong> <code>member_no, savings_balance, shares_balance, takaful_balance, development_fund_balance, wallet_balance, building_balance, agm_balance, loan_repayment_balance, fine_balance, welfare_balance, lateness_balance, stationery_balance, loan_form_balance, others_balance, id_card_balance, emergency_balance, entrance_balance, h_savings_balance, investment_balance, digital_gold_balance, group_savings_balance, outstanding_fines</code></li>
                             <li><strong>Loans:</strong> <code>member_no, original_loan_amount, total_repaid_to_date, remaining_principal, next_installment_amount</code></li>
                         </ul>
                     </li>
