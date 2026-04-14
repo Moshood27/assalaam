@@ -57,10 +57,6 @@
                     <td>₦ {{ number_format($totalShares, 2) }}</td>
                 </tr>
                 <tr>
-                    <td>Total Other Funds/Schemes</td>
-                    <td>₦ {{ number_format($otherFunds, 2) }}</td>
-                </tr>
-                <tr>
                     <td>Total Digital Gold</td>
                     <td>{{ number_format($totalGold, 4) }} g</td>
                 </tr>
@@ -69,8 +65,94 @@
                     <td>₦ {{ number_format($totalFines, 2) }}</td>
                 </tr>
                 <tr class="total-row">
-                    <td>Total Liabilities (Wallet + Savings + Shares + Others)</td>
-                    <td>₦ {{ number_format($totalWallet + $totalSavings + $totalShares + $otherFunds, 2) }}</td>
+                    <td>Total Financial Liabilities (Wallet + Savings + Shares + Others + Takaful)</td>
+                    <td>₦ {{ number_format($totalWallet + $totalSavings + $totalShares + $otherFunds + $takafulFunds, 2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Breakdown of Other Funds & Schemes</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Scheme / Fund</th>
+                    <th>Total Migrated Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Takaful Contribution</td>
+                    <td>₦ {{ number_format($takafulFunds, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Building Fund</td>
+                    <td>₦ {{ number_format($buildingBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Development Fund</td>
+                    <td>₦ {{ number_format($developmentFundBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>AGM Fund</td>
+                    <td>₦ {{ number_format($agmBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Loan Repayment Fund</td>
+                    <td>₦ {{ number_format($loanRepaymentBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Fine Account</td>
+                    <td>₦ {{ number_format($fineBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Welfare Fund</td>
+                    <td>₦ {{ number_format($welfareBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Lateness Fees</td>
+                    <td>₦ {{ number_format($latenessBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Stationery Fees</td>
+                    <td>₦ {{ number_format($stationeryBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Loan Form Fees</td>
+                    <td>₦ {{ number_format($loanFormBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>ID Card Fees</td>
+                    <td>₦ {{ number_format($idCardBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Emergency Fund</td>
+                    <td>₦ {{ number_format($emergencyBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Entrance Fees</td>
+                    <td>₦ {{ number_format($entranceBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>H Savings</td>
+                    <td>₦ {{ number_format($hSavingsBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Investment Fund</td>
+                    <td>₦ {{ number_format($investmentBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Group Savings</td>
+                    <td>₦ {{ number_format($groupSavingsBalance, 2) }}</td>
+                </tr>
+                <tr>
+                    <td>Miscellaneous (Others)</td>
+                    <td>₦ {{ number_format($othersBalance, 2) }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>Sub-Total (Other Funds + Takaful)</td>
+                    <td>₦ {{ number_format($otherFunds + $takafulFunds, 2) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -108,7 +190,7 @@
 
     <div class="summary-box">
         <h2>Grand Total Reconciliation</h2>
-        <p>Total Member Wealth (Naira): ₦ {{ number_format($totalWallet + $totalSavings + $totalShares + $otherFunds, 2) }}</p>
+        <p>Total Member Wealth (Naira): ₦ {{ number_format($totalWallet + $totalSavings + $totalShares + $otherFunds + $takafulFunds, 2) }}</p>
         <p style="font-size: 16px; margin-top: 5px;">Total Gold Weight: {{ number_format($totalGold, 4) }} g</p>
     </div>
 

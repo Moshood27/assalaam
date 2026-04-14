@@ -138,8 +138,7 @@ class MigrationImport extends Page implements HasForms
             $otherFunds += User::sum($col);
         }
 
-        // Add Takaful migration contributions
-        $otherFunds += \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
+        $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
 
         $data = [
             'date' => now()->format('d M, Y H:i'),
@@ -150,6 +149,23 @@ class MigrationImport extends Page implements HasForms
             'totalFines' => $totalFines,
             'totalGold' => $totalGold,
             'otherFunds' => $otherFunds,
+            'takafulFunds' => $takafulFunds,
+            'buildingBalance' => User::sum('building_balance'),
+            'developmentFundBalance' => User::sum('development_fund_balance'),
+            'agmBalance' => User::sum('agm_balance'),
+            'loanRepaymentBalance' => User::sum('loan_repayment_balance'),
+            'fineBalance' => User::sum('fine_balance'),
+            'welfareBalance' => User::sum('welfare_balance'),
+            'latenessBalance' => User::sum('lateness_balance'),
+            'stationeryBalance' => User::sum('stationery_balance'),
+            'loanFormBalance' => User::sum('loan_form_balance'),
+            'othersBalance' => User::sum('others_balance'),
+            'idCardBalance' => User::sum('id_card_balance'),
+            'emergencyBalance' => User::sum('emergency_balance'),
+            'entranceBalance' => User::sum('entrance_balance'),
+            'hSavingsBalance' => User::sum('h_savings_balance'),
+            'investmentBalance' => User::sum('investment_balance'),
+            'groupSavingsBalance' => User::sum('group_savings_balance'),
             'loanCount' => $loanCount,
             'totalLoans' => $totalLoans,
             'paidLoans' => $paidLoans,
@@ -233,18 +249,23 @@ class MigrationImport extends Page implements HasForms
         }
 
         // Add Takaful migration contributions
-        $otherFunds += \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
+        $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
 
         $totalLoans = QardHasan::where('status', 'active')->sum('principal_amount');
         $paidLoans = QardHasan::where('status', 'active')->sum('paid_amount');
         $remainingLoans = $totalLoans - $paidLoans;
 
+        $totalLiabilities = $totalWallet + $totalSavings + $totalShares + $otherFunds + $takafulFunds;
+
         Notification::make()
             ->title('Reconciliation Report')
-            ->body("Total Wallet Balance: ₦" . number_format($totalWallet, 2) . "\n" .
+            ->body("Total Financial Liabilities: ₦" . number_format($totalLiabilities, 2) . "\n" .
+                  "----------------------------\n" .
+                  "Total Wallet Balance: ₦" . number_format($totalWallet, 2) . "\n" .
                   "Total Savings: ₦" . number_format($totalSavings, 2) . "\n" .
                   "Total Shares: ₦" . number_format($totalShares, 2) . "\n" .
                   "Total Other Funds: ₦" . number_format($otherFunds, 2) . "\n" .
+                  "Total Takaful: ₦" . number_format($takafulFunds, 2) . "\n" .
                   "Total Digital Gold: " . number_format($totalGold, 4) . "g\n" .
                   "Total Outstanding Fines: ₦" . number_format($totalFines, 2) . "\n" .
                   "Outstanding Loans: ₦" . number_format($remainingLoans, 2))

@@ -205,6 +205,28 @@ class DashboardController extends Controller
                                   (float) $user->h_savings_balance +
                                   (float) $user->investment_balance +
                                   (float) $user->group_savings_balance,
+                'breakdown' => [
+                    'Wallet' => (float) $user->balance,
+                    'Ordinary Savings' => (float) $user->ordinary_savings,
+                    'Shares Capital' => (float) $user->shares_capital,
+                    'Takaful' => (float) $user->takafulContributions()->where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount'),
+                    'Building' => (float) $user->building_balance,
+                    'Development' => (float) $user->development_fund_balance,
+                    'AGM' => (float) $user->agm_balance,
+                    'Loan Repayment' => (float) $user->loan_repayment_balance,
+                    'Fine' => (float) $user->fine_balance,
+                    'Welfare' => (float) $user->welfare_balance,
+                    'Lateness' => (float) $user->lateness_balance,
+                    'Stationery' => (float) $user->stationery_balance,
+                    'Loan Form' => (float) $user->loan_form_balance,
+                    'Others' => (float) $user->others_balance,
+                    'ID Card' => (float) $user->id_card_balance,
+                    'Emergency' => (float) $user->emergency_balance,
+                    'Entrance' => (float) $user->entrance_balance,
+                    'H Savings' => (float) $user->h_savings_balance,
+                    'Investment' => (float) $user->investment_balance,
+                    'Group Savings' => (float) $user->group_savings_balance,
+                ]
             ],
             'kpis' => $kpis,
             'zakat_status' => $zakatStatus,

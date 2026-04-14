@@ -223,12 +223,36 @@ class AdminReportsController extends Controller
         ]);
     }
 
-    // 5) Total Liquidity Report
+    // 5) Total Liquidity (Liabilities) Report
     public function totalLiquidity(Request $request)
     {
-        $total = (float) User::query()->sum('balance');
+        $walletTotal = (float) User::sum('balance');
+        $savingsTotal = (float) User::sum('ordinary_savings');
+        $sharesTotal = (float) User::sum('shares_capital');
+
+        $otherColumns = [
+            'building_balance', 'development_fund_balance', 'agm_balance',
+            'loan_repayment_balance', 'fine_balance', 'welfare_balance',
+            'lateness_balance', 'stationery_balance', 'loan_form_balance',
+            'others_balance', 'id_card_balance', 'emergency_balance',
+            'entrance_balance', 'h_savings_balance', 'investment_balance',
+            'group_savings_balance'
+        ];
+
+        $otherTotal = 0.0;
+        foreach ($otherColumns as $col) {
+            $otherTotal += (float) User::sum($col);
+        }
+
+        $takafulTotal = (float) \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
+
         return response()->json([
-            'total_user_wallet_balance' => $total,
+            'total_wallet_balance' => $walletTotal,
+            'total_savings' => $savingsTotal,
+            'total_shares' => $sharesTotal,
+            'total_other_funds' => $otherTotal,
+            'total_takaful' => $takafulTotal,
+            'grand_total_liabilities' => round($walletTotal + $savingsTotal + $sharesTotal + $otherTotal + $takafulTotal, 2),
         ]);
     }
 

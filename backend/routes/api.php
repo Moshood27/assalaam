@@ -310,6 +310,8 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/download-audit-trail', [ExportController::class, 'downloadAuditTrail'])->name('download-audit-trail');
     Route::get('/download-order-receipt/{id}', [ExportController::class, 'downloadOrderReceipt'])->name('download-order-receipt');
     Route::get('/download-zakat-report', [ExportController::class, 'downloadZakatReport'])->name('download-zakat-report');
+    Route::get('/download-membership-enrolment', [ExportController::class, 'downloadMembershipEnrolment'])->name('download-membership-enrolment');
+    Route::get('/download-imam-attestation', [ExportController::class, 'downloadImamAttestation'])->name('download-imam-attestation');
     Route::get('/download-zakat-portfolio', [ExportController::class, 'downloadMemberZakatPortfolio'])->name('download-zakat-portfolio');
     Route::get('/download-project-distribution/{id}', [ExportController::class, 'downloadProjectDistribution'])->name('download-project-distribution');
     Route::get('/download-savings-ledger/{userId?}', [ExportController::class, 'downloadMemberSavingsLedger'])->name('download-savings-ledger');

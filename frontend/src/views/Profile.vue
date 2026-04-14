@@ -162,6 +162,19 @@
         <div class="mt-3 text-xs text-gray-500">KYC status is used to prevent fraud and verify identity.</div>
       </div>
 
+      <!-- Membership Documents & Details -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Membership Data</p>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-2xl">📑</div>
+          <div class="flex-1">
+            <h3 class="text-sm font-bold text-slate-800">My Enrolment Details</h3>
+            <p class="text-xs text-slate-500">View your full membership data and download enrolment forms.</p>
+          </div>
+          <button @click="$router.push('/membership-details')" class="px-4 py-2 rounded-xl bg-teal-50 text-teal-700 font-bold text-xs hover:bg-teal-100 transition-colors">View</button>
+        </div>
+      </div>
+
       <!-- Vendor Portal -->
       <div v-if="profile.vendor" class="bg-white rounded-3xl shadow-sm border border-emerald-100 p-5 overflow-hidden relative group">
         <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />

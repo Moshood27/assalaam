@@ -11,6 +11,7 @@ const Passbook = () => import('../views/Passbook.vue')
 const Loans = () => import('../views/Loans.vue')
 const Settings = () => import('../views/Settings.vue')
 const Profile = () => import('../views/Profile.vue')
+const MembershipDetails = () => import('../views/MembershipDetails.vue')
 const Reports = () => import('../views/Reports.vue')
 const QardHasan = () => import('../components/QardHasan.vue')
 const WalletCallback = () => import('../views/WalletCallback.vue')
@@ -76,6 +77,7 @@ const routes = [
   { path: '/takaful', name: 'takaful', component: Takaful, meta: { requiresAuth: true } },
   { path: '/settings', name: 'settings', component: Settings, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: Profile, meta: { requiresAuth: true } },
+  { path: '/membership-details', name: 'membership.details', component: MembershipDetails, meta: { requiresAuth: true } },
   { path: '/store', name: 'store', component: Store, meta: { requiresAuth: true } },
   // Merchant QR pay
   { path: '/merchant/receive', name: 'merchant.receive', component: MerchantReceive, meta: { requiresAuth: true } },

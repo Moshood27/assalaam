@@ -533,4 +533,45 @@ class ExportController extends Controller
             return response()->json(['message' => 'Unable to generate Zakat report at the moment.'], 422);
         }
     }
+
+    /**
+     * Download the member's full enrolment form (KYC PDF).
+     */
+    public function downloadMembershipEnrolment(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            // Re-use the existing enrolment PDF template.
+            // Note: We pass the $user as 'application' because the view expects that variable name.
+            $pdf = Pdf::loadView('pdfs.membership_application', ['application' => $user]);
+            return $pdf->download("Membership_Enrolment_{$user->membership_number}.pdf");
+        } catch (\Throwable $e) {
+            \Log::error('downloadMembershipEnrolment error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Enrolment PDF.'], 422);
+        }
+    }
+
+    /**
+     * Download the member's Attestation of Imam.
+     */
+    public function downloadImamAttestation(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            // Re-use the existing imam attestation PDF template.
+            $pdf = Pdf::loadView('pdfs.imam_attestation', ['application' => $user]);
+            return $pdf->download("Imam_Attestation_{$user->membership_number}.pdf");
+        } catch (\Throwable $e) {
+            \Log::error('downloadImamAttestation error', ['exception' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to generate Attestation PDF.'], 422);
+        }
+    }
 }

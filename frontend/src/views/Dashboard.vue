@@ -415,9 +415,14 @@ const checkMigration = async () => {
 
   // Show verification modal
   const total = formatMoney(m.total_balance)
+  const breakdownLines = Object.entries(m.breakdown || {})
+    .filter(([_, val]) => Number(val) > 0)
+    .map(([key, val]) => `• ${key}: ${currency} ${formatMoney(val)}`)
+    .join('\n')
+
   const ok = await modal.prompt(
     'Verify Opening Balance',
-    `Welcome to Attaqwa Pay. Based on our system migration from paper/Excel records, your total opening balance is ${currency} ${total}.\n\nIs this correct?`,
+    `Welcome to Attaqwa Pay. Based on our system migration from paper/Excel records, here is your opening balance breakdown:\n\n${breakdownLines}\n\nTotal: ${currency} ${total}\n\nIs this correct?`,
     [
       { label: 'Yes, it is correct', value: 'verify', primary: true },
       { label: 'No, report discrepancy', value: 'report', danger: true },

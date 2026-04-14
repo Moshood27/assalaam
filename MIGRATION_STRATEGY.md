@@ -70,7 +70,7 @@ Transparency helps build trust with the cooperative members.
 
 1. **Onboarding SMS:** Admins can trigger a "Send Onboarding SMS" to all migrated members with their login details.
 2. **Verification Prompt:** On first login, members see a non-dismissible modal:
-   - "Your migrated opening balance is **₦XX,XXX.XX** (Sum of Savings, Shares, and Wallet)."
+   - "Your migrated opening balance is **₦XX,XXX.XX** (Detailed breakdown of all 20+ schemes including Savings, Shares, Takaful, and other funds)."
 3. **Actions:**
    - **Verify:** Member confirms accuracy. `verified_at` is set.
    - **Report Discrepancy:** Member submits a brief explanation of the error. A support message is generated for Admin review.

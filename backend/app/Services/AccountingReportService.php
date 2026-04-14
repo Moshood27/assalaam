@@ -187,13 +187,52 @@ class AccountingReportService
         // If we don't have a full ledger for savings/shares/gold, we use the balances as of $toDate.
         // WARNING: This part mixes flows and balances. In a real system, these would come from the Ledger.
 
-        // Total Member Savings & Shares (Current Liabilities)
+        // Total Member Savings, Shares & Other Funds (Current Liabilities)
         $memberStats = User::query()
-            ->selectRaw('SUM(ordinary_savings) as total_savings, SUM(shares_capital) as total_shares, SUM(gold_balance) as total_gold')
+            ->selectRaw('
+                SUM(ordinary_savings) as total_savings,
+                SUM(shares_capital) as total_shares,
+                SUM(gold_balance) as total_gold,
+                SUM(building_balance) as total_building,
+                SUM(development_fund_balance) as total_development,
+                SUM(agm_balance) as total_agm,
+                SUM(loan_repayment_balance) as total_loan_repayment,
+                SUM(fine_balance) as total_fine,
+                SUM(welfare_balance) as total_welfare,
+                SUM(lateness_balance) as total_lateness,
+                SUM(stationery_balance) as total_stationery,
+                SUM(loan_form_balance) as total_loan_form,
+                SUM(others_balance) as total_others,
+                SUM(id_card_balance) as total_id_card,
+                SUM(emergency_balance) as total_emergency,
+                SUM(entrance_balance) as total_entrance,
+                SUM(h_savings_balance) as total_h_savings,
+                SUM(investment_balance) as total_investment,
+                SUM(group_savings_balance) as total_group_savings
+            ')
             ->first();
 
         $post('Member Savings Payable', 0, (float) $memberStats->total_savings);
         $post('Member Shares Payable', 0, (float) $memberStats->total_shares);
+
+        $otherFundsTotal = (float) $memberStats->total_building +
+                          (float) $memberStats->total_development +
+                          (float) $memberStats->total_agm +
+                          (float) $memberStats->total_loan_repayment +
+                          (float) $memberStats->total_fine +
+                          (float) $memberStats->total_welfare +
+                          (float) $memberStats->total_lateness +
+                          (float) $memberStats->total_stationery +
+                          (float) $memberStats->total_loan_form +
+                          (float) $memberStats->total_others +
+                          (float) $memberStats->total_id_card +
+                          (float) $memberStats->total_emergency +
+                          (float) $memberStats->total_entrance +
+                          (float) $memberStats->total_h_savings +
+                          (float) $memberStats->total_investment +
+                          (float) $memberStats->total_group_savings;
+
+        $post('Member Other Funds Payable', 0, $otherFundsTotal);
         $post('Member Gold Payable', 0, (float) $memberStats->total_gold * $goldPrice);
         // Dr Gold Inventory, Cr Member Gold Payable
         $post('Gold Inventory', (float) $memberStats->total_gold * $goldPrice, 0);
@@ -253,7 +292,8 @@ class AccountingReportService
             // Liabilities & Equity (Credit balance)
             elseif (in_array($name, [
                 'Wallets Payable', 'Member Savings Payable', 'Member Shares Payable',
-                'Junior Accounts Payable', 'Takaful Pool Fund', 'Charity Fund (Restricted)'
+                'Member Other Funds Payable', 'Junior Accounts Payable',
+                'Takaful Pool Fund', 'Charity Fund (Restricted)'
             ])) {
                 $push($liabilities, $name, -$net);
             }
