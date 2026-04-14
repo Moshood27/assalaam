@@ -43,11 +43,15 @@
 </template>
 
 <script setup>
+import axios from 'axios'
 import { useRouter } from 'vue-router'
 import SupportContacts from '../components/SupportContacts.vue'
 
 const router = useRouter()
-const logout = () => {
+const logout = async () => {
+  try {
+    await axios.post('/api/logout')
+  } catch (_) {}
   localStorage.removeItem('token')
   localStorage.removeItem('admin_token')
   router.push('/login')

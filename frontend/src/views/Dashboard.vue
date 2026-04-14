@@ -478,7 +478,10 @@ const load = async () => {
   }
 }
 
-const logout = () => {
+const logout = async () => {
+  try {
+    await axios.post('/api/logout')
+  } catch (_) {}
   localStorage.removeItem('token')
   const base = import.meta?.env?.BASE_URL || '/'
   const basePath = (base && base.endsWith('/')) ? base : `${base}/`

@@ -113,6 +113,7 @@ Route::match(['get', 'post'], '/vtu/callback', [\App\Http\Controllers\Api\Utilit
 
 // Protected endpoints (rate limited)
 Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
     // Takaful (member-facing)
     Route::get('/takaful/summary', [TakafulController::class, 'summary']);
     Route::get('/takaful/contributions', [TakafulController::class, 'contributions']);

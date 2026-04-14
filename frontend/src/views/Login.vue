@@ -67,6 +67,14 @@
             </div>
           </div>
 
+          <div class="flex items-center gap-3 px-1">
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input v-model="form.remember" type="checkbox" class="sr-only peer" />
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <span class="ml-3 text-sm font-medium text-slate-600">Remember Me</span>
+            </label>
+          </div>
+
           <div v-if="biometricSupported" class="flex items-center gap-3 px-1">
             <label class="relative inline-flex items-center cursor-pointer select-none">
               <input v-model="rememberWithBiometrics" type="checkbox" class="sr-only peer" />
@@ -174,13 +182,21 @@ const quickLoading = ref(false)
 const form = ref({
   branch_id: '',
   membership_number: '',
-  password: ''
+  password: '',
+  remember: false
 })
 
 onMounted(async () => {
   console.log('LOGIN PAGE MOUNTED')
 
   const lastBranchId = localStorage.getItem('last_branch_id')
+  const rememberedMembership = localStorage.getItem('remembered_membership_number')
+  const rememberChoice = localStorage.getItem('remember_me_choice') === 'true'
+
+  if (rememberChoice && rememberedMembership) {
+    form.value.membership_number = rememberedMembership
+    form.value.remember = true
+  }
 
   // 1. Load branches first
   try {
@@ -282,6 +298,15 @@ const handleLogin = async () => {
     // Remember last branch for "Auto arrange" on next login
     if (form.value.branch_id) {
       localStorage.setItem('last_branch_id', String(form.value.branch_id))
+    }
+
+    // Handle "Remember Me" for membership number
+    if (form.value.remember) {
+      localStorage.setItem('remembered_membership_number', form.value.membership_number)
+      localStorage.setItem('remember_me_choice', 'true')
+    } else {
+      localStorage.removeItem('remembered_membership_number')
+      localStorage.setItem('remember_me_choice', 'false')
     }
 
     afterLogin(data.token)

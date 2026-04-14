@@ -35,13 +35,16 @@ class InactivityTimeout
             if ($token) {
                 $lastUsed = $token->last_used_at ?? $token->created_at; // fallback to creation time
 
-                if ($lastUsed && now()->diffInSeconds($lastUsed) > $this->timeout) {
-                    // Revoke token and reject request
-                    $token->delete();
+                // Enforce inactivity timeout only if it's NOT a 'remember_token'
+                if ($token->name !== 'remember_token') {
+                    if ($lastUsed && now()->diffInSeconds($lastUsed) > $this->timeout) {
+                        // Revoke token and reject request
+                        $token->delete();
 
-                    return response()->json([
-                        'message' => 'Session expired due to inactivity.',
-                    ], 401);
+                        return response()->json([
+                            'message' => 'Session expired due to inactivity.',
+                        ], 401);
+                    }
                 }
 
                 // Proceed with request, then stamp last_used_at after successful handling

@@ -43,6 +43,7 @@ class AuthController extends Controller
             'branch_id' => 'required|exists:branches,id',
             'membership_number' => 'required',
             'password' => 'required',
+            'remember' => 'nullable|boolean',
         ]);
 
         $user = User::where('branch_id', $validated['branch_id'])
@@ -58,12 +59,20 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('mobile_token')->plainTextToken;
+        $tokenName = $request->boolean('remember') ? 'remember_token' : 'mobile_token';
+        $token = $user->createToken($tokenName)->plainTextToken;
 
         return response()->json([
             'token' => $token,
             'user' => $user,
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out successfully.']);
     }
 
     /**
