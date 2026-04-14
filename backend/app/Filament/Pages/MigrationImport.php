@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Imports\UsersImport;
 use App\Imports\BalancesImport;
 use App\Imports\LoansImport;
+use App\Imports\PassbookImport;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Models\QardHasan;
@@ -33,6 +34,7 @@ class MigrationImport extends Page implements HasForms
     public $membersFile;
     public $balancesFile;
     public $loansFile;
+    public $passbookFile;
     public $migrationDate;
 
     public function mount()
@@ -138,7 +140,7 @@ class MigrationImport extends Page implements HasForms
             $otherFunds += User::sum($col);
         }
 
-        $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
+        $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-%TAKF-%')->sum('amount');
 
         $data = [
             'date' => now()->format('d M, Y H:i'),
@@ -225,6 +227,21 @@ class MigrationImport extends Page implements HasForms
         }
     }
 
+    public function importPassbook()
+    {
+        if (!$this->passbookFile) {
+            Notification::make()->warning()->title('Please upload a Passbook Master file.')->send();
+            return;
+        }
+
+        try {
+            Excel::import(new PassbookImport(), $this->passbookFile);
+            Notification::make()->success()->title('Passbook history migrated and reconciled successfully.')->send();
+        } catch (\Exception $e) {
+            Notification::make()->danger()->title('Migration failed: ' . $e->getMessage())->send();
+        }
+    }
+
     public function reconcile()
     {
         $totalSavings = User::sum('ordinary_savings');
@@ -249,7 +266,7 @@ class MigrationImport extends Page implements HasForms
         }
 
         // Add Takaful migration contributions
-        $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount');
+        $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-%TAKF-%')->sum('amount');
 
         $totalLoans = QardHasan::where('status', 'active')->sum('principal_amount');
         $paidLoans = QardHasan::where('status', 'active')->sum('paid_amount');

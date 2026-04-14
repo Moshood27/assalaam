@@ -9,6 +9,7 @@ use App\Exports\LoanImportTemplate;
 use App\Exports\MigrationUserImportTemplate;
 use App\Exports\MigrationBalanceImportTemplate;
 use App\Exports\MigrationLoanImportTemplate;
+use App\Exports\MigrationPassbookImportTemplate;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TemplateDownloadController extends Controller
@@ -41,5 +42,10 @@ class TemplateDownloadController extends Controller
     public function migrationLoans()
     {
         return Excel::download(new MigrationLoanImportTemplate, 'migration_loans_template.xlsx');
+    }
+
+    public function migrationPassbook()
+    {
+        return Excel::download(new MigrationPassbookImportTemplate, 'migration_passbook_template.xlsx');
     }
 }

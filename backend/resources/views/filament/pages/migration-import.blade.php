@@ -87,6 +87,30 @@
                 </x-filament::button>
             </form>
         </x-filament::section>
+
+        <!-- Passbook Master -->
+        <x-filament::section>
+            <x-slot name="heading">
+                4. Passbook Master (Optional)
+            </x-slot>
+            <p class="text-sm text-gray-500 mb-4">Import monthly historical breakdown (Jan-Dec) for specific years/schemes.</p>
+
+            <div class="mb-4">
+                <a href="/admin/templates/migration-passbook.xlsx" class="text-primary-600 hover:underline flex items-center gap-1 text-sm font-medium">
+                    <x-heroicon-o-document-arrow-down class="w-4 h-4" />
+                    Download Passbook Template (Excel)
+                </a>
+            </div>
+
+            <form wire:submit.prevent="importPassbook">
+                <div class="mb-4">
+                    <input type="file" wire:model="passbookFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-gray-700 dark:file:text-gray-300">
+                </div>
+                <x-filament::button type="submit" color="primary" class="w-full">
+                    Import Passbook
+                </x-filament::button>
+            </form>
+        </x-filament::section>
     </div>
 
     <div class="mt-8">
@@ -102,6 +126,7 @@
                             <li><strong>Members:</strong> <code>name, membership_no, phone, email, address, branch</code></li>
                             <li><strong>Balances:</strong> <code>membership_no, savings_balance, shares_balance, takaful_balance, development_fund_balance, outstanding_fines, wallet_balance, building_balance, agm_balance, loan_repayment_balance, fine_balance, welfare_balance, lateness_balance, stationery_balance, loan_form_balance, others_balance, id_card_balance, emergency_balance, entrance_balance, h_savings_balance, investment_balance, digital_gold_balance, group_savings_balance</code></li>
                             <li><strong>Loans:</strong> <code>membership_no, original_loan_amount, total_repaid_to_date, remaining_principal, next_installment_amount</code></li>
+                            <li><strong>Passbook:</strong> <code>membership_no, scheme_name, year, january, february, march, april, may, june, july, august, september, october, november, december</code></li>
                         </ul>
                     </li>
                     <li><strong>Step 3: Reconciliation:</strong> After each import, run the reconciliation report to verify totals match your paper records.</li>

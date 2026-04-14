@@ -36,10 +36,18 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             return null;
         }
 
+        // 1. Clean Sweep: Remove any non-migration (demo) loans for this user
+        // We only do this if it's the first time we see this user in this import?
+        // Actually, deleting where NOT LIKE 'MIG-%' is safe to run repeatedly on each row
+        // as it only targets demo data and ignores the ones we are currently importing.
+        \App\Models\QardHasan::where('user_id', $user->id)
+            ->where('qard_id_string', 'NOT LIKE', 'MIG-%')
+            ->delete();
+
         $totalRepaid = (float) ($row['total_repaid_to_date'] ?? 0);
         $originalAmount = (float) $row['original_loan_amount'];
 
-        // Avoid duplicate migration if re-running
+        // Avoid duplicate migration if re-running (Matches exact loan already migrated)
         $exists = QardHasan::where('user_id', $user->id)
             ->where('qard_id_string', 'like', 'MIG-%')
             ->where('principal_amount', $originalAmount)

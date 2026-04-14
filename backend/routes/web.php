@@ -110,4 +110,5 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/templates/migration-users.xlsx', [TemplateDownloadController::class, 'migrationUsers'])->name('admin.templates.migration-users');
     Route::get('/templates/migration-balances.xlsx', [TemplateDownloadController::class, 'migrationBalances'])->name('admin.templates.migration-balances');
     Route::get('/templates/migration-loans.xlsx', [TemplateDownloadController::class, 'migrationLoans'])->name('admin.templates.migration-loans');
+    Route::get('/templates/migration-passbook.xlsx', [TemplateDownloadController::class, 'migrationPassbook'])->name('admin.templates.migration-passbook');
 });
