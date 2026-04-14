@@ -64,11 +64,13 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
         // Calculate total installments based on remaining principal and installment amount
         $remaining = (float) $row['remaining_principal'];
         $perInstallment = (float) $row['next_installment_amount'];
-        $installmentsLeft = ($perInstallment > 0) ? ceil($remaining / $perInstallment) : 1;
 
-        // We want the system to know how many installments there were in total
-        $installmentsRepaid = ($perInstallment > 0) ? floor($totalRepaid / $perInstallment) : 0;
-        $totalInstallments = $installmentsRepaid + $installmentsLeft;
+        $totalInstallments = (int) ($row['total_installments'] ?? 0);
+        if ($totalInstallments <= 0) {
+            $installmentsLeft = ($perInstallment > 0) ? ceil($remaining / $perInstallment) : 1;
+            $installmentsRepaid = ($perInstallment > 0) ? floor($totalRepaid / $perInstallment) : 0;
+            $totalInstallments = $installmentsRepaid + $installmentsLeft;
+        }
 
         return new QardHasan([
             'user_id' => $user->id,
@@ -77,6 +79,7 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             'paid_amount' => $totalRepaid,
             'total_installments' => $totalInstallments,
             'per_installment' => $perInstallment,
+            'interval' => strtolower($row['interval'] ?? 'monthly'),
             'status' => 'active',
             'approved_at' => $this->migrationDate,
             'created_at' => $this->migrationDate,

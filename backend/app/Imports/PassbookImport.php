@@ -48,9 +48,10 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
             'september' => 9, 'october' => 10, 'november' => 11, 'december' => 12
         ];
 
-        DB::transaction(function () use ($user, $scheme, $year, $months, $data) {
+        DB::transaction(function () use ($user, $scheme, $year, $months, $data, $schemeName) {
 
-            // 1. DELETE existing demo contributions for this user/scheme/year
+            // --- STEP 1: CLEANUP (Delete Demo Data for this Year/Scheme) ---
+
             $contributionsQuery = Contribution::where('user_id', $user->id)
                 ->where('scheme_id', $scheme->id)
                 ->whereYear('created_at', $year);
@@ -61,10 +62,9 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
 
             $contributionsQuery->delete();
 
-            // (If Takaful) Clear Takaful records too for this year
-            if ($scheme->name === 'Takaful') {
+            if ($schemeName === 'Takaful') {
                 TakafulContribution::where('user_id', $user->id)
-                    ->where('period', 'like', "$year-%")
+                    ->where('period', 'like', "{$year}-%")
                     ->delete();
 
                 TakafulPoolEntry::where('user_id', $user->id)
@@ -72,33 +72,36 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
                     ->delete();
             }
 
+            // --- STEP 2: REBUILD (Insert Real Data from Excel) ---
+
             foreach ($months as $monthName => $monthNum) {
                 $amount = (float) ($data[$monthName] ?? 0);
-                if ($amount <= 0) continue;
 
-                $createdDate = Carbon::create($year, $monthNum, 1, 12, 0, 0);
+                // We only create records for months with actual payments
+                if ($amount > 0) {
+                    $createdDate = Carbon::create($year, $monthNum, 1, 12, 0, 0);
 
-                // 2. Insert the "Clean" Excel record
-                Contribution::create([
-                    'user_id' => $user->id,
-                    'scheme_id' => $scheme->id,
-                    'amount' => $amount,
-                    'status' => 'success',
-                    'reference' => 'MIG-REC-' . strtoupper(substr($scheme->name, 0, 3)) . '-' . Str::random(6),
-                    'created_at' => $createdDate,
-                ]);
+                    Contribution::create([
+                        'user_id' => $user->id,
+                        'scheme_id' => $scheme->id,
+                        'amount' => $amount,
+                        'status' => 'success',
+                        'reference' => 'MIG-REC-' . strtoupper(substr($schemeName, 0, 3)) . '-' . Str::random(6),
+                        'created_at' => $createdDate,
+                    ]);
 
-                if ($scheme->name === 'Takaful') {
-                    $this->handleTakafulClean($user, $amount, $createdDate);
+                    if ($schemeName === 'Takaful') {
+                        $this->handleTakafulRebuild($user, $amount, $createdDate);
+                    }
                 }
             }
 
-            // 3. Reset the User's aggregate column to the New Total
-            $this->syncUserColumn($user, $scheme->name);
+            // --- STEP 3: SYNC (Recalculate User Aggregate Column) ---
+            $this->syncUserBalance($user, $schemeName);
         });
     }
 
-    private function handleTakafulClean(User $user, float $amount, Carbon $date)
+    private function handleTakafulRebuild(User $user, float $amount, Carbon $date)
     {
         $period = $date->format('Y-m');
 
@@ -108,7 +111,7 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
             'amount' => $amount,
             'status' => 'success',
             'reference' => 'MIG-REC-TAKF-' . Str::random(6),
-            'meta' => ['description' => 'System Migration Passbook breakdown'],
+            'meta' => ['description' => 'Account Reconciliation Rebuild'],
             'created_at' => $date,
         ]);
 
@@ -116,13 +119,13 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
             'user_id' => $user->id,
             'direction' => 'credit',
             'amount' => $amount,
-            'reference' => 'MIG-REC-TAKF-POOL-' . Str::random(6),
-            'meta' => ['description' => 'System Migration Passbook breakdown'],
+            'reference' => 'MIG-REC-POOL-' . Str::random(6),
+            'meta' => ['description' => 'Account Reconciliation Rebuild'],
             'created_at' => $date,
         ]);
     }
 
-    private function syncUserColumn(User $user, string $schemeName)
+    private function syncUserBalance(User $user, string $schemeName)
     {
         $columnMap = [
             'Savings' => 'ordinary_savings',
@@ -152,13 +155,25 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
         if (isset($columnMap[$schemeName])) {
             $column = $columnMap[$schemeName];
 
-            // Sum ALL verified contributions for this scheme
-            $actualTotal = (float) $user->contributions()
+            // Re-calculate the TOTAL from the newly cleaned contributions
+            $total = (float) Contribution::where('user_id', $user->id)
                 ->whereHas('scheme', fn($q) => $q->where('name', $schemeName))
                 ->where('status', 'success')
                 ->sum('amount');
 
-            $user->forceFill([$column => $actualTotal])->save();
+            // Force update the column to match the history exactly
+            $user->forceFill([$column => $total])->save();
+
+            // Create one master Audit Log for the reconciliation
+            WalletTransaction::create([
+                'user_id' => $user->id,
+                'amount' => $total,
+                'type' => 'credit',
+                'source' => 'migration',
+                'reference' => 'MIG-SYNC-' . Str::random(6),
+                'meta' => ['description' => "Full Account Reconciliation for {$schemeName}"],
+                'created_at' => now(),
+            ]);
         }
     }
 

@@ -20,6 +20,8 @@ class MigrationLoanImportTemplate implements FromCollection, WithHeadings
                 'remaining_principal' => '40000',
                 'next_installment_amount' => '10000',
                 'total_repaid_to_date' => '60000',
+                'interval' => 'monthly',
+                'total_installments' => '10',
             ]
         ]);
     }
@@ -32,6 +34,8 @@ class MigrationLoanImportTemplate implements FromCollection, WithHeadings
             'remaining_principal',
             'next_installment_amount',
             'total_repaid_to_date',
+            'interval',
+            'total_installments',
         ];
     }
 }

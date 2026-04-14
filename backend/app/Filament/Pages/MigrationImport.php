@@ -59,6 +59,15 @@ class MigrationImport extends Page implements HasForms
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('cleanSweep')
+                ->label('Clean Sweep Demo Data')
+                ->color('danger')
+                ->icon('heroicon-o-trash')
+                ->requiresConfirmation()
+                ->modalHeading('Delete all Demo/Test Data?')
+                ->modalDescription('This will permanently delete all transactions, contributions, and loans that were NOT created via migration (MIG- prefix). This is used to clear test data before going live.')
+                ->action(fn () => $this->cleanSweep()),
+
             Action::make('reconcile')
                 ->label('Run Reconciliation')
                 ->color('success')
@@ -240,6 +249,52 @@ class MigrationImport extends Page implements HasForms
         } catch (\Exception $e) {
             Notification::make()->danger()->title('Migration failed: ' . $e->getMessage())->send();
         }
+    }
+
+    public function cleanSweep()
+    {
+        DB::transaction(function () {
+            // 1. Contributions & Investments
+            $demoContributions = \App\Models\Contribution::where('reference', 'NOT LIKE', 'MIG-%')->pluck('id');
+            \App\Models\ProjectInvestment::whereIn('contribution_id', $demoContributions)->delete();
+            \App\Models\Contribution::whereIn('id', $demoContributions)->delete();
+
+            // 2. Takaful
+            \App\Models\TakafulContribution::where('reference', 'NOT LIKE', 'MIG-%')->delete();
+            \App\Models\TakafulPoolEntry::where('reference', 'NOT LIKE', 'MIG-%')->delete();
+
+            // 3. Loans & Repayments
+            $demoLoans = \App\Models\QardHasan::where('qard_id_string', 'NOT LIKE', 'MIG-%')->pluck('id');
+            \App\Models\QardHasanRepayment::whereIn('qard_hasan_id', $demoLoans)->delete();
+            \App\Models\QardHasan::whereIn('id', $demoLoans)->delete();
+
+            // 4. Wallet Transactions
+            \App\Models\WalletTransaction::where('reference', 'NOT LIKE', 'MIG-%')
+                ->where('source', '!=', 'migration')
+                ->delete();
+
+            // 5. Reset User aggregate columns for non-migrated users (or all users, then they must re-migrate balances)
+            // It's safer to just reset everyone and let the migration re-sync them.
+            $financialColumns = [
+                'balance', 'ordinary_savings', 'shares_capital', 'takaful_balance',
+                'building_balance', 'development_fund_balance', 'agm_balance',
+                'loan_repayment_balance', 'fine_balance', 'welfare_balance',
+                'lateness_balance', 'stationery_balance', 'loan_form_balance',
+                'others_balance', 'id_card_balance', 'emergency_balance',
+                'entrance_balance', 'h_savings_balance', 'investment_balance',
+                'group_savings_balance', 'gold_balance', 'outstanding_fines'
+            ];
+
+            foreach ($financialColumns as $column) {
+                User::query()->update([$column => 0]);
+            }
+        });
+
+        Notification::make()
+            ->success()
+            ->title('Clean Sweep Complete')
+            ->body('All non-migration data has been deleted and user balances reset to zero.')
+            ->send();
     }
 
     public function reconcile()
