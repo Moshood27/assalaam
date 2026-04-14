@@ -30,13 +30,24 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation
             return null;
         }
 
+        $totalRepaid = (float) ($row['total_repaid_to_date'] ?? 0);
+        $originalAmount = (float) $row['original_loan_amount'];
+
+        // Avoid duplicate migration if re-running
+        $exists = QardHasan::where('user_id', $user->id)
+            ->where('qard_id_string', 'like', 'MIG-%')
+            ->where('principal_amount', $originalAmount)
+            ->where('paid_amount', $totalRepaid)
+            ->exists();
+
+        if ($exists) {
+            return null;
+        }
+
         // Calculate total installments based on remaining principal and installment amount
         $remaining = (float) $row['remaining_principal'];
         $perInstallment = (float) $row['next_installment_amount'];
         $installmentsLeft = ($perInstallment > 0) ? ceil($remaining / $perInstallment) : 1;
-
-        $totalRepaid = (float) ($row['total_repaid_to_date'] ?? 0);
-        $originalAmount = (float) $row['original_loan_amount'];
 
         // We want the system to know how many installments there were in total
         $installmentsRepaid = ($perInstallment > 0) ? floor($totalRepaid / $perInstallment) : 0;
