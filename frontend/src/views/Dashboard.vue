@@ -118,6 +118,19 @@
         <div class="text-white/40">➡️</div>
       </div>
 
+      <!-- Migration Verification Warning -->
+      <div v-if="dashboardData.migrated_at && !dashboardData.verified_at"
+           class="mt-4 p-4 rounded-3xl bg-emerald-50 border border-emerald-200 flex items-center gap-3"
+           @click="verifyMigration()">
+        <div class="text-2xl">✅</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-emerald-900">Verify Opening Balances</p>
+          <p class="text-xs text-emerald-700 uppercase tracking-widest font-black">Action Required</p>
+          <p class="text-xs text-emerald-800 mt-1">Your total balance (Savings + Shares + Wallet) is ₦{{ formatMoney(dashboardData.total_balance) }}. Tap to verify.</p>
+        </div>
+        <div class="text-emerald-400">➡️</div>
+      </div>
+
       <!-- Passbook Snapshot -->
       <div v-if="kpis.passbook_balance > 0" class="mt-4 p-5 rounded-[2rem] bg-white border border-slate-100 shadow-sm">
         <div class="flex items-center justify-between mb-3">
@@ -451,6 +464,46 @@ const utilLabel = (ux) => {
   if (type === 'airtime') return `Airtime — ${net} (${phone})`
   if (type === 'data') return `Data — ${net} (${phone})`
   return `${type || 'utility'} — ${net} (${phone})`
+}
+
+const verifyMigration = async () => {
+  const options = [
+    { label: 'Yes, it is correct', value: 'verify', primary: true },
+    { label: 'No, report discrepancy', value: 'report', danger: true },
+    { label: 'Cancel', value: 'cancel' }
+  ]
+
+  const choice = await modal.prompt(
+    'Verify Opening Balances',
+    `Welcome to Attaqwa Pay. Our records show your total balance (Savings + Shares + Wallet) is ₦${formatMoney(dashboardData.value.total_balance)}. Is this correct?`,
+    options
+  )
+
+  if (!choice || choice === 'cancel') return
+
+  if (choice === 'verify') {
+    try {
+      const { data } = await axios.post('/api/profile/verify-migration')
+      await modal.alert(data.message)
+      dashboardData.value.verified_at = data.verified_at
+    } catch (err) {
+      await modal.alert(err.response?.data?.message || 'Verification failed')
+    }
+  } else if (choice === 'report') {
+    const details = await modal.promptText(
+      'Report Discrepancy',
+      'Please describe the discrepancy in your records. What should your balance be?',
+      { placeholder: 'e.g. My savings should be ₦50,000 not ₦45,000...' }
+    )
+    if (!details) return
+
+    try {
+      const { data } = await axios.post('/api/profile/report-migration-error', { details })
+      await modal.alert(data.message)
+    } catch (err) {
+      await modal.alert(err.response?.data?.message || 'Failed to submit report')
+    }
+  }
 }
 
 const load = async () => {

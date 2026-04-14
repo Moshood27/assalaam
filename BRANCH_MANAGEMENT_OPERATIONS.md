@@ -41,7 +41,10 @@ The mobile app uses branches as a primary entry point for authentication.
 
 ### Branch Selection API
 *   **Endpoint**: `GET /api/branches`
-*   **Purpose**: Returns a sorted list of all branches for the login screen dropdown.
+*   **Purpose**: Returns a list of all branches for the login screen dropdown.
+*   **Auto Arrange**: The mobile app automatically arranges the branch list by:
+    1.  Prioritizing the **Last Used Branch** from the device's local storage.
+    2.  Sorting the remaining branches by **Geographic Proximity** (Distance) if the user grants location permission.
 *   **Controller**: `App\Http\Controllers\Api\AuthController@branches`
 
 ### Branch-Based Login

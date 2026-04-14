@@ -180,13 +180,47 @@ const form = ref({
 onMounted(async () => {
   console.log('LOGIN PAGE MOUNTED')
 
+  const lastBranchId = localStorage.getItem('last_branch_id')
+
   // 1. Load branches first
   try {
     const { data } = await axios.get('/api/branches')
     branches.value = data
+
+    // Initial arrangement (pre-select last branch if exists)
+    if (lastBranchId && !form.value.branch_id) {
+      const found = data.find(b => String(b.id) === String(lastBranchId))
+      if (found) {
+        form.value.branch_id = found.id
+        // Move it to top
+        const sorted = [found, ...data.filter(b => String(b.id) !== String(lastBranchId))]
+        branches.value = sorted
+      }
+    }
   } catch (e) { console.error(e) }
 
-  // 2. WAIT for the system to be clear before checking Biometrics
+  // 2. Try to auto-arrange by proximity if geolocation is available
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude, longitude } = pos.coords
+      const getDist = (lat, lng) => {
+        if (!lat || !lng) return Infinity
+        return Math.pow(Number(lat) - latitude, 2) + Math.pow(Number(lng) - longitude, 2)
+      }
+
+      const sorted = [...branches.value].sort((a, b) => {
+        // Always keep the last selected branch at the very top if it was already moved there
+        if (lastBranchId && String(a.id) === String(lastBranchId)) return -1
+        if (lastBranchId && String(b.id) === String(lastBranchId)) return 1
+        return getDist(a.latitude, a.longitude) - getDist(b.latitude, b.longitude)
+      })
+      branches.value = sorted
+    }, () => {
+      // Ignore geolocation errors, stick with existing order
+    }, { timeout: 5000 })
+  }
+
+  // 3. WAIT for the system to be clear before checking Biometrics
   // We use a longer delay (2.5s) to ensure the Notification popup is gone
   setTimeout(async () => {
     console.log('Checking biometrics now that system dialogs are likely gone...')
@@ -243,6 +277,11 @@ const handleLogin = async () => {
           password: form.value.password,
         })
       } catch (_) {}
+    }
+
+    // Remember last branch for "Auto arrange" on next login
+    if (form.value.branch_id) {
+      localStorage.setItem('last_branch_id', String(form.value.branch_id))
     }
 
     afterLogin(data.token)

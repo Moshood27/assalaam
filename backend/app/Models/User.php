@@ -131,6 +131,8 @@ class User extends Authenticatable implements FilamentUser
         'president_signed_at',
         'secretary_general_signature_path',
         'secretary_general_signed_at',
+        'migrated_at',
+        'verified_at',
     ];
 
     /**
@@ -186,6 +188,8 @@ class User extends Authenticatable implements FilamentUser
             'imam_approved_at' => 'datetime',
             'president_signed_at' => 'datetime',
             'secretary_general_signed_at' => 'datetime',
+            'migrated_at' => 'datetime',
+            'verified_at' => 'datetime',
         ];
     }
 

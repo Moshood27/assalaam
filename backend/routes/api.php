@@ -130,6 +130,8 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::post('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences']);
     Route::post('/profile/admin-charge-preference', [ProfileController::class, 'updateAdminChargePreference']);
+    Route::post('/profile/verify-migration', [ProfileController::class, 'verifyMigration']);
+    Route::post('/profile/report-migration-error', [ProfileController::class, 'reportMigrationError']);
     // Banks directory (dynamic list from provider)
     Route::get('/banks', [ProfileController::class, 'banks']);
     // Bank details: resolve and save (2-step with confirm flag)

@@ -6,6 +6,7 @@ Start here
 - README.md – High‑level overview, architecture notes, and setup guidance.
 - BUILD_AND_DEPLOY.md – Build, run, and deploy instructions.
 - DEPLOYMENT.md – Server environment and deployment checklist.
+- VPS_UPGRADE_GUIDE.md – **NEW:** Steps to update the existing VPS with new implementation features.
 - MOBILE_BUILD_SYNC.md – Capacitor mobile projects: syncing and assets.
 - MOBILE_VERSIONING.md – Managing app versions and forced updates.
 - PLAYSTORE_DEPLOYMENT.md – Google Play Store publishing guide.

@@ -530,4 +530,74 @@ class ProfileController extends Controller
             'admin_charge_auto_deduct' => (bool) $user->admin_charge_auto_deduct,
         ]);
     }
+
+    /**
+     * Verify the migrated opening balances.
+     */
+    public function verifyMigration(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->migrated_at) {
+            return response()->json(['message' => 'This account was not part of the system migration.'], 400);
+        }
+
+        if ($user->verified_at) {
+            return response()->json(['message' => 'Account already verified.'], 400);
+        }
+
+        $user->verified_at = now();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Opening balances verified successfully. Welcome to Attaqwa Pay!',
+            'verified_at' => $user->verified_at,
+        ]);
+    }
+
+    /**
+     * Report a discrepancy in the migrated opening balances.
+     */
+    public function reportMigrationError(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->migrated_at) {
+            return response()->json(['message' => 'This account was not part of the system migration.'], 400);
+        }
+
+        if ($user->verified_at) {
+            return response()->json(['message' => 'Account already verified.'], 400);
+        }
+
+        $validated = $request->validate([
+            'details' => 'required|string|max:1000',
+        ]);
+
+        // Create a support message for the admin to review
+        $msgBody = "MIGRATION DISCREPANCY REPORT\n\nUser: {$user->name} ({$user->membership_number})\nDetails: " . $validated['details'];
+
+        $msg = \App\Models\SupportMessage::create([
+            'user_id' => $user->id,
+            'sender_type' => 'member',
+            'sender_id' => $user->id,
+            'body' => $msgBody,
+        ]);
+
+        $user->discrepancy_reported_at = now();
+        $user->save();
+
+        // Notify admins
+        \App\Models\User::where('is_admin', true)->each(function ($admin) use ($user, $msgBody) {
+            $admin->notifyMember(
+                "Migration Discrepancy",
+                "New report from {$user->name} regarding their opening balance.",
+                ['type' => 'migration_discrepancy', 'user_id' => $user->id]
+            );
+        });
+
+        return response()->json([
+            'message' => 'Your report has been submitted to the admin for review. We will contact you shortly.',
+        ]);
+    }
 }

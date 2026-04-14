@@ -8,6 +8,9 @@ const state = reactive({
   size: 'md',
   // actions: [{ label: 'OK', primary: true, handler: () => {} }]
   actions: [],
+  type: 'alert', // 'alert', 'confirm', 'prompt', 'promptText'
+  inputValue: '',
+  inputPlaceholder: '',
 })
 
 let resolver = null
@@ -17,6 +20,9 @@ function show(opts = {}) {
   state.message = opts.message || ''
   state.size = opts.size || 'md'
   state.actions = Array.isArray(opts.actions) ? opts.actions : []
+  state.type = opts.type || 'alert'
+  state.inputValue = opts.inputValue || ''
+  state.inputPlaceholder = opts.inputPlaceholder || ''
   state.open = true
 }
 
@@ -33,6 +39,7 @@ function alert(message, title = 'Notice') {
     show({
       title,
       message,
+      type: 'alert',
       actions: [
         {
           label: 'OK',
@@ -50,6 +57,7 @@ function confirm(message, { title = 'Confirm', confirmText = 'OK', cancelText = 
     show({
       title,
       message,
+      type: 'confirm',
       actions: [
         { label: cancelText, handler: () => close(false) },
         { label: confirmText, primary: true, handler: () => close(true) },
@@ -58,6 +66,38 @@ function confirm(message, { title = 'Confirm', confirmText = 'OK', cancelText = 
   })
 }
 
+function prompt(title, message, options = []) {
+  return new Promise(resolve => {
+    resolver = resolve
+    show({
+      title,
+      message,
+      type: 'prompt',
+      actions: options.map(opt => ({
+        ...opt,
+        handler: () => close(opt.value)
+      }))
+    })
+  })
+}
+
+function promptText(title, message, { placeholder = '', initialValue = '' } = {}) {
+  return new Promise(resolve => {
+    resolver = resolve
+    show({
+      title,
+      message,
+      type: 'promptText',
+      inputValue: initialValue,
+      inputPlaceholder: placeholder,
+      actions: [
+        { label: 'Cancel', handler: () => close(null) },
+        { label: 'Submit', primary: true, handler: () => close(state.inputValue) },
+      ]
+    })
+  })
+}
+
 export function useModal() {
-  return { state, show, close, alert, confirm }
+  return { state, show, close, alert, confirm, prompt, promptText }
 }

@@ -1603,6 +1603,15 @@ Notes
 - Web builds gracefully hide biometric options.
 - On Android emulators without biometrics enrolled, enable biometrics/enroll in emulator settings.
 - The app does not delete biometric credentials on logout so users can use Quick Login next time. If you need to clear, remove the device credentials from system settings or implement a “Forget biometrics on this device” in Settings.
+## Documentation
+For detailed guides on specific modules, see:
+- [MIGRATION_STRATEGY.md](MIGRATION_STRATEGY.md) - How to migrate from paper/Excel to the digital platform.
+- [VPS_UPGRADE_GUIDE.md](VPS_UPGRADE_GUIDE.md) - **NEW:** Steps to update the existing VPS with these new features.
+- [TAKAFUL.md](TAKAFUL.md) - Shariah-compliant insurance (Takaful) module.
+- [QARD_HASAN.md](QARD_HASAN.md) - Interest-free loan (Qard Hasan) module.
+- [KYC_SYSTEM.md](KYC_SYSTEM.md) - Automated BVN and Face verification.
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Server and mobile app deployment guide.
+
 # coop_app
 
 

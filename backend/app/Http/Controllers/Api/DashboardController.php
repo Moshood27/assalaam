@@ -170,6 +170,9 @@ class DashboardController extends Controller
             'membership_id' => $user->membership_number,
             'passport_url' => $passportUrl,
             'balance' => (float) $user->balance,
+            'total_balance' => (float) ($user->balance + $passbook['base']),
+            'migrated_at' => optional($user->migrated_at)->toISOString(),
+            'verified_at' => optional($user->verified_at)->toISOString(),
             'joined_at' => optional($user->created_at)->toISOString(),
             'branch' => $user->branch ? [
                 'id' => $user->branch->id,
