@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\QardHasan;
+use App\Models\QardHasanRepayment;
 use App\Models\User;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -37,12 +38,14 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
         }
 
         // 1. Clean Sweep: Remove any non-migration (demo) loans for this user
-        // We only do this if it's the first time we see this user in this import?
-        // Actually, deleting where NOT LIKE 'MIG-%' is safe to run repeatedly on each row
-        // as it only targets demo data and ignores the ones we are currently importing.
-        \App\Models\QardHasan::where('user_id', $user->id)
+        $demoLoanIds = QardHasan::where('user_id', $user->id)
             ->where('qard_id_string', 'NOT LIKE', 'MIG-%')
-            ->delete();
+            ->pluck('id');
+
+        // Delete repayments first to satisfy foreign key constraint
+        QardHasanRepayment::whereIn('qard_hasan_id', $demoLoanIds)->delete();
+
+        QardHasan::whereIn('id', $demoLoanIds)->delete();
 
         $totalRepaid = (float) ($row['total_repaid_to_date'] ?? 0);
         $originalAmount = (float) $row['original_loan_amount'];

@@ -8,6 +8,7 @@ use App\Models\Scheme;
 use App\Models\WalletTransaction;
 use App\Models\TakafulContribution;
 use App\Models\TakafulPoolEntry;
+use App\Models\ProjectInvestment;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Row;
@@ -50,10 +51,15 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
         DB::transaction(function () use ($user, $scheme, $year, $months, $data) {
 
             // 1. DELETE existing demo contributions for this user/scheme/year
-            Contribution::where('user_id', $user->id)
+            $contributionsQuery = Contribution::where('user_id', $user->id)
                 ->where('scheme_id', $scheme->id)
-                ->whereYear('created_at', $year)
-                ->delete();
+                ->whereYear('created_at', $year);
+
+            // Clean up linked project investments first to satisfy foreign key constraint
+            $contributionIds = $contributionsQuery->pluck('id');
+            ProjectInvestment::whereIn('contribution_id', $contributionIds)->delete();
+
+            $contributionsQuery->delete();
 
             // (If Takaful) Clear Takaful records too for this year
             if ($scheme->name === 'Takaful') {

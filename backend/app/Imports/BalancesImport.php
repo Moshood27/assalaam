@@ -8,6 +8,7 @@ use App\Models\Contribution;
 use App\Models\Scheme;
 use App\Models\TakafulContribution;
 use App\Models\TakafulPoolEntry;
+use App\Models\ProjectInvestment;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Row;
@@ -92,13 +93,18 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
 
         // 1. Clean Sweep: Remove non-migration records and previous migration opening balances
         // This ensures the passbook looks clean and only contains valid migration/history data.
-        Contribution::where('user_id', $user->id)
+        $contributionsQuery = Contribution::where('user_id', $user->id)
             ->where('scheme_id', $scheme->id)
             ->where(function($q) {
                 $q->where('reference', 'NOT LIKE', 'MIG-%')
                   ->orWhere('reference', 'LIKE', 'MIG-CNTRB-%');
-            })
-            ->delete();
+            });
+
+        // Clean up linked project investments first to satisfy foreign key constraint
+        $contributionIds = $contributionsQuery->pluck('id');
+        ProjectInvestment::whereIn('contribution_id', $contributionIds)->delete();
+
+        $contributionsQuery->delete();
 
         // 2. Calculate current sum from Passbook history (MIG-REC- / MIG-PASS-)
         $currentSum = (float) $user->contributions()
@@ -177,10 +183,14 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
         $scheme = self::$schemesCache[$schemeName] ??= Scheme::firstOrCreate(['name' => $schemeName]);
 
         // Wipe previous migration opening adjustments
-        Contribution::where('user_id', $user->id)
+        $contributionsQuery = Contribution::where('user_id', $user->id)
             ->where('scheme_id', $scheme->id)
-            ->where('reference', 'LIKE', 'MIG-CNTRB-DIG-%')
-            ->delete();
+            ->where('reference', 'LIKE', 'MIG-CNTRB-DIG-%');
+
+        $contributionIds = $contributionsQuery->pluck('id');
+        ProjectInvestment::whereIn('contribution_id', $contributionIds)->delete();
+
+        $contributionsQuery->delete();
 
         // Calculate current sum from Passbook history
         $currentSum = (float) $user->contributions()
@@ -249,10 +259,14 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
         $scheme = self::$schemesCache[$schemeName] ??= Scheme::firstOrCreate(['name' => $schemeName]);
 
         // Wipe previous opening adjustments
-        Contribution::where('user_id', $user->id)
+        $contributionsQuery = Contribution::where('user_id', $user->id)
             ->where('scheme_id', $scheme->id)
-            ->where('reference', 'LIKE', 'MIG-CNTRB-WAL-%')
-            ->delete();
+            ->where('reference', 'LIKE', 'MIG-CNTRB-WAL-%');
+
+        $contributionIds = $contributionsQuery->pluck('id');
+        ProjectInvestment::whereIn('contribution_id', $contributionIds)->delete();
+
+        $contributionsQuery->delete();
 
         // Wipe demo transactions (not from migration)
         WalletTransaction::where('user_id', $user->id)
