@@ -35,8 +35,8 @@ class MockProvider
             'meta' => [
                 'note' => 'Mocked response for local/dev',
                 'bvn' => $bvn,
-                'selfie_exists' => is_file($selfiePath),
-                'id_image_exists' => $idImagePath ? is_file($idImagePath) : false,
+                'selfie_exists' => is_file(public_path($selfiePath)),
+                'id_image_exists' => $idImagePath ? is_file(public_path($idImagePath)) : false,
                 'hint' => $ok ? null : 'In mock mode, BVNs ending with an even digit pass.'
             ],
         ];

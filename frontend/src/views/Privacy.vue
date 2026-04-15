@@ -14,8 +14,8 @@
 
     <main class="p-4 space-y-6 max-w-3xl mx-auto">
       <div class="flex items-center justify-between px-2">
-        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Last updated: 2026-03-21</p>
-        <span class="badge bg-emerald-100 text-emerald-700">v1.1</span>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Last updated: 2026-04-15</p>
+        <span class="badge bg-emerald-100 text-emerald-700">v1.2</span>
       </div>
 
       <section class="card card-elevated p-6 bg-gradient-to-br from-white to-slate-50">
@@ -43,6 +43,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               Transaction and wallet activity necessary to provide services (payments, VTU, loans, etc.).
+            </li>
+            <li class="flex gap-3 items-start text-sm text-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Camera data: We request access to your device's camera strictly for scanning QR codes during merchant payments. Images are processed locally on your device and are not uploaded or stored on our servers.
             </li>
             <li class="flex gap-3 items-start text-sm text-slate-600">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">

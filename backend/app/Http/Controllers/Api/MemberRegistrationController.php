@@ -23,13 +23,13 @@ class MemberRegistrationController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'surname' => ['required', 'string', 'max:255'],
-            'other_names' => ['required', 'string', 'max:255'],
+            'other_names' => ['nullable', 'string', 'max:255'],
             'gender' => ['required', 'string', 'in:male,female'],
             'native_place' => ['nullable', 'string', 'max:255'],
             'dob' => ['required', 'date'],
             'marital_status' => ['required', 'string', 'in:single,married,divorced,widow'],
             'occupation' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email:rfc,dns', 'max:255', Rule::unique('users', 'email')],
+            'email' => ['required', 'email:rfc', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['required', 'string', 'max:30'],
             'secondary_phone' => ['nullable', 'string', 'max:30'],
             'address' => ['required', 'string', 'max:1000'],
@@ -40,29 +40,29 @@ class MemberRegistrationController extends Controller
             'confirm_password' => ['required', 'same:password'],
 
             // Business & Professional Information
-            'nature_of_business' => ['required', 'string', 'max:255'],
-            'business_address' => ['required', 'string', 'max:1000'],
-            'has_other_cooperatives' => ['required', 'boolean'],
+            'nature_of_business' => ['nullable', 'string', 'max:255'],
+            'business_address' => ['nullable', 'string', 'max:1000'],
+            'has_other_cooperatives' => ['nullable', 'boolean'],
             'other_cooperative_details' => ['nullable', 'string', 'max:1000'],
 
             // Next of Kin
-            'nok_name' => ['required', 'string', 'max:255'],
-            'nok_address' => ['required', 'string', 'max:1000'],
-            'nok_phone' => ['required', 'string', 'max:30'],
-            'nok_relationship' => ['required', 'string', 'max:100'],
+            'nok_name' => ['nullable', 'string', 'max:255'],
+            'nok_address' => ['nullable', 'string', 'max:1000'],
+            'nok_phone' => ['nullable', 'string', 'max:30'],
+            'nok_relationship' => ['nullable', 'string', 'max:100'],
 
             // Guarantor Details
-            'guarantor_name' => ['required', 'string', 'max:255'],
-            'guarantor_address' => ['required', 'string', 'max:1000'],
-            'guarantor_phone' => ['required', 'string', 'max:30'],
-            'guarantor_occupation' => ['required', 'string', 'max:255'],
+            'guarantor_name' => ['nullable', 'string', 'max:255'],
+            'guarantor_address' => ['nullable', 'string', 'max:1000'],
+            'guarantor_phone' => ['nullable', 'string', 'max:30'],
+            'guarantor_occupation' => ['nullable', 'string', 'max:255'],
 
             // Religious Information & Imam's Attestation
-            'religious_society_name' => ['required', 'string', 'max:255'],
-            'imam_name' => ['required', 'string', 'max:255'],
-            'mosque_address' => ['required', 'string', 'max:1000'],
-            'imam_phone' => ['required', 'string', 'max:30'],
-            'duration_of_jamma_membership' => ['required', 'string', 'max:100'],
+            'religious_society_name' => ['nullable', 'string', 'max:255'],
+            'imam_name' => ['nullable', 'string', 'max:255'],
+            'mosque_address' => ['nullable', 'string', 'max:1000'],
+            'imam_phone' => ['nullable', 'string', 'max:30'],
+            'duration_of_jamma_membership' => ['nullable', 'string', 'max:100'],
 
             // Information for Female Members
             'spouse_father_name' => ['nullable', 'string', 'max:255'],

@@ -712,11 +712,13 @@ async function handleStart() {
       step.value = 2
     }
   } catch (e) {
-    errorStart.value = e?.response?.data?.message
-      || e?.response?.data?.errors?.email?.[0]
-      || e?.response?.data?.errors?.phone?.[0]
-      || e?.response?.data?.errors?.branch_id?.[0]
-      || 'Could not start application'
+    const errors = e?.response?.data?.errors
+    if (errors) {
+      const firstError = Object.values(errors)[0][0]
+      errorStart.value = firstError
+    } else {
+      errorStart.value = e?.response?.data?.message || 'Could not start application'
+    }
   } finally {
     loadingStart.value = false
   }
@@ -743,7 +745,13 @@ async function handleUpload() {
     await handleSendOtps()
     step.value = 3
   } catch (e) {
-    errorUpload.value = e?.response?.data?.message || 'Upload failed'
+    const errors = e?.response?.data?.errors
+    if (errors) {
+      const firstError = Object.values(errors)[0][0]
+      errorUpload.value = firstError
+    } else {
+      errorUpload.value = e?.response?.data?.message || 'Upload failed'
+    }
   } finally {
     loadingUpload.value = false
   }

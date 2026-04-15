@@ -6,6 +6,7 @@ use App\Imports\UsersImport;
 use App\Imports\BalancesImport;
 use App\Imports\LoansImport;
 use App\Imports\PassbookImport;
+use App\Imports\TransactionsImport;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Models\QardHasan;
@@ -36,6 +37,7 @@ class MigrationImport extends Page implements HasForms
     public $balancesFile;
     public $loansFile;
     public $passbookFile;
+    public $transactionsFile;
     public $migrationDate;
 
     public function mount()
@@ -247,6 +249,21 @@ class MigrationImport extends Page implements HasForms
         try {
             Excel::import(new PassbookImport(), $this->passbookFile);
             Notification::make()->success()->title('Passbook history migrated and reconciled successfully.')->send();
+        } catch (\Exception $e) {
+            Notification::make()->danger()->title('Migration failed: ' . $e->getMessage())->send();
+        }
+    }
+
+    public function importTransactions()
+    {
+        if (!$this->transactionsFile) {
+            Notification::make()->warning()->title('Please upload a Transactions Master file.')->send();
+            return;
+        }
+
+        try {
+            Excel::import(new TransactionsImport(), $this->transactionsFile);
+            Notification::make()->success()->title('Transaction history migrated successfully with a clean sweep.')->send();
         } catch (\Exception $e) {
             Notification::make()->danger()->title('Migration failed: ' . $e->getMessage())->send();
         }
