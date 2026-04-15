@@ -1,17 +1,11 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-24 font-sans">
     <!-- Header -->
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" aria-label="Back" class="hover:opacity-80 transition rounded-xl p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Airtime, Data & Bills</h1>
-        <router-link to="/vtu/history" class="btn-ghost text-xs">History</router-link>
-      </div>
-    </header>
+    <AppHeader title="Airtime, Data & Bills" :showBack="true">
+      <template #right>
+        <router-link to="/vtu/history" class="text-emerald-700 text-xs font-bold mr-2">History</router-link>
+      </template>
+    </AppHeader>
 
     <div class="p-4 space-y-6 max-w-md mx-auto">
       <!-- Balance Card -->
@@ -223,27 +217,15 @@
       @close="handlePinCancel"
     />
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="bottom-nav-btn bottom-nav-btn-active" @click="$router.push('/vtu')">
-        <span class="text-xl">📶</span>
-        <span class="text-[10px] font-bold">Services</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/wallet')">
-        <span class="text-xl">👛</span>
-        <span class="text-[10px] font-bold">Wallet</span>
-      </button>
-    </nav>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import axios from 'axios'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
+import axios from '../http'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 

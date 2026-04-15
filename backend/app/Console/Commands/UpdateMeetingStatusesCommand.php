@@ -20,15 +20,26 @@ class UpdateMeetingStatusesCommand extends Command
         $this->info("Current time ({$timezone}): {$todayStr} {$nowStr}");
 
         // Mark as ongoing if current time is within window
-        $ongoingCount = Meeting::where('status', 'scheduled')
+        $meetingsToOngoing = Meeting::where('status', 'scheduled')
             ->where('date', '<=', $todayStr)
             ->where('start_time', '<=', $nowStr)
             ->where('end_time', '>', $nowStr)
-            ->update(['status' => 'ongoing']);
+            ->get();
 
-        if ($ongoingCount > 0) {
-            $this->info("Marked {$ongoingCount} meetings as ongoing.");
+        foreach ($meetingsToOngoing as $meeting) {
+            $meeting->update(['status' => 'ongoing']);
+
+            // Notify members that it's time for the meeting
+            $meeting->notifyMembers(
+                "⏰ Meeting Time: {$meeting->name}",
+                "The meeting is starting now. Please join or mark your attendance.",
+                ['type' => 'meeting_ongoing']
+            );
+
+            $this->info("Marked meeting '{$meeting->name}' as ongoing and notified members.");
         }
+
+        $ongoingCount = $meetingsToOngoing->count();
 
         // Mark as completed if end_time has passed
         $completedCount = Meeting::whereIn('status', ['scheduled', 'ongoing'])

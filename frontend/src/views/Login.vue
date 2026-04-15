@@ -158,6 +158,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Geolocation } from '@capacitor/geolocation'
 import axios from '../http.js'
 import { Capacitor } from '@capacitor/core'
 import { useRouter, useRoute } from 'vue-router'
@@ -216,24 +217,23 @@ onMounted(async () => {
   } catch (e) { console.error(e) }
 
   // 2. Try to auto-arrange by proximity if geolocation is available
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const { latitude, longitude } = pos.coords
-      const getDist = (lat, lng) => {
-        if (!lat || !lng) return Infinity
-        return Math.pow(Number(lat) - latitude, 2) + Math.pow(Number(lng) - longitude, 2)
-      }
+  try {
+    const pos = await Geolocation.getCurrentPosition({ timeout: 5000 })
+    const { latitude, longitude } = pos.coords
+    const getDist = (lat, lng) => {
+      if (!lat || !lng) return Infinity
+      return Math.pow(Number(lat) - latitude, 2) + Math.pow(Number(lng) - longitude, 2)
+    }
 
-      const sorted = [...branches.value].sort((a, b) => {
-        // Always keep the last selected branch at the very top if it was already moved there
-        if (lastBranchId && String(a.id) === String(lastBranchId)) return -1
-        if (lastBranchId && String(b.id) === String(lastBranchId)) return 1
-        return getDist(a.latitude, a.longitude) - getDist(b.latitude, b.longitude)
-      })
-      branches.value = sorted
-    }, () => {
-      // Ignore geolocation errors, stick with existing order
-    }, { timeout: 5000 })
+    const sorted = [...branches.value].sort((a, b) => {
+      // Always keep the last selected branch at the very top if it was already moved there
+      if (lastBranchId && String(a.id) === String(lastBranchId)) return -1
+      if (lastBranchId && String(b.id) === String(lastBranchId)) return 1
+      return getDist(a.latitude, a.longitude) - getDist(b.latitude, b.longitude)
+    })
+    branches.value = sorted
+  } catch (e) {
+    // Ignore geolocation errors, stick with existing order
   }
 
   // 3. WAIT for the system to be clear before checking Biometrics

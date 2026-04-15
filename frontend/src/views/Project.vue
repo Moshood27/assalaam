@@ -1,14 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" class="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors" aria-label="Go back">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
-        </button>
-        <h1 class="text-lg sm:text-xl font-bold text-slate-800 truncate">{{ project?.name || 'Project' }}</h1>
-        <div class="w-10" />
-      </div>
-    </header>
+    <AppHeader :title="project?.name || 'Project'" :showBack="true" />
 
     <div class="p-4 space-y-4">
       <div v-if="loading" class="text-center text-slate-500 py-10">Loading...</div>
@@ -201,11 +193,14 @@
         </div>
       </div>
     </div>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import { useRoute } from 'vue-router'
 import axios from '../http.js'
 

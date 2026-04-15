@@ -1,16 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-32">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" class="p-2 -ml-2 rounded-full active:bg-slate-100 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 class="text-lg font-bold text-slate-800">Loan Records</h1>
-        <div class="w-10"></div>
-      </div>
-    </header>
+    <AppHeader title="Loan Records" :showBack="true" />
 
     <div class="container-app py-4">
       <div v-if="loading" class="text-center text-slate-500 py-10">Loading…</div>
@@ -314,29 +304,14 @@
           @close="closeNotice"
         />
 
-        <nav class="bottom-nav" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
-      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/wallet')">
-        <span class="text-xl">👛</span>
-        <span class="text-[10px] font-bold">Wallet</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/passbook')">
-        <span class="text-xl">📅</span>
-        <span class="text-[10px] font-bold">Passbook</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/profile')">
-        <span class="text-xl">👤</span>
-        <span class="text-[10px] font-bold">Profile</span>
-      </button>
-    </nav>
+        <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
 import getImageUrl from '../utils/image'
 import { openBlob } from '../utils/download'

@@ -1,16 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-20 font-sans">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Member Terms</h1>
-        <div class="w-6"></div>
-      </div>
-    </header>
+    <AppHeader title="Member Terms" :showBack="true" />
 
     <main class="p-4 space-y-6 max-w-3xl mx-auto">
       <div class="flex items-center justify-between px-2">
@@ -134,5 +124,6 @@
 </template>
 
 <script setup>
+import AppHeader from '../components/AppHeader.vue'
 import brand from '../brand'
 </script>

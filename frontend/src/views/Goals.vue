@@ -1,18 +1,14 @@
 <template>
   <div class="min-h-screen bg-slate-50/50 pb-24">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" class="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors" aria-label="Go back">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
-        </button>
-        <h1 class="text-lg font-bold text-slate-800">Hajj & Umrah</h1>
-        <button @click="openCreate" class="btn-ghost text-xs py-1.5 px-3">New Goal</button>
-      </div>
-    </header>
+    <AppHeader title="Hajj & Umrah" :showBack="true">
+      <template #right>
+        <button @click="openCreate" class="text-emerald-700 text-xs font-bold mr-2">New Goal</button>
+      </template>
+    </AppHeader>
 
     <div class="p-4 max-w-2xl mx-auto space-y-4">
       <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-lg relative overflow-hidden">
-        <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full" />
+        <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full"></div>
         <p class="text-emerald-100 text-sm font-medium mb-1 relative z-10">Available Wallet Balance</p>
         <h2 class="text-3xl font-black relative z-10">₦ {{ formatMoney(balance) }}</h2>
       </div>
@@ -116,11 +112,14 @@
         </div>
       </div>
     </div>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
 
 const goals = ref([])

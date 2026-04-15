@@ -497,6 +497,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { Geolocation } from '@capacitor/geolocation'
 import axios from '../http.js'
 import SearchableSelect from '../components/SearchableSelect.vue'
 import SignaturePad from '../components/SignaturePad.vue'
@@ -619,15 +620,16 @@ onMounted(async () => {
     branches.value = data
 
     // Auto-arrange branches by proximity if geolocation is available
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const { latitude, longitude } = pos.coords
-        const getDist = (lat, lng) => {
-          if (!lat || !lng) return Infinity
-          return Math.pow(Number(lat) - latitude, 2) + Math.pow(Number(lng) - longitude, 2)
-        }
-        branches.value = [...branches.value].sort((a, b) => getDist(a.latitude, a.longitude) - getDist(b.latitude, b.longitude))
-      }, () => {}, { timeout: 5000 })
+    try {
+      const pos = await Geolocation.getCurrentPosition({ timeout: 5000 })
+      const { latitude, longitude } = pos.coords
+      const getDist = (lat, lng) => {
+        if (!lat || !lng) return Infinity
+        return Math.pow(Number(lat) - latitude, 2) + Math.pow(Number(lng) - longitude, 2)
+      }
+      branches.value = [...branches.value].sort((a, b) => getDist(a.latitude, a.longitude) - getDist(b.latitude, b.longitude))
+    } catch (e) {
+      // Ignore geolocation errors
     }
   } catch (e) {}
 

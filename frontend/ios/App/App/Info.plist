@@ -47,7 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>We use the camera to scan merchant QR codes for payments.</string>
+        <key>NSCameraUsageDescription</key>
+        <string>We use the camera to scan merchant QR codes for payments.</string>
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>We use your location to verify your presence at meetings and mark your attendance.</string>
 </dict>
 </plist>

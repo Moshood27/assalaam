@@ -1,19 +1,13 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-24 font-sans">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" aria-label="Back" class="hover:opacity-80 transition rounded-xl p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Passbook</h1>
-        <div class="flex items-center gap-2">
-          <a :href="getDownloadUrl('pdf')" target="_blank" class="btn-ghost text-[10px] px-2 py-1 border rounded">PDF</a>
-          <a :href="getDownloadUrl('csv')" target="_blank" class="btn-ghost text-[10px] px-2 py-1 border rounded">CSV</a>
+    <AppHeader title="Passbook" :showBack="true">
+      <template #right>
+        <div class="flex items-center gap-1">
+          <a :href="getDownloadUrl('pdf')" target="_blank" class="p-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">PDF</a>
+          <a :href="getDownloadUrl('csv')" target="_blank" class="p-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">CSV</a>
         </div>
-      </div>
-    </header>
+      </template>
+    </AppHeader>
 
     <div class="p-4 space-y-6">
       <div v-if="loadError" class="card p-4 border border-rose-200 bg-rose-50 text-rose-700 text-sm">
@@ -96,24 +90,13 @@
       <div v-else class="card p-4 animate-pulse h-20"></div>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="bottom-nav-btn bottom-nav-btn-active" @click="$router.push('/passbook')">
-        <span class="text-xl">📅</span>
-        <span class="text-[10px] font-bold">Passbook</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/pay')">
-        <span class="text-xl">💳</span>
-        <span class="text-[10px] font-bold">Pay</span>
-      </button>
-    </nav>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import { ref, onMounted, computed } from 'vue'
 import axios from '../http.js'
 

@@ -1,13 +1,6 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-20">
-    <header class="bg-white p-4 flex items-center gap-4 sticky top-0 z-30 shadow-sm">
-      <button @click="$router.back()" class="p-2 -ml-2 text-slate-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-      </button>
-      <h1 class="text-lg font-bold text-slate-800 uppercase tracking-tight">Attendance</h1>
-    </header>
+  <div class="min-h-screen bg-slate-50 pb-24">
+    <AppHeader title="Attendance" :showBack="true" />
 
     <div class="p-4">
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
@@ -144,11 +137,15 @@
         </div>
       </div>
     </div>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { Geolocation } from '@capacitor/geolocation'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
 import { useRouter } from 'vue-router'
 import { useModal } from '../composables/useModal'
@@ -244,30 +241,34 @@ const fetchHistory = async () => {
   }
 }
 
-const getLocation = () => {
+const getLocation = async () => {
   locating.value = true
-  if (!navigator.geolocation) {
-    modal.alert("Geolocation is not supported by your device")
-    locating.value = false
-    return
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      location.value = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
+  try {
+    const position = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 10000
+    })
+    
+    location.value = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    }
+  } catch (error) {
+    console.error('Location Error:', error)
+    const perms = await Geolocation.checkPermissions()
+    if (perms.location !== 'granted') {
+      const title = "Permission Required"
+      const msg = "Location permission is required to verify your presence and mark attendance during a meeting. Please allow access in your device settings."
+      const retry = await modal.confirm(msg, { confirmText: 'Try Again', title })
+      if (retry) {
+        getLocation()
       }
-      locating.value = false
-    },
-    (error) => {
-      let msg = "Could not get your location."
-      if (error.code === 1) msg = "Please allow location access in your settings."
-      modal.alert(msg)
-      locating.value = false
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  )
+    } else {
+      modal.alert("Could not get your location. Please check your GPS and try again.", "Location Error")
+    }
+  } finally {
+    locating.value = false
+  }
 }
 
 const submitAttendance = async () => {

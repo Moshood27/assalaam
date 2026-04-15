@@ -66,12 +66,25 @@ html, body, #app { height: 100%; }
   .segment-active { @apply bg-emerald-700 text-white shadow; }
 
   /* Bottom navigation */
-  .bottom-nav { @apply fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t p-3 flex justify-around items-center z-10; }
-  .bottom-nav-btn { @apply text-slate-400 flex flex-col items-center gap-1; }
-  .bottom-nav-btn-active { @apply text-emerald-700; }
+  .bottom-nav { 
+    @apply fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-200/60 flex justify-around items-center z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.03)];
+    padding-bottom: env(safe-area-inset-bottom, 0.75rem);
+    height: auto;
+    min-height: calc(64px + env(safe-area-inset-bottom, 0));
+  }
+  .bottom-nav-btn { @apply text-slate-400 flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all py-2; }
+  .bottom-nav-btn-active { @apply text-emerald-700 font-bold; }
+  .bottom-nav-btn span { @apply leading-none; }
+  .bottom-nav-btn .text-xl { @apply text-2xl mb-0.5 transition-transform; }
+  .bottom-nav-btn-active .text-xl { @apply scale-110; }
+  .bottom-nav-btn .text-\[10px\] { @apply uppercase tracking-wider font-bold; }
 
   /* Header */
-  .header-fintech { @apply w-full bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-20; }
+  .header-fintech { 
+    @apply w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-40 shadow-sm;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .navbar-inner { @apply mx-auto max-w-5xl px-4 sm:px-6 h-16 flex items-center justify-between; }
 
   /* Admin helpers used elsewhere */
   .lbl { @apply block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1; }

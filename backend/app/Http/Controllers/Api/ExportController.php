@@ -547,7 +547,7 @@ class ExportController extends Controller
         try {
             // Re-use the existing enrolment PDF template.
             // Note: We pass the $user as 'application' because the view expects that variable name.
-            $pdf = Pdf::loadView('pdfs.membership_application', ['application' => $user]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.membership_application', ['application' => $user]);
             return $pdf->download("Membership_Enrolment_{$user->membership_number}.pdf");
         } catch (\Throwable $e) {
             \Log::error('downloadMembershipEnrolment error', ['exception' => $e->getMessage()]);
@@ -566,8 +566,7 @@ class ExportController extends Controller
         }
 
         try {
-            // Re-use the existing imam attestation PDF template.
-            $pdf = Pdf::loadView('pdfs.imam_attestation', ['application' => $user]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.imam_attestation', ['application' => $user]);
             return $pdf->download("Imam_Attestation_{$user->membership_number}.pdf");
         } catch (\Throwable $e) {
             \Log::error('downloadImamAttestation error', ['exception' => $e->getMessage()]);

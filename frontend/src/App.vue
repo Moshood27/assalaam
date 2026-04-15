@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
+import { Geolocation } from '@capacitor/geolocation'
 import { SplashScreen } from '@capacitor/splash-screen'
 import BaseModal from './components/BaseModal.vue'
 import InboxDrawer from './components/InboxDrawer.vue'
@@ -155,6 +156,18 @@ onMounted(async () => {
     if (unreadTimer) clearInterval(unreadTimer)
     unreadTimer = setInterval(refreshUnreadCount, 30000)
   }
+
+  // 6. Setup Geolocation permissions on native platforms
+  if (isNative && Capacitor.isPluginAvailable('Geolocation')) {
+    try {
+      const geoPermStatus = await Geolocation.checkPermissions()
+      if (geoPermStatus.location !== 'granted') {
+        await Geolocation.requestPermissions()
+      }
+    } catch (e) {
+      console.warn('Geolocation permission sequence failed', e)
+    }
+  }
 })
 </script>
 
@@ -167,7 +180,7 @@ onMounted(async () => {
       v-if="isLoggedIn"
       @click="$router.push('/support')"
       aria-label="Open Support Chat"
-      class="fixed bottom-20 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-emerald-50"
+      class="fixed bottom-32 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-emerald-50 mb-[env(safe-area-inset-bottom)]"
     >
       <span class="i-mdi-headset text-2xl text-emerald-600"></span>
     </button>
@@ -177,7 +190,7 @@ onMounted(async () => {
       v-if="isLoggedIn"
       @click="showInbox = true"
       aria-label="Open Inbox"
-      class="fixed bottom-6 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:bg-slate-50 active:scale-[0.98] transition"
+      class="fixed bottom-20 right-6 z-40 bg-white border shadow-lg rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:bg-slate-50 active:scale-[0.98] transition mb-[env(safe-area-inset-bottom)]"
     >
       <span class="i-mdi-inbox-outline text-2xl md:text-3xl"></span>
       <span v-if="unreadCount>0" class="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 bg-red-600 text-white text-[10px] md:text-xs rounded-full px-1.5 md:px-2 py-0.5">{{ unreadCount }}</span>

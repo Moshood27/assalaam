@@ -78,7 +78,7 @@
                 </a>
             </div>
 
-            <form wire:submit.prevent="importLoans">
+            <form wire:submit.Iprevent="importLoans">
                 <div class="mb-4">
                     <input type="file" wire:model="loansFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-gray-700 dark:file:text-gray-300">
                 </div>

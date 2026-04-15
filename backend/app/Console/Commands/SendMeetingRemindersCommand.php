@@ -50,39 +50,17 @@ class SendMeetingRemindersCommand extends Command
         foreach ($meetings as $meeting) {
             $this->info("Sending reminders for meeting: {$meeting->name} (ID: {$meeting->id})");
 
-            // Find users who should attend
-            $query = User::where('is_admin', false)->where('is_defaulter', false);
-
-            // Filter by branches if specified
-            if ($meeting->branches()->exists()) {
-                $query->whereIn('branch_id', $meeting->branches()->pluck('branches.id'));
-            }
-
-            $users = $query->get();
-
-            if ($users->isEmpty()) {
-                $this->warn("No eligible members found for meeting reminders.");
-                $meeting->update(['reminder_sent_at' => now()]);
-                continue;
-            }
-
             $title = "📌 Meeting Reminder: {$meeting->name}";
             $body = "Meeting starts at " . date('h:i A', strtotime($meeting->start_time)) . ". Please be at the venue on time to mark your attendance and avoid the ₦500 fine.";
 
-            foreach ($users as $user) {
-                try {
-                    $user->notifyMember($title, $body, [
-                        'type' => 'attendance_meeting',
-                        'meeting_id' => (string) $meeting->id,
-                        'action' => '/attendance'
-                    ]);
-                } catch (\Throwable $e) {
-                    $this->error("Failed to notify user {$user->id}: " . $e->getMessage());
-                }
-            }
+            $meeting->notifyMembers($title, $body, [
+                'type' => 'attendance_meeting',
+                'meeting_id' => (string) $meeting->id,
+                'action' => '/attendance'
+            ]);
 
             $meeting->update(['reminder_sent_at' => now()]);
-            $this->info("Successfully sent reminders to " . $users->count() . " members.");
+            $this->info("Successfully sent reminders for meeting: {$meeting->name}");
         }
     }
 }

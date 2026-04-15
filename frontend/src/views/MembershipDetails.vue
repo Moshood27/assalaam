@@ -1,17 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-32">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <div class="flex items-center gap-3">
-          <button @click="$router.back()" class="p-2 -ml-2 rounded-full active:bg-slate-100 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 class="text-lg font-bold text-slate-800">Membership Details</h1>
-        </div>
-      </div>
-    </header>
+    <AppHeader title="Membership Details" :showBack="true" />
 
     <div class="p-4 space-y-6">
       <!-- Actions Section -->
@@ -53,6 +42,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import AppHeader from '../components/AppHeader.vue'
 import axios from '../http'
 const profile = ref({})
 

@@ -1,16 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-20 font-sans">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" class="text-2xl hover:opacity-70 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Privacy Policy</h1>
-        <div class="w-6"></div>
-      </div>
-    </header>
+    <AppHeader title="Privacy Policy" :showBack="true" />
 
     <main class="p-4 space-y-6 max-w-3xl mx-auto">
       <div class="flex items-center justify-between px-2">
@@ -49,6 +39,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               Camera data: We request access to your device's camera strictly for scanning QR codes during merchant payments. Images are processed locally on your device and are not uploaded or stored on our servers.
+            </li>
+            <li class="flex gap-3 items-start text-sm text-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Location data: We request access to your device's GPS location strictly to verify your presence at scheduled branch meetings and mark attendance. Your location is only processed when you actively mark attendance and is not tracked in the background.
             </li>
             <li class="flex gap-3 items-start text-sm text-slate-600">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
@@ -130,7 +126,7 @@
           </h2>
           <p class="text-sm text-slate-600 leading-relaxed">
             Questions about this Privacy Policy? Reach us via the Support page or email
-            <a href="mailto:support@example.com" class="text-emerald-700 font-bold hover:underline">support@example.com</a>.
+            <a href="mailto:admin@attaqwa.com" class="text-emerald-700 font-bold hover:underline">admin@attaqwa.com</a>.
           </p>
         </section>
 
@@ -148,5 +144,6 @@
 </template>
 
 <script setup>
+import AppHeader from '../components/AppHeader.vue'
 import brand from '../brand'
 </script>

@@ -11,9 +11,8 @@
         .photo-box { position: absolute; top: 0; right: 0; width: 120px; height: 140px; border: 1px solid #ccc; text-align: center; line-height: 140px; font-size: 10px; color: #999; }
         .section { margin-bottom: 20px; position: relative; }
         .section-title { background: #f3f4f6; padding: 5px 10px; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 10px; border-left: 4px solid #047857; }
-        .row { display: flex; margin-bottom: 8px; }
         .label { font-weight: bold; width: 180px; }
-        .value { border-bottom: 1px dotted #ccc; flex: 1; min-height: 1.2em; }
+        .value { border-bottom: 1px dotted #ccc; min-height: 1.2em; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
         table td { padding: 5px; vertical-align: top; }
         .signature-box { margin-top: 10px; text-align: center; }
@@ -267,23 +266,32 @@
             </tr>
         </table>
 
-        <div style="margin-top: 30px; display: flex; justify-content: space-between;">
-            <div class="signature-box" style="width: 45%; float: left;">
-                @if($sig = $getPath($application->president_signature_path))
-                    <img src="{{ $sig }}" class="signature-image">
-                @else
-                    <div style="height: 60px; border-bottom: 1px solid #000;"></div>
-                @endif
-                <p>President's Signature/Date</p>
-            </div>
-            <div class="signature-box" style="width: 45%; float: right;">
-                @if($sig = $getPath($application->secretary_general_signature_path))
-                    <img src="{{ $sig }}" class="signature-image">
-                @else
-                    <div style="height: 60px; border-bottom: 1px solid #000;"></div>
-                @endif
-                <p>Secretary General's Signature/Date</p>
-            </div>
+        <div style="margin-top: 30px;">
+            <table style="border: none; margin-top: 30px;">
+                <tr>
+                    <td style="width: 45%; border: none;">
+                        <div class="signature-box">
+                            @if($sig = $getPath($application->president_signature_path))
+                                <img src="{{ $sig }}" class="signature-image">
+                            @else
+                                <div style="height: 60px; border-bottom: 1px solid #000;"></div>
+                            @endif
+                            <p>President's Signature/Date</p>
+                        </div>
+                    </td>
+                    <td style="width: 10%; border: none;"></td>
+                    <td style="width: 45%; border: none;">
+                        <div class="signature-box">
+                            @if($sig = $getPath($application->secretary_general_signature_path))
+                                <img src="{{ $sig }}" class="signature-image">
+                            @else
+                                <div style="height: 60px; border-bottom: 1px solid #000;"></div>
+                            @endif
+                            <p>Secretary General's Signature/Date</p>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 

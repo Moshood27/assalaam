@@ -1,20 +1,6 @@
 <template>
-  <div class="min-h-screen pb-28 overflow-x-hidden">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button class="flex items-center gap-2 min-w-0" @click="$router.push('/profile')">
-          <div class="w-10 h-10 rounded-full overflow-hidden bg-emerald-700 flex items-center justify-center text-white font-bold text-xl">
-            <img v-if="dashboardData.passport_url" :src="getImageUrl(dashboardData.passport_url)" alt="Profile photo" class="w-10 h-10 object-cover" />
-            <span v-else>{{ (dashboardData.full_name || 'M')[0] }}</span>
-          </div>
-          <div class="text-left min-w-0">
-            <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Welcome back,</p>
-            <h2 class="text-sm font-black text-slate-800 uppercase truncate">{{ dashboardData.full_name }}</h2>
-          </div>
-        </button>
-        <button id="nav-profile" class="btn-muted rounded-full p-2" title="Settings" @click="$router.push('/settings')">⚙️</button>
-      </div>
-    </header>
+  <div class="min-h-screen pb-28 overflow-x-hidden bg-slate-50">
+    <AppHeader :user="dashboardData" :showSettings="true" />
 
     <div class="p-4">
       <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
@@ -302,24 +288,13 @@
       @close="closeNotice"
     />
 
-    <nav class="bottom-nav" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
-      <button class="bottom-nav-btn-active" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/passbook')">
-        <span class="text-xl">📅</span>
-        <span class="text-[10px] font-bold">Passbook</span>
-      </button>
-      <button class="bottom-nav-btn" @click="logout">
-        <span class="text-xl">🚪</span>
-        <span class="text-[10px] font-bold">Logout</span>
-      </button>
-    </nav>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import { ref, onMounted, computed } from 'vue'
 import axios from '../http'
 import getImageUrl from '../utils/image'

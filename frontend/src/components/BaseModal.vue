@@ -1,12 +1,12 @@
 <template>
   <transition name="fade">
-    <div v-if="state.open" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div v-if="state.open" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-6 pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <!-- Backdrop -->
       <div class="absolute inset-0 bg-black/40" @click="close()"></div>
 
       <!-- Panel -->
       <div
-        class="relative w-full sm:w-auto bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-200 mx-0 sm:mx-4"
+        class="relative w-full sm:w-auto bg-white rounded-2xl shadow-xl border border-slate-200 mx-0 sm:mx-4"
         :class="panelSize"
         role="dialog"
         aria-modal="true"
@@ -35,7 +35,7 @@
               a.primary ? 'bg-emerald-700 text-white' : (a.danger ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700'),
               state.type === 'prompt' ? 'flex-1 sm:flex-none' : ''
             ]"
-            class="px-4 py-2 rounded-xl text-sm font-bold min-w-[80px]"
+            class="px-6 py-3 rounded-xl text-sm font-bold min-w-[100px] active:scale-95 transition-transform"
           >
             {{ a.label }}
           </button>

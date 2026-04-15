@@ -1,16 +1,10 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-24 font-sans">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.back()" aria-label="Back" class="hover:opacity-80 transition rounded-xl p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 class="text-lg sm:text-xl font-bold text-slate-800">VTU History</h1>
-        <router-link to="/vtu" class="btn-ghost text-xs">Buy</router-link>
-      </div>
-    </header>
+    <AppHeader title="VTU History" :showBack="true">
+      <template #right>
+        <router-link to="/vtu" class="text-emerald-700 text-xs font-bold mr-2">Buy</router-link>
+      </template>
+    </AppHeader>
 
     <div class="p-4 space-y-4 max-w-md mx-auto">
       <div class="card card-elevated p-4 grid grid-cols-3 gap-3 items-end">
@@ -68,26 +62,15 @@
       </div>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="bottom-nav-btn" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="bottom-nav-btn bottom-nav-btn-active" @click="$router.push('/vtu/history')">
-        <span class="text-xl">🧾</span>
-        <span class="text-[10px] font-bold">VTU History</span>
-      </button>
-      <button class="bottom-nav-btn" @click="$router.push('/vtu')">
-        <span class="text-xl">📶</span>
-        <span class="text-[10px] font-bold">Buy</span>
-      </button>
-    </nav>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
+import axios from '../http'
 
 const items = ref([])
 const page = ref(1)

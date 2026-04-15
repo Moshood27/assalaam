@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -62,6 +63,34 @@ class Meeting extends Model
     public function attendanceRecords(): HasMany
     {
         return $this->hasMany(AttendanceRecord::class);
+    }
+
+    /**
+     * Notify all eligible members about this meeting.
+     */
+    public function notifyMembers(string $title, string $body, array $data = []): void
+    {
+        $query = User::where('is_admin', false)
+            ->where('is_defaulter', false);
+
+        // Filter by branches if specified
+        if ($this->branches()->exists()) {
+            $query->whereIn('branch_id', $this->branches()->pluck('branches.id'));
+        }
+
+        $users = $query->get();
+
+        foreach ($users as $user) {
+            try {
+                $user->notifyMember($title, $body, array_merge([
+                    'type' => 'meeting_notification',
+                    'meeting_id' => (string) $this->id,
+                    'action' => '/attendance'
+                ], $data));
+            } catch (\Throwable $e) {
+                // skip failed notifications
+            }
+        }
     }
 
     public function isOngoing(): bool

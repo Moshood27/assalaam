@@ -1,16 +1,12 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-24">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <button @click="$router.push('/dashboard')" class="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors" aria-label="Go back">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
-        </button>
-        <h1 class="text-lg sm:text-xl font-bold text-slate-800">Sadaqah Jariyah</h1>
+    <AppHeader title="Sadaqah Jariyah" :showBack="true">
+      <template #right>
         <button @click="$router.push('/sadaqah/history')" class="p-2 -mr-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500" aria-label="History">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          <span class="i-mdi-history text-2xl text-slate-600"></span>
         </button>
-      </div>
-    </header>
+      </template>
+    </AppHeader>
 
     <div class="p-4 space-y-4">
       <div class="bg-gradient-to-br from-emerald-600 to-teal-700 p-6 rounded-[2rem] text-white shadow-lg mb-6">
@@ -77,11 +73,14 @@
         </div>
       </div>
     </div>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http.js'
 
 const projects = ref([])

@@ -1,28 +1,24 @@
 <template>
   <div class="min-h-screen bg-slate-50/50 pb-32">
-    <header class="header-fintech">
-      <div class="navbar-inner">
-        <h1 class="text-lg font-bold text-slate-800">Coop Store</h1>
-        <div class="flex items-center gap-2">
+    <AppHeader title="Coop Store" :showBack="true">
+      <template #right>
+        <div class="flex items-center gap-1">
           <button class="relative p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="toggleCart()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-700"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span class="i-mdi-cart-outline text-2xl text-emerald-700"></span>
             <span v-if="totalQty" class="absolute top-0 right-0 w-5 h-5 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ totalQty }}</span>
           </button>
           <button class="p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="$router.push('/store/orders')" title="Orders">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            <span class="i-mdi-file-document-outline text-2xl text-slate-600"></span>
           </button>
           <button v-if="vendor && vendor.id" class="p-2 hover:bg-emerald-50 rounded-xl transition-colors" @click="$router.push('/vendor/dashboard')" title="Vendor Portal">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-700"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span class="i-mdi-store-outline text-2xl text-emerald-700"></span>
           </button>
           <button v-else class="p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="$router.push('/vendor/apply')" title="Become a Vendor">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </button>
-          <button @click="$router.back()" class="p-2 hover:bg-slate-100 rounded-xl transition-colors" aria-label="Go back">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
+            <span class="i-mdi-store-plus-outline text-2xl text-slate-400"></span>
           </button>
         </div>
-      </div>
-    </header>
+      </template>
+    </AppHeader>
 
     <div class="p-4 space-y-4">
       <section class="card p-5">
@@ -246,25 +242,14 @@
       @cancel="handlePinCancel"
     />
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/dashboard')">
-        <span class="text-xl">🏠</span>
-        <span class="text-[10px] font-bold">Home</span>
-      </button>
-      <button class="text-emerald-700 flex flex-col items-center gap-1">
-        <span class="text-xl">🛒</span>
-        <span class="text-[10px] font-bold">Store</span>
-      </button>
-      <button class="text-slate-400 flex flex-col items-center gap-1" @click="$router.push('/reports')">
-        <span class="text-xl">📈</span>
-        <span class="text-[10px] font-bold">Reports</span>
-      </button>
-    </nav>
+    <AppBottomNav />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
+import AppHeader from '../components/AppHeader.vue'
+import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
 import getImageUrl from '../utils/image'
 import { useRouter } from 'vue-router'
