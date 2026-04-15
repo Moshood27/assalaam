@@ -24,8 +24,33 @@
     @php
         $getPath = function($path) {
             if (!$path) return null;
-            if (file_exists(public_path($path))) return public_path($path);
-            if (file_exists(storage_path('app/public/' . $path))) return storage_path('app/public/' . $path);
+
+            // If it's already a full path and exists
+            if (file_exists($path)) {
+                return $path;
+            }
+
+            // Check public/
+            $publicPath = public_path($path);
+            if (file_exists($publicPath)) {
+                return $publicPath;
+            }
+
+            // Check storage/app/public/
+            $storagePath = storage_path('app/public/' . $path);
+            if (file_exists($storagePath)) {
+                return $storagePath;
+            }
+
+            // Try to resolve if it's a "storage/..." URL path (common for Filament)
+            if (str_starts_with($path, 'storage/')) {
+                $trimmedPath = substr($path, 8);
+                $storagePath2 = storage_path('app/public/' . $trimmedPath);
+                if (file_exists($storagePath2)) {
+                    return $storagePath2;
+                }
+            }
+
             return null;
         };
     @endphp

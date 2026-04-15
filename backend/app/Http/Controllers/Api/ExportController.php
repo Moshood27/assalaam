@@ -455,7 +455,7 @@ class ExportController extends Controller
             'income_expenditure' => $ie,
             'balance_sheet' => $bs,
         ];
-        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.financials', $data);
+        $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.financials', $data);
         $filename = 'Financial_Statements_' . $year . '.pdf';
         return $pdf->download($filename);
     }
@@ -478,7 +478,7 @@ class ExportController extends Controller
         ];
 
         try {
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.wallet_receipt', $data);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.wallet_receipt', $data);
             $filename = 'Wallet_Receipt_' . ($tx->reference ?: ('TX'.$tx->id)) . '.pdf';
             return $pdf->download($filename);
         } catch (\Throwable $e) {
@@ -505,7 +505,7 @@ class ExportController extends Controller
         ];
 
         try {
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.order_receipt', $data);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.order_receipt', $data);
             $filename = 'Order_Receipt_' . ($order->reference ?: ('ORD'.$order->id)) . '.pdf';
             return $pdf->download($filename);
         } catch (\Throwable $e) {
@@ -525,7 +525,7 @@ class ExportController extends Controller
             $data = $this->zakatService->getEstimate($user);
             $data['branch'] = optional($user->branch)->name;
 
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.zakat_report', $data);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.zakat_report', $data);
             $filename = 'Zakat_Report_' . $user->membership_number . '_' . now()->format('Ymd') . '.pdf';
             return $pdf->download($filename);
         } catch (\Throwable $e) {
@@ -547,7 +547,7 @@ class ExportController extends Controller
         try {
             // Re-use the existing enrolment PDF template.
             // Note: We pass the $user as 'application' because the view expects that variable name.
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.membership_application', ['application' => $user]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.membership_application', ['application' => $user]);
             return $pdf->download("Membership_Enrolment_{$user->membership_number}.pdf");
         } catch (\Throwable $e) {
             \Log::error('downloadMembershipEnrolment error', ['exception' => $e->getMessage()]);
@@ -566,7 +566,7 @@ class ExportController extends Controller
         }
 
         try {
-            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.imam_attestation', ['application' => $user]);
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.imam_attestation', ['application' => $user]);
             return $pdf->download("Imam_Attestation_{$user->membership_number}.pdf");
         } catch (\Throwable $e) {
             \Log::error('downloadImamAttestation error', ['exception' => $e->getMessage()]);

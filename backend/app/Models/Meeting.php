@@ -86,7 +86,7 @@ class Meeting extends Model
                     'type' => 'meeting_notification',
                     'meeting_id' => (string) $this->id,
                     'action' => '/attendance'
-                ], $data));
+                ], $data), ['push', 'database']);
             } catch (\Throwable $e) {
                 // skip failed notifications
             }
