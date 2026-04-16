@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\ContributionResource\Pages;
 
+use App\Filament\Traits\HasWipeAction;
+
 use App\Filament\Resources\ContributionResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -9,6 +11,8 @@ use Filament\Tables;
 
 class ListContributions extends ListRecords
 {
+    use HasWipeAction;
+
     protected static string $resource = ContributionResource::class;
 
     public function getSubheading(): ?string
@@ -19,6 +23,7 @@ class ListContributions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
         ];
     }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\QardHasanResource\Pages;
 
+use App\Filament\Traits\HasWipeAction;
+
 use App\Exports\LoanImportTemplate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Filament\Resources\QardHasanResource;
@@ -14,6 +16,8 @@ use Filament\Tables;
 
 class ListQardHasans extends ListRecords
 {
+    use HasWipeAction;
+
     protected static string $resource = QardHasanResource::class;
 
     public function getSubheading(): ?string
@@ -24,6 +28,7 @@ class ListQardHasans extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
             Actions\Action::make('importCsv')
                 ->label('Import CSV')

@@ -497,7 +497,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { Geolocation } from '@capacitor/geolocation'
 import axios from '../http.js'
 import SearchableSelect from '../components/SearchableSelect.vue'
 import SignaturePad from '../components/SignaturePad.vue'
@@ -617,20 +616,8 @@ function onBvnInput() {
 onMounted(async () => {
   try {
     const { data } = await axios.get('/api/branches')
-    branches.value = data
-
-    // Auto-arrange branches by proximity if geolocation is available
-    try {
-      const pos = await Geolocation.getCurrentPosition({ timeout: 5000 })
-      const { latitude, longitude } = pos.coords
-      const getDist = (lat, lng) => {
-        if (!lat || !lng) return Infinity
-        return Math.pow(Number(lat) - latitude, 2) + Math.pow(Number(lng) - longitude, 2)
-      }
-      branches.value = [...branches.value].sort((a, b) => getDist(a.latitude, a.longitude) - getDist(b.latitude, b.longitude))
-    } catch (e) {
-      // Ignore geolocation errors
-    }
+    // Always keep branches in ascending order by name as requested
+    branches.value = (data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
   } catch (e) {}
 
   if (token.value) {

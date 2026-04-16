@@ -2,12 +2,16 @@
 
 namespace App\Filament\Resources\AgmSessionResource\Pages;
 
+use App\Filament\Traits\HasWipeAction;
+
 use App\Filament\Resources\AgmSessionResource;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Actions;
 
 class ListAgmSessions extends ListRecords
 {
+    use HasWipeAction;
+
     protected static string $resource = AgmSessionResource::class;
 
     public function getSubheading(): ?string
@@ -18,6 +22,7 @@ class ListAgmSessions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
         ];
     }

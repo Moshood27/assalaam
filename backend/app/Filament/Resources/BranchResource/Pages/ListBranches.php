@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\BranchResource\Pages;
 
+use App\Filament\Traits\HasWipeAction;
+
 use App\Filament\Resources\BranchResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -9,6 +11,8 @@ use Filament\Tables; // For table header actions (beside search bar)
 
 class ListBranches extends ListRecords
 {
+    use HasWipeAction;
+
     protected static string $resource = BranchResource::class;
 
     public function getSubheading(): ?string
@@ -19,6 +23,7 @@ class ListBranches extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
         ];
     }

@@ -2,6 +2,14 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
+2026-04-16
+- Implemented "Wipe Module" feature for all Admin Filament resources.
+  - Added `HasWipeAction` trait to provide a consistent "Wipe Module" header action.
+  - Integrated "Wipe Module" button across all 38 resources (Activity Logs, Users, Branches, etc.).
+  - Restricted "Wipe Module" action to `super_admin` role only.
+  - Included a safety check to prevent the current `super_admin` from deleting their own account in the User module.
+  - Added confirmation modals to prevent accidental data loss.
+
 2026-04-07
 - Implemented "Bank-Grade" Security and Auditing for the Admin Panel.
   - Added Multi-Factor Authentication (MFA/2FA) and Browser Session management via `filament-breezy`.

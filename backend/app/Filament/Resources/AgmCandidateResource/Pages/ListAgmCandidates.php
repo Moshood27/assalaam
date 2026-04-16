@@ -2,12 +2,16 @@
 
 namespace App\Filament\Resources\AgmCandidateResource\Pages;
 
+use App\Filament\Traits\HasWipeAction;
+
 use App\Filament\Resources\AgmCandidateResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAgmCandidates extends ListRecords
 {
+    use HasWipeAction;
+
     protected static string $resource = AgmCandidateResource::class;
 
     public function getSubheading(): ?string
@@ -18,6 +22,7 @@ class ListAgmCandidates extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
         ];
     }

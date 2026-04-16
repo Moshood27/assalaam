@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Filament\Traits;
+
+use Filament\Actions;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Model;
+
+trait HasWipeAction
+{
+    /**
+     * @return Actions\Action
+     */
+    protected function getWipeHeaderAction(): Actions\Action
+    {
+        return Actions\Action::make('wipe')
+            ->label('Wipe Module')
+            ->color('danger')
+            ->icon('heroicon-o-trash')
+            ->requiresConfirmation()
+            ->modalHeading('Wipe All Data')
+            ->modalDescription('Are you absolutely sure you want to delete ALL records in this module? This action is irreversible.')
+            ->action(function () {
+                $resource = static::getResource();
+                $model = $resource::getModel();
+
+                try {
+                    // Try to delete all records
+                    $query = $model::query();
+
+                    // If it's the User model, don't delete the current user
+                    if ($model === \App\Models\User::class) {
+                        $query->where('id', '!=', auth()->id());
+                    }
+
+                    $query->delete();
+
+                    Notification::make()
+                        ->title('Module wiped successfully')
+                        ->success()
+                        ->send();
+                } catch (\Throwable $e) {
+                    Notification::make()
+                        ->title('Wipe failed')
+                        ->body('This may be due to foreign key constraints: ' . $e->getMessage())
+                        ->danger()
+                        ->send();
+                }
+            })
+            ->visible(fn () => auth()->user()->hasRole('super_admin'));
+    }
+}

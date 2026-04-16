@@ -2,12 +2,16 @@
 
 namespace App\Filament\Resources\AuditTrailResource\Pages;
 
+use App\Filament\Traits\HasWipeAction;
+
 use App\Filament\Resources\AuditTrailResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAuditTrails extends ListRecords
 {
+    use HasWipeAction;
+
     protected static string $resource = AuditTrailResource::class;
 
     public function getSubheading(): ?string
@@ -17,6 +21,7 @@ class ListAuditTrails extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            $this->getWipeHeaderAction(),];
     }
 }

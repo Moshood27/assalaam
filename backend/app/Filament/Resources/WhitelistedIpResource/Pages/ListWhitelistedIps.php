@@ -2,12 +2,16 @@
 
 namespace App\Filament\Resources\WhitelistedIpResource\Pages;
 
+use App\Filament\Traits\HasWipeAction;
+
 use App\Filament\Resources\WhitelistedIpResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListWhitelistedIps extends ListRecords
 {
+    use HasWipeAction;
+
     protected static string $resource = WhitelistedIpResource::class;
 
     public function getSubheading(): ?string
@@ -18,6 +22,7 @@ class ListWhitelistedIps extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
         ];
     }

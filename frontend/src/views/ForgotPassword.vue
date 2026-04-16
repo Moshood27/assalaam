@@ -240,7 +240,8 @@ const resetForm = ref({
 onMounted(async () => {
   try {
     const { data } = await axios.get('/api/branches')
-    branches.value = data?.map?.(b => ({ value: b.id, label: b.name })) || []
+    // Ensure branches are in ascending order by name
+    branches.value = (data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
   } catch (_) {}
 })
 
