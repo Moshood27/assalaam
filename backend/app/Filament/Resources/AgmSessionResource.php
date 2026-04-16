@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AgmSessionResource extends Resource
 {
@@ -52,9 +53,15 @@ class AgmSessionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('name')->searchable()->sortable(query: function (Builder $query, string $direction): Builder {
+                    return $query
+                        ->orderByRaw("LENGTH(name) $direction")
+                        ->orderBy("name", $direction);
+                }),
                 TextColumn::make('status')->badge()
                     ->colors([
                         'warning' => 'draft',

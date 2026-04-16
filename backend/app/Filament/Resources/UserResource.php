@@ -331,7 +331,9 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
                 ImageColumn::make('passport_path')
                     ->label('Photo')
@@ -374,7 +376,11 @@ class UserResource extends Resource
                         return $url;
                     })
                     ->size(40),
-                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('name')->searchable()->sortable(query: function (Builder $query, string $direction): Builder {
+                    return $query
+                        ->orderByRaw("LENGTH(name) $direction")
+                        ->orderBy("name", $direction);
+                }),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('phone')->label('Phone')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('address')->label('Address')->limit(30)->toggleable(isToggledHiddenByDefault: true),
@@ -862,7 +868,7 @@ class UserResource extends Resource
                         ->label('Print Enrolment Forms')
                         ->icon('heroicon-o-printer')
                         ->action(fn (\Illuminate\Support\Collection $records) => response()->streamDownload(function () use ($records) {
-                            $sortedRecords = $records->sortBy('name');
+                            $sortedRecords = $records->sortBy('name', SORT_NATURAL);
                             echo Pdf::loadView('pdfs.bulk_membership_applications', ['users' => $sortedRecords])->setPaper('a4')->output();
                         }, "bulk-enrolment-forms.pdf")),
                     Tables\Actions\DeleteBulkAction::make()

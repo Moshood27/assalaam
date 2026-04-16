@@ -202,7 +202,7 @@ onMounted(async () => {
   try {
     const { data } = await axios.get('/api/branches')
     // Always keep branches in ascending order by name as requested
-    branches.value = (data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    branches.value = (data || []).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }))
 
     // Pre-select last branch if exists (without re-ordering the list)
     if (lastBranchId && !form.value.branch_id) {

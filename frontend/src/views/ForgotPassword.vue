@@ -241,7 +241,7 @@ onMounted(async () => {
   try {
     const { data } = await axios.get('/api/branches')
     // Ensure branches are in ascending order by name
-    branches.value = (data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    branches.value = (data || []).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }))
   } catch (_) {}
 })
 

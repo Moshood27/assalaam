@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class BeneficiariesRelationManager extends RelationManager
 {
@@ -51,11 +52,17 @@ class BeneficiariesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->orderByRaw("LENGTH(name) $direction")
+                            ->orderBy("name", $direction);
+                    }),
                 Tables\Columns\TextColumn::make('relationship'),
                 Tables\Columns\TextColumn::make('asset_type')
                     ->badge(),

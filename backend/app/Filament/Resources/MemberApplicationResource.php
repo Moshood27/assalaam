@@ -168,12 +168,18 @@ class MemberApplicationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('surname', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(surname) ASC')->orderBy('surname', 'asc');
+            })
             ->columns([
                 Tables\Columns\ImageColumn::make('passport_path')
                     ->label('Photo')
                     ->circular(),
-                TextColumn::make('surname')->searchable()->sortable(),
+                TextColumn::make('surname')->searchable()->sortable(query: function (Builder $query, string $direction): Builder {
+                    return $query
+                        ->orderByRaw("LENGTH(surname) $direction")
+                        ->orderBy("surname", $direction);
+                }),
                 TextColumn::make('name')->label('First Name')->searchable()->sortable(),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('phone')->searchable(),

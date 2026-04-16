@@ -14,6 +14,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Actions\Action;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
 
 class VendorResource extends Resource
 {
@@ -77,9 +78,15 @@ class VendorResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('name')->searchable()->sortable(query: function (Builder $query, string $direction): Builder {
+                    return $query
+                        ->orderByRaw("LENGTH(name) $direction")
+                        ->orderBy("name", $direction);
+                }),
                 TextColumn::make('owner.name')->label('Owner')->searchable()->sortable(),
                 TextColumn::make('phone')->searchable(),
                 IconColumn::make('is_approved')->boolean()->label('Approved')->sortable(),

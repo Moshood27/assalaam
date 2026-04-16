@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AgmCandidateResource extends Resource
 {
@@ -50,9 +51,15 @@ class AgmCandidateResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('name')->searchable()->sortable(query: function (Builder $query, string $direction): Builder {
+                    return $query
+                        ->orderByRaw("LENGTH(name) $direction")
+                        ->orderBy("name", $direction);
+                }),
                 TextColumn::make('position')->badge()->searchable()->sortable(),
                 TextColumn::make('session.name')->label('Session')->searchable()->sortable(),
                 TextColumn::make('votes_count')->label('Votes')->counts('votes')->sortable(),

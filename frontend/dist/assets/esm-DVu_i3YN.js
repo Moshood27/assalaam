@@ -1,1 +1,0 @@
-import{c as e}from"./index-TxhiSxXf.js";export{e as SplashScreen};

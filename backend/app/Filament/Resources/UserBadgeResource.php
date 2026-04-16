@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserBadgeResource extends Resource
 {
@@ -47,7 +48,9 @@ class UserBadgeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Member')
@@ -55,7 +58,11 @@ class UserBadgeResource extends Resource
                     ->sortable(),
                 TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->orderByRaw("LENGTH(name) $direction")
+                            ->orderBy("name", $direction);
+                    }),
                 TextColumn::make('badge_type')
                     ->searchable()
                     ->sortable(),

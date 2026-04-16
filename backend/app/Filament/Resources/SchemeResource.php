@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
+use Illuminate\Database\Eloquent\Builder;
 
 class SchemeResource extends Resource
 {
@@ -38,9 +39,15 @@ class SchemeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
-                TextColumn::make('name')->sortable()->searchable(),
+                TextColumn::make('name')->sortable(query: function (Builder $query, string $direction): Builder {
+                    return $query
+                        ->orderByRaw("LENGTH(name) $direction")
+                        ->orderBy("name", $direction);
+                })->searchable(),
                 TextColumn::make('min_amount')
                     ->label('Minimum Amount')
                     ->money('ngn', true)

@@ -43,7 +43,9 @@ class BranchResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->modifyQueryUsing(function (Builder $query) {
                 // Preload members count for performance
                 $query->withCount('users');
@@ -51,7 +53,11 @@ class BranchResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->orderByRaw("LENGTH(name) $direction")
+                            ->orderBy("name", $direction);
+                    }),
                 TextColumn::make('latitude')
                     ->label('Lat')
                     ->sortable(),

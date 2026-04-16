@@ -36,11 +36,17 @@ class ZakatResource extends Resource
         $nisabValue = $priceService->getGoldNisab() ?: 0;
 
         return $table
-            ->defaultSort('name', 'asc')
+            ->defaultSort(function (Builder $query): Builder {
+                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->orderByRaw("LENGTH(name) $direction")
+                            ->orderBy("name", $direction);
+                    }),
                 Tables\Columns\TextColumn::make('membership_number')
                     ->label('Member #')
                     ->searchable(),
