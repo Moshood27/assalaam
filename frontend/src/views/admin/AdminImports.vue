@@ -117,7 +117,6 @@ const upload = async (type) => {
   try {
     const { data } = await client.value.post(url, fd, {
       headers: {
-        'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${adminToken.value}`,
       }
     })

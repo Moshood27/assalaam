@@ -592,9 +592,7 @@ const onFileChange = async (e) => {
   form.append('passport', file)
   uploading.value = true
   try {
-    const { data } = await axios.post('/api/profile/passport', form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const { data } = await axios.post('/api/profile/passport', form)
     profile.value.passport_url = data.passport_url
   } catch (err) {
     alert(err?.response?.data?.message || 'Failed to upload. Please try a smaller image or a different format.')

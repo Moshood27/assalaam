@@ -297,13 +297,9 @@ const saveProduct = async () => {
     if (editingId.value) {
       // Use POST with _method=PUT to handle multipart/form-data for update
       formData.append('_method', 'PUT')
-      await axios.post(`/api/vendor/products/${editingId.value}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      await axios.post(`/api/vendor/products/${editingId.value}`, formData)
     } else {
-      await axios.post('/api/vendor/products', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      await axios.post('/api/vendor/products', formData)
     }
     showModal.value = false
     loadData()

@@ -111,18 +111,30 @@ class MemberRegistrationController extends Controller
      */
     public function upload(Request $request)
     {
-        $request->validate([
+        $rules = [
             'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
-            'passport' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'id_card' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:7168'],
-            'proof_of_address' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:7168'],
-            'guarantor_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'passport' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'], // 10MB
+            'id_card' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:15360'], // 15MB
+            'proof_of_address' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:15360'], // 15MB
+            'guarantor_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'guarantor_signature_base64' => ['nullable', 'string'],
-            'imam_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'imam_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'imam_signature_base64' => ['nullable', 'string'],
-            'spouse_father_consent_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'spouse_father_consent_signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'spouse_father_consent_signature_base64' => ['nullable', 'string'],
-        ]);
+        ];
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            Log::error('Member application upload validation failed', [
+                'token' => $request->input('token'),
+                'errors' => $validator->errors()->toArray(),
+                'request_keys' => array_keys($request->all()),
+                'file_keys' => array_keys($request->allFiles()),
+            ]);
+            $validator->validate();
+        }
 
         $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
 

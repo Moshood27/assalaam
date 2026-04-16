@@ -374,8 +374,7 @@ const onAgreementFileChange = async (e, loanId) => {
     const token = localStorage.getItem('token')
     await axios.post(`/api/loans/${loanId}/agreement`, form, {
       headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data'
+        Authorization: `Bearer ${token}`
       }
     })
     showNotice('Success', 'Agreement uploaded successfully. Admin will verify it shortly.', 'success')

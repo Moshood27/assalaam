@@ -118,7 +118,7 @@ const onPick = async (ev, p) => {
     // Preserve original filename when possible
     const filename = (file.name && file.name.includes('.')) ? file.name : `product_${p.id}.jpg`
     fd.append('image', new File([blob], filename, { type: blob.type || 'image/jpeg' }))
-    await axios.post(`/api/admin/products/${p.id}/image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    await axios.post(`/api/admin/products/${p.id}/image`, fd)
     await load(page.value)
     bust()
   } catch (e) {

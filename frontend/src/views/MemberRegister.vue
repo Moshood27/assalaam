@@ -729,7 +729,7 @@ async function handleUpload() {
     if (signatures.value.guarantor) fd.append('guarantor_signature_base64', signatures.value.guarantor)
     if (signatures.value.imam) fd.append('imam_signature_base64', signatures.value.imam)
     if (signatures.value.spouse_father) fd.append('spouse_father_consent_signature_base64', signatures.value.spouse_father)
-    const { data } = await axios.post('/api/register/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    const { data } = await axios.post('/api/register/upload', fd)
     uploaded.value = data.application || {}
     await handleSendOtps()
     step.value = 3
