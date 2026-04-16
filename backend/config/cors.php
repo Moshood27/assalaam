@@ -11,13 +11,13 @@ $allowedOrigins = $origins
 
 return [
 
-    'paths' => ['api/*', 'broadcasting/*', 'sanctum/csrf-cookie', 'login', 'logout'],
+    'paths' => ['*'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => $allowedOrigins,
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['#^https?://localhost(:[0-9]+)?$#'],
 
     'allowed_headers' => ['*'],
 

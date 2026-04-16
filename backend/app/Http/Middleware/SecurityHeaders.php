@@ -19,6 +19,11 @@ class SecurityHeaders
         /** @var Response $response */
         $response = $next($request);
 
+        // Skip adding these headers for OPTIONS preflight requests to avoid CORS interference.
+        if ($request->isMethod('OPTIONS')) {
+            return $response;
+        }
+
         // Do not override headers if already set upstream (e.g., reverse proxy)
         $headers = [
             'X-Frame-Options' => 'DENY',

@@ -18,7 +18,7 @@ class AdminTakafulController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $period = $request->query('period') ?: now()->format('Y-m');
+        $period = str_replace(['/', '\\'], '_', (string) ($request->query('period') ?: now()->format('Y-m')));
         $poolBalance = TakafulPoolEntry::balance();
         $contribs = TakafulContribution::where('period', $period);
         $data = [
@@ -240,7 +240,7 @@ class AdminTakafulController extends Controller
         if (!$admin || !$admin->is_admin) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-        $period = $request->query('period') ?: now()->format('Y-m');
+        $period = str_replace(['/', '\\'], '_', (string) ($request->query('period') ?: now()->format('Y-m')));
         $contribs = TakafulContribution::where('period', $period);
         $rows = $contribs->get();
         $headers = [
@@ -274,7 +274,7 @@ class AdminTakafulController extends Controller
         if (!$admin || !$admin->is_admin) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-        $period = $request->query('period') ?: now()->format('Y-m');
+        $period = str_replace(['/', '\\'], '_', (string) ($request->query('period') ?: now()->format('Y-m')));
         $contribs = TakafulContribution::where('period', $period);
         $data = [
             'period' => $period,

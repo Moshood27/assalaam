@@ -90,7 +90,7 @@ class ExportController extends Controller
             ];
 
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.passbook', $data);
-            return $pdf->download('Coop_Statement_' . $user->membership_number . '.pdf');
+            return $pdf->download($this->sanitizeFilename('Coop_Statement_' . $user->membership_number . '.pdf'));
         } catch (\Throwable $e) {
             \Log::error('downloadPassbook error', ['exception' => $e->getMessage()]);
             return response()->json(['message' => 'Unable to generate PDF at the moment. Please try again later.'], 422);
@@ -113,7 +113,7 @@ class ExportController extends Controller
                 ->orderBy('created_at')
                 ->get();
 
-            $filename = 'Passbook_' . $year . '_' . $user->membership_number . '.csv';
+            $filename = $this->sanitizeFilename('Passbook_' . $year . '_' . $user->membership_number . '.csv');
             $headers = [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => "attachment; filename=\"$filename\"",
@@ -178,7 +178,7 @@ class ExportController extends Controller
             }
 
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.bank_statement', $data);
-            return $pdf->download('Statement_' . $user->membership_number . '.pdf');
+            return $pdf->download($this->sanitizeFilename('Statement_' . $user->membership_number . '.pdf'));
         } catch (\Throwable $e) {
             \Log::error('downloadStatement error', ['exception' => $e->getMessage()]);
             return response()->json(['message' => 'Unable to generate export at the moment.'], 422);
@@ -191,7 +191,7 @@ class ExportController extends Controller
         $transactions = $data['transactions'];
         $openingBalance = $data['opening_balance'];
 
-        $filename = 'Statement_' . $user->membership_number . '.csv';
+        $filename = $this->sanitizeFilename('Statement_' . $user->membership_number . '.csv');
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
@@ -307,7 +307,7 @@ class ExportController extends Controller
         ];
 
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_schedule', $data);
-        $filename = 'Loan_Schedule_' . $loan->qard_id_string . '.pdf';
+        $filename = $this->sanitizeFilename('Loan_Schedule_' . $loan->qard_id_string . '.pdf');
         return $pdf->download($filename);
     }
 
@@ -363,7 +363,7 @@ class ExportController extends Controller
         ];
 
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $data);
-        $filename = 'Loan_Agreement_' . $loan->qard_id_string . '.pdf';
+        $filename = $this->sanitizeFilename('Loan_Agreement_' . $loan->qard_id_string . '.pdf');
         return $pdf->download($filename);
     }
 
@@ -392,7 +392,7 @@ class ExportController extends Controller
         ];
 
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.murabahah_agreement', $data);
-        $filename = 'Murabahah_Agreement_' . $order->reference . '.pdf';
+        $filename = $this->sanitizeFilename('Murabahah_Agreement_' . $order->reference . '.pdf');
         return $pdf->download($filename);
     }
 
@@ -419,7 +419,7 @@ class ExportController extends Controller
             ];
 
             $pdf = Pdf::loadView('pdfs.dividend', $data)->setOptions(['isHtml5ParserEnabled' => false]);
-            $filename = 'Dividend_Statement_' . $year . '_' . $user->membership_number . '.pdf';
+            $filename = $this->sanitizeFilename('Dividend_Statement_' . $year . '_' . $user->membership_number . '.pdf');
             return $pdf->download($filename);
         } catch (\Throwable $e) {
             \Log::error('downloadDividend error', ['exception' => $e->getMessage()]);
@@ -437,7 +437,7 @@ class ExportController extends Controller
         $data['user'] = $request->user();
         $data['year'] = $year;
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.appropriation', $data);
-        $filename = 'Appropriation_Account_' . $year . '.pdf';
+        $filename = $this->sanitizeFilename('Appropriation_Account_' . $year . '.pdf');
         return $pdf->download($filename);
     }
 
@@ -456,7 +456,7 @@ class ExportController extends Controller
             'balance_sheet' => $bs,
         ];
         $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.financials', $data);
-        $filename = 'Financial_Statements_' . $year . '.pdf';
+        $filename = $this->sanitizeFilename('Financial_Statements_' . $year . '.pdf');
         return $pdf->download($filename);
     }
 
@@ -479,7 +479,7 @@ class ExportController extends Controller
 
         try {
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.wallet_receipt', $data);
-            $filename = 'Wallet_Receipt_' . ($tx->reference ?: ('TX'.$tx->id)) . '.pdf';
+            $filename = $this->sanitizeFilename('Wallet_Receipt_' . ($tx->reference ?: ('TX'.$tx->id)) . '.pdf');
             return $pdf->download($filename);
         } catch (\Throwable $e) {
             \Log::error('downloadWalletReceipt error', ['exception' => $e->getMessage(), 'tx_id' => $id]);
@@ -506,7 +506,7 @@ class ExportController extends Controller
 
         try {
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.order_receipt', $data);
-            $filename = 'Order_Receipt_' . ($order->reference ?: ('ORD'.$order->id)) . '.pdf';
+            $filename = $this->sanitizeFilename('Order_Receipt_' . ($order->reference ?: ('ORD'.$order->id)) . '.pdf');
             return $pdf->download($filename);
         } catch (\Throwable $e) {
             \Log::error('downloadOrderReceipt error', ['exception' => $e->getMessage(), 'order_id' => $id]);
@@ -526,7 +526,7 @@ class ExportController extends Controller
             $data['branch'] = optional($user->branch)->name;
 
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.zakat_report', $data);
-            $filename = 'Zakat_Report_' . $user->membership_number . '_' . now()->format('Ymd') . '.pdf';
+            $filename = $this->sanitizeFilename('Zakat_Report_' . $user->membership_number . '_' . now()->format('Ymd') . '.pdf');
             return $pdf->download($filename);
         } catch (\Throwable $e) {
             \Log::error('downloadZakatReport error', ['exception' => $e->getMessage(), 'user_id' => $user->id]);
@@ -548,7 +548,7 @@ class ExportController extends Controller
             // Re-use the existing enrolment PDF template.
             // Note: We pass the $user as 'application' because the view expects that variable name.
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.membership_application', ['application' => $user]);
-            return $pdf->download("Membership_Enrolment_{$user->membership_number}.pdf");
+            return $pdf->download($this->sanitizeFilename("Membership_Enrolment_{$user->membership_number}.pdf"));
         } catch (\Throwable $e) {
             \Log::error('downloadMembershipEnrolment error', ['exception' => $e->getMessage()]);
             return response()->json(['message' => 'Unable to generate Enrolment PDF.'], 422);
@@ -567,10 +567,14 @@ class ExportController extends Controller
 
         try {
             $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.imam_attestation', ['application' => $user]);
-            return $pdf->download("Imam_Attestation_{$user->membership_number}.pdf");
+            return $pdf->download($this->sanitizeFilename("Imam_Attestation_{$user->membership_number}.pdf"));
         } catch (\Throwable $e) {
             \Log::error('downloadImamAttestation error', ['exception' => $e->getMessage()]);
             return response()->json(['message' => 'Unable to generate Attestation PDF.'], 422);
         }
+    }
+    private function sanitizeFilename(string $filename): string
+    {
+        return str_replace(['/', '\\'], '_', $filename);
     }
 }
