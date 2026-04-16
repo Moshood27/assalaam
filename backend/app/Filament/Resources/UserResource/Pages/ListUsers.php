@@ -71,12 +71,6 @@ class ListUsers extends ListRecords
 
     protected function getTableHeaderActions(): array
     {
-        return [
-            Tables\Actions\Action::make('print_list')
-                ->label('Print List')
-                ->icon('heroicon-o-printer')
-                ->url(fn () => route('admin.print.users'))
-                ->openUrlInNewTab(),
-        ];
+        return [];
     }
 }

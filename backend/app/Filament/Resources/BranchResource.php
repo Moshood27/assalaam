@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BranchResource\Pages;
 use App\Jobs\SendBulkCommunication;
 use App\Models\Branch;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Notifications\Notification;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -84,12 +85,23 @@ class BranchResource extends Resource
                 //
             ])
             ->headerActions([
-                Tables\Actions\Action::make('print')
-                    ->label('Print')
+                Tables\Actions\Action::make('printAll')
+                    ->label('Print All Branches')
                     ->icon('heroicon-o-printer')
                     ->extraAttributes(['onclick' => 'window.print()']),
             ])
             ->actions([
+                Tables\Actions\Action::make('printMembers')
+                    ->label('Print Members')
+                    ->icon('heroicon-o-printer')
+                    ->action(function (Branch $record) {
+                        $users = $record->users()->orderBy('name')->get();
+                        $pdf = Pdf::loadView('pdfs.member_list', [
+                            'users' => $users,
+                            'branchName' => $record->name
+                        ]);
+                        return response()->streamDownload(fn () => print($pdf->output()), "members-{$record->name}.pdf");
+                    }),
                 Tables\Actions\Action::make('communicate')
                     ->label('Bulk Communicate')
                     ->icon('heroicon-o-chat-bubble-left-right')

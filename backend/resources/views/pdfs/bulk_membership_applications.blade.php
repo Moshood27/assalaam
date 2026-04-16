@@ -6,10 +6,10 @@
     <style>
         body { font-family: 'Helvetica', sans-serif; font-size: 11px; color: #333; line-height: 1.3; margin: 0; padding: 0; }
         .page { position: relative; width: 100%; page-break-after: always; padding: 20px; box-sizing: border-box; min-height: 1000px; }
-        .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #047857; padding-bottom: 10px; }
+        .header { text-align: center; margin-bottom: 100px; border-bottom: 2px solid #047857; padding-bottom: 10px; }
         .header h1 { margin: 0; color: #047857; text-transform: uppercase; font-size: 18px; }
         .header p { margin: 3px 0; font-weight: bold; }
-        .photo-box { position: absolute; top: 20px; right: 20px; width: 100px; height: 120px; border: 1px solid #ccc; text-align: center; line-height: 120px; font-size: 9px; color: #999; overflow: hidden; }
+        .photo-box { position: absolute; top: 20px; right: 20px; width: 100px; height: 120px; border: 1px solid #ccc; text-align: center; line-height: 120px; font-size: 9px; color: #999; overflow: hidden; z-index: 100; }
         .section { margin-bottom: 15px; position: relative; }
         .section-title { background: #f3f4f6; padding: 4px 8px; font-weight: bold; color: #047857; text-transform: uppercase; margin-bottom: 8px; border-left: 3px solid #047857; }
         .label { font-weight: bold; width: 150px; }
@@ -26,9 +26,78 @@
     @php
         $getPath = function($path) {
             if (!$path) return null;
-            if (str_starts_with($path, '/') && file_exists($path)) return $path;
-            if (file_exists(public_path($path))) return public_path($path);
-            if (file_exists(storage_path('app/public/' . $path))) return storage_path('app/public/' . $path);
+
+            $absolutePath = null;
+
+            // 1. If it's already a full path and exists
+            if (file_exists($path)) {
+                $absolutePath = $path;
+            }
+
+            // 2. Check public/
+            if (!$absolutePath) {
+                $publicPath = public_path($path);
+                if (file_exists($publicPath)) {
+                    $absolutePath = $publicPath;
+                }
+            }
+
+            // 3. Check storage/app/public/
+            if (!$absolutePath) {
+                $storagePath = storage_path('app/public/' . $path);
+                if (file_exists($storagePath)) {
+                    $absolutePath = $storagePath;
+                }
+            }
+
+            // 4. Try to resolve if it's a "storage/..." URL path (common for Filament)
+            if (!$absolutePath && str_starts_with($path, 'storage/')) {
+                $trimmedPath = substr($path, 8);
+                $storagePath2 = storage_path('app/public/' . $trimmedPath);
+                if (file_exists($storagePath2)) {
+                    $absolutePath = $storagePath2;
+                }
+            }
+
+            if ($absolutePath) {
+                try {
+                    $imageData = base64_encode(file_get_contents($absolutePath));
+                    $mimeType = 'image/jpeg';
+                    if (function_exists('mime_content_type')) {
+                        $mimeType = @mime_content_type($absolutePath) ?: 'image/jpeg';
+                    } else {
+                        $ext = pathinfo($absolutePath, PATHINFO_EXTENSION);
+                        $mimeType = match(strtolower($ext)) {
+                            'png' => 'image/png',
+                            'webp' => 'image/webp',
+                            'gif' => 'image/gif',
+                            default => 'image/jpeg',
+                        };
+                    }
+                    return 'data:' . $mimeType . ';base64,' . $imageData;
+                } catch (\Exception $e) {
+                    return null;
+                }
+            }
+
+            // 5. If it's a URL, try to fetch it if isRemoteEnabled is on (optional, but robust)
+            if (filter_var($path, FILTER_VALIDATE_URL)) {
+                try {
+                    $imageData = base64_encode(file_get_contents($path));
+                    // Simple mime detection by extension for URLs
+                    $ext = pathinfo($path, PATHINFO_EXTENSION);
+                    $mimeType = match(strtolower($ext)) {
+                        'png' => 'image/png',
+                        'webp' => 'image/webp',
+                        'gif' => 'image/gif',
+                        default => 'image/jpeg',
+                    };
+                    return 'data:' . $mimeType . ';base64,' . $imageData;
+                } catch (\Exception $e) {
+                    return null;
+                }
+            }
+
             return null;
         };
     @endphp

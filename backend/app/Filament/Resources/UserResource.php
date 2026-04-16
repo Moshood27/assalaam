@@ -384,7 +384,7 @@ class UserResource extends Resource
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('phone')->label('Phone')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('address')->label('Address')->limit(30)->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('branch.name')->label('Branch')->sortable(),
+                TextColumn::make('branch.name')->label('Branch')->sortable()->searchable(),
                 TextColumn::make('membership_number')
                     ->label('Member #')
                     ->searchable()
@@ -459,6 +459,11 @@ class UserResource extends Resource
                     }),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('branch')
+                    ->relationship('branch', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Branch'),
                 Tables\Filters\TernaryFilter::make('deceased')
                     ->label('Deceased Status')
                     ->placeholder('All Users')
@@ -504,9 +509,17 @@ class UserResource extends Resource
                     }),
             ])
             ->headerActions([
-                Action::make('print')
-                    ->label('Print')
+                Action::make('print_list')
+                    ->label('Print Member List')
                     ->icon('heroicon-o-printer')
+                    ->action(function (Table $table) {
+                        $users = $table->getLivewire()->getFilteredTableQuery()->get();
+                        $pdf = Pdf::loadView('pdfs.member_list', ['users' => $users]);
+                        return response()->streamDownload(fn () => print($pdf->output()), 'member-list.pdf');
+                    }),
+                Action::make('print')
+                    ->label('Print Screen')
+                    ->icon('heroicon-o-computer-desktop')
                     ->extraAttributes(['onclick' => 'window.print()']),
                 Action::make('bulkCommunicate')
                     ->label('Bulk Communicate')
@@ -552,6 +565,13 @@ class UserResource extends Resource
                     }),
             ])
             ->actions([
+                Action::make('printInfo')
+                    ->label('Print Info')
+                    ->icon('heroicon-o-printer')
+                    ->action(function (User $record) {
+                        $pdf = Pdf::loadView('pdfs.bulk_membership_applications', ['users' => [$record]])->setPaper('a4');
+                        return response()->streamDownload(fn () => print($pdf->output()), "member-{$record->membership_number}.pdf");
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin

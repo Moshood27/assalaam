@@ -107,8 +107,11 @@ class GoldSilverPriceService
      */
     public function getPrice($symbol)
     {
-        if (!$this->apiKey) {
-            // Mock price for development if no API key
+        // Check if API key was marked invalid
+        $isInvalid = Cache::get('gold_api_key_invalid', false);
+
+        if (!$this->apiKey || $isInvalid) {
+            // Mock price for development if no API key or it's known invalid
             return $symbol === 'XAU' ? 85000 : 1200;
         }
 
@@ -119,10 +122,20 @@ class GoldSilverPriceService
             ])->timeout(10)->get("{$this->baseUrl}/{$symbol}/NGN");
 
             if ($response->successful()) {
-                return $response->json('price_gram-24k') ?? $response->json('price') / 31.1035; // Convert oz to gram if needed
+                $price = $response->json('price_gram-24k') ?? ($response->json('price') ? $response->json('price') / 31.1035 : null);
+                if ($price) {
+                    return $price;
+                }
             }
 
-            Log::warning("Failed to fetch price for {$symbol}: " . $response->body());
+            $body = $response->body();
+            if (str_contains($body, 'Invalid API Key')) {
+                Log::error("GoldAPI Error: Invalid API Key. Please check GOLDAPI_KEY in .env. Falling back to mock prices.");
+                // Cache the invalid status for 24 hours to avoid repeated failed calls
+                Cache::put('gold_api_key_invalid', true, now()->addDay());
+            } else {
+                Log::warning("Failed to fetch price for {$symbol}: " . $body);
+            }
         } catch (\Exception $e) {
             Log::error("Exception when fetching price for {$symbol}: " . $e->getMessage());
         }
@@ -140,19 +153,26 @@ class GoldSilverPriceService
             $history = [];
             $today = now();
 
+            // Check if API key was marked invalid
+            $isInvalid = Cache::get('gold_api_key_invalid', false);
+
             for ($i = $days; $i >= 0; $i--) {
                 $date = $today->copy()->subDays($i);
                 $formattedDate = $date->format('Ymd');
                 $price = null;
 
-                if ($this->apiKey) {
+                if ($this->apiKey && !$isInvalid) {
                     try {
                         $response = Http::withHeaders([
                             'x-access-token' => $this->apiKey,
                         ])->timeout(5)->get("{$this->baseUrl}/{$symbol}/NGN/{$formattedDate}");
 
                         if ($response->successful()) {
-                            $price = $response->json('price_gram-24k') ?? $response->json('price') / 31.1035;
+                            $price = $response->json('price_gram-24k') ?? ($response->json('price') ? $response->json('price') / 31.1035 : null);
+                        } else if (str_contains($response->body(), 'Invalid API Key')) {
+                            Log::error("GoldAPI History Error: Invalid API Key. Please check GOLDAPI_KEY in .env.");
+                            Cache::put('gold_api_key_invalid', true, now()->addDay());
+                            $isInvalid = true; // Avoid checking again for subsequent dates in this loop
                         }
                     } catch (\Exception $e) {
                         Log::warning("Failed to fetch history for {$formattedDate}: " . $e->getMessage());
