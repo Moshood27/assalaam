@@ -21,7 +21,7 @@ class ListExpenseEntries extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            $this->getWipeHeaderAction(),,
+            $this->getWipeHeaderAction(),
         ];
     }
 }

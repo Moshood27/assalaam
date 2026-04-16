@@ -33,7 +33,13 @@ trait HasWipeAction
                         $query->where('id', '!=', auth()->id());
                     }
 
-                    $query->delete();
+                    // Use chunking to avoid memory issues and to trigger model events if any are defined
+                    // Note: chunkById is better for deletions to avoid skipping records
+                    $query->chunkById(100, function ($records) {
+                        foreach ($records as $record) {
+                            $record->delete();
+                        }
+                    });
 
                     Notification::make()
                         ->title('Module wiped successfully')
