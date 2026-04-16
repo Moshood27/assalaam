@@ -261,10 +261,10 @@ const getLocation = async () => {
       const msg = "Location permission is required to verify your presence and mark attendance during a meeting. Please allow access in your device settings."
       const retry = await modal.confirm(msg, { confirmText: 'Try Again', title })
       if (retry) {
-        getLocation()
+        await getLocation()
       }
     } else {
-      modal.alert("Could not get your location. Please check your GPS and try again.", "Location Error")
+      await modal.alert("Could not get your location. Please check your GPS and try again.", "Location Error")
     }
   } finally {
     locating.value = false

@@ -9,11 +9,11 @@
         </button>
         <h1 class="text-xl font-bold text-slate-800">Gold Savings</h1>
       </div>
-      <button @click="exportTransactions" class="p-2 text-slate-500 hover:text-yellow-600 transition-colors" title="Export CSV">
+      <a :href="getExportUrl()" target="_blank" class="p-2 text-slate-500 hover:text-yellow-600 transition-colors" title="Export CSV">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
-      </button>
+      </a>
     </header>
 
     <div class="p-4 max-w-lg mx-auto space-y-4">
@@ -553,19 +553,10 @@ const handleSell = async () => {
   }
 }
 
-const exportTransactions = async () => {
-  try {
-    const response = await axios.get('/api/gold/export', { responseType: 'blob' })
-    const url = window.URL.createObjectURL(new Blob([response.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', 'gold_transactions.csv')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  } catch (err) {
-    alert('Export failed')
-  }
+const getExportUrl = () => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/gold/export?token=${encodeURIComponent(token)}`
 }
 
 const handlePayZakat = async () => {

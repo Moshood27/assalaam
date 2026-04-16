@@ -43,8 +43,8 @@
             </div>
           </div>
           <div class="mt-4 flex flex-wrap gap-2">
-            <button class="btn-muted" @click="exportSummary('csv')">Export Summary CSV</button>
-            <button class="btn-muted" @click="exportSummary('pdf')">Export Summary PDF</button>
+            <a class="btn-muted" :href="getExportSummaryUrl('csv')" target="_blank">Export Summary CSV</a>
+            <a class="btn-muted" :href="getExportSummaryUrl('pdf')" target="_blank">Export Summary PDF</a>
           </div>
         </div>
 
@@ -106,8 +106,8 @@
         <div class="mt-3 flex flex-wrap gap-2">
           <button @click="reloadLedger" class="btn-primary">Apply</button>
           <button @click="resetFilters" class="btn-muted">Reset</button>
-          <button class="btn-muted" @click="exportLedger('csv')">Export Ledger CSV</button>
-          <button class="btn-muted" @click="exportLedger('pdf')">Export Ledger PDF</button>
+          <a class="btn-muted" :href="getExportLedgerUrl('csv')" target="_blank">Export Ledger CSV</a>
+          <a class="btn-muted" :href="getExportLedgerUrl('pdf')" target="_blank">Export Ledger PDF</a>
         </div>
       </div>
 
@@ -168,7 +168,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import axiosBase from '../../http.js'
-import { openBlob } from '../../utils/download'
 
 const adminToken = ref(localStorage.getItem('admin_token') || '')
 const client = axiosBase.create ? axiosBase.create() : axiosBase
@@ -250,22 +249,19 @@ const triggerCharge = async () => {
 }
 const resetCharge = () => { Object.assign(chargeForm, { period: new Date().toISOString().slice(0,7), amount: '', user_id: '', dry_run: true }); chargeResult.value = null }
 
-const downloadBlob = (blob, filename) => {
-  openBlob(blob, filename)
-}
-
-const exportLedger = async (type) => {
-  if (!adminToken.value) { alert('Please login as admin'); return }
-  const path = type === 'pdf' ? '/api/admin/takaful/export/ledger.pdf' : '/api/admin/takaful/export/ledger.csv'
-  const { data } = await client.get(path, { headers: authHeaders(), params: Object.fromEntries(buildLedgerParams()), responseType: 'blob' })
-  downloadBlob(data, type === 'pdf' ? 'takaful_ledger.pdf' : 'takaful_ledger.csv')
-}
-
-const exportSummary = async (type) => {
-  if (!adminToken.value) { alert('Please login as admin'); return }
+const getExportSummaryUrl = (type) => {
   const path = type === 'pdf' ? '/api/admin/takaful/export/summary.pdf' : '/api/admin/takaful/export/summary.csv'
-  const { data } = await client.get(path, { headers: authHeaders(), params: { period: summaryFilters.period }, responseType: 'blob' })
-  downloadBlob(data, type === 'pdf' ? `takaful_summary_${summaryFilters.period}.pdf` : `takaful_summary_${summaryFilters.period}.csv`)
+  const baseUrl = axiosBase.defaults.baseURL || ''
+  const params = new URLSearchParams({ period: summaryFilters.period, token: adminToken.value })
+  return `${baseUrl}${path}?${params.toString()}`
+}
+
+const getExportLedgerUrl = (type) => {
+  const path = type === 'pdf' ? '/api/admin/takaful/export/ledger.pdf' : '/api/admin/takaful/export/ledger.csv'
+  const baseUrl = axiosBase.defaults.baseURL || ''
+  const params = buildLedgerParams()
+  params.append('token', adminToken.value)
+  return `${baseUrl}${path}?${params.toString()}`
 }
 
 onMounted(async () => { await loadSummary(); await loadLedger() })
