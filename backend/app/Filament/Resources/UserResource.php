@@ -59,26 +59,22 @@ class UserResource extends Resource
                             ->schema([
                                 Forms\Components\Section::make('Basic Personal Information')
                                     ->schema([
-                                        Forms\Components\TextInput::make('name')
-                                            ->label('Name')
-                                            ->required()
-                                            ->maxLength(255)
-                                            ->readOnly()
-                                            ->placeholder('Will be generated automatically'),
                                         Forms\Components\TextInput::make('surname')
-                                            ->label('Surname')
-                                            ->maxLength(255)
+                                            ->label('Surname') // OLADOSU
                                             ->live(onBlur: true)
-                                            ->afterStateUpdated(function (Get $get, Set $set) {
-                                                $set('name', trim($get('surname') . ' ' . $get('other_names')));
-                                            }),
+                                            ->afterStateUpdated(fn (Get $get, Set $set) => self::syncFullUserName($get, $set))
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Name') // MOSHOOD
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(fn (Get $get, Set $set) => self::syncFullUserName($get, $set))
+                                            ->maxLength(255),
                                         Forms\Components\TextInput::make('other_names')
-                                            ->label('Other names')
-                                            ->maxLength(255)
+                                            ->label('Other names') // ADEWALE
                                             ->live(onBlur: true)
-                                            ->afterStateUpdated(function (Get $get, Set $set) {
-                                                $set('name', trim($get('surname') . ' ' . $get('other_names')));
-                                            }),
+                                            ->afterStateUpdated(fn (Get $get, Set $set) => self::syncFullUserName($get, $set))
+                                            ->maxLength(255),
                                         Forms\Components\Select::make('gender')
                                             ->options([
                                                 'male' => 'Male',
@@ -344,6 +340,18 @@ class UserResource extends Resource
                             ]),
                     ])->columnSpanFull(),
             ]);
+    }
+
+    protected static function syncFullUserName(Get $get, Set $set)
+    {
+        $full = trim(implode(' ', array_filter([
+            $get('surname'),
+            $get('name'),
+            $get('other_names')
+        ])));
+
+        // We update a hidden field or the master name field to keep the app happy
+        $set('full_name_hidden', $full);
     }
 
     public static function table(Table $table): Table

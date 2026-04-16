@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,7 +20,6 @@ use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -34,19 +34,20 @@ class User extends Authenticatable implements FilamentUser
             ->dontLogEmptyChanges();
     }
 
-    /**
-     * This ensures the mobile app always gets the combined name
-     * even if you only updated the surname/other_names columns.
-     */
     protected function name(): Attribute
     {
         return Attribute::make(
             get: function ($value) {
-                // If surname exists, use the combined version
-                if (!empty($this->surname) || !empty($this->other_names)) {
-                    return trim("{$this->surname} {$this->other_names}");
+                // Check if we have the new split columns filled
+                if (!empty($this->surname) && !empty($this->attributes['name'])) {
+                    return trim("{$this->surname} {$this->attributes['name']} {$this->other_names}");
                 }
-                // Fallback to whatever is in the 'name' column for old test data
+                // Fallback to the database 'name' column for old data
+                return $value;
+            },
+            set: function ($value) {
+                // If the whole string is being updated at once (like from an API)
+                // optional logic to split it back into parts can go here.
                 return $value;
             }
         );
