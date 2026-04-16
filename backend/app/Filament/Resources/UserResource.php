@@ -517,8 +517,8 @@ class UserResource extends Resource
                     ->label('Print Member List')
                     ->icon('heroicon-o-printer')
                     ->url(fn (Table $table) => route('admin.print.users-list', [
-                        'branch_id' => $table->getLivewire()->tableFilters['branch']['value'] ?? null,
-                        'search' => $table->getLivewire()->tableSearchQuery,
+                        'branch_id' => data_get($table->getLivewire()->tableFilters, 'branch.value'),
+                        'search' => $table->getLivewire()->getTableSearch(),
                     ]))
                     ->openUrlInNewTab(),
                 Action::make('print')
