@@ -36,6 +36,7 @@ class ZakatResource extends Resource
         $nisabValue = $priceService->getGoldNisab() ?: 0;
 
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()

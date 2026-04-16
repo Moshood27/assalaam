@@ -168,6 +168,7 @@ class MemberApplicationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('surname', 'asc')
             ->columns([
                 Tables\Columns\ImageColumn::make('passport_path')
                     ->label('Photo')

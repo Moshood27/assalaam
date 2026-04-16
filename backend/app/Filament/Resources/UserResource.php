@@ -331,6 +331,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 ImageColumn::make('passport_path')
                     ->label('Photo')
@@ -861,7 +862,8 @@ class UserResource extends Resource
                         ->label('Print Enrolment Forms')
                         ->icon('heroicon-o-printer')
                         ->action(fn (\Illuminate\Support\Collection $records) => response()->streamDownload(function () use ($records) {
-                            echo Pdf::loadView('pdfs.bulk_membership_applications', ['users' => $records])->setPaper('a4')->output();
+                            $sortedRecords = $records->sortBy('name');
+                            echo Pdf::loadView('pdfs.bulk_membership_applications', ['users' => $sortedRecords])->setPaper('a4')->output();
                         }, "bulk-enrolment-forms.pdf")),
                     Tables\Actions\DeleteBulkAction::make()
                         ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin

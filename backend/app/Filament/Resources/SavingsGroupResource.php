@@ -58,9 +58,11 @@ class SavingsGroupResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('monthly_contribution_amount')
                     ->label('Monthly Amount')
                     ->money('ngn')

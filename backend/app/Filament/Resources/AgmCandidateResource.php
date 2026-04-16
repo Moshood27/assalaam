@@ -50,6 +50,7 @@ class AgmCandidateResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('position')->badge()->searchable()->sortable(),

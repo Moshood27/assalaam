@@ -47,6 +47,7 @@ class UserBadgeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Member')

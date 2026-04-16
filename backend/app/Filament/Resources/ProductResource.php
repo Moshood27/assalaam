@@ -95,10 +95,11 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 Tables\Columns\TextColumn::make('category.name')->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('vendor.name')->label('Vendor')->placeholder('Internal')->sortable()->toggleable(),
-                TextColumn::make('name')->searchable()->wrap()->limit(40),
+                TextColumn::make('name')->searchable()->sortable()->wrap()->limit(40),
                 TextColumn::make('stock_quantity')
                     ->label('Stock')
                     ->numeric()

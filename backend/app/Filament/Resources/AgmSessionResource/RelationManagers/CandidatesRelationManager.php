@@ -38,6 +38,7 @@ class CandidatesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('position')->searchable()->sortable(),

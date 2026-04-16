@@ -38,6 +38,7 @@ class SchemeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('name')->sortable()->searchable(),
                 TextColumn::make('min_amount')

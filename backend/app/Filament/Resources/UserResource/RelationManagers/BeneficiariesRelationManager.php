@@ -51,9 +51,11 @@ class BeneficiariesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('relationship'),
                 Tables\Columns\TextColumn::make('asset_type')
                     ->badge(),

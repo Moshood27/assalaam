@@ -108,6 +108,7 @@ class ProjectResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('name')->sortable()->searchable(),
                 IconColumn::make('active')->boolean()->label('Active')->sortable(),

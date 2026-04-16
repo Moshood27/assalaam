@@ -43,6 +43,7 @@ class BranchResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->modifyQueryUsing(function (Builder $query) {
                 // Preload members count for performance
                 $query->withCount('users');
