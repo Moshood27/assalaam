@@ -25,11 +25,12 @@ class SmsService
 
         $to = $this->normalizeMsisdn($to);
         if (empty($to)) {
-            Log::warning('SMS not sent: missing or invalid phone');
+            Log::warning('SMS not sent: missing or invalid phone', ['raw_to' => $to]);
             return false;
         }
 
         $driver = config('sms.driver', 'termii');
+        Log::debug('Attempting to send SMS', ['to' => $to, 'driver' => $driver]);
         try {
             if ($driver === 'termii') {
                 return $this->sendViaTermii($to, $message);
@@ -82,9 +83,28 @@ class SmsService
         ];
         $res = Http::asJson()->post($url, $payload);
         if (!$res->ok()) {
-            Log::warning('Termii SMS failed', ['status' => $res->status(), 'body' => $res->json()]);
+            Log::warning('Termii SMS failed', [
+                'status' => $res->status(),
+                'body' => $res->json(),
+                'to' => $to,
+            ]);
             return false;
         }
+
+        $data = $res->json();
+        // Termii sometimes returns 200 OK but with a body indicating failure (e.g. {status: "error", message: "..."})
+        if (isset($data['status']) && in_array($data['status'], ['error', 'failed'])) {
+             Log::warning('Termii returned error status', [
+                 'body' => $data,
+                 'to' => $to
+             ]);
+             return false;
+        }
+
+        Log::info('Termii SMS sent successfully', [
+            'to' => $to,
+            'message_id' => $data['message_id'] ?? $data['data']['message_id'] ?? null
+        ]);
         return true;
     }
 

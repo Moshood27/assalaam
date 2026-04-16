@@ -152,12 +152,18 @@ class AuthController extends Controller
             }
             if ($sendSms) {
                 $sms = app(\App\Services\SmsService::class);
-                $sms->send($user->phone, 'Your password reset code is '.$code.'. It expires in 10 minutes.');
-                return response()->json([
-                    'message' => 'If the account exists, a reset code has been sent.',
-                    'sent_to' => ['phone' => $this->maskPhone($user->phone)],
-                    'expires_in' => 600,
-                ]);
+                if ($sms->send($user->phone, 'Your password reset code is '.$code.'. It expires in 10 minutes.')) {
+                    return response()->json([
+                        'message' => 'If the account exists, a reset code has been sent.',
+                        'sent_to' => ['phone' => $this->maskPhone($user->phone)],
+                        'expires_in' => 600,
+                    ]);
+                } else {
+                    Log::warning('Password reset SMS send reported failure', ['user_id' => $user->id]);
+                    return response()->json([
+                        'message' => 'Failed to send SMS code. Please try again later or use email.',
+                    ], 500);
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('Password reset code send failed', ['error' => $e->getMessage()]);

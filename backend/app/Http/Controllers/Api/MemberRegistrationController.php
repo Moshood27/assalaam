@@ -293,10 +293,14 @@ class MemberRegistrationController extends Controller
         if ($app->phone && $app->sms_otp_hash) {
             try {
                 $sms = app(\App\Services\SmsService::class);
-                $sms->send($app->phone, 'Your phone verification code is '.$smsCode.'. It expires in 10 minutes.');
-                $sentTo['phone'] = $this->maskPhone($app->phone);
+                $sent = $sms->send($app->phone, 'Your phone verification code is '.$smsCode.'. It expires in 10 minutes.');
+                if ($sent) {
+                    $sentTo['phone'] = $this->maskPhone($app->phone);
+                } else {
+                    Log::warning('Registration SMS OTP send reported failure', ['token' => $app->token]);
+                }
             } catch (\Throwable $e) {
-                Log::warning('Registration SMS OTP send failed', ['error' => $e->getMessage()]);
+                Log::warning('Registration SMS OTP send failed with exception', ['error' => $e->getMessage()]);
                 if (app()->bound('sentry')) {
                     app('sentry')->captureException($e);
                 }

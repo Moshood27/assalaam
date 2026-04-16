@@ -384,7 +384,10 @@
                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Email Verification</div>
                 <div v-if="emailVerified" class="badge-success px-2 py-1 rounded-lg">Verified</div>
               </div>
-              <p class="text-xs text-slate-500 font-medium">Code sent to <span class="text-slate-800 font-bold">{{ maskedEmail || form.email }}</span></p>
+              <p class="text-xs text-slate-500 font-medium">
+                <span v-if="maskedEmail">Code sent to <span class="text-slate-800 font-bold">{{ maskedEmail }}</span></span>
+                <span v-else class="text-rose-600 font-bold">Email dispatch failed. Please check your email or try resending.</span>
+              </p>
               <div class="flex items-center gap-3">
                 <input v-model="emailCode" :disabled="emailVerified" type="text" inputmode="numeric" maxlength="6" class="input flex-1 h-12 text-center text-lg font-black tracking-[0.5em] bg-white border-slate-200" placeholder="000000" />
                 <button @click="handleVerifyEmail" :disabled="emailVerified || loadingVerifyEmail" class="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50 shadow-sm">
@@ -400,7 +403,10 @@
                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Phone Verification</div>
                 <div v-if="phoneVerified" class="badge-success px-2 py-1 rounded-lg">Verified</div>
               </div>
-              <p class="text-xs text-slate-500 font-medium">SMS sent to <span class="text-slate-800 font-bold">{{ maskedPhone || form.phone }}</span></p>
+              <p class="text-xs text-slate-500 font-medium">
+                <span v-if="maskedPhone">SMS sent to <span class="text-slate-800 font-bold">{{ maskedPhone }}</span></span>
+                <span v-else class="text-rose-600 font-bold">SMS dispatch failed. Please check your phone or try resending.</span>
+              </p>
               <div class="flex items-center gap-3">
                 <input v-model="smsCode" :disabled="phoneVerified" type="text" inputmode="numeric" maxlength="6" class="input flex-1 h-12 text-center text-lg font-black tracking-[0.5em] bg-white border-slate-200" placeholder="000000" />
                 <button @click="handleVerifySms" :disabled="phoneVerified || loadingVerifySms" class="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50 shadow-sm">
