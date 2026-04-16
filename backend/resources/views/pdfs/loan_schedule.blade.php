@@ -49,7 +49,7 @@
                 <td>Per Installment</td>
                 <td class="right">₦ {{ number_format((float) $loan->per_installment, 2) }}</td>
                 <td>Interval</td>
-                <td class="right">{{ ucfirst($loan->interval) }}</td>
+                <td class="right">{{ ucfirst((string) $loan->interval) }}</td>
             </tr>
             <tr>
                 <td>Total Paid</td>

@@ -47,7 +47,7 @@ class StoreOrderObserver
 
         $push = app(PushService::class);
         $title = "Order Status Updated";
-        $body = "Your order #{$order->reference} status is now: " . ucfirst(str_replace('_', ' ', $newStatus));
+        $body = "Your order #{$order->reference} status is now: " . ucfirst(str_replace('_', ' ', (string) $newStatus));
         $send = true;
 
         switch ($newStatus) {

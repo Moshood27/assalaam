@@ -44,11 +44,11 @@
                 </tr>
                 <tr>
                     <td class="label">Installments</td>
-                    <td class="value">{{ $loan->total_installments }} × ₦{{ number_format((float) $loan->per_installment, 2) }} ({{ ucfirst($loan->interval) }})</td>
+                    <td class="value">{{ $loan->total_installments }} × ₦{{ number_format((float) $loan->per_installment, 2) }} ({{ ucfirst((string) $loan->interval) }})</td>
                 </tr>
                 <tr>
                     <td class="label">Status</td>
-                    <td class="value"><span class="badge">{{ ucfirst($loan->status) }}</span></td>
+                    <td class="value"><span class="badge">{{ ucfirst((string) $loan->status) }}</span></td>
                 </tr>
                 @if($loan->relationLoaded('guarantors') || $loan->guarantors()->exists())
                 <tr>

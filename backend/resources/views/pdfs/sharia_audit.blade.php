@@ -49,7 +49,7 @@
                     <br>
                     <strong>Actions Breakdown:</strong><br>
                     @foreach($actions_summary as $action => $count)
-                        {{ str_replace('_', ' ', ucfirst($action)) }}: {{ $count }}<br>
+                        {{ str_replace('_', ' ', ucfirst((string) $action)) }}: {{ $count }}<br>
                     @endforeach
                 </td>
             </tr>

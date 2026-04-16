@@ -113,7 +113,7 @@
             </tr>
             <tr>
                 <td class="label">Gender:</td>
-                <td class="value">{{ ucfirst($application->gender) }}</td>
+                <td class="value">{{ ucfirst((string) $application->gender) }}</td>
             </tr>
             <tr>
                 <td class="label">Residential Address:</td>

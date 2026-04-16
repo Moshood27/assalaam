@@ -47,7 +47,7 @@
                 <td>Admin Fee (Flat/%)</td>
                 <td class="right">₦ {{ number_format((float) $loan->admin_fee_flat, 2) }} / {{ $loan->admin_fee_pct }}%</td>
                 <td>Repayment Interval</td>
-                <td class="right">{{ ucfirst($loan->interval) }}</td>
+                <td class="right">{{ ucfirst((string) $loan->interval) }}</td>
             </tr>
             <tr>
                 <td>Amount Per Installment</td>

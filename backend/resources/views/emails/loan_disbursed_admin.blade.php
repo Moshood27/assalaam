@@ -55,7 +55,7 @@
                 </tr>
                 <tr>
                     <td class="label">Status</td>
-                    <td class="value">{{ ucfirst($loan->status) }}</td>
+                    <td class="value">{{ ucfirst((string) $loan->status) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Disbursed at</td>

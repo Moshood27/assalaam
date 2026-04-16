@@ -38,7 +38,7 @@
           <p><strong>Details</strong></p>
           <ul>
           @foreach($meta as $k => $v)
-            <li>{{ ucfirst(str_replace('_',' ', $k)) }}: {{ is_scalar($v) ? $v : json_encode($v) }}</li>
+            <li>{{ ucfirst(str_replace('_',' ', (string) $k)) }}: {{ is_scalar($v) ? $v : json_encode($v) }}</li>
           @endforeach
           </ul>
         </div>

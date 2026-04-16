@@ -41,7 +41,7 @@ class PaymentStatusMail extends Mailable
 
     public function build(): self
     {
-        $subject = '[' . ucfirst($this->status) . '] ' . ($this->title ?: 'Payment Update');
+        $subject = '[' . ucfirst((string) $this->status) . '] ' . ($this->title ?: 'Payment Update');
         return $this->subject($subject)
             ->view('emails.payment_status');
     }

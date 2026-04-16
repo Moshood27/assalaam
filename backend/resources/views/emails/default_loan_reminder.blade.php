@@ -58,7 +58,7 @@
                 @foreach($loans as $ln)
                     <tr>
                         <td>{{ $ln['loan_id'] }}</td>
-                        <td>{{ ucfirst($ln['status']) }}</td>
+                        <td>{{ ucfirst((string) $ln['status']) }}</td>
                         <td>{{ number_format($ln['principal'], 2) }}</td>
                         <td>{{ number_format($ln['paid'], 2) }}</td>
                         <td>{{ number_format($ln['remaining'], 2) }}</td>

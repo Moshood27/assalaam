@@ -68,7 +68,7 @@
             <tr>
                 <td>{{ $pay['member'] }}</td>
                 <td class="right">{{ number_format($pay['amount'], 2) }}</td>
-                <td>{{ ucfirst($pay['status']) }}</td>
+                <td>{{ ucfirst((string) $pay['status']) }}</td>
             </tr>
             @endforeach
         </tbody>

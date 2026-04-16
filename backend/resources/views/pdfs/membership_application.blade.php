@@ -124,7 +124,7 @@
             </tr>
             <tr>
                 <td class="label">Sex (Gender):</td>
-                <td class="value">{{ ucfirst($application->gender) }}</td>
+                <td class="value">{{ ucfirst((string) $application->gender) }}</td>
                 <td class="label">Date of Birth:</td>
                 <td class="value">{{ $application->dob ? $application->dob->format('d/m/Y') : 'N/A' }}</td>
             </tr>
@@ -132,7 +132,7 @@
                 <td class="label">Native (State/Town):</td>
                 <td class="value">{{ $application->native_place }}</td>
                 <td class="label">Marital Status:</td>
-                <td class="value">{{ ucfirst($application->marital_status) }}</td>
+                <td class="value">{{ ucfirst((string) $application->marital_status) }}</td>
             </tr>
             <tr>
                 <td class="label">Occupation:</td>

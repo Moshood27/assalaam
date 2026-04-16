@@ -44,9 +44,9 @@
             <tr>
                 <td>{{ $h['date'] }}</td>
                 <td>{{ $h['scheme'] }}</td>
-                <td>{{ ucfirst($h['type']) }}</td>
+                <td>{{ ucfirst((string) $h['type']) }}</td>
                 <td class="right">{{ number_format($h['amount'], 2) }}</td>
-                <td>{{ ucfirst($h['status']) }}</td>
+                <td>{{ ucfirst((string) $h['status']) }}</td>
             </tr>
             @endforeach
         </tbody>

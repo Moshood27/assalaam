@@ -40,7 +40,7 @@
                 </tr>
                 <tr>
                     <td class="label">Installments</td>
-                    <td class="value">{{ $loan->total_installments }} × ₦{{ number_format((float) $loan->per_installment, 2) }} ({{ ucfirst($loan->interval) }})</td>
+                    <td class="value">{{ $loan->total_installments }} × ₦{{ number_format((float) $loan->per_installment, 2) }} ({{ ucfirst((string) $loan->interval) }})</td>
                 </tr>
             </table>
 
