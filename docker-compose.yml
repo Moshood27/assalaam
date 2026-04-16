@@ -69,6 +69,22 @@ services:
       - db
       - app
 
+  reverb:
+    build:
+      context: ./backend
+      dockerfile: ../docker/php/Dockerfile
+    container_name: attaqwa-reverb
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    env_file: [ ".env" ]
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - attaqwa-network
+      - gateway-network
+    depends_on:
+      - app
+
 networks:
   attaqwa-network:
     driver: bridge

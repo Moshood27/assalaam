@@ -77,8 +77,9 @@
             <tr>
                 <th style="width: 18%">Date</th>
                 <th>Scheme</th>
-                <th style="width: 30%">Reference</th>
-                <th class="right" style="width: 18%">Amount (₦)</th>
+                <th style="width: 25%">Reference</th>
+                <th class="right" style="width: 15%">Units</th>
+                <th class="right" style="width: 15%">Amount (₦)</th>
             </tr>
         </thead>
         <tbody>
@@ -89,6 +90,7 @@
                     <td>{{ optional($c->created_at)->format('Y-m-d H:i') }}</td>
                     <td>{{ optional($c->scheme)->name ?? '—' }}</td>
                     <td>{{ $c->reference }}</td>
+                    <td class="right">{{ $c->units ? number_format((float)$c->units, 4).(str_contains(strtolower(optional($c->scheme)->name), 'gold') ? 'g' : '') : '—' }}</td>
                     <td class="right">{{ number_format($amt, 2) }}</td>
                 </tr>
             @empty
@@ -99,7 +101,7 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3">Total</td>
+                <td colspan="4">Total</td>
                 <td class="right">{{ number_format((float) $total, 2) }}</td>
             </tr>
         </tfoot>

@@ -3,6 +3,8 @@
 return [
     // GoldAPI settings
     'goldapi_key' => env('GOLDAPI_KEY'),
+    'goldapi_currency' => env('GOLDAPI_CURRENCY', 'USD'),
+    'usd_ngn_rate' => env('USD_NGN_RATE', 'auto'), // Set to 'auto' to fetch or a fixed number
 
     // Nisab threshold in NGN. Default is a placeholder; set ZAKAT_NISAB_NGN in .env to override.
     'nisab_ngn' => (float) env('ZAKAT_NISAB_NGN', 500000),

@@ -25,9 +25,16 @@ class GoldController extends Controller
 
     public function getPrice()
     {
-        $basePrice = $this->goldService->getGoldPrice();
-        $buyPrice = $this->goldService->getBuyPrice();
-        $sellPrice = $this->goldService->getSellPrice();
+        $priceData = $this->goldService->getGoldPriceData();
+
+        if (!$priceData) {
+            return response()->json(['message' => 'Could not fetch current gold price.'], 503);
+        }
+
+        $basePrice = $priceData['base_price_ngn'];
+        $buyPrice = $priceData['buy_price_ngn'];
+        $sellPrice = $priceData['sell_price_ngn'];
+
         $user = auth()->user();
 
         $performance = $this->getPerformanceAndZakat($user, $sellPrice);
@@ -37,6 +44,9 @@ class GoldController extends Controller
             'base_price' => $basePrice,
             'buy_price' => $buyPrice,
             'sell_price' => $sellPrice,
+            'price_usd' => $priceData['base_price_usd'],
+            'exchange_rate' => $priceData['exchange_rate'],
+            'currency' => $priceData['currency'],
             'gold_balance' => (float) $user->gold_balance,
             'naira_balance' => (float) $user->balance,
             'current_value' => round($user->gold_balance * $sellPrice, 2), // Current value is what they'd get if they sold
@@ -134,7 +144,9 @@ class GoldController extends Controller
             return response()->json(['message' => 'Insufficient wallet balance.'], 400);
         }
 
-        $buyPrice = $this->goldService->getBuyPrice();
+        $priceData = $this->goldService->getGoldPriceData();
+        $buyPrice = $priceData['buy_price_ngn'] ?? null;
+
         if (!$buyPrice) {
             return response()->json(['message' => 'Could not fetch current gold price. Please try again later.'], 503);
         }
@@ -145,7 +157,7 @@ class GoldController extends Controller
         $netAmount = $request->amount_naira - $fee;
         $grams = round($netAmount / $buyPrice, 6);
 
-        DB::transaction(function () use ($user, $request, $grams, $buyPrice, $scheme, $fee) {
+        DB::transaction(function () use ($user, $request, $grams, $buyPrice, $scheme, $fee, $priceData) {
             // Deduct full amount from wallet
             $user->decrement('balance', $request->amount_naira);
 
@@ -162,6 +174,8 @@ class GoldController extends Controller
                 'meta' => [
                     'grams' => $grams,
                     'price_at_purchase' => $buyPrice,
+                    'price_usd' => $priceData['base_price_usd'] ?? null,
+                    'exchange_rate' => $priceData['exchange_rate'] ?? null,
                     'fee_charged' => $fee,
                     'net_amount' => $request->amount_naira - $fee
                 ]
@@ -204,7 +218,9 @@ class GoldController extends Controller
             return response()->json(['message' => 'Insufficient gold balance.'], 400);
         }
 
-        $sellPrice = $this->goldService->getSellPrice();
+        $priceData = $this->goldService->getGoldPriceData();
+        $sellPrice = $priceData['sell_price_ngn'] ?? null;
+
         if (!$sellPrice) {
             return response()->json(['message' => 'Could not fetch current gold price. Please try again later.'], 503);
         }
@@ -214,7 +230,7 @@ class GoldController extends Controller
         $fee = $grossAmount * $feeRate;
         $netAmount = round($grossAmount - $fee, 2);
 
-        DB::transaction(function () use ($user, $request, $netAmount, $sellPrice, $fee) {
+        DB::transaction(function () use ($user, $request, $netAmount, $sellPrice, $fee, $priceData) {
             // Deduct from gold balance
             $user->decrement('gold_balance', $request->grams);
 
@@ -231,6 +247,8 @@ class GoldController extends Controller
                 'meta' => [
                     'grams' => $request->grams,
                     'price_at_sale' => $sellPrice,
+                    'price_usd' => $priceData['base_price_usd'] ?? null,
+                    'exchange_rate' => $priceData['exchange_rate'] ?? null,
                     'fee_charged' => $fee,
                     'gross_amount' => $request->grams * $sellPrice
                 ]

@@ -114,6 +114,7 @@ class WalletController extends Controller
 
         return response()->json([
             'balance' => (float) $user->balance,
+            'gold_balance' => (float) ($user->gold_balance ?? 0),
             'available_for_withdrawal' => (float) ($breakdown['available_for_withdrawal'] ?? 0),
             'breakdown' => $breakdown,
             'virtual_account' => [

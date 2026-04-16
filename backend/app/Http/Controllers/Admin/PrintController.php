@@ -3,24 +3,61 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Contribution;
+use App\Models\Scheme;
 use App\Models\User;
 use App\Models\UtilityTransaction;
 use App\Models\WalletTransaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class PrintController extends Controller
 {
     public function passbook(Request $request, User $user)
     {
         $year = (int) $request->get('year', now()->year);
+        $startOfYear = Carbon::create($year, 1, 1, 0, 0, 0);
+
         $contributions = $user->contributions()
             ->with('scheme')
             ->whereYear('created_at', $year)
             ->where('status', 'success')
             ->orderBy('created_at', 'asc')
             ->get();
+
+        $bfContributions = $user->contributions()
+            ->where('created_at', '<', $startOfYear)
+            ->where('status', 'success')
+            ->get();
+
+        $schemes = Scheme::orderBy('name')->get();
+
+        $matrix = $schemes->map(function ($scheme) use ($contributions, $bfContributions) {
+            $row = [
+                'scheme_name' => $scheme->name,
+                'months' => array_fill(1, 12, 0.0),
+                'bf' => 0.0,
+                'total' => 0.0,
+            ];
+
+            foreach ($bfContributions as $con) {
+                if ($con->scheme_id === $scheme->id) {
+                    $row['bf'] += (float) $con->amount;
+                }
+            }
+
+            foreach ($contributions as $con) {
+                if ($con->scheme_id === $scheme->id) {
+                    $month = $con->created_at->month;
+                    $row['months'][$month] += (float) $con->amount;
+                    $row['total'] += (float) $con->amount;
+                }
+            }
+
+            return $row;
+        });
 
         $branchName = $user->branch?->name;
 
@@ -29,6 +66,9 @@ class PrintController extends Controller
             'year' => $year,
             'contributions' => $contributions,
             'branch' => $branchName,
+            'matrix' => $matrix,
+            'grand_total' => $matrix->sum('total'),
+            'bf_total' => $matrix->sum('bf'),
         ]);
 
         return $pdf->stream("passbook-{$user->membership_number}-{$year}.pdf");
@@ -36,10 +76,18 @@ class PrintController extends Controller
 
     public function usersList(Request $request)
     {
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+        ini_set('pcre.backtrack_limit', '5000000');
+
         $query = User::query()->with('branch');
 
         if ($branchId = $request->get('branch_id')) {
-            $query->where('branch_id', $branchId);
+            if (is_array($branchId)) {
+                $query->whereIn('branch_id', $branchId);
+            } else {
+                $query->where('branch_id', $branchId);
+            }
         }
 
         if ($search = $request->get('search')) {
@@ -50,14 +98,23 @@ class PrintController extends Controller
             });
         }
 
-        $users = $query->orderBy('name')->get();
+        $users = $query->orderBy('name')
+            ->select(['id', 'name', 'surname', 'other_names', 'membership_number', 'phone', 'branch_id', 'deceased_at', 'balance', 'gold_balance'])
+            ->get();
 
-        $branchName = $branchId ? \App\Models\Branch::find($branchId)?->name : null;
+        $branchName = null;
+        if ($branchId) {
+            if (is_array($branchId)) {
+                $branchName = Branch::whereIn('id', $branchId)->pluck('name')->implode(', ');
+            } else {
+                $branchName = Branch::find($branchId)?->name;
+            }
+        }
 
         $pdf = Pdf::loadView('pdfs.member_list', [
             'users' => $users,
             'branchName' => $branchName,
-        ]);
+        ])->setPaper('a4', 'landscape');
 
         return $pdf->stream("member-list.pdf");
     }

@@ -77,6 +77,36 @@ class GoldSilverPriceService
     }
 
     /**
+     * Get comprehensive gold price data including USD and NGN
+     */
+    public function getGoldPriceData()
+    {
+        $currency = config('zakat.goldapi_currency', 'USD');
+        $goldPrice = $this->getGoldPrice(); // This is already NGN if currency is USD
+
+        if (!$goldPrice) return null;
+
+        $rate = 1.0;
+        $priceUsd = $goldPrice;
+
+        if ($currency === 'USD') {
+            $rate = $this->getUsdNgnRate();
+            $priceUsd = $goldPrice / $rate;
+        }
+
+        $spread = config('zakat.gold_spread', 0.01) / 2;
+
+        return [
+            'base_price_ngn' => $goldPrice,
+            'base_price_usd' => $priceUsd,
+            'exchange_rate' => $rate,
+            'buy_price_ngn' => $goldPrice * (1 + $spread),
+            'sell_price_ngn' => $goldPrice * (1 - $spread),
+            'currency' => $currency
+        ];
+    }
+
+    /**
      * Get buy price (with optional fee or spread)
      */
     public function getBuyPrice()
@@ -103,27 +133,60 @@ class GoldSilverPriceService
     }
 
     /**
+     * Get the USD to NGN exchange rate.
+     */
+    public function getUsdNgnRate()
+    {
+        $rate = config('zakat.usd_ngn_rate', 'auto');
+
+        if (is_numeric($rate)) {
+            return (float) $rate;
+        }
+
+        return Cache::remember('usd_ngn_exchange_rate', now()->addHours(12), function () {
+            try {
+                // Using a free, no-key-required exchange rate API
+                $response = Http::timeout(10)->get('https://open.er-api.com/v6/latest/USD');
+                if ($response->successful()) {
+                    return (float) $response->json('rates.NGN', 1500.0);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch USD/NGN exchange rate: ' . $e->getMessage());
+            }
+
+            // Fallback rate if API fails
+            return 1500.0;
+        });
+    }
+
+    /**
      * Get price per gram for a given symbol (XAU or XAG)
      */
     public function getPrice($symbol)
     {
         // Check if API key was marked invalid
-        $isInvalid = Cache::get('gold_api_key_invalid', false);
+        $isInvalid = Cache::get('gold_api_key_v1_invalid', false);
 
         if (!$this->apiKey || $isInvalid) {
             // Mock price for development if no API key or it's known invalid
-            return $symbol === 'XAU' ? 85000 : 1200;
+            $mockBase = $symbol === 'XAU' ? 85000 : 1200;
+            return $mockBase;
         }
 
         try {
+            $currency = config('zakat.goldapi_currency', 'USD');
             $response = Http::withHeaders([
                 'x-access-token' => $this->apiKey,
                 'Content-Type' => 'application/json'
-            ])->timeout(10)->get("{$this->baseUrl}/{$symbol}/NGN");
+            ])->timeout(10)->get("{$this->baseUrl}/{$symbol}/{$currency}");
 
             if ($response->successful()) {
-                $price = $response->json('price_gram-24k') ?? ($response->json('price') ? $response->json('price') / 31.1035 : null);
+                $price = $response->json('price_gram_24k') ?? ($response->json('price') ? $response->json('price') / 31.1034768 : null);
                 if ($price) {
+                    if ($currency === 'USD') {
+                        $rate = $this->getUsdNgnRate();
+                        $price = $price * $rate;
+                    }
                     return $price;
                 }
             }
@@ -132,7 +195,7 @@ class GoldSilverPriceService
             if (str_contains($body, 'Invalid API Key')) {
                 Log::error("GoldAPI Error: Invalid API Key. Please check GOLDAPI_KEY in .env. Falling back to mock prices.");
                 // Cache the invalid status for 24 hours to avoid repeated failed calls
-                Cache::put('gold_api_key_invalid', true, now()->addDay());
+                Cache::put('gold_api_key_v1_invalid', true, now()->addDay());
             } else {
                 Log::warning("Failed to fetch price for {$symbol}: " . $body);
             }
@@ -154,7 +217,7 @@ class GoldSilverPriceService
             $today = now();
 
             // Check if API key was marked invalid
-            $isInvalid = Cache::get('gold_api_key_invalid', false);
+            $isInvalid = Cache::get('gold_api_key_v1_invalid', false);
 
             for ($i = $days; $i >= 0; $i--) {
                 $date = $today->copy()->subDays($i);
@@ -163,15 +226,20 @@ class GoldSilverPriceService
 
                 if ($this->apiKey && !$isInvalid) {
                     try {
+                        $currency = config('zakat.goldapi_currency', 'USD');
                         $response = Http::withHeaders([
                             'x-access-token' => $this->apiKey,
-                        ])->timeout(5)->get("{$this->baseUrl}/{$symbol}/NGN/{$formattedDate}");
+                        ])->timeout(5)->get("{$this->baseUrl}/{$symbol}/{$currency}/{$formattedDate}");
 
                         if ($response->successful()) {
-                            $price = $response->json('price_gram-24k') ?? ($response->json('price') ? $response->json('price') / 31.1035 : null);
+                            $price = $response->json('price_gram_24k') ?? ($response->json('price') ? $response->json('price') / 31.1034768 : null);
+                            if ($price && $currency === 'USD') {
+                                $rate = $this->getUsdNgnRate();
+                                $price = $price * $rate;
+                            }
                         } else if (str_contains($response->body(), 'Invalid API Key')) {
                             Log::error("GoldAPI History Error: Invalid API Key. Please check GOLDAPI_KEY in .env.");
-                            Cache::put('gold_api_key_invalid', true, now()->addDay());
+                            Cache::put('gold_api_key_v1_invalid', true, now()->addDay());
                             $isInvalid = true; // Avoid checking again for subsequent dates in this loop
                         }
                     } catch (\Exception $e) {
