@@ -31,7 +31,7 @@
         <div class="section-title">1. THE PARTIES</div>
         <p>This Loan Agreement is made on {{ now()->format('jS F, Y') }} between:</p>
         <p><strong>LENDER:</strong> Cooperative Multipurpose Society (hereinafter referred to as "the Society").</p>
-        <p><strong>BORROWER:</strong> {{ $user->name }} (ID: {{ $user->membership_number }}), residing at {{ $user->address ?? '____________________' }}.</p>
+        <p><strong>BORROWER:</strong> {{ $user->full_name }} (ID: {{ $user->membership_number }}), residing at {{ $user->address ?? '____________________' }}.</p>
     </div>
 
     <div class="section">
@@ -60,7 +60,7 @@
 
     <div class="section">
         <div class="section-title">3. UNDERTAKING & COVENANTS</div>
-        <p>I, <strong>{{ $user->name }}</strong>, hereby acknowledge receipt of the loan amount stated above and agree to the following terms:</p>
+        <p>I, <strong>{{ $user->full_name }}</strong>, hereby acknowledge receipt of the loan amount stated above and agree to the following terms:</p>
         <ol>
             <li>I undertake to repay the loan in full according to the schedule below.</li>
             <li>I authorize the Society to deduct repayments from my linked bank account or wallet.</li>
@@ -98,7 +98,7 @@
     <div class="footer">
         <div class="signature-box">
             <div class="signature-line">BORROWER'S SIGNATURE</div>
-            <div>Name: {{ $user->name }}</div>
+            <div>Name: {{ $user->full_name }}</div>
             <div>Date: ____________________</div>
         </div>
         <div class="signature-box" style="float: right;">

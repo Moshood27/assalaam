@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -32,25 +31,6 @@ class User extends Authenticatable implements FilamentUser
             ->logFillable()
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
-    }
-
-    protected function name(): Attribute
-    {
-        return Attribute::make(
-            get: function ($value) {
-                // Check if we have the new split columns filled
-                if (!empty($this->surname) && !empty($this->attributes['name'])) {
-                    return trim("{$this->surname} {$this->attributes['name']} {$this->other_names}");
-                }
-                // Fallback to the database 'name' column for old data
-                return $value;
-            },
-            set: function ($value) {
-                // If the whole string is being updated at once (like from an API)
-                // optional logic to split it back into parts can go here.
-                return $value;
-            }
-        );
     }
 
     /**
@@ -241,6 +221,11 @@ class User extends Authenticatable implements FilamentUser
             'president_signed_at' => 'datetime',
             'secretary_general_signed_at' => 'datetime',
         ];
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->surname} {$this->name} {$this->other_names}");
     }
 
     public function badges()

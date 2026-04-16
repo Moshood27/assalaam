@@ -19,7 +19,6 @@ use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -59,22 +58,9 @@ class UserResource extends Resource
                             ->schema([
                                 Forms\Components\Section::make('Basic Personal Information')
                                     ->schema([
-                                        Forms\Components\TextInput::make('surname')
-                                            ->label('Surname') // OLADOSU
-                                            ->live(onBlur: true)
-                                            ->afterStateUpdated(fn (Get $get, Set $set) => self::syncFullUserName($get, $set))
-                                            ->maxLength(255),
-                                        Forms\Components\TextInput::make('name')
-                                            ->label('Name') // MOSHOOD
-                                            ->required()
-                                            ->live(onBlur: true)
-                                            ->afterStateUpdated(fn (Get $get, Set $set) => self::syncFullUserName($get, $set))
-                                            ->maxLength(255),
-                                        Forms\Components\TextInput::make('other_names')
-                                            ->label('Other names') // ADEWALE
-                                            ->live(onBlur: true)
-                                            ->afterStateUpdated(fn (Get $get, Set $set) => self::syncFullUserName($get, $set))
-                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('name')->required()->maxLength(255),
+                                        Forms\Components\TextInput::make('surname')->maxLength(255),
+                                        Forms\Components\TextInput::make('other_names')->maxLength(255),
                                         Forms\Components\Select::make('gender')
                                             ->options([
                                                 'male' => 'Male',
@@ -342,18 +328,6 @@ class UserResource extends Resource
             ]);
     }
 
-    protected static function syncFullUserName(Get $get, Set $set)
-    {
-        $full = trim(implode(' ', array_filter([
-            $get('surname'),
-            $get('name'),
-            $get('other_names')
-        ])));
-
-        // We update a hidden field or the master name field to keep the app happy
-        $set('full_name_hidden', $full);
-    }
-
     public static function table(Table $table): Table
     {
         return $table
@@ -402,11 +376,15 @@ class UserResource extends Resource
                         return $url;
                     })
                     ->size(40),
-                TextColumn::make('name')->searchable()->sortable(query: function (Builder $query, string $direction): Builder {
-                    return $query
-                        ->orderByRaw("LENGTH(name) $direction")
-                        ->orderBy("name", $direction);
-                }),
+                TextColumn::make('full_name')
+                    ->label('Name')
+                    ->searchable(['name', 'surname', 'other_names'])
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->orderBy("surname", $direction)
+                            ->orderBy("name", $direction)
+                            ->orderBy("other_names", $direction);
+                    }),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('phone')->label('Phone')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('address')->label('Address')->limit(30)->toggleable(isToggledHiddenByDefault: true),

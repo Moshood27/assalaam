@@ -27,6 +27,8 @@ class MembersFromOldSeeder extends Seeder
         // Detect optional columns in users table
         $hasPhone = Schema::hasColumn('users', 'phone');
         $hasAddress = Schema::hasColumn('users', 'address');
+        $hasSurname = Schema::hasColumn('users', 'surname');
+        $hasOtherNames = Schema::hasColumn('users', 'other_names');
 
         // Preload existing emails to avoid N queries and ensure uniqueness quickly (case-insensitive)
         // Map: email_lower => owner_membership_number (may be empty for non-member users)
@@ -43,7 +45,7 @@ class MembersFromOldSeeder extends Seeder
         // Precompute a single password hash (doing this per-row is very slow)
         $passwordHash = Hash::make('password123');
 
-        DB::table('members')->orderBy('id')->chunk(1000, function ($rows) use (&$existingEmails, $existingUsers, $passwordHash, $hasPhone, $hasAddress) {
+        DB::table('members')->orderBy('id')->chunk(1000, function ($rows) use (&$existingEmails, $existingUsers, $passwordHash, $hasPhone, $hasAddress, $hasSurname, $hasOtherNames) {
             foreach ($rows as $row) {
                 $membership = $row->memberno ?: null;
                 if (!$membership) {
@@ -77,9 +79,29 @@ class MembersFromOldSeeder extends Seeder
                     }
                 }
 
-                $name = trim((string)($row->membername ?? 'Member ' . $row->id));
-                if ($name === '') {
-                    $name = 'Unknown Member';
+                $rawName = trim((string)($row->membername ?? 'Member ' . $row->id));
+                if ($rawName === '') {
+                    $rawName = 'Unknown Member';
+                }
+
+                // Parse name into components based on requested logic (3 words: surname name other_name)
+                // first word is surname, second word is name, and last word is other name
+                $parts = preg_split('/\s+/', $rawName);
+                $surname = null;
+                $name = $rawName;
+                $otherNames = null;
+
+                if (count($parts) === 3) {
+                    $surname = $parts[0];
+                    $name = $parts[1];
+                    $otherNames = $parts[2];
+                } elseif (count($parts) === 2) {
+                    $surname = $parts[0];
+                    $name = $parts[1];
+                } elseif (count($parts) > 3) {
+                    $surname = $parts[0];
+                    $name = $parts[1];
+                    $otherNames = implode(' ', array_slice($parts, 2));
                 }
 
                 // Optional fields from legacy
@@ -105,6 +127,12 @@ class MembersFromOldSeeder extends Seeder
                         // keep password as known default for legacy imports
                         'password' => $passwordHash,
                     ];
+                    if ($hasSurname) {
+                        $update['surname'] = $surname;
+                    }
+                    if ($hasOtherNames) {
+                        $update['other_names'] = $otherNames;
+                    }
                     if ($hasPhone && (empty($existing->phone) && $phone)) {
                         $update['phone'] = $phone;
                     }
@@ -138,6 +166,8 @@ class MembersFromOldSeeder extends Seeder
                         'email' => $email,
                         'password' => $passwordHash,
                     ];
+                    if ($hasSurname) $insert['surname'] = $surname;
+                    if ($hasOtherNames) $insert['other_names'] = $otherNames;
                     if ($hasPhone) $insert['phone'] = $phone;
                     if ($hasAddress) $insert['address'] = $address;
                     if ($joinedAt) {

@@ -160,7 +160,7 @@ class DashboardController extends Controller
         ];
 
         return response()->json([
-            'full_name' => $user->name,
+            'full_name' => $user->full_name,
             'email' => $user->email,
             'membership_id' => $user->membership_number,
             'passport_url' => $passportUrl,

@@ -499,7 +499,7 @@ class MemberRegistrationController extends Controller
         User::where('is_admin', true)->each(function ($admin) use ($user) {
             $admin->notifyMember(
                 "New Member Joined",
-                "{$user->name} has completed registration and is now a member (Membership: {$user->membership_number}).",
+                "{$user->full_name} has completed registration and is now a member (Membership: {$user->membership_number}).",
                 ['type' => 'new_member', 'user_id' => $user->id]
             );
         });

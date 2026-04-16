@@ -38,7 +38,7 @@
             <div class="brand">{{ config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $user->name }},</p>
+            <p class="salam">Assalāmu ‘alaykum {{ $user->full_name }},</p>
             <p>Welcome to {{ config('app.name') }}. We begin in the Name of Allāh, the Most Merciful, the Especially Merciful. May Allāh place barakah in your membership and make it a means of khayr for you and your family. Āmīn.</p>
 
             @if(!empty($user->membership_number))
@@ -49,7 +49,7 @@
                 </tr>
                 <tr>
                     <th>Name</th>
-                    <td>{{ $user->name }}</td>
+                    <td>{{ $user->full_name }}</td>
                 </tr>
             </table>
             @endif
