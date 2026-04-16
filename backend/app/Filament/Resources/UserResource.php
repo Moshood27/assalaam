@@ -516,11 +516,11 @@ class UserResource extends Resource
                 Action::make('print_list')
                     ->label('Print Member List')
                     ->icon('heroicon-o-printer')
-                    ->action(function (Table $table) {
-                        $users = $table->getLivewire()->getFilteredTableQuery()->get();
-                        $pdf = Pdf::loadView('pdfs.member_list', ['users' => $users]);
-                        return response()->streamDownload(fn () => print($pdf->output()), 'member-list.pdf');
-                    }),
+                    ->url(fn (Table $table) => route('admin.print.users-list', [
+                        'branch_id' => $table->getLivewire()->tableFilters['branch']['value'] ?? null,
+                        'search' => $table->getLivewire()->tableSearchQuery,
+                    ]))
+                    ->openUrlInNewTab(),
                 Action::make('print')
                     ->label('Print Screen')
                     ->icon('heroicon-o-computer-desktop')
@@ -574,7 +574,9 @@ class UserResource extends Resource
                     ->icon('heroicon-o-printer')
                     ->action(function (User $record) {
                         $pdf = Pdf::loadView('pdfs.bulk_membership_applications', ['users' => [$record]])->setPaper('a4');
-                        return response()->streamDownload(fn () => print($pdf->output()), "member-{$record->membership_number}.pdf");
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->output();
+                        }, "member-{$record->membership_number}.pdf");
                     }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()

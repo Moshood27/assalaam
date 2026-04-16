@@ -94,14 +94,8 @@ class BranchResource extends Resource
                 Tables\Actions\Action::make('printMembers')
                     ->label('Print Members')
                     ->icon('heroicon-o-printer')
-                    ->action(function (Branch $record) {
-                        $users = $record->users()->orderBy('name')->get();
-                        $pdf = Pdf::loadView('pdfs.member_list', [
-                            'users' => $users,
-                            'branchName' => $record->name
-                        ]);
-                        return response()->streamDownload(fn () => print($pdf->output()), "members-{$record->name}.pdf");
-                    }),
+                    ->url(fn (Branch $record) => route('admin.print.users-list', ['branch_id' => $record->id]))
+                    ->openUrlInNewTab(),
                 Tables\Actions\Action::make('communicate')
                     ->label('Bulk Communicate')
                     ->icon('heroicon-o-chat-bubble-left-right')

@@ -74,7 +74,7 @@ watch(open, (v) => { if (v) fetchList(page.value) })
     <aside v-if="open" class="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white shadow-xl z-50 flex flex-col">
       <header class="p-4 border-b flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <button class="sm:hidden mr-1 rounded-full p-2 hover:bg-slate-100" @click="open = false" aria-label="Back">
+          <button class="mr-1 rounded-full p-2 hover:bg-slate-100" @click="open = false" aria-label="Back">
             <span class="i-mdi-arrow-left text-xl"></span>
           </button>
           <span class="i-mdi-inbox-outline text-xl"></span>

@@ -34,6 +34,34 @@ class PrintController extends Controller
         return $pdf->stream("passbook-{$user->membership_number}-{$year}.pdf");
     }
 
+    public function usersList(Request $request)
+    {
+        $query = User::query()->with('branch');
+
+        if ($branchId = $request->get('branch_id')) {
+            $query->where('branch_id', $branchId);
+        }
+
+        if ($search = $request->get('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('membership_number', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->orderBy('name')->get();
+
+        $branchName = $branchId ? \App\Models\Branch::find($branchId)?->name : null;
+
+        $pdf = Pdf::loadView('pdfs.member_list', [
+            'users' => $users,
+            'branchName' => $branchName,
+        ]);
+
+        return $pdf->stream("member-list.pdf");
+    }
+
     public function walletReceipt(Request $request, WalletTransaction $transaction)
     {
         $user = $transaction->user;
