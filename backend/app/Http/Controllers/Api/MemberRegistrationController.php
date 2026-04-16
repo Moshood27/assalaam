@@ -254,18 +254,16 @@ class MemberRegistrationController extends Controller
             return response()->json(['message' => 'Please wait at least 30 seconds before requesting new codes.'], 429);
         }
 
-        $emailCode = (string) random_int(100000, 999999);
-        $smsCode = (string) random_int(100000, 999999);
-
-        $app->email_otp_hash = $app->email ? Hash::make($emailCode) : null;
-        $app->sms_otp_hash = $app->phone ? Hash::make($smsCode) : null;
+        $code = (string) random_int(100000, 999999);
+        $app->email_otp_hash = $app->email ? Hash::make($code) : null;
+        $app->sms_otp_hash = $app->phone ? Hash::make($code) : null;
         $app->otp_expires_at = now()->addMinutes(10);
         $app->email_otp_attempts = 0;
         $app->sms_otp_attempts = 0;
         $app->last_otp_sent_at = now();
         $app->save();
 
-        Log::info('Registration OTPs generated', [
+        Log::info('Registration OTP generated', [
             'token' => $app->token,
             'email_present' => !empty($app->email),
             'phone_present' => !empty($app->phone),
@@ -277,8 +275,8 @@ class MemberRegistrationController extends Controller
         // Email
         if ($app->email && $app->email_otp_hash) {
             try {
-                Mail::raw('Your email verification code is '.$emailCode.'. It expires in 10 minutes.', function ($m) use ($app) {
-                    $m->to($app->email)->subject('Cooperative Email Verification Code');
+                Mail::raw('Your verification code is '.$code.'. It expires in 10 minutes. Use this code for both email and phone.', function ($m) use ($app) {
+                    $m->to($app->email)->subject('Cooperative Verification Code');
                 });
                 $sentTo['email'] = $this->maskEmail($app->email);
             } catch (\Throwable $e) {
@@ -293,7 +291,7 @@ class MemberRegistrationController extends Controller
         if ($app->phone && $app->sms_otp_hash) {
             try {
                 $sms = app(\App\Services\SmsService::class);
-                $sent = $sms->send($app->phone, 'Your phone verification code is '.$smsCode.'. It expires in 10 minutes.');
+                $sent = $sms->send($app->phone, 'Your verification code is '.$code.'. It expires in 10 minutes. Use this code for both email and phone.');
                 if ($sent) {
                     $sentTo['phone'] = $this->maskPhone($app->phone);
                 } else {
@@ -404,6 +402,7 @@ class MemberRegistrationController extends Controller
             Log::warning('SMS verification failed: Invalid code', [
                 'token' => $data['token'],
                 'attempts' => $app->sms_otp_attempts,
+                'input_length' => strlen($data['code']),
             ]);
             return response()->json(['message' => 'Invalid code.'], 403);
         }

@@ -385,7 +385,7 @@
                 <div v-if="emailVerified" class="badge-success px-2 py-1 rounded-lg">Verified</div>
               </div>
               <p class="text-xs text-slate-500 font-medium">
-                <span v-if="maskedEmail">Code sent to <span class="text-slate-800 font-bold">{{ maskedEmail }}</span></span>
+                <span v-if="maskedEmail">The same verification code has been sent to <span class="text-slate-800 font-bold">{{ maskedEmail }}</span> and your phone.</span>
                 <span v-else class="text-rose-600 font-bold">Email dispatch failed. Please check your email or try resending.</span>
               </p>
               <div class="flex items-center gap-3">
@@ -404,7 +404,7 @@
                 <div v-if="phoneVerified" class="badge-success px-2 py-1 rounded-lg">Verified</div>
               </div>
               <p class="text-xs text-slate-500 font-medium">
-                <span v-if="maskedPhone">SMS sent to <span class="text-slate-800 font-bold">{{ maskedPhone }}</span></span>
+                <span v-if="maskedPhone">The same verification code has been sent to <span class="text-slate-800 font-bold">{{ maskedPhone }}</span> and your email.</span>
                 <span v-else class="text-rose-600 font-bold">SMS dispatch failed. Please check your phone or try resending.</span>
               </p>
               <div class="flex items-center gap-3">
@@ -791,7 +791,7 @@ async function handleVerifyEmail() {
   loadingVerifyEmail.value = true
   errorVerifyEmail.value = ''
   try {
-    await axios.post('/api/register/verify-email', { token: token.value, code: emailCode.value })
+    await axios.post('/api/register/verify-email', { token: token.value, code: (emailCode.value || '').toString().replace(/\D/g, '').trim() })
     emailVerified.value = true
   } catch (e) {
     errorVerifyEmail.value = e?.response?.data?.message || 'Invalid code'
@@ -804,7 +804,7 @@ async function handleVerifySms() {
   loadingVerifySms.value = true
   errorVerifySms.value = ''
   try {
-    await axios.post('/api/register/verify-sms', { token: token.value, code: smsCode.value })
+    await axios.post('/api/register/verify-sms', { token: token.value, code: (smsCode.value || '').toString().replace(/\D/g, '').trim() })
     phoneVerified.value = true
   } catch (e) {
     errorVerifySms.value = e?.response?.data?.message || 'Invalid code'
