@@ -235,9 +235,18 @@ class MemberRegistrationController extends Controller
      */
     public function sendOtps(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
         ]);
+
+        if ($validator->fails()) {
+            Log::warning('Send OTPs validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all(),
+            ]);
+            $validator->validate();
+        }
+
         $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
 
         // Basic backoff: allow at most once per 30 seconds
@@ -255,6 +264,13 @@ class MemberRegistrationController extends Controller
         $app->sms_otp_attempts = 0;
         $app->last_otp_sent_at = now();
         $app->save();
+
+        Log::info('Registration OTPs generated', [
+            'token' => $app->token,
+            'email_present' => !empty($app->email),
+            'phone_present' => !empty($app->phone),
+            'expires_at' => $app->otp_expires_at->toDateTimeString(),
+        ]);
 
         $sentTo = [];
 
@@ -297,25 +313,47 @@ class MemberRegistrationController extends Controller
     /** Verify email code */
     public function verifyEmail(Request $request)
     {
-        $data = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
             'code' => ['required', 'regex:/^\\d{6}$/'],
         ]);
+
+        if ($validator->fails()) {
+            Log::warning('Email verification validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all(),
+            ]);
+            $validator->validate();
+        }
+
+        $data = $validator->validated();
         $app = MemberApplication::where('token', $data['token'])->firstOrFail();
 
         if (!$app->email_otp_hash || !$app->otp_expires_at || now()->greaterThan($app->otp_expires_at)) {
+            Log::warning('Email verification failed: Code expired or not requested', [
+                'token' => $data['token'],
+                'has_hash' => !empty($app->email_otp_hash),
+                'expires_at' => $app->otp_expires_at?->toDateTimeString(),
+                'now' => now()->toDateTimeString(),
+            ]);
             return response()->json(['message' => 'Code expired or not requested.'], 422);
         }
         $attempts = (int) $app->email_otp_attempts;
         if ($attempts >= 5) {
+            Log::warning('Email verification failed: Too many attempts', ['token' => $data['token']]);
             return response()->json(['message' => 'Too many invalid attempts. Please resend a new code.'], 429);
         }
         if (!Hash::check($data['code'], $app->email_otp_hash)) {
             $app->email_otp_attempts = $attempts + 1;
             $app->save();
+            Log::warning('Email verification failed: Invalid code', [
+                'token' => $data['token'],
+                'attempts' => $app->email_otp_attempts,
+            ]);
             return response()->json(['message' => 'Invalid code.'], 403);
         }
 
+        Log::info('Email verified successfully', ['token' => $data['token']]);
         $app->email_verified_at = now();
         $app->email_otp_hash = null;
         $app->save();
@@ -326,25 +364,47 @@ class MemberRegistrationController extends Controller
     /** Verify SMS code */
     public function verifySms(Request $request)
     {
-        $data = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
             'code' => ['required', 'regex:/^\\d{6}$/'],
         ]);
+
+        if ($validator->fails()) {
+            Log::warning('SMS verification validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all(),
+            ]);
+            $validator->validate();
+        }
+
+        $data = $validator->validated();
         $app = MemberApplication::where('token', $data['token'])->firstOrFail();
 
         if (!$app->sms_otp_hash || !$app->otp_expires_at || now()->greaterThan($app->otp_expires_at)) {
+            Log::warning('SMS verification failed: Code expired or not requested', [
+                'token' => $data['token'],
+                'has_hash' => !empty($app->sms_otp_hash),
+                'expires_at' => $app->otp_expires_at?->toDateTimeString(),
+                'now' => now()->toDateTimeString(),
+            ]);
             return response()->json(['message' => 'Code expired or not requested.'], 422);
         }
         $attempts = (int) $app->sms_otp_attempts;
         if ($attempts >= 5) {
+            Log::warning('SMS verification failed: Too many attempts', ['token' => $data['token']]);
             return response()->json(['message' => 'Too many invalid attempts. Please resend a new code.'], 429);
         }
         if (!Hash::check($data['code'], $app->sms_otp_hash)) {
             $app->sms_otp_attempts = $attempts + 1;
             $app->save();
+            Log::warning('SMS verification failed: Invalid code', [
+                'token' => $data['token'],
+                'attempts' => $app->sms_otp_attempts,
+            ]);
             return response()->json(['message' => 'Invalid code.'], 403);
         }
 
+        Log::info('SMS verified successfully', ['token' => $data['token']]);
         $app->phone_verified_at = now();
         $app->sms_otp_hash = null;
         $app->save();
@@ -355,11 +415,21 @@ class MemberRegistrationController extends Controller
     /** Finalize the application, create a User and assign a membership number */
     public function finalize(Request $request)
     {
-        $data = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
             'bvn' => ['required', 'regex:/^\\d{11}$/'],
         ]);
-        $app = MemberApplication::where('token', $data['token'])->firstOrFail();
+
+        if ($validator->fails()) {
+            Log::warning('Registration finalization validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all(),
+            ]);
+            $validator->validate();
+        }
+
+        $data = $validator->validated();
+        $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
 
         // Prevent re-finalizing the same application
         if (!empty($app->finalized_at)) {
@@ -526,10 +596,19 @@ class MemberRegistrationController extends Controller
     /** Registration status helper for resuming onboarding */
     public function status(Request $request)
     {
-        $data = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'token' => ['required', 'string', Rule::exists('member_applications', 'token')],
         ]);
-        $app = MemberApplication::where('token', $data['token'])->firstOrFail();
+
+        if ($validator->fails()) {
+            Log::warning('Registration status check validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all(),
+            ]);
+            $validator->validate();
+        }
+
+        $app = MemberApplication::where('token', $request->input('token'))->firstOrFail();
 
         $docs = [
             'passport_path' => $app->passport_path,
