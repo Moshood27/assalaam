@@ -19,6 +19,7 @@ use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -58,9 +59,26 @@ class UserResource extends Resource
                             ->schema([
                                 Forms\Components\Section::make('Basic Personal Information')
                                     ->schema([
-                                        Forms\Components\TextInput::make('name')->required()->maxLength(255),
-                                        Forms\Components\TextInput::make('surname')->maxLength(255),
-                                        Forms\Components\TextInput::make('other_names')->maxLength(255),
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Name')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->readOnly()
+                                            ->placeholder('Will be generated automatically'),
+                                        Forms\Components\TextInput::make('surname')
+                                            ->label('Surname')
+                                            ->maxLength(255)
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function (Get $get, Set $set) {
+                                                $set('name', trim($get('surname') . ' ' . $get('other_names')));
+                                            }),
+                                        Forms\Components\TextInput::make('other_names')
+                                            ->label('Other names')
+                                            ->maxLength(255)
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function (Get $get, Set $set) {
+                                                $set('name', trim($get('surname') . ' ' . $get('other_names')));
+                                            }),
                                         Forms\Components\Select::make('gender')
                                             ->options([
                                                 'male' => 'Male',

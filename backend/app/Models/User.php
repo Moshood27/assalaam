@@ -19,6 +19,7 @@ use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -31,6 +32,24 @@ class User extends Authenticatable implements FilamentUser
             ->logFillable()
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
+    }
+
+    /**
+     * This ensures the mobile app always gets the combined name
+     * even if you only updated the surname/other_names columns.
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                // If surname exists, use the combined version
+                if (!empty($this->surname) || !empty($this->other_names)) {
+                    return trim("{$this->surname} {$this->other_names}");
+                }
+                // Fallback to whatever is in the 'name' column for old test data
+                return $value;
+            }
+        );
     }
 
     /**
