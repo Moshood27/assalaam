@@ -71,6 +71,11 @@ class SecurityController extends Controller
         ]);
 
         $channel = $request->input('channel', 'sms');
+        $hasPush = !empty($user->fcm_token) || !empty($user->device_token);
+
+        // Prioritize push delivery if token exists
+        $notificationChannel = $channel . ($hasPush ? ',push' : '');
+
         $code = (string) random_int(100000, 999999);
         $cacheKey = 'pin_reset_'.$user->id;
 
@@ -85,7 +90,7 @@ class SecurityController extends Controller
             $user->notify(new OtpNotification(
                 title: 'PIN Reset Code Sent',
                 message: $message,
-                channel: $channel,
+                channel: $notificationChannel,
                 context: [
                     'expires_in' => 600,
                 ]
@@ -94,7 +99,10 @@ class SecurityController extends Controller
             Log::warning('PIN reset notification failed', ['error' => $e->getMessage()]);
         }
 
-        $sentTo = $channel === 'email' ? self::maskEmail($user->email) : self::maskPhone($user->phone);
+        $sentTo = [];
+        if ($channel === 'email') $sentTo['email'] = self::maskEmail($user->email);
+        if ($channel === 'sms') $sentTo['phone'] = self::maskPhone($user->phone);
+        if ($hasPush) $sentTo['push'] = 'Device notification sent';
 
         return response()->json([
             'message' => 'If your contact is on file, a reset code has been sent. The code expires in 10 minutes.',
@@ -141,6 +149,17 @@ class SecurityController extends Controller
         $user->save();
 
         Cache::forget($cacheKey);
+
+        // Send security alert
+        try {
+            $user->notify(new \App\Notifications\GeneralNotification(
+                title: 'Transaction PIN Reset',
+                message: 'Your transaction PIN has been successfully reset. If you did not perform this action, please contact support immediately.',
+                data: ['type' => 'security_alert']
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('PIN reset confirmation notification failed', ['error' => $e->getMessage()]);
+        }
 
         return response()->json(['message' => 'Transaction PIN reset successfully']);
     }

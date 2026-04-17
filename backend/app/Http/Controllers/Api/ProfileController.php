@@ -306,6 +306,17 @@ class ProfileController extends Controller
         // $user->email_verified_at = null;
         $user->save();
 
+        // Send security alert
+        try {
+            $user->notify(new \App\Notifications\GeneralNotification(
+                title: 'Email Updated',
+                message: "Your account email has been updated to {$user->email}. If you did not perform this action, please contact support immediately.",
+                data: ['type' => 'security_alert']
+            ));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Email update notification failed', ['error' => $e->getMessage()]);
+        }
+
         return response()->json([
             'message' => 'Email updated successfully.',
             'email' => $user->email,
@@ -344,6 +355,17 @@ class ProfileController extends Controller
 
         $user->password = Hash::make($data['new_password']);
         $user->save();
+
+        // Send security alert
+        try {
+            $user->notify(new \App\Notifications\GeneralNotification(
+                title: 'Password Updated',
+                message: 'Your account password has been successfully updated. If you did not perform this action, please contact support immediately.',
+                data: ['type' => 'security_alert']
+            ));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Password update notification failed', ['error' => $e->getMessage()]);
+        }
 
         return response()->json([
             'message' => 'Password updated successfully.'

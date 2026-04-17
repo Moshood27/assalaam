@@ -1,0 +1,1 @@
+import{c as e}from"./index-Cai25XQk.js";export{e as SplashScreen};

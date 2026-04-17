@@ -66,8 +66,8 @@ class AdminAuthController extends Controller
         $request->validate(['email' => ['required', 'email']]);
 
         // Ensure the email belongs to an admin account
-        $isAdmin = User::where('email', $request->email)->where('is_admin', true)->exists();
-        if (! $isAdmin) {
+        $user = User::where('email', $request->email)->where('is_admin', true)->first();
+        if (! $user) {
             // Do not reveal that the email doesn't exist or is not admin
             return response()->json(['status' => __(Password::RESET_LINK_SENT)]);
         }
@@ -76,8 +76,26 @@ class AdminAuthController extends Controller
             $request->only('email')
         );
 
+        $sentTo = ['email' => $request->email];
+
         if ($status === Password::RESET_LINK_SENT) {
-            return response()->json(['status' => __($status)]);
+            // Send push notification if token available
+            if (!empty($user->fcm_token) || !empty($user->device_token)) {
+                $sentTo['push'] = 'Device notification sent';
+                try {
+                    $user->notify(new \App\Notifications\GeneralNotification(
+                        title: 'Password Reset Link Sent',
+                        message: 'A password reset link has been sent to your email address. Please check your inbox.',
+                        data: ['type' => 'security_alert', 'context' => 'admin_forgot_password']
+                    ));
+                } catch (\Throwable $e) {
+                    \Log::warning('Admin forgot password push failed', ['error' => $e->getMessage()]);
+                }
+            }
+            return response()->json([
+                'status' => __($status),
+                'sent_to' => $sentTo
+            ]);
         }
 
         return response()->json([

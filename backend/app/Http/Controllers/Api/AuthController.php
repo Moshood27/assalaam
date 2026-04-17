@@ -78,12 +78,13 @@ class AuthController extends Controller
 
     /**
      * Member forgot password: send a 6-digit code via email or SMS.
+     * Supports both registered Users and Applicants (MemberApplications).
      * Accepts one of: email | phone | (branch_id + membership_number)
      */
     public function forgotPassword(Request $request)
     {
         $data = $request->validate([
-            'channel' => ['required', 'in:email,sms'],
+            'channel' => ['required', 'in:email,sms,push'],
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string', 'max:30'],
             'branch_id' => ['nullable', 'integer'],
@@ -92,10 +93,20 @@ class AuthController extends Controller
 
         // Try resolve user silently (do not reveal existence)
         $user = null;
+        $isApplicant = false;
+
         if (!empty($data['email'])) {
             $user = User::where('email', $data['email'])->first();
+            if (!$user) {
+                $user = \App\Models\MemberApplication::where('email', $data['email'])->whereNull('finalized_at')->first();
+                if ($user) $isApplicant = true;
+            }
         } elseif (!empty($data['phone'])) {
             $user = User::where('phone', $data['phone'])->first();
+            if (!$user) {
+                $user = \App\Models\MemberApplication::where('phone', $data['phone'])->whereNull('finalized_at')->first();
+                if ($user) $isApplicant = true;
+            }
         } elseif (!empty($data['branch_id']) && !empty($data['membership_number'])) {
             $user = User::where('branch_id', $data['branch_id'])
                 ->where(function ($query) use ($data) {
@@ -113,15 +124,19 @@ class AuthController extends Controller
         }
 
         // Determine destination
+        $hasPush = !empty($user->fcm_token) || !empty($user->device_token);
         $sendEmail = $data['channel'] === 'email' && $user->email;
         $sendSms = $data['channel'] === 'sms' && $user->phone;
-        if (!$sendEmail && !$sendSms) {
-            // No valid destination; return generic
+        $sendPushExplicit = $data['channel'] === 'push' && $hasPush;
+
+        if (!$sendEmail && !$sendSms && !$sendPushExplicit) {
+            // If they chose push but don't have it, or email/sms but don't have it
             return response()->json($generic);
         }
 
-        // Throttle per user: 60s between sends
-        $tkey = 'pwd_reset:throttle:'.$user->id;
+        // Throttle per target: 60s between sends
+        $throttleId = ($isApplicant ? 'app_' : 'user_') . $user->id;
+        $tkey = 'pwd_reset:throttle:' . $throttleId;
         if (Cache::has($tkey)) {
             return response()->json(['message' => 'Please wait before requesting another code.', 'retry_after' => 60], 429)
                 ->header('Retry-After', 60);
@@ -129,21 +144,23 @@ class AuthController extends Controller
 
         $code = (string) random_int(100000, 999999);
 
-        $cacheKey = 'pwd_reset:'.$user->id;
+        $cacheKey = 'pwd_reset:' . $throttleId;
         $payload = [
             'hash' => Hash::make($code),
             'attempts' => 0,
             'expires_at' => now()->addMinutes(10)->timestamp,
             'channel' => $data['channel'],
+            'is_applicant' => $isApplicant,
         ];
         Cache::put($cacheKey, $payload, now()->addMinutes(10));
         Cache::put($tkey, 1, now()->addSeconds(60));
 
         // Determine channel(s)
-        $hasPush = !empty($user->fcm_token) || !empty($user->device_token);
-
         // Always send push if available, plus the requested channel
-        $notificationChannel = $data['channel'] . ',push';
+        $notificationChannel = $data['channel'];
+        if ($hasPush && $data['channel'] !== 'push') {
+            $notificationChannel .= ',push';
+        }
 
         try {
             $user->notify(new OtpNotification(
@@ -172,6 +189,7 @@ class AuthController extends Controller
 
     /**
      * Member reset password using 6-digit code sent via email or SMS.
+     * Supports both registered Users and Applicants (MemberApplications).
      */
     public function resetPassword(Request $request)
     {
@@ -187,10 +205,19 @@ class AuthController extends Controller
 
         // Resolve user by provided identifier
         $user = null;
+        $isApplicant = false;
         if (!empty($data['email'])) {
             $user = User::where('email', $data['email'])->first();
+            if (!$user) {
+                $user = \App\Models\MemberApplication::where('email', $data['email'])->whereNull('finalized_at')->first();
+                if ($user) $isApplicant = true;
+            }
         } elseif (!empty($data['phone'])) {
             $user = User::where('phone', $data['phone'])->first();
+            if (!$user) {
+                $user = \App\Models\MemberApplication::where('phone', $data['phone'])->whereNull('finalized_at')->first();
+                if ($user) $isApplicant = true;
+            }
         } elseif (!empty($data['branch_id']) && !empty($data['membership_number'])) {
             $user = User::where('branch_id', $data['branch_id'])
                 ->where(function ($query) use ($data) {
@@ -203,7 +230,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid or expired code.'], 422);
         }
 
-        $cacheKey = 'pwd_reset:'.$user->id;
+        $throttleId = ($isApplicant ? 'app_' : 'user_') . $user->id;
+        $cacheKey = 'pwd_reset:' . $throttleId;
         $payload = Cache::get($cacheKey);
         if (!$payload) {
             return response()->json(['message' => 'Invalid or expired code.'], 422);
@@ -224,11 +252,33 @@ class AuthController extends Controller
         }
 
         // Update password and clear token
-        $user->password = $data['password']; // hashed by cast
+        if ($isApplicant) {
+            $user->password_hash = \Illuminate\Support\Facades\Crypt::encryptString($data['password']);
+        } else {
+            $user->password = $data['password']; // hashed by cast
+        }
         $user->save();
         Cache::forget($cacheKey);
 
-        return response()->json(['message' => 'Password has been reset successfully.']);
+        $response = ['message' => 'Password has been reset successfully.'];
+        if ($isApplicant) {
+            $response['token'] = $user->token;
+        } else {
+            $response['membership_number'] = $user->membership_number;
+        }
+
+        // Send security alert
+        try {
+            $user->notify(new \App\Notifications\GeneralNotification(
+                title: 'Password Changed',
+                message: 'Your account password has been successfully reset. If you did not perform this action, please contact support immediately.',
+                data: ['type' => 'security_alert']
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Password reset confirmation notification failed', ['error' => $e->getMessage()]);
+        }
+
+        return response()->json($response);
     }
 
     private function maskPhone(string $phone): string

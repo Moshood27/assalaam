@@ -36,6 +36,9 @@
                 <button @click="channel = 'sms'" type="button" :class="['flex-1 py-3 rounded-xl font-bold text-sm transition-all', channel==='sms' ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
                   SMS
                 </button>
+                <button @click="channel = 'push'" type="button" :class="['flex-1 py-3 rounded-xl font-bold text-sm transition-all', channel==='push' ? 'bg-white text-emerald-800 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+                  Push
+                </button>
               </div>
             </div>
 
@@ -52,6 +55,18 @@
             </div>
 
             <div v-else class="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div v-if="channel === 'push'" class="relative group">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Email Address (Optional if using phone)</label>
+                <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <input v-model="requestForm.email" type="email" placeholder="you@example.com" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+                </div>
+              </div>
+
               <div class="relative group">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Phone Number</label>
                 <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20 rounded-2xl">
@@ -119,7 +134,21 @@
           <div v-else class="space-y-6">
             <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 text-sm">
               <div class="font-bold text-emerald-800 mb-1">Secure code sent!</div>
-              <div class="text-emerald-700">Check your {{ channel === 'email' ? 'email' : 'SMS' }}. Code expires in 10 mins.</div>
+              <div v-if="sentTo" class="text-emerald-700 space-y-1">
+                <div v-if="sentTo.push" class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>{{ sentTo.push }}</span>
+                </div>
+                <div v-if="sentTo.email" class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Sent to Email: {{ sentTo.email }}</span>
+                </div>
+                <div v-if="sentTo.phone" class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Sent to SMS: {{ sentTo.phone }}</span>
+                </div>
+              </div>
+              <div v-else class="text-emerald-700">Check your {{ channel === 'email' ? 'email' : (channel === 'push' ? 'app' : 'SMS') }}. Code expires in 10 mins.</div>
             </div>
 
             <div class="relative group">
@@ -223,6 +252,7 @@ const success = ref('')
 const channel = ref('email')
 const step = ref(1)
 const showPassword = ref(false)
+const sentTo = ref(null)
 
 const requestForm = ref({
   email: '',
@@ -254,7 +284,9 @@ const handleRequest = async () => {
     if (channel.value === 'email') {
       payload.email = requestForm.value.email
     } else {
-      if (requestForm.value.phone) {
+      if (channel.value === 'push' && requestForm.value.email) {
+        payload.email = requestForm.value.email
+      } else if (requestForm.value.phone) {
         payload.phone = requestForm.value.phone
       } else {
         payload.branch_id = requestForm.value.branch_id
@@ -263,6 +295,7 @@ const handleRequest = async () => {
     }
     const { data } = await axios.post('/api/forgot-password', payload)
     success.value = data?.message || 'If the account exists, a reset code has been sent.'
+    sentTo.value = data?.sent_to || null
     step.value = 2
   } catch (e) {
     error.value = e?.response?.data?.message || 'Could not send reset code'
@@ -280,7 +313,9 @@ const handleReset = async () => {
     if (channel.value === 'email') {
       payload.email = requestForm.value.email
     } else {
-      if (requestForm.value.phone) {
+      if (channel.value === 'push' && requestForm.value.email) {
+        payload.email = requestForm.value.email
+      } else if (requestForm.value.phone) {
         payload.phone = requestForm.value.phone
       } else {
         payload.branch_id = requestForm.value.branch_id
@@ -300,6 +335,7 @@ const backToRequest = () => {
   step.value = 1
   error.value = ''
   success.value = ''
+  sentTo.value = null
   resetForm.value = { code: '', password: '', password_confirmation: '' }
 }
 </script>

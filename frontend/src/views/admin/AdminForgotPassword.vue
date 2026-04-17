@@ -23,7 +23,19 @@
           </button>
 
           <p v-if="error" class="text-center text-rose-600 text-sm">{{ error }}</p>
-          <p v-if="success" class="text-center text-emerald-600 text-sm">{{ success }}</p>
+          <div v-if="success" class="space-y-3 text-center">
+            <p class="text-emerald-600 text-sm font-bold">{{ success }}</p>
+            <div v-if="sentTo" class="bg-emerald-50 rounded-xl p-4 text-xs text-emerald-800 space-y-2 inline-block mx-auto text-left min-w-[200px]">
+              <div v-if="sentTo.email" class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>Sent to: {{ sentTo.email }}</span>
+              </div>
+              <div v-if="sentTo.push" class="flex items-center gap-2 font-bold text-emerald-900">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>{{ sentTo.push }}</span>
+              </div>
+            </div>
+          </div>
 
           <div class="text-xs text-center">
             <router-link class="text-amber-700 font-semibold hover:underline" to="/admin/login">Back to login</router-link>
@@ -73,6 +85,7 @@ const showSupportModal = ref(false)
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
+const sentTo = ref(null)
 
 const form = ref({
   email: ''
@@ -85,6 +98,7 @@ const handleSubmit = async () => {
   try {
     const { data } = await axios.post('/api/admin/forgot-password', form.value)
     success.value = data?.status || 'If an account exists for that email, a reset link has been sent.'
+    sentTo.value = data?.sent_to || null
   } catch (e) {
     error.value = e?.response?.data?.message || 'Could not send reset link'
   } finally {

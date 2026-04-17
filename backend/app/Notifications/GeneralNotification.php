@@ -17,6 +17,7 @@ class GeneralNotification extends Notification implements ShouldQueue
         public array $data = [],
         public bool $useMail = true,
         public bool $useDatabase = true,
+        public bool $usePush = true,
     ) {}
 
     /**
@@ -33,7 +34,22 @@ class GeneralNotification extends Notification implements ShouldQueue
         if ($this->useMail && (bool)($notifiable->notify_email ?? true) && !empty($notifiable->email)) {
             $channels[] = 'mail';
         }
+        if ($this->usePush && (!empty($notifiable->fcm_token) || !empty($notifiable->device_token))) {
+            $channels[] = \App\Channels\PushChannel::class;
+        }
         return $channels;
+    }
+
+    /**
+     * Push notification representation.
+     */
+    public function toPush(object $notifiable): array
+    {
+        return [
+            'title' => $this->title,
+            'body' => $this->message,
+            'data' => array_merge(['type' => 'general'], $this->data),
+        ];
     }
 
     /**

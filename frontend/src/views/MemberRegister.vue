@@ -679,7 +679,14 @@ async function handleStart() {
   }
 
   try {
-    const { data } = await axios.post('/api/register/start', form.value)
+    const payload = { ...form.value }
+    const pendingToken = localStorage.getItem('pending_push_token')
+    if (pendingToken) {
+      payload.fcm_token = pendingToken
+      payload.device_token = pendingToken
+    }
+
+    const { data } = await axios.post('/api/register/start', payload)
     token.value = data.token
     localStorage.setItem('reg_token', token.value)
 
