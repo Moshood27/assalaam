@@ -9,17 +9,57 @@ use Kreait\Firebase\Messaging\CloudMessage;
 
 class PushService
 {
+    protected ?string $lastError = null;
+
     public function enabled(): bool
     {
         return (bool) config('push.enabled', false);
     }
 
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
+    /**
+     * Check if the last error (or given error string) represents an unregistered/not-found token.
+     */
+    public function isUnregisteredError(?string $error = null): bool
+    {
+        $err = $error ?: $this->lastError;
+        if (!$err) return false;
+
+        $unregisteredPhrases = [
+            'Requested entity was not found',
+            'UNREGISTERED',
+            'Messaging/NotFound',
+            'NotRegistered',
+            'InvalidRegistration',
+        ];
+
+        foreach ($unregisteredPhrases as $phrase) {
+            if (stripos($err, $phrase) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
     * Send a push notification to a single device token.
     * Returns true on success, false on failure. Never throws.
+    *
+    * @param string|null $toToken
+    * @param string $title
+    * @param string $body
+    * @param array $data
+    * @param object|null $notifiable Optional model to clear token from if unregistered
+    * @return bool
     */
-    public function send(?string $toToken, string $title, string $body, array $data = []): bool
+    public function send(?string $toToken, string $title, string $body, array $data = [], ?object $notifiable = null): bool
     {
+        $this->lastError = null;
         if (!$this->enabled()) {
             Log::info('[PUSH disabled] '.($toToken ?: 'no-token').': '.$title.' | '.$body, ['data' => $data]);
             return false;
@@ -31,6 +71,7 @@ class PushService
         }
 
         $driver = (string) config('push.driver', 'fcm');
+        $success = false;
         try {
             if ($driver === 'log') {
                 $channel = config('push.log.channel');
@@ -38,17 +79,55 @@ class PushService
                     ->info('[PUSH log driver] '.$title.' | '.$body, ['to' => $token, 'data' => $data]);
                 return true;
             }
+
             if ($driver === 'fcm_v1') {
-                return $this->sendViaFcmV1($token, $title, $body, $data);
+                $success = $this->sendViaFcmV1($token, $title, $body, $data);
+            } elseif ($driver === 'fcm') {
+                $success = $this->sendViaFcmLegacy($token, $title, $body, $data);
+            } else {
+                Log::warning('Push driver not recognized', ['driver' => $driver]);
             }
-            if ($driver === 'fcm') {
-                return $this->sendViaFcmLegacy($token, $title, $body, $data);
-            }
-            Log::warning('Push driver not recognized', ['driver' => $driver]);
-            return false;
         } catch (\Throwable $e) {
+            $this->lastError = $e->getMessage();
             Log::warning('Push send threw', ['error' => $e->getMessage()]);
-            return false;
+            $success = false;
+        }
+
+        if (!$success && $notifiable && $this->isUnregisteredError()) {
+            $this->autoClearToken($notifiable, $token);
+        }
+
+        return $success;
+    }
+
+    /**
+     * Clear the invalid token from the notifiable model to prevent future failures.
+     */
+    protected function autoClearToken(object $notifiable, string $token): void
+    {
+        if (method_exists($notifiable, 'update')) {
+            $updates = [];
+            if (($notifiable->fcm_token ?? null) === $token) {
+                $updates['fcm_token'] = null;
+            }
+            if (($notifiable->device_token ?? null) === $token) {
+                $updates['device_token'] = null;
+            }
+
+            if (!empty($updates)) {
+                try {
+                    $notifiable->update($updates);
+                    Log::info("Auto-cleared invalid FCM token", [
+                        'model' => get_class($notifiable),
+                        'id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : ($notifiable->id ?? 'unknown'),
+                        'cleared' => array_keys($updates)
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to auto-clear invalid FCM token", [
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
         }
     }
 
@@ -183,7 +262,13 @@ class PushService
             $messaging->send($message);
             return true;
         } catch (\Throwable $e) {
-            Log::warning('FCM v1 push failed', ['error' => $e->getMessage()]);
+            $this->lastError = $e->getMessage();
+            Log::warning('FCM v1 push failed', [
+                'error' => $this->lastError,
+                'token' => $token,
+                'title' => $title,
+                'exception' => get_class($e)
+            ]);
             return false;
         }
     }
@@ -217,7 +302,13 @@ class PushService
         if (!$res->ok()) {
             $code = $res->status();
             $json = $res->json();
-            Log::warning('FCM push failed', ['status' => $code, 'body' => $json]);
+            $this->lastError = is_array($json) ? json_encode($json) : (string) $json;
+            Log::warning('FCM push failed', [
+                'status' => $code,
+                'body' => $json,
+                'token' => $token,
+                'title' => $title
+            ]);
             return false;
         }
         return true;

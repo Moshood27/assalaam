@@ -279,7 +279,7 @@ class User extends Authenticatable implements FilamentUser
                 $token = $this->fcm_token ?: ($this->device_token ?? null);
                 if (!empty($token)) {
                     try {
-                        app(\App\Services\PushService::class)->send($token, $title, $message, $data ?? []);
+                        app(\App\Services\PushService::class)->send($token, $title, $message, $data ?? [], $this);
                     } catch (\Throwable $e) {
                     }
                 }

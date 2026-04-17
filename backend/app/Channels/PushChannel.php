@@ -28,7 +28,8 @@ class PushChannel
             $token,
             $message['title'],
             $message['body'],
-            $message['data'] ?? []
+            $message['data'] ?? [],
+            $notifiable
         );
     }
 }
