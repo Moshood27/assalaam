@@ -14,92 +14,12 @@ use Illuminate\Support\Str;
 
 class TakafulService
 {
-    /**
-     * Retry pending Takaful contributions for a user after wallet top-up.
-     * Processes oldest first and stops when funds are insufficient.
-     */
-    public function retryPendingForUser(User $user, ?int $max = null): array
-    {
-        $result = [
-            'attempted' => 0,
-            'succeeded' => 0,
-            'stopped_insufficient' => false,
-            'charged_total' => 0.0,
-            'processed_periods' => [],
-        ];
-
-        $pending = TakafulContribution::where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->orderBy('period')
-            ->get();
-
-        if ($pending->isEmpty()) {
-            return $result;
-        }
-
-        foreach ($pending as $row) {
-            if ($max !== null && $result['attempted'] >= $max) {
-                break;
-            }
-            $result['attempted']++;
-
-            DB::transaction(function () use ($row, &$result) {
-                /** @var TakafulContribution $fresh */
-                $fresh = TakafulContribution::whereKey($row->id)->lockForUpdate()->first();
-                /** @var User $member */
-                $member = User::whereKey($fresh->user_id)->lockForUpdate()->first();
-
-                // If already paid (race/previous retry), skip
-                if ($fresh->status === 'success') {
-                    return; // leave counters as-is
-                }
-
-                $amt = (float) $fresh->amount;
-                if ((float) $member->balance < $amt) {
-                    // stop further processing; mark flag; return from this txn
-                    $result['stopped_insufficient'] = true;
-
-                    return;
-                }
-
-                // Debit wallet
-                $reference = 'TAKAFUL_RETRY_'.now()->format('YmdHis').'_'.$member->id.'_'.bin2hex(random_bytes(3));
-                $member->decrement('balance', $amt);
-                WalletTransaction::create([
-                    'user_id' => $member->id,
-                    'type' => 'debit',
-                    'amount' => $amt,
-                    'reference' => $reference,
-                    'source' => 'takaful_contribution',
-                    'meta' => ['period' => $fresh->period, 'initiated_by' => 'auto_retry'],
-                ]);
-
-                // Mark contribution paid
-                $fresh->status = 'success';
-                $fresh->reference = $reference;
-                $fresh->save();
-
-                // Credit pool
-                TakafulPoolEntry::create([
-                    'user_id' => $member->id,
-                    'direction' => 'credit',
-                    'amount' => $amt,
-                    'reference' => $reference,
-                    'meta' => ['period' => $fresh->period, 'initiated_by' => 'auto_retry'],
-                ]);
-
-                $result['succeeded']++;
-                $result['charged_total'] += $amt;
-                $result['processed_periods'][] = $fresh->period;
-            });
-        }
-
-        return $result;
-    }
-
     public function monthlyAmount(): float
     {
-        return (float) config('services.takaful.monthly_amount', 200.00);
+        return app(\App\Services\AdministrativeChargeService::class)->getCharge(
+            'takaful_monthly_contribution',
+            (float) config('services.takaful.monthly_amount', 200.00)
+        );
     }
 
     /**
@@ -153,13 +73,8 @@ class TakafulService
             $totals['processed']++;
 
             if ($dryRun) {
-                // Don't persist anything, just count as created if affordable
-                if ((float) $user->balance >= $amount) {
-                    $totals['created']++;
-                    $totals['charged'] += $amount;
-                } else {
-                    $totals['insufficient_funds']++;
-                }
+                // Policy change: Everyone eligible gets a pending record (dry-run count)
+                $totals['created']++;
 
                 continue;
             }
@@ -180,61 +95,19 @@ class TakafulService
                     return;
                 }
 
-                // If insufficient wallet, mark pending (to be retried later) and skip debit
-                if ((float) $locked->balance < $amount) {
-                    TakafulContribution::updateOrCreate(
-                        ['user_id' => $locked->id, 'period' => $period],
-                        [
-                            'amount' => $amount,
-                            'status' => 'pending',
-                            'meta' => [
-                                'reason' => 'insufficient_wallet_balance',
-                            ],
-                        ]
-                    );
-                    $totals['insufficient_funds']++;
-
-                    return;
-                }
-
-                // Deduct wallet
-                $reference = 'TAKAFUL_CONTR_'.now()->format('YmdHis').'_'.$locked->id.'_'.bin2hex(random_bytes(3));
-                $locked->decrement('balance', $amount);
-
-                WalletTransaction::create([
-                    'user_id' => $locked->id,
-                    'type' => 'debit',
-                    'amount' => $amount,
-                    'reference' => $reference,
-                    'source' => 'takaful_contribution',
-                    'meta' => [
-                        'period' => $period,
-                    ],
-                ]);
-
-                // Record contribution
+                // Policy change: Remove automatic debit. Mark as pending for manual payment.
                 TakafulContribution::updateOrCreate(
                     ['user_id' => $locked->id, 'period' => $period],
                     [
                         'amount' => $amount,
-                        'status' => 'success',
-                        'reference' => $reference,
+                        'status' => 'pending',
+                        'meta' => [
+                            'reason' => 'manual_payment_policy',
+                        ],
                     ]
                 );
 
-                // Credit pool
-                TakafulPoolEntry::create([
-                    'user_id' => $locked->id,
-                    'direction' => 'credit',
-                    'amount' => $amount,
-                    'reference' => $reference,
-                    'meta' => [
-                        'period' => $period,
-                    ],
-                ]);
-
                 $totals['created']++;
-                $totals['charged'] += $amount;
             });
         }
 

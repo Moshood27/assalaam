@@ -311,6 +311,13 @@ class MemberApplicationResource extends Resource
                             $record->finalized_at = $now;
                             $record->save();
 
+                            // Charge registration fee
+                            $regFee = app(\App\Services\AdministrativeChargeService::class)->getCharge('member_registration_fee', 0);
+                            if ($regFee > 0) {
+                                $user->admin_charge_balance += $regFee;
+                                $user->save();
+                            }
+
                             ShariahAudit::log(auth()->user(), 'approve_member_application', [
                                 'application_id' => $record->id,
                                 'user_id' => $user->id,

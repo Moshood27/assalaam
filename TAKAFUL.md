@@ -59,7 +59,7 @@ Example (.env)
     - --amount=NUMBER
     - --user=ID
     - --dry-run
-  - Description: Charges monthly Takaful contributions by debiting members’ wallets and crediting the pool. Skips members already paid for that period. Creates pending markers when wallet balance is insufficient.
+  - Description: Creates monthly Takaful contribution records (pending) for members to pay manually. Skips members already paid for that period. Previously debited wallets automatically, but now requires manual payment by members.
 
 - Scheduler (backend/app/Console/Kernel.php)
   - Runs monthly on the 1st at 08:10 Africa/Lagos:
@@ -85,8 +85,8 @@ Example (.env)
       - 422 insufficient funds
 
 Notes
-- The monthly scheduler will also charge members automatically when they have sufficient wallet balance.
-- If wallet balance is insufficient, a pending TakafulContribution is recorded for that period (can be retried later or satisfied by a manual "Pay now").
+- The monthly scheduler creates pending contribution records; members must pay manually via "Pay now".
+- Automatic debiting from wallet is disabled to give members control over payment timing.
 
 
 ## 6) Admin Workflows (API)
@@ -134,8 +134,9 @@ Important notes
   - Skips any user who already has a success contribution for the given period.
   - For each selected user:
     - If dryRun: increments counters without writing.
-    - Else: within a transaction, verifies no success exists, checks wallet; if insufficient, creates/updates a pending row; otherwise, decrements wallet, writes WalletTransaction (source=takaful_contribution), creates/updates TakafulContribution (status=success), and credits the pool via TakafulPoolEntry (direction=credit).
+    - Else: within a transaction, verifies no success exists, then creates/updates a pending row (manual_payment_policy).
   - Returns totals and the pool balance.
+- Note: Automatic wallet debits and automated retries on top-up are disabled. Members must initiate payment via the "Pay now" feature.
 
 - Member-initiated one-off payment: App\Services\TakafulService::payNow(user, period?, amount?) follows similar steps for a single member.
 
@@ -176,8 +177,8 @@ Console
 ## 12) Worked Examples
 A. Monthly batch on the 1st
 1) Scheduler runs takaful:charge for April (2026-04).
-2) Members with sufficient wallet balance are debited ₦200; pool is credited. Members with insufficient balance get a pending record.
-3) /takaful shows "Paid this month" for successful members.
+2) Pending contribution records are created for all eligible members.
+3) Members receive a notice (or see the pending status in their app) and click "Pay now" to contribute.
 
 B. Manual pay-now by a member
 1) Member opens /takaful and clicks Pay now.

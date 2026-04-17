@@ -149,6 +149,9 @@ class User extends Authenticatable implements FilamentUser
         'president_signed_at',
         'secretary_general_signature_path',
         'secretary_general_signed_at',
+        'admin_charge_balance',
+        'admin_charge_auto_deduct',
+        'last_admin_charge_at',
     ];
 
     /**

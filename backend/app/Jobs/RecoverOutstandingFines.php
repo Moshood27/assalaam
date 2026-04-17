@@ -72,7 +72,7 @@ class RecoverOutstandingFines implements ShouldQueue
 
             $remainingToMark = $deduction;
             foreach ($pendingRecords as $record) {
-                $fineAmount = (float)($record->meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
+                $fineAmount = (float)($record->meeting->fine_amount ?? app(\App\Services\AdministrativeChargeService::class)->getCharge('attendance_fine', config('cooperative.attendance.default_fine', 500)));
                 if ($remainingToMark >= $fineAmount) {
                     $record->update([
                         'status' => 'fine_paid',

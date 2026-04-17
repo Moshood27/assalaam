@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Resources\ActivityLogResource;
 use App\Filament\Resources\WhitelistedIpResource;
+use App\Filament\Resources\AdministrativeChargeResource;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use App\Filament\Resources\AgmCandidateResource;
 use App\Filament\Resources\AgmSessionResource;
@@ -115,6 +116,7 @@ class AdminPanelProvider extends PanelProvider
                 UtilityTransactionResource::class,
                 ActivityLogResource::class,
                 WhitelistedIpResource::class,
+                AdministrativeChargeResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

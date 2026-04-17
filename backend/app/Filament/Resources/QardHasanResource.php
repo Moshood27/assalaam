@@ -131,12 +131,12 @@ class QardHasanResource extends Resource
                     ->label('Admin Fee (Flat)')
                     ->numeric()
                     ->prefix('₦')
-                    ->default(0),
+                    ->default(fn() => app(\App\Services\AdministrativeChargeService::class)->getCharge('loan_admin_fee_flat', 0)),
                 Forms\Components\TextInput::make('admin_fee_pct')
                     ->label('Admin Fee (%)')
                     ->numeric()
                     ->suffix('%')
-                    ->default(0),
+                    ->default(fn() => app(\App\Services\AdministrativeChargeService::class)->getCharge('loan_admin_fee_pct', 0, 'percentage')),
                 Forms\Components\TextInput::make('paid_amount')
                     ->numeric()
                     ->prefix('₦')

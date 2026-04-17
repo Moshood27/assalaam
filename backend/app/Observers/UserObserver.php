@@ -21,20 +21,6 @@ class UserObserver
             if ($user->outstanding_fines > 0) {
                 $this->processOutstandingFines($user);
             }
-
-            // 2. Retry pending Takaful contributions
-            $this->retryTakaful($user);
-        }
-    }
-
-    protected function retryTakaful(User $user): void
-    {
-        try {
-            $takaful = app(\App\Services\TakafulService::class);
-            $takaful->retryPendingForUser($user);
-        } catch (\Throwable $e) {
-            // Log or ignore
-            \Illuminate\Support\Facades\Log::error('Failed to retry Takaful: ' . $e->getMessage());
         }
     }
 
@@ -91,7 +77,7 @@ class UserObserver
 
             $remainingToMark = $deduction;
             foreach ($pendingRecords as $record) {
-                $fineAmount = (float)($record->meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
+                $fineAmount = (float)($record->meeting->fine_amount ?? app(\App\Services\AdministrativeChargeService::class)->getCharge('attendance_fine', config('cooperative.attendance.default_fine', 500)));
                 if ($remainingToMark >= $fineAmount) {
                     $record->update([
                         'status' => 'fine_paid',

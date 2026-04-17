@@ -15,6 +15,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            AdministrativeChargeSeeder::class,
+        ]);
+
         // Always ensure base test user exists for sanity
         User::updateOrCreate(
             ['email' => 'test@example.com'],

@@ -15,7 +15,7 @@ class AdministrativeChargeService
      */
     public function processMonthlyCharges(): array
     {
-        $amount = config('cooperative.admin_charges.amount', 300);
+        $amount = $this->getCharge('monthly_admin_charge', config('cooperative.admin_charges.amount', 300));
         $period = Carbon::now()->format('Y-m');
 
         $stats = [
@@ -104,6 +104,55 @@ class AdministrativeChargeService
             // Or just the whole thing. Let's go with the whole thing for simplicity first.
             if (isset($stats['failed_auto_deduct'])) $stats['failed_auto_deduct']++;
             return false;
+        }
+    }
+
+    /**
+     * Get charge amount by slug from database or fallback to default.
+     */
+    public function getCharge(string $slug, float $default = 0, string $field = 'amount'): float
+    {
+        try {
+            $charge = \App\Models\AdministrativeCharge::where('slug', $slug)
+                ->where('is_active', true)
+                ->first();
+
+            return $charge ? (float) ($charge->$field ?? 0) : $default;
+        } catch (\Exception $e) {
+            return $default;
+        }
+    }
+
+    /**
+     * Calculate charge for a given slug and base amount.
+     * Handles flat amount, percentage, and max amount cap.
+     */
+    public function calculateCharge(string $slug, float $baseAmount, ?float $defaultAmount = null, ?float $defaultPercentage = null, ?float $defaultMax = null): float
+    {
+        try {
+            $charge = \App\Models\AdministrativeCharge::where('slug', $slug)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$charge) {
+                $amount = $defaultAmount ?? 0;
+                $percentage = $defaultPercentage ?? 0;
+                $max = $defaultMax ?? INF;
+
+                $calculated = $amount + ($baseAmount * ($percentage / 100));
+                return round(min($calculated, $max), 2);
+            }
+
+            $amount = (float) ($charge->amount ?? 0);
+            $percentage = (float) ($charge->percentage ?? 0);
+            $max = $charge->max_amount !== null ? (float) $charge->max_amount : INF;
+
+            $calculated = $amount + ($baseAmount * ($percentage / 100));
+            return round(min($calculated, $max), 2);
+        } catch (\Exception $e) {
+            // Fallback to simple calculation if everything fails
+            $amount = $defaultAmount ?? 0;
+            return round($amount, 2);
         }
     }
 }

@@ -98,7 +98,7 @@ class MeetingResource extends Resource
                         Forms\Components\TextInput::make('fine_amount')
                             ->numeric()
                             ->prefix('₦')
-                            ->default(config('cooperative.attendance.default_fine', 500)),
+                            ->default(fn() => app(\App\Services\AdministrativeChargeService::class)->getCharge('attendance_fine', config('cooperative.attendance.default_fine', 500))),
                     ]),
             ]);
     }

@@ -381,24 +381,6 @@ class WebhookController extends Controller
                     'channel' => $vdChannel,
                 ]);
 
-                // After crediting wallet, attempt auto-retry for any pending Takaful contributions (best-effort)
-                try {
-                    $svc = app(TakafulService::class);
-                    $retry = $svc->retryPendingForUser($topupUser->fresh());
-                    \Log::info('Takaful auto-retry after wallet top-up (paystack)', [
-                        'user_id' => $topupUser->id,
-                        'attempted' => $retry['attempted'] ?? 0,
-                        'succeeded' => $retry['succeeded'] ?? 0,
-                        'charged_total' => $retry['charged_total'] ?? 0,
-                        'periods' => $retry['processed_periods'] ?? [],
-                    ]);
-                } catch (\Throwable $e) {
-                    \Log::warning('Takaful auto-retry failed after wallet top-up (paystack)', [
-                        'user_id' => $topupUser->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-
                 // Notify user (non-blocking) + best-effort Push
                 try {
                     $topupUser->notify(new PaymentNotification(
@@ -1000,24 +982,6 @@ class WebhookController extends Controller
             'user_id' => $topupUser->id,
         ]);
 
-        // After crediting wallet, attempt auto-retry for any pending Takaful contributions (best-effort)
-        try {
-            $svc = app(TakafulService::class);
-            $retry = $svc->retryPendingForUser($topupUser->fresh());
-            \Log::info('Takaful auto-retry after wallet top-up (flutterwave)', [
-                'user_id' => $topupUser->id,
-                'attempted' => $retry['attempted'] ?? 0,
-                'succeeded' => $retry['succeeded'] ?? 0,
-                'charged_total' => $retry['charged_total'] ?? 0,
-                'periods' => $retry['processed_periods'] ?? [],
-            ]);
-        } catch (\Throwable $e) {
-            \Log::warning('Takaful auto-retry failed after wallet top-up (flutterwave)', [
-                'user_id' => $topupUser->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
         // Notify user (non-blocking)
         try {
             $topupUser->notify(new PaymentNotification(
@@ -1051,16 +1015,19 @@ class WebhookController extends Controller
 
     /**
      * Calculate system maintenance charge for wallet top-ups.
-     * 0.1% of the amount, capped at 500.
+     * Uses AdministrativeChargeService if available.
      *
      * @param float $amount
      * @return float
      */
     private function calculateMaintenanceCharge(float $amount): float
     {
-        $percentage = config('cooperative.wallet.maintenance_charge.percentage', 0.1) / 100;
-        $maxCharge = config('cooperative.wallet.maintenance_charge.max_amount', 500);
-
-        return round(min($amount * $percentage, (float) $maxCharge), 2);
+        return app(\App\Services\AdministrativeChargeService::class)->calculateCharge(
+            'wallet_topup_charge',
+            $amount,
+            0,
+            (float) config('cooperative.wallet.maintenance_charge.percentage', 0.1),
+            (float) config('cooperative.wallet.maintenance_charge.max_amount', 500)
+        );
     }
 }
