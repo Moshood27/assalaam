@@ -20,9 +20,12 @@ use App\Mail\LoanDisbursedAdminNotification;
 use App\Mail\LoanRequestedAdminNotification;
 use App\Services\AttaqwaScoreService;
 use App\Notifications\LoanApprovedNotification;
+use App\Traits\VerifiesOtp;
+use App\Notifications\OtpNotification;
 
 class LoanController extends Controller
 {
+    use VerifiesOtp;
     // Return loans for the authenticated user only
     public function index(Request $request)
     {
@@ -94,7 +97,17 @@ class LoanController extends Controller
             'guarantor_ids.*' => ['integer', 'distinct', 'exists:users,id'],
             'guarantor_memberships' => ['nullable', 'array', 'max:3'],
             'guarantor_memberships.*' => ['string', 'distinct'],
+            'pin' => ['required', 'string'],
+            'otp' => ['nullable', 'string'],
         ]);
+
+        if (!$user->verifyTransactionPin($data['pin'])) {
+            return response()->json(['message' => 'Invalid transaction PIN.'], 403);
+        }
+
+        if (!$this->verifyOtp($user, 'loan_request', $request->input('otp'))) {
+            return response()->json(['message' => 'Invalid or expired authorization code (OTP).'], 403);
+        }
 
         // Compute Attaqwa Score and derived requirements
         $scoreSvc = app(AttaqwaScoreService::class);

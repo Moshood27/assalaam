@@ -70,7 +70,7 @@ class SecurityController extends Controller
             'channel' => 'nullable|in:sms,email',
         ]);
 
-        $channel = $request->input('channel');
+        $channel = $request->input('channel', 'sms');
         $code = (string) random_int(100000, 999999);
         $cacheKey = 'pin_reset_'.$user->id;
 
@@ -79,61 +79,23 @@ class SecurityController extends Controller
             'attempts' => 0,
         ], now()->addMinutes(10));
 
-        $sentTo = null;
         $message = 'Your Transaction PIN reset code is '.$code.'. It expires in 10 minutes.';
 
         try {
-            // Prefer SMS if phone exists and channel is not forced to email
-            $phone = trim((string) ($user->phone ?? ''));
-            if (($channel !== 'email') && $phone) {
-                $sms = app(\App\Services\SmsService::class);
-                $sms->send($phone, $message);
-                $sentTo = self::maskPhone($phone);
-                // Log to Inbox (database notifications)
-                try {
-                    $user->notify(new OtpNotification(
-                        title: 'PIN Reset Code Sent',
-                        message: $message,
-                        channel: 'sms',
-                        context: [
-                            'sent_to' => $sentTo,
-                            'expires_in' => 600,
-                        ]
-                    ));
-                } catch (\Throwable $e) {
-                    // swallow
-                }
-            }
+            $user->notify(new OtpNotification(
+                title: 'PIN Reset Code Sent',
+                message: $message,
+                channel: $channel,
+                context: [
+                    'expires_in' => 600,
+                ]
+            ));
         } catch (\Throwable $e) {
-            Log::warning('PIN reset SMS send failed', ['error' => $e->getMessage()]);
+            Log::warning('PIN reset notification failed', ['error' => $e->getMessage()]);
         }
 
-        if (!$sentTo && (($channel !== 'sms') && !empty($user->email))) {
-            try {
-                Mail::raw($message, function ($m) use ($user) {
-                    $m->to($user->email)->subject('Transaction PIN Reset Code');
-                });
-                $sentTo = self::maskEmail($user->email);
-                // Log to Inbox (database notifications)
-                try {
-                    $user->notify(new OtpNotification(
-                        title: 'PIN Reset Code Sent',
-                        message: $message,
-                        channel: 'email',
-                        context: [
-                            'sent_to' => $sentTo,
-                            'expires_in' => 600,
-                        ]
-                    ));
-                } catch (\Throwable $e) {
-                    // swallow
-                }
-            } catch (\Throwable $e) {
-                Log::warning('PIN reset email send failed', ['error' => $e->getMessage()]);
-            }
-        }
+        $sentTo = $channel === 'email' ? self::maskEmail($user->email) : self::maskPhone($user->phone);
 
-        // Do not disclose whether message actually delivered; return masked destination if available
         return response()->json([
             'message' => 'If your contact is on file, a reset code has been sent. The code expires in 10 minutes.',
             'sent_to' => $sentTo,
@@ -181,6 +143,62 @@ class SecurityController extends Controller
         Cache::forget($cacheKey);
 
         return response()->json(['message' => 'Transaction PIN reset successfully']);
+    }
+
+    /**
+     * Request a one-time code to authorize a transaction.
+     * Uses Push notification primarily, falls back to SMS/Email based on availability.
+     */
+    public function requestOtp(Request $request)
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'transaction_type' => 'required|string|in:withdrawal,gold_buy,gold_sell,loan_request,p2p_transfer,scheme_allocation',
+            'amount' => 'nullable|numeric',
+        ]);
+
+        $type = $validated['transaction_type'];
+        $code = (string) random_int(100000, 999999);
+        $cacheKey = 'otp_auth_' . $type . '_' . $user->id;
+
+        Cache::put($cacheKey, [
+            'hash' => Hash::make($code),
+            'attempts' => 0,
+        ], now()->addMinutes(10));
+
+        $title = 'Transaction Authorization';
+        $message = "Your OTP for {$type} is {$code}. It expires in 10 minutes.";
+        if (!empty($validated['amount'])) {
+            $message = "Your OTP for {$type} of ₦" . number_format($validated['amount'], 2) . " is {$code}. It expires in 10 minutes.";
+        }
+
+        // Determine channel: push is prioritized for transactions as per instructions
+        $channel = 'push';
+        if (empty($user->fcm_token) && empty($user->device_token)) {
+            $channel = 'all'; // fallback to all if no push token
+        }
+
+        try {
+            $user->notify(new OtpNotification(
+                title: $title,
+                message: $message,
+                channel: $channel,
+                context: [
+                    'transaction_type' => $type,
+                    'amount' => $validated['amount'] ?? null,
+                    'expires_in' => 600,
+                ]
+            ));
+        } catch (\Throwable $e) {
+            Log::error('OTP notification failed', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Failed to send OTP. Please try again.'], 500);
+        }
+
+        return response()->json([
+            'message' => 'Authorization code sent successfully.',
+            'channel' => $channel,
+            'expires_in' => 600,
+        ]);
     }
 
     protected static function maskPhone(string $phone): string

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\MemberApplication;
 use App\Models\User;
+use App\Notifications\OtpNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -38,6 +39,8 @@ class MemberRegistrationController extends Controller
             'branch_id' => ['required', 'exists:branches,id'],
             'password' => ['required', 'string', 'min:6'],
             'confirm_password' => ['required', 'same:password'],
+            'fcm_token' => ['nullable', 'string'],
+            'device_token' => ['nullable', 'string'],
 
             // Business & Professional Information
             'nature_of_business' => ['nullable', 'string', 'max:255'],
@@ -80,6 +83,8 @@ class MemberRegistrationController extends Controller
         if ($existing) {
             // Update details to latest submission
             $existing->fill(array_merge($data, [
+                'fcm_token' => $data['fcm_token'] ?? $existing->fcm_token,
+                'device_token' => $data['device_token'] ?? $existing->device_token,
                 'password_hash' => Crypt::encryptString($data['password']), // store encrypted; will hash once on User model
                 'submitted_at' => now(),
             ]));
@@ -96,6 +101,8 @@ class MemberRegistrationController extends Controller
 
         $app = MemberApplication::create(array_merge($data, [
             'token' => $token,
+            'fcm_token' => $data['fcm_token'] ?? null,
+            'device_token' => $data['device_token'] ?? null,
             'password_hash' => Crypt::encryptString($data['password']), // store encrypted; will hash once on User model
             'submitted_at' => now(),
         ]));
@@ -272,37 +279,23 @@ class MemberRegistrationController extends Controller
 
         $sentTo = [];
 
-        // Email
-        if ($app->email && $app->email_otp_hash) {
-            try {
-                Mail::raw('Your verification code is '.$code.'. It expires in 10 minutes. Use this code for both email and phone.', function ($m) use ($app) {
-                    $m->to($app->email)->subject('Cooperative Verification Code');
-                });
-                $sentTo['email'] = $this->maskEmail($app->email);
-            } catch (\Throwable $e) {
-                Log::warning('Registration email OTP send failed', ['error' => $e->getMessage()]);
-                if (app()->bound('sentry')) {
-                    app('sentry')->captureException($e);
-                }
-            }
-        }
+        // Determine if push is available
+        $hasPush = !empty($app->fcm_token) || !empty($app->device_token);
 
-        // SMS
-        if ($app->phone && $app->sms_otp_hash) {
-            try {
-                $sms = app(\App\Services\SmsService::class);
-                $sent = $sms->send($app->phone, 'Your verification code is '.$code.'. It expires in 10 minutes. Use this code for both email and phone.');
-                if ($sent) {
-                    $sentTo['phone'] = $this->maskPhone($app->phone);
-                } else {
-                    Log::warning('Registration SMS OTP send reported failure', ['token' => $app->token]);
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Registration SMS OTP send failed with exception', ['error' => $e->getMessage()]);
-                if (app()->bound('sentry')) {
-                    app('sentry')->captureException($e);
-                }
-            }
+        try {
+            $app->notify(new OtpNotification(
+                title: 'Registration Verification Code',
+                message: "Your verification code is {$code}. It expires in 10 minutes. Use this code for both email and phone.",
+                channel: 'all', // notification handles via()
+                context: ['type' => 'registration']
+            ));
+
+            if ($app->email) $sentTo['email'] = $this->maskEmail($app->email);
+            if ($app->phone) $sentTo['phone'] = $this->maskPhone($app->phone);
+            if ($hasPush) $sentTo['push'] = 'Device notification sent';
+
+        } catch (\Throwable $e) {
+            Log::warning('Registration OTP notifications partially failed', ['error' => $e->getMessage()]);
         }
 
         return response()->json([

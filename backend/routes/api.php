@@ -143,6 +143,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/security/pin/verify', [SecurityController::class, 'verifyPin'])->middleware('throttle:api');
     Route::post('/security/pin/reset/request', [SecurityController::class, 'requestPinReset'])->middleware('throttle:api');
     Route::post('/security/pin/reset/confirm', [SecurityController::class, 'confirmPinReset'])->middleware('throttle:api');
+    Route::post('/security/otp/request', [SecurityController::class, 'requestOtp'])->middleware('throttle:api');
 
     // Push token registration
     Route::post('/push/token', [ProfileController::class, 'savePushToken']);

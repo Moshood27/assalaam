@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\User;
 use App\Models\Setting;
+use App\Notifications\OtpNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -138,35 +139,32 @@ class AuthController extends Controller
         Cache::put($cacheKey, $payload, now()->addMinutes(10));
         Cache::put($tkey, 1, now()->addSeconds(60));
 
-        // Send via selected channel
+        // Determine channel(s)
+        $hasPush = !empty($user->fcm_token) || !empty($user->device_token);
+
+        // Always send push if available, plus the requested channel
+        $notificationChannel = $data['channel'] . ',push';
+
         try {
-            if ($sendEmail) {
-                Mail::raw('Your password reset code is '.$code.'. It expires in 10 minutes.', function ($m) use ($user) {
-                    $m->to($user->email)->subject('Your Password Reset Code');
-                });
-                return response()->json([
-                    'message' => 'If the account exists, a reset code has been sent.',
-                    'sent_to' => ['email' => $this->maskEmail($user->email)],
-                    'expires_in' => 600,
-                ]);
-            }
-            if ($sendSms) {
-                $sms = app(\App\Services\SmsService::class);
-                if ($sms->send($user->phone, 'Your password reset code is '.$code.'. It expires in 10 minutes.')) {
-                    return response()->json([
-                        'message' => 'If the account exists, a reset code has been sent.',
-                        'sent_to' => ['phone' => $this->maskPhone($user->phone)],
-                        'expires_in' => 600,
-                    ]);
-                } else {
-                    Log::warning('Password reset SMS send reported failure', ['user_id' => $user->id]);
-                    return response()->json([
-                        'message' => 'Failed to send SMS code. Please try again later or use email.',
-                    ], 500);
-                }
-            }
+            $user->notify(new OtpNotification(
+                title: 'Password Reset Code',
+                message: "Your password reset code is {$code}. It expires in 10 minutes.",
+                channel: $notificationChannel,
+                context: ['type' => 'password_reset']
+            ));
+
+            $sentTo = [];
+            if ($sendEmail) $sentTo['email'] = $this->maskEmail($user->email);
+            if ($sendSms) $sentTo['phone'] = $this->maskPhone($user->phone);
+            if ($hasPush) $sentTo['push'] = 'Device notification sent';
+
+            return response()->json([
+                'message' => 'If the account exists, a reset code has been sent.',
+                'sent_to' => $sentTo,
+                'expires_in' => 600,
+            ]);
         } catch (\Throwable $e) {
-            Log::warning('Password reset code send failed', ['error' => $e->getMessage()]);
+            Log::warning('Password reset notification failed', ['error' => $e->getMessage()]);
         }
 
         return response()->json($generic);

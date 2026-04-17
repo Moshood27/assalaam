@@ -10,6 +10,7 @@ use App\Models\WalletTransaction;
 use App\Models\WithdrawalRequest;
 use App\Models\User;
 use App\Models\Branch;
+use App\Traits\VerifiesOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -18,6 +19,8 @@ use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
+    use VerifiesOtp;
+
     public function resolveRecipient(Request $request)
     {
         $validated = $request->validate([
@@ -607,6 +610,7 @@ class WalletController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'pin' => ['required','regex:/^\\d{4}$/'],
+            'otp' => ['nullable', 'string', 'max:10'], // optional if transition, but as per task, should use Push OTP
             'note' => 'nullable|string|max:200',
         ]);
 
@@ -617,6 +621,14 @@ class WalletController extends Controller
         }
         if (!$user->verifyTransactionPin($validated['pin'])) {
             return response()->json(['message' => 'Invalid PIN'], 403);
+        }
+
+        // Verify OTP if provided OR if we want to enforce it for withdrawals
+        // Given the task, we should enforce or at least support it.
+        // Let's enforce it for Push-enabled users or just generally for high-value?
+        // Task says: "Use Push OTP for: Transaction authorizations"
+        if (!$this->verifyOtp($user, 'withdrawal', $request->input('otp'))) {
+            return response()->json(['message' => 'Invalid or expired authorization code (OTP).'], 403);
         }
 
         // Ensure verified bank details exist

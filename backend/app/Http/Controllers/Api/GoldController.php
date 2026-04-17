@@ -8,12 +8,15 @@ use App\Models\WalletTransaction;
 use App\Models\Contribution;
 use App\Services\GoldSilverPriceService;
 use App\Services\ZakatService;
+use App\Traits\VerifiesOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class GoldController extends Controller
 {
+    use VerifiesOtp;
+
     protected $goldService;
     protected $zakatService;
 
@@ -131,13 +134,18 @@ class GoldController extends Controller
 
         $request->validate([
             'amount_naira' => "required|numeric|min:$minAmount",
-            'pin' => 'required|string'
+            'pin' => 'required|string',
+            'otp' => 'nullable|string'
         ]);
 
         $user = auth()->user();
 
         if (!$user->verifyTransactionPin($request->pin)) {
             return response()->json(['message' => 'Invalid transaction PIN.'], 403);
+        }
+
+        if (!$this->verifyOtp($user, 'gold_buy', $request->input('otp'))) {
+            return response()->json(['message' => 'Invalid or expired authorization code (OTP).'], 403);
         }
 
         if ($user->balance < $request->amount_naira) {
@@ -205,13 +213,18 @@ class GoldController extends Controller
     {
         $request->validate([
             'grams' => 'required|numeric|min:0.000001',
-            'pin' => 'required|string'
+            'pin' => 'required|string',
+            'otp' => 'nullable|string'
         ]);
 
         $user = auth()->user();
 
         if (!$user->verifyTransactionPin($request->pin)) {
             return response()->json(['message' => 'Invalid transaction PIN.'], 403);
+        }
+
+        if (!$this->verifyOtp($user, 'gold_sell', $request->input('otp'))) {
+            return response()->json(['message' => 'Invalid or expired authorization code (OTP).'], 403);
         }
 
         if ($user->gold_balance < $request->grams) {
