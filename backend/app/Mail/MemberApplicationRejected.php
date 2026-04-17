@@ -12,7 +12,7 @@ class MemberApplicationRejected extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public MemberApplication $application,
+        public $application,
         public string $reason
     ) {}
 

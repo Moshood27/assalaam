@@ -11,6 +11,8 @@ use App\Models\Branch;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
 use App\Models\MemberApplication;
+use App\Mail\NewMemberWelcome;
+use App\Mail\MemberApplicationRejected;
 use App\Services\PushService;
 use App\Services\SmsService;
 use App\Services\TakafulService;
@@ -30,6 +32,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -386,6 +389,16 @@ class UserResource extends Resource
                             ->orderBy("other_names", $direction);
                     }),
                 TextColumn::make('email')->searchable(),
+                Tables\Columns\TextColumn::make('approval_status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'recommended' => 'info',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable(),
                 TextColumn::make('phone')->label('Phone')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('address')->label('Address')->limit(30)->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('branch.name')->label('Branch')->sortable()->searchable(),
@@ -468,6 +481,14 @@ class UserResource extends Resource
                     ->searchable()
                     ->preload()
                     ->label('Branch'),
+                Tables\Filters\SelectFilter::make('approval_status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'recommended' => 'Recommended',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ])
+                    ->label('Approval Status'),
                 Tables\Filters\TernaryFilter::make('deceased')
                     ->label('Deceased Status')
                     ->placeholder('All Users')
@@ -769,6 +790,96 @@ class UserResource extends Resource
                             ->title('Member marked major loss; settlement attempted')
                             ->body('Total settled: ₦'.number_format((float) ($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float) ($summary['pool_after'] ?? 0), 2))
                             ->success()
+                            ->send();
+                    }),
+                Action::make('approveMember')
+                    ->label('Approve Member')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (User $record) => $record->approval_status !== 'approved' && !$record->is_admin)
+                    ->requiresConfirmation()
+                    ->action(function (User $record) {
+                        $record->approval_status = 'approved';
+                        if (empty($record->admission_date)) $record->admission_date = now();
+                        if (empty($record->admission_officer_name)) $record->admission_officer_name = auth()->user()->name;
+                        $record->save();
+
+                        // Sync with application if exists
+                        MemberApplication::where('email', $record->email)->update([
+                            'approval_status' => 'approved',
+                            'user_id' => $record->id,
+                            'finalized_at' => now(),
+                        ]);
+
+                        ShariahAudit::log(auth()->user(), 'approve_member_manually', [
+                            'user_id' => $record->id,
+                            'email' => $record->email,
+                        ]);
+
+                        // Send welcome email
+                        try {
+                            Mail::to($record->email)->send(new NewMemberWelcome($record));
+                            $record->notifyMember(
+                                "Membership Approved",
+                                "Assalāmu ‘alaykum {$record->name}, your membership has been approved. You can now log in to the app.",
+                                ['type' => 'membership_approved']
+                            );
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error('Failed to send welcome notification', ['error' => $e->getMessage()]);
+                        }
+
+                        Notification::make()
+                            ->title('Member Approved Successfully')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('rejectMember')
+                    ->label('Reject Member')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (User $record) => $record->approval_status !== 'approved' && !$record->is_admin)
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Reason for rejection')
+                            ->required()
+                            ->maxLength(1000),
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function (User $record, array $data) {
+                        $record->approval_status = 'rejected';
+                        $record->officer_recommendation = $data['reason'];
+                        $record->save();
+
+                        // Sync with application if exists
+                        $application = MemberApplication::where('email', $record->email)->first();
+                        if ($application) {
+                            $application->update([
+                                'approval_status' => 'rejected',
+                                'officer_recommendation' => $data['reason'],
+                                'finalized_at' => now(),
+                            ]);
+                        }
+
+                        ShariahAudit::log(auth()->user(), 'reject_member_manually', [
+                            'user_id' => $record->id,
+                            'reason' => $data['reason'],
+                        ]);
+
+                        // Send rejection email
+                        try {
+                            Mail::to($record->email)->send(new MemberApplicationRejected($application ?? $record, $data['reason']));
+                            $record->notifyMember(
+                                "Membership Application Rejected",
+                                "Regrettably, your membership application has been rejected. Reason: " . $data['reason'],
+                                ['type' => 'membership_rejected']
+                            );
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error('Failed to send rejection notification', ['error' => $e->getMessage()]);
+                        }
+
+                        Notification::make()
+                            ->title('Member Rejected')
+                            ->danger()
                             ->send();
                     }),
                 Action::make('printPassbook')

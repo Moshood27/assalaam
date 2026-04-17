@@ -60,6 +60,13 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->approval_status !== 'approved') {
+            $status = ucfirst($user->approval_status ?: 'pending');
+            throw ValidationException::withMessages([
+                'membership_number' => ["Your account is {$status}. Please contact the administrator for approval."],
+            ]);
+        }
+
         $tokenName = $request->boolean('remember') ? 'remember_token' : 'mobile_token';
         $token = $user->createToken($tokenName)->plainTextToken;
 

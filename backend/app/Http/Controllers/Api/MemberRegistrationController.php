@@ -546,7 +546,7 @@ class MemberRegistrationController extends Controller
         $user->spouse_father_consent_signature_path = $app->spouse_father_consent_signature_path;
 
         // Official Use
-        $user->approval_status = 'approved'; // Successfully finalized via KYC means approved
+        $user->approval_status = 'pending'; // Changed from 'approved' to 'pending' to require admin approval
         $user->admission_date = now();
         $user->admission_officer_name = 'System/KYC';
 
@@ -571,19 +571,21 @@ class MemberRegistrationController extends Controller
         ];
         $user->save();
         $app->finalized_at = now();
+        $app->user_id = $user->id; // Link to the newly created user
+        $app->approval_status = 'pending'; // Ensure application is also marked as pending
         $app->save();
 
         // Notify admins about new member registration
         User::where('is_admin', true)->each(function ($admin) use ($user) {
             $admin->notifyMember(
-                "New Member Joined",
-                "{$user->full_name} has completed registration and is now a member (Membership: {$user->membership_number}).",
+                "New Member Registration",
+                "{$user->full_name} has completed KYC registration and is pending approval (Membership: {$user->membership_number}).",
                 ['type' => 'new_member', 'user_id' => $user->id]
             );
         });
 
         return response()->json([
-            'message' => 'Registration complete. Welcome to the Cooperative!',
+            'message' => 'Registration submitted successfully. Your account is pending admin approval.',
             'membership_number' => $user->membership_number,
             'branch_id' => $user->branch_id,
         ]);

@@ -12,6 +12,7 @@ class MemberApplication extends Model
     use HasFactory, Notifiable;
 
     protected $fillable = [
+        'user_id',
         'token',
         'fcm_token',
         'device_token',
