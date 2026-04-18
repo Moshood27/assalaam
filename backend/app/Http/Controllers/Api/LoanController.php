@@ -97,15 +97,15 @@ class LoanController extends Controller
             'guarantor_ids.*' => ['integer', 'distinct', 'exists:users,id'],
             'guarantor_memberships' => ['nullable', 'array', 'max:3'],
             'guarantor_memberships.*' => ['string', 'distinct'],
-            'pin' => ['required', 'string'],
+            'pin' => ['nullable', 'string'],
             'otp' => ['nullable', 'string'],
         ]);
 
-        if (!$user->verifyTransactionPin($data['pin'])) {
+        if ($request->filled('pin') && !$user->verifyTransactionPin($data['pin'])) {
             return response()->json(['message' => 'Invalid transaction PIN.'], 403);
         }
 
-        if (!$this->verifyOtp($user, 'loan_request', $request->input('otp'))) {
+        if ($request->filled('otp') && !$this->verifyOtp($user, 'loan_request', $request->input('otp'))) {
             return response()->json(['message' => 'Invalid or expired authorization code (OTP).'], 403);
         }
 
