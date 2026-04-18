@@ -351,7 +351,9 @@ class WebhookController extends Controller
                     if ($dirty) { $topupUser->save(); }
 
                     // Credit wallet
-                    $topupUser->increment('balance', $netAmount);
+                    $lockedUser = User::where('id', $topupUser->id)->lockForUpdate()->first();
+                    $lockedUser->balance += $netAmount;
+                    $lockedUser->save();
 
                     // Detect autosave via metadata
                     $isAutosave = is_array($metadata) && (($metadata['type'] ?? null) === 'autosave');
@@ -959,7 +961,9 @@ class WebhookController extends Controller
         }
 
         DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vd) {
-            $topupUser->increment('balance', $netAmount);
+            $lockedUser = User::where('id', $topupUser->id)->lockForUpdate()->first();
+            $lockedUser->balance += $netAmount;
+            $lockedUser->save();
 
             WalletTransaction::create([
                 'user_id' => $topupUser->id,

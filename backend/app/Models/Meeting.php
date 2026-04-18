@@ -71,7 +71,8 @@ class Meeting extends Model
     public function notifyMembers(string $title, string $body, array $data = []): void
     {
         $query = User::where('is_admin', false)
-            ->where('is_defaulter', false);
+            ->where('approval_status', 'approved')
+            ->whereNull('deceased_at');
 
         // Filter by branches if specified
         if ($this->branches()->exists()) {

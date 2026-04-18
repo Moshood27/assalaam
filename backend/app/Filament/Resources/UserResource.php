@@ -624,8 +624,10 @@ class UserResource extends Resource
                                 return;
                             }
 
-                            $record->increment('balance', $amount);
-                            $newBalance = (float) $record->fresh()->balance;
+                            $locked = User::where('id', $record->id)->lockForUpdate()->first();
+                            $locked->balance += $amount;
+                            $locked->save();
+                            $newBalance = (float) $locked->balance;
 
                             DB::afterCommit(function () use ($record, $amount, $data, $newBalance) {
                                 ShariahAudit::log(auth()->user(), 'credit_wallet_manual', [

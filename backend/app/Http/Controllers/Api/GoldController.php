@@ -252,15 +252,18 @@ class GoldController extends Controller
         $netAmount = round($grossAmount - $fee, 2);
 
         DB::transaction(function () use ($user, $request, $netAmount, $sellPrice, $fee, $priceData) {
+            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
+
             // Deduct from gold balance
-            $user->decrement('gold_balance', $request->grams);
+            $lockedUser->decrement('gold_balance', $request->grams);
 
             // Add net amount to wallet balance
-            $user->increment('balance', $netAmount);
+            $lockedUser->balance += $netAmount;
+            $lockedUser->save();
 
             // Record wallet transaction
             WalletTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $lockedUser->id,
                 'type' => 'credit',
                 'amount' => $netAmount,
                 'reference' => 'GOLD-SELL-' . time() . '-' . uniqid(),

@@ -188,7 +188,8 @@ class TakafulService
 
             // Proceed to debit wallet and credit pool
             $reference = 'TAKAFUL_CONTR_'.now()->format('YmdHis').'_'.$locked->id.'_'.bin2hex(random_bytes(3));
-            $locked->decrement('balance', $amount);
+            $locked->balance -= $amount;
+            $locked->save();
 
             WalletTransaction::create([
                 'user_id' => $locked->id,

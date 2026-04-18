@@ -643,7 +643,9 @@ class QardHasanResource extends Resource
                         // Disburse within transaction
                         DB::transaction(function () use ($record, $credit, $withdrawable, $reference, $mode, $data) {
                             // Credit member wallet
-                            $record->user->increment('balance', $credit);
+                            $user = User::where('id', $record->user_id)->lockForUpdate()->first();
+                            $user->balance += $credit;
+                            $user->save();
 
                             // Record wallet transaction with loan_disbursement source and withdrawable flag
                             WalletTransaction::create([
