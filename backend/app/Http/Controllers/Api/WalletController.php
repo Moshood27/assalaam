@@ -501,10 +501,8 @@ class WalletController extends Controller
             }
 
             // Perform transfer
-            $lockedSender->balance -= $amount;
-            $lockedSender->save();
-            $lockedRecipient->balance += $amount;
-            $lockedRecipient->save();
+            $lockedSender->decrement('balance', $amount);
+            $lockedRecipient->increment('balance', $amount);
 
             $metaDebit = [
                 'to_user_id' => $lockedRecipient->id,

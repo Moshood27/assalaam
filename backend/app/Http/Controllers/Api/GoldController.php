@@ -160,12 +160,8 @@ class GoldController extends Controller
         }
 
         // Apply buy fee
-        $fee = app(\App\Services\AdministrativeChargeService::class)->calculateCharge(
-            'gold_buy_fee',
-            (float) $request->amount_naira,
-            0,
-            (float) config('zakat.gold_buy_fee', 0.005) * 100
-        );
+        $feeRate = config('zakat.gold_buy_fee', 0.005);
+        $fee = $request->amount_naira * $feeRate;
         $netAmount = $request->amount_naira - $fee;
         $grams = round($netAmount / $buyPrice, 6);
 
@@ -243,27 +239,20 @@ class GoldController extends Controller
         }
 
         $grossAmount = $request->grams * $sellPrice;
-        $fee = app(\App\Services\AdministrativeChargeService::class)->calculateCharge(
-            'gold_sell_fee',
-            (float) $grossAmount,
-            0,
-            (float) config('zakat.gold_sell_fee', 0.005) * 100
-        );
+        $feeRate = config('zakat.gold_sell_fee', 0.005);
+        $fee = $grossAmount * $feeRate;
         $netAmount = round($grossAmount - $fee, 2);
 
         DB::transaction(function () use ($user, $request, $netAmount, $sellPrice, $fee, $priceData) {
-            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
-
             // Deduct from gold balance
-            $lockedUser->decrement('gold_balance', $request->grams);
+            $user->decrement('gold_balance', $request->grams);
 
             // Add net amount to wallet balance
-            $lockedUser->balance += $netAmount;
-            $lockedUser->save();
+            $user->increment('balance', $netAmount);
 
             // Record wallet transaction
             WalletTransaction::create([
-                'user_id' => $lockedUser->id,
+                'user_id' => $user->id,
                 'type' => 'credit',
                 'amount' => $netAmount,
                 'reference' => 'GOLD-SELL-' . time() . '-' . uniqid(),

@@ -131,12 +131,12 @@ class QardHasanResource extends Resource
                     ->label('Admin Fee (Flat)')
                     ->numeric()
                     ->prefix('₦')
-                    ->default(fn() => app(\App\Services\AdministrativeChargeService::class)->getCharge('loan_admin_fee_flat', 0)),
+                    ->default(0),
                 Forms\Components\TextInput::make('admin_fee_pct')
                     ->label('Admin Fee (%)')
                     ->numeric()
                     ->suffix('%')
-                    ->default(fn() => app(\App\Services\AdministrativeChargeService::class)->getCharge('loan_admin_fee_pct', 0, 'percentage')),
+                    ->default(0),
                 Forms\Components\TextInput::make('paid_amount')
                     ->numeric()
                     ->prefix('₦')
@@ -643,9 +643,7 @@ class QardHasanResource extends Resource
                         // Disburse within transaction
                         DB::transaction(function () use ($record, $credit, $withdrawable, $reference, $mode, $data) {
                             // Credit member wallet
-                            $user = User::where('id', $record->user_id)->lockForUpdate()->first();
-                            $user->balance += $credit;
-                            $user->save();
+                            $record->user->increment('balance', $credit);
 
                             // Record wallet transaction with loan_disbursement source and withdrawable flag
                             WalletTransaction::create([

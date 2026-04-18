@@ -231,9 +231,7 @@ class LoanController extends Controller
             DB::transaction(function () use ($q, $user, $credit, $reference) {
                 // Ensure status is active and credit wallet
                 $q->update(['status' => 'active']);
-                $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
-                $lockedUser->balance += $credit;
-                $lockedUser->save();
+                $user->increment('balance', $credit);
 
                 // Record wallet transaction for loan disbursement (default: internal credit, non-withdrawable)
                 WalletTransaction::create([

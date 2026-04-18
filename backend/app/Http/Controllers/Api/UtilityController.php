@@ -817,7 +817,7 @@ class UtilityController extends Controller
             return response()->json(['message' => 'Invalid PIN'], 403);
         }
         $amount = (float)$validated['amount'];
-        $convenience = app(\App\Services\AdministrativeChargeService::class)->getCharge('vtu_convenience_fee', (float) config('services.vtu.convenience_fee', 0));
+        $convenience = (float) (config('services.vtu.convenience_fee', 0));
         if ((float)$user->balance < ($amount + $convenience)) {
             return response()->json(['message' => 'Insufficient Coop Balance'], 422);
         }
@@ -1180,7 +1180,7 @@ class UtilityController extends Controller
         $network = $this->normalizeNetwork($validated['network']);
         $serviceId = $this->dataServiceId($network);
         $cacheKey = 'vtu:data:plans:' . $network;
-        $convenience = app(\App\Services\AdministrativeChargeService::class)->getCharge('vtu_convenience_fee', (float) config('services.vtu.convenience_fee', 0));
+        $convenience = (float) config('services.vtu.convenience_fee', 0);
 
         // 1. Determine Primary Provider
         $order = explode(',', config('services.vtu.routing_order', 'clubkonnect,vtpass'));
@@ -1289,7 +1289,7 @@ class UtilityController extends Controller
         $apiKey = config('services.vtu.api_key');
         $publicKey = config('services.vtu.public_key');
         $secretKey = config('services.vtu.secret_key');
-        $convenience = app(\App\Services\AdministrativeChargeService::class)->getCharge('vtu_convenience_fee', (float) config('services.vtu.convenience_fee', 0));
+        $convenience = (float) (config('services.vtu.convenience_fee', 0));
 
         // Use routing order to decide which provider to fetch packages from first.
         $order = array_filter(array_map('trim', explode(',', (string) config('services.vtu.routing_order', 'clubkonnect,shago,vtpass'))));
@@ -1429,7 +1429,7 @@ class UtilityController extends Controller
             return response()->json(['message' => 'Invalid PIN'], 403);
         }
         $amount = (float)$validated['amount'];
-        $convenience = app(\App\Services\AdministrativeChargeService::class)->getCharge('vtu_convenience_fee', (float) config('services.vtu.convenience_fee', 0));
+        $convenience = (float) (config('services.vtu.convenience_fee', 0));
         $totalDebit = round($amount + $convenience, 2);
         if ((float)$user->balance < $totalDebit) {
             return response()->json(['message' => 'Insufficient Coop Balance'], 422);
@@ -1762,7 +1762,7 @@ class UtilityController extends Controller
             return response()->json(['message' => 'Invalid PIN'], 403);
         }
         $amount = (float)$validated['amount'];
-        $convenience = app(\App\Services\AdministrativeChargeService::class)->getCharge('vtu_convenience_fee', (float) config('services.vtu.convenience_fee', 0));
+        $convenience = (float) (config('services.vtu.convenience_fee', 0));
         $totalDebit = round($amount + $convenience, 2);
         if ((float)$user->balance < $totalDebit) {
             return response()->json(['message' => 'Insufficient Coop Balance'], 422);

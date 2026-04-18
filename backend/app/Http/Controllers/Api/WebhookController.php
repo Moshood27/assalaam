@@ -351,9 +351,7 @@ class WebhookController extends Controller
                     if ($dirty) { $topupUser->save(); }
 
                     // Credit wallet
-                    $lockedUser = User::where('id', $topupUser->id)->lockForUpdate()->first();
-                    $lockedUser->balance += $netAmount;
-                    $lockedUser->save();
+                    $topupUser->increment('balance', $netAmount);
 
                     // Detect autosave via metadata
                     $isAutosave = is_array($metadata) && (($metadata['type'] ?? null) === 'autosave');
@@ -961,9 +959,7 @@ class WebhookController extends Controller
         }
 
         DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vd) {
-            $lockedUser = User::where('id', $topupUser->id)->lockForUpdate()->first();
-            $lockedUser->balance += $netAmount;
-            $lockedUser->save();
+            $topupUser->increment('balance', $netAmount);
 
             WalletTransaction::create([
                 'user_id' => $topupUser->id,
@@ -1019,19 +1015,16 @@ class WebhookController extends Controller
 
     /**
      * Calculate system maintenance charge for wallet top-ups.
-     * Uses AdministrativeChargeService if available.
+     * 0.1% of the amount, capped at 500.
      *
      * @param float $amount
      * @return float
      */
     private function calculateMaintenanceCharge(float $amount): float
     {
-        return app(\App\Services\AdministrativeChargeService::class)->calculateCharge(
-            'wallet_topup_charge',
-            $amount,
-            0,
-            (float) config('cooperative.wallet.maintenance_charge.percentage', 0.1),
-            (float) config('cooperative.wallet.maintenance_charge.max_amount', 500)
-        );
+        $percentage = config('cooperative.wallet.maintenance_charge.percentage', 0.1) / 100;
+        $maxCharge = config('cooperative.wallet.maintenance_charge.max_amount', 500);
+
+        return round(min($amount * $percentage, (float) $maxCharge), 2);
     }
 }

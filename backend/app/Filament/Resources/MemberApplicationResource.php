@@ -222,7 +222,7 @@ class MemberApplicationResource extends Resource
                     ->label('Approve')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
-                    ->visible(fn (MemberApplication $record) => $record->approval_status !== 'approved' && $record->submitted_at !== null)
+                    ->visible(fn (MemberApplication $record) => $record->finalized_at === null && $record->submitted_at !== null)
                     ->requiresConfirmation()
                     ->action(function (MemberApplication $record) {
                         $user = DB::transaction(function () use ($record) {
@@ -230,104 +230,86 @@ class MemberApplicationResource extends Resource
                             $admissionDate = $record->admission_date ?? $now;
                             $admissionOfficer = $record->admission_officer_name ?? auth()->user()->name;
 
-                            // Check if a user already exists for this application (e.g. via KYC finalize)
-                            $user = $record->user_id ? User::find($record->user_id) : User::where('email', $record->email)->first();
-
-                            if ($user) {
-                                // Update existing user to approved
-                                $user->approval_status = 'approved';
-                                if (empty($user->admission_date)) $user->admission_date = $admissionDate;
-                                if (empty($user->admission_officer_name)) $user->admission_officer_name = $admissionOfficer;
-                                $user->save();
-                            } else {
-                                // Decrypt the stored password
-                                $password = null;
-                                if ($record->password_hash) {
-                                    try {
-                                        $password = \Illuminate\Support\Facades\Crypt::decryptString($record->password_hash);
-                                    } catch (\Throwable $e) {
-                                        $password = \Illuminate\Support\Str::random(12);
-                                    }
+                            // Decrypt the stored password
+                            $password = null;
+                            if ($record->password_hash) {
+                                try {
+                                    $password = \Illuminate\Support\Facades\Crypt::decryptString($record->password_hash);
+                                } catch (\Throwable $e) {
+                                    // Fallback if decryption fails (though it shouldn't)
+                                    $password = \Illuminate\Support\Str::random(12);
                                 }
-
-                                // Generate a unique membership number within the branch (6 digits)
-                                $membership = User::generateMembershipNumber((int) $record->branch_id);
-
-                                // Create the user
-                                $user = User::create([
-                                    'name' => $record->name,
-                                    'surname' => $record->surname,
-                                    'other_names' => $record->other_names,
-                                    'gender' => $record->gender,
-                                    'native_place' => $record->native_place,
-                                    'dob' => $record->dob,
-                                    'marital_status' => $record->marital_status,
-                                    'occupation' => $record->occupation,
-                                    'email' => $record->email,
-                                    'phone' => $record->phone,
-                                    'secondary_phone' => $record->secondary_phone,
-                                    'address' => $record->address,
-                                    'residential_address' => $record->residential_address,
-                                    'permanent_address' => $record->permanent_address,
-                                    'branch_id' => $record->branch_id,
-                                    'nature_of_business' => $record->nature_of_business,
-                                    'business_address' => $record->business_address,
-                                    'has_other_cooperatives' => $record->has_other_cooperatives,
-                                    'other_cooperative_details' => $record->other_cooperative_details,
-                                    'nok_name' => $record->nok_name,
-                                    'nok_address' => $record->nok_address,
-                                    'nok_phone' => $record->nok_phone,
-                                    'nok_relationship' => $record->nok_relationship,
-                                    'guarantor_name' => $record->guarantor_name,
-                                    'guarantor_address' => $record->guarantor_address,
-                                    'guarantor_phone' => $record->guarantor_phone,
-                                    'guarantor_occupation' => $record->guarantor_occupation,
-                                    'guarantor_signature_path' => $record->guarantor_signature_path,
-                                    'religious_society_name' => $record->religious_society_name,
-                                    'imam_name' => $record->imam_name,
-                                    'mosque_address' => $record->mosque_address,
-                                    'imam_phone' => $record->imam_phone,
-                                    'duration_of_jamma_membership' => $record->duration_of_jamma_membership,
-                                    'imam_approval_status' => $record->imam_approval_status,
-                                    'imam_approved_at' => $record->imam_approved_at,
-                                    'imam_signature_path' => $record->imam_signature_path,
-                                    'spouse_father_name' => $record->spouse_father_name,
-                                    'spouse_father_address' => $record->spouse_father_address,
-                                    'spouse_father_business_address' => $record->spouse_father_business_address,
-                                    'spouse_father_phone' => $record->spouse_father_phone,
-                                    'spouse_father_consent_signature_path' => $record->spouse_father_consent_signature_path,
-                                    'admission_form_number' => $record->admission_form_number,
-                                    'admission_date' => $admissionDate,
-                                    'admission_officer_name' => $admissionOfficer,
-                                    'officer_recommendation' => $record->officer_recommendation,
-                                    'approval_status' => 'approved',
-                                    'president_signature_path' => $record->president_signature_path,
-                                    'president_signed_at' => $record->president_signed_at,
-                                    'secretary_general_signature_path' => $record->secretary_general_signature_path,
-                                    'secretary_general_signed_at' => $record->secretary_general_signed_at,
-                                    'membership_number' => $membership,
-                                    'password' => $password,
-                                    'email_verified_at' => $record->email_verified_at,
-                                    'passport_path' => $record->passport_path,
-                                    'id_card_path' => $record->id_card_path,
-                                    'proof_of_address_path' => $record->proof_of_address_path,
-                                    'balance' => 0,
-                                ]);
                             }
+
+                            // Generate a unique membership number within the branch (6 digits)
+                            $membership = User::generateMembershipNumber((int) $record->branch_id);
+
+                            // Create the user
+                            $user = User::create([
+                                'name' => $record->name,
+                                'surname' => $record->surname,
+                                'other_names' => $record->other_names,
+                                'gender' => $record->gender,
+                                'native_place' => $record->native_place,
+                                'dob' => $record->dob,
+                                'marital_status' => $record->marital_status,
+                                'occupation' => $record->occupation,
+                                'email' => $record->email,
+                                'phone' => $record->phone,
+                                'secondary_phone' => $record->secondary_phone,
+                                'address' => $record->address,
+                                'residential_address' => $record->residential_address,
+                                'permanent_address' => $record->permanent_address,
+                                'branch_id' => $record->branch_id,
+                                'nature_of_business' => $record->nature_of_business,
+                                'business_address' => $record->business_address,
+                                'has_other_cooperatives' => $record->has_other_cooperatives,
+                                'other_cooperative_details' => $record->other_cooperative_details,
+                                'nok_name' => $record->nok_name,
+                                'nok_address' => $record->nok_address,
+                                'nok_phone' => $record->nok_phone,
+                                'nok_relationship' => $record->nok_relationship,
+                                'guarantor_name' => $record->guarantor_name,
+                                'guarantor_address' => $record->guarantor_address,
+                                'guarantor_phone' => $record->guarantor_phone,
+                                'guarantor_occupation' => $record->guarantor_occupation,
+                                'guarantor_signature_path' => $record->guarantor_signature_path,
+                                'religious_society_name' => $record->religious_society_name,
+                                'imam_name' => $record->imam_name,
+                                'mosque_address' => $record->mosque_address,
+                                'imam_phone' => $record->imam_phone,
+                                'duration_of_jamma_membership' => $record->duration_of_jamma_membership,
+                                'imam_approval_status' => $record->imam_approval_status,
+                                'imam_approved_at' => $record->imam_approved_at,
+                                'imam_signature_path' => $record->imam_signature_path,
+                                'spouse_father_name' => $record->spouse_father_name,
+                                'spouse_father_address' => $record->spouse_father_address,
+                                'spouse_father_business_address' => $record->spouse_father_business_address,
+                                'spouse_father_phone' => $record->spouse_father_phone,
+                                'spouse_father_consent_signature_path' => $record->spouse_father_consent_signature_path,
+                                'admission_form_number' => $record->admission_form_number,
+                                'admission_date' => $admissionDate,
+                                'admission_officer_name' => $admissionOfficer,
+                                'officer_recommendation' => $record->officer_recommendation,
+                                'approval_status' => 'approved',
+                                'president_signature_path' => $record->president_signature_path,
+                                'president_signed_at' => $record->president_signed_at,
+                                'secretary_general_signature_path' => $record->secretary_general_signature_path,
+                                'secretary_general_signed_at' => $record->secretary_general_signed_at,
+                                'membership_number' => $membership,
+                                'password' => $password,
+                                'email_verified_at' => $record->email_verified_at,
+                                'passport_path' => $record->passport_path,
+                                'id_card_path' => $record->id_card_path,
+                                'proof_of_address_path' => $record->proof_of_address_path,
+                                'balance' => 0,
+                            ]);
 
                             $record->approval_status = 'approved';
                             $record->admission_date = $admissionDate;
                             $record->admission_officer_name = $admissionOfficer;
-                            $record->finalized_at = $record->finalized_at ?? $now;
-                            $record->user_id = $user->id;
+                            $record->finalized_at = $now;
                             $record->save();
-
-                            // Charge registration fee
-                            $regFee = app(\App\Services\AdministrativeChargeService::class)->getCharge('member_registration_fee', 0);
-                            if ($regFee > 0) {
-                                $user->admin_charge_balance += $regFee;
-                                $user->save();
-                            }
 
                             ShariahAudit::log(auth()->user(), 'approve_member_application', [
                                 'application_id' => $record->id,
@@ -341,18 +323,13 @@ class MemberApplicationResource extends Resource
                         // Send welcome email
                         try {
                             Mail::to($user->email)->send(new NewMemberWelcome($user));
-                            $user->notifyMember(
-                                "Membership Approved",
-                                "Assalāmu ‘alaykum {$user->name}, your membership has been approved. You can now log in to the app.",
-                                ['type' => 'membership_approved']
-                            );
                         } catch (\Exception $e) {
-                            Log::error('Failed to send welcome notification', ['error' => $e->getMessage()]);
+                            Log::error('Failed to send welcome email', ['error' => $e->getMessage()]);
                         }
 
                         Notification::make()
                             ->title('Application Approved')
-                            ->body('A new member account has been enabled and a welcome notification has been sent.')
+                            ->body('A new member account has been created and a welcome email has been sent.')
                             ->success()
                             ->send();
                     }),
@@ -375,20 +352,6 @@ class MemberApplicationResource extends Resource
                         $record->finalized_at = now();
                         $record->save();
 
-                        // Update linked user if exists
-                        if ($record->user_id) {
-                            User::where('id', $record->user_id)->update([
-                                'approval_status' => 'rejected',
-                                'officer_recommendation' => $data['reason'],
-                            ]);
-                        } else {
-                            // Try finding by email just in case user_id wasn't set but user exists
-                            User::where('email', $record->email)->update([
-                                'approval_status' => 'rejected',
-                                'officer_recommendation' => $data['reason'],
-                            ]);
-                        }
-
                         ShariahAudit::log(auth()->user(), 'reject_member_application', [
                             'application_id' => $record->id,
                             'reason' => $data['reason'],
@@ -397,17 +360,8 @@ class MemberApplicationResource extends Resource
                         // Send rejection email
                         try {
                             Mail::to($record->email)->send(new MemberApplicationRejected($record, $data['reason']));
-                            // Also notify user if exists
-                            $user = $record->user_id ? User::find($record->user_id) : User::where('email', $record->email)->first();
-                            if ($user) {
-                                $user->notifyMember(
-                                    "Membership Application Rejected",
-                                    "Regrettably, your membership application has been rejected. Reason: " . $data['reason'],
-                                    ['type' => 'membership_rejected']
-                                );
-                            }
                         } catch (\Exception $e) {
-                            Log::error('Failed to send rejection notification', ['error' => $e->getMessage()]);
+                            Log::error('Failed to send rejection email', ['error' => $e->getMessage()]);
                         }
 
                         Notification::make()

@@ -37,21 +37,8 @@ class AuditAttendanceCommand extends Command
 
             $this->info("Auditing meeting: {$meeting->name} (ID: {$meeting->id})");
 
-            // Define who should have attended (approved non-admins)
-            $query = User::where('is_admin', false)
-                ->where('approval_status', 'approved')
-                ->whereNull('deceased_at');
-
-            // Ensure users were members at the time of the meeting
-            $meetingDate = $meeting->date->format('Y-m-d');
-            $query->where(function($q) use ($meetingDate) {
-                $q->where('admission_date', '<=', $meetingDate)
-                  ->orWhere(function($sq) use ($meetingDate) {
-                      $sq->whereNull('admission_date')
-                         ->whereDate('created_at', '<=', $meetingDate);
-                  });
-            });
-
+            // Define who should have attended (non-admins)
+            $query = User::where('is_admin', false);
             if ($meeting->branches()->exists()) {
                 $query->whereIn('branch_id', $meeting->branches()->pluck('branches.id'));
             }

@@ -149,9 +149,6 @@ class User extends Authenticatable implements FilamentUser
         'president_signed_at',
         'secretary_general_signature_path',
         'secretary_general_signed_at',
-        'admin_charge_balance',
-        'admin_charge_auto_deduct',
-        'last_admin_charge_at',
     ];
 
     /**
@@ -558,10 +555,6 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        if ($this->approval_status !== 'approved') {
-            return false;
-        }
-
         return $this->is_admin === true || $this->hasAnyRole(['super_admin', 'Branch Manager', 'Clerk']);
     }
 

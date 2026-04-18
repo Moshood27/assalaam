@@ -45,10 +45,7 @@ class ApplyMonthlyFines extends Command
             return self::FAILURE;
         }
 
-        $fineAmount = app(\App\Services\AdministrativeChargeService::class)->getCharge(
-            'contribution_lateness_fine',
-            (float) ($latenessScheme->min_amount > 0 ? $latenessScheme->min_amount : 200.00)
-        );
+        $fineAmount = (float) $latenessScheme->min_amount > 0 ? (float) $latenessScheme->min_amount : 200.00;
 
         $this->info("Checking for members who didn't contribute between {$startOfLastMonth->toDateString()} and {$endOfLastMonth->toDateString()}.");
 

@@ -16,10 +16,7 @@ class TakafulService
 {
     public function monthlyAmount(): float
     {
-        return app(\App\Services\AdministrativeChargeService::class)->getCharge(
-            'takaful_monthly_contribution',
-            (float) config('services.takaful.monthly_amount', 200.00)
-        );
+        return (float) config('services.takaful.monthly_amount', 200.00);
     }
 
     /**
@@ -188,8 +185,7 @@ class TakafulService
 
             // Proceed to debit wallet and credit pool
             $reference = 'TAKAFUL_CONTR_'.now()->format('YmdHis').'_'.$locked->id.'_'.bin2hex(random_bytes(3));
-            $locked->balance -= $amount;
-            $locked->save();
+            $locked->decrement('balance', $amount);
 
             WalletTransaction::create([
                 'user_id' => $locked->id,
