@@ -35,10 +35,15 @@ trait HasWipeAction
 
                     // Use chunking to avoid memory issues and to trigger model events if any are defined
                     // Note: chunkById is better for deletions to avoid skipping records
-                    $query->chunkById(100, function ($records) {
-                        foreach ($records as $record) {
-                            $record->delete();
-                        }
+                    $query->chunkById(100, function ($records) use ($model) {
+                        // Use withoutEvents to bypass observers like the one in QardHasan
+                        // that prevents deletion if history exists.
+                        // This is a "Wipe" action, so we intend to delete everything.
+                        $model::withoutEvents(function () use ($records) {
+                            foreach ($records as $record) {
+                                $record->delete();
+                            }
+                        });
                     });
 
                     Notification::make()

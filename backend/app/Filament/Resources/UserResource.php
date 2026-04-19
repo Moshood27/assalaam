@@ -32,6 +32,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -216,7 +217,8 @@ class UserResource extends Resource
                                         Forms\Components\TextInput::make('password')
                                             ->password()
                                             ->revealable()
-                                            ->dehydrateStateUsing(fn ($state) => filled($state) ? $state : null)
+                                            ->required(fn ($livewire) => $livewire instanceof Pages\CreateUser)
+                                            ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
                                             ->dehydrated(fn ($state) => filled($state))
                                             ->maxLength(255),
                                     ])->columns(3),
@@ -320,7 +322,9 @@ class UserResource extends Resource
                                                 'recommended' => 'Recommended',
                                                 'approved' => 'Approved',
                                                 'rejected' => 'Rejected',
-                                            ]),
+                                            ])
+                                            ->required()
+                                            ->default('approved'),
                                         Forms\Components\FileUpload::make('president_signature_path')->label('President Signature')->image()->disk('public_root')->directory('upload'),
                                         Forms\Components\DateTimePicker::make('president_signed_at'),
                                         Forms\Components\FileUpload::make('secretary_general_signature_path')->label('Secretary General Signature')->image()->disk('public_root')->directory('upload'),
@@ -481,6 +485,14 @@ class UserResource extends Resource
                     ->searchable()
                     ->preload()
                     ->label('Branch'),
+                Tables\Filters\TernaryFilter::make('is_admin')
+                    ->label('Admin Status')
+                    ->placeholder('All Users')
+                    ->trueLabel('Admins')
+                    ->falseLabel('Non-Admins'),
+                Tables\Filters\Filter::make('has_qard_hasan')
+                    ->label('Has Qard Hasan Loan')
+                    ->query(fn (Builder $query) => $query->whereHas('qardHasans')),
                 Tables\Filters\SelectFilter::make('approval_status')
                     ->options([
                         'pending' => 'Pending',
