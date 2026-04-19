@@ -943,11 +943,20 @@ class AccountingReportService
     /**
      * Build Branch-by-Branch Outstanding Qard Hasan Report.
      */
-    public function buildBranchQardHasanReport(?int $branchId = null): array
+    public function buildBranchQardHasanReport(?int $branchId = null, ?string $from = null, ?string $to = null): array
     {
+        $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
+        $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
+
         $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
-            ->with(['users.qardHasans' => function ($query) {
+            ->with(['users.qardHasans' => function ($query) use ($fromDate, $toDate) {
                 $query->where('status', 'active');
+                if ($fromDate) {
+                    $query->where('created_at', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('created_at', '<=', $toDate);
+                }
             }, 'users.qardHasans.repayments' => function($q) {
                 $q->whereIn('status', ['success', 'paid', 'completed'])->orderBy('paid_at', 'desc');
             }])->get();
@@ -958,6 +967,8 @@ class AccountingReportService
             'grand_total_paid' => 0,
             'grand_total_outstanding' => 0,
             'grand_total_loans_count' => 0,
+            'from' => $from,
+            'to' => $to,
         ];
 
         foreach ($branches as $branch) {
@@ -998,6 +1009,159 @@ class AccountingReportService
                 $report['grand_total_paid'] += $branchData['total_paid'];
                 $report['grand_total_outstanding'] += $branchData['total_outstanding'];
                 $report['grand_total_loans_count'] += count($branchData['loans']);
+            }
+        }
+
+        return $report;
+    }
+
+    /**
+     * Build Branch-by-Branch Contribution Report.
+     */
+    public function buildBranchContributionReport(?int $branchId = null, ?string $from = null, ?string $to = null): array
+    {
+        $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
+        $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
+
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users.contributions' => function ($query) use ($fromDate, $toDate) {
+                $query->whereIn('status', ['success', 'paid', 'completed']);
+                if ($fromDate) {
+                    $query->where('created_at', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('created_at', '<=', $toDate);
+                }
+            }])->get();
+
+        $report = [
+            'branches' => [],
+            'grand_total_amount' => 0,
+            'grand_total_members_count' => 0,
+            'from' => $from,
+            'to' => $to,
+        ];
+
+        foreach ($branches as $branch) {
+            $branchData = [
+                'branch_id' => $branch->id,
+                'branch_name' => $branch->name,
+                'members' => [],
+                'total_amount' => 0,
+            ];
+
+            foreach ($branch->users as $user) {
+                $userTotal = $user->contributions->sum('amount');
+
+                if ($userTotal > 0) {
+                    $branchData['members'][] = [
+                        'member_name' => $user->full_name,
+                        'membership_number' => $user->membership_number,
+                        'total_contributed' => (float)$userTotal,
+                        'last_contribution_date' => $user->contributions->max('created_at'),
+                    ];
+                    $branchData['total_amount'] += (float)$userTotal;
+                }
+            }
+
+            if (!empty($branchData['members'])) {
+                // Sort members by amount descending
+                usort($branchData['members'], fn($a, $b) => $b['total_contributed'] <=> $a['total_contributed']);
+
+                $report['branches'][] = $branchData;
+                $report['grand_total_amount'] += $branchData['total_amount'];
+                $report['grand_total_members_count'] += count($branchData['members']);
+            }
+        }
+
+        return $report;
+    }
+
+    /**
+     * Build Branch-by-Branch Member Balances Report (Savings, Shares, Gold, etc).
+     */
+    public function buildBranchMemberBalancesReport(?int $branchId = null, float $goldPrice = 0.0): array
+    {
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users'])
+            ->get();
+
+        $report = [
+            'branches' => [],
+            'grand_total_savings' => 0,
+            'grand_total_shares' => 0,
+            'grand_total_gold_weight' => 0,
+            'grand_total_gold_value' => 0,
+            'grand_total_other' => 0,
+            'grand_total_members_count' => 0,
+        ];
+
+        foreach ($branches as $branch) {
+            $branchData = [
+                'branch_id' => $branch->id,
+                'branch_name' => $branch->name,
+                'members' => [],
+                'total_savings' => 0,
+                'total_shares' => 0,
+                'total_gold_weight' => 0,
+                'total_gold_value' => 0,
+                'total_other' => 0,
+            ];
+
+            foreach ($branch->users as $user) {
+                $otherTotal = (float)$user->building_balance +
+                              (float)$user->development_fund_balance +
+                              (float)$user->agm_balance +
+                              (float)$user->loan_repayment_balance +
+                              (float)$user->fine_balance +
+                              (float)$user->welfare_balance +
+                              (float)$user->lateness_balance +
+                              (float)$user->stationery_balance +
+                              (float)$user->loan_form_balance +
+                              (float)$user->others_balance +
+                              (float)$user->id_card_balance +
+                              (float)$user->emergency_balance +
+                              (float)$user->entrance_balance +
+                              (float)$user->h_savings_balance +
+                              (float)$user->investment_balance +
+                              (float)$user->group_savings_balance;
+
+                $hasBalance = (float)$user->ordinary_savings > 0 ||
+                              (float)$user->shares_capital > 0 ||
+                              (float)$user->gold_balance > 0 ||
+                              $otherTotal > 0;
+
+                if ($hasBalance) {
+                    $goldValue = (float)$user->gold_balance * $goldPrice;
+                    $branchData['members'][] = [
+                        'member_name' => $user->full_name,
+                        'membership_number' => $user->membership_number,
+                        'savings' => (float)$user->ordinary_savings,
+                        'shares' => (float)$user->shares_capital,
+                        'gold_weight' => (float)$user->gold_balance,
+                        'gold_value' => $goldValue,
+                        'other_funds' => $otherTotal,
+                        'total_wealth' => (float)$user->ordinary_savings + (float)$user->shares_capital + $goldValue + $otherTotal,
+                    ];
+                    $branchData['total_savings'] += (float)$user->ordinary_savings;
+                    $branchData['total_shares'] += (float)$user->shares_capital;
+                    $branchData['total_gold_weight'] += (float)$user->gold_balance;
+                    $branchData['total_gold_value'] += $goldValue;
+                    $branchData['total_other'] += $otherTotal;
+                }
+            }
+
+            if (!empty($branchData['members'])) {
+                // Sort by total wealth descending
+                usort($branchData['members'], fn($a, $b) => $b['total_wealth'] <=> $a['total_wealth']);
+
+                $report['branches'][] = $branchData;
+                $report['grand_total_savings'] += $branchData['total_savings'];
+                $report['grand_total_shares'] += $branchData['total_shares'];
+                $report['grand_total_gold_weight'] += $branchData['total_gold_weight'];
+                $report['grand_total_gold_value'] += $branchData['total_gold_value'];
+                $report['grand_total_other'] += $branchData['total_other'];
+                $report['grand_total_members_count'] += count($branchData['members']);
             }
         }
 

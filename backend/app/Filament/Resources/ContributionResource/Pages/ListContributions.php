@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ContributionResource\Pages;
 use App\Filament\Traits\HasWipeAction;
 
 use App\Filament\Resources\ContributionResource;
+use App\Filament\Pages\ContributionBranchReport;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables;
@@ -23,6 +24,11 @@ class ListContributions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('branchReport')
+                ->label('Branch Contribution Report')
+                ->icon('heroicon-o-document-chart-bar')
+                ->color('success')
+                ->url(fn () => ContributionBranchReport::getUrl()),
             $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
         ];

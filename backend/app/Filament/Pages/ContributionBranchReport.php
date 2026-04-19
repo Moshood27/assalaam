@@ -6,31 +6,29 @@ use App\Services\AccountingReportService;
 use Filament\Pages\Page;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class QardHasanBranchReport extends Page
+class ContributionBranchReport extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
     protected static ?string $navigationGroup = 'Financial Reports';
-    protected static ?string $navigationLabel = 'Qard Hasan Branch Report';
-    protected static ?int $navigationSort = 15;
+    protected static ?string $navigationLabel = 'Contribution Branch Report';
+    protected static ?int $navigationSort = 16;
 
-    protected static string $view = 'filament.pages.qard-hasan-branch-report';
+    protected static string $view = 'filament.pages.contribution-branch-report';
 
     public function getSubheading(): ?string
     {
-        return 'Detailed list of outstanding Qard Hasan loans grouped by branch.';
+        return 'Total contributions by members grouped by branch.';
     }
 
     public static function canAccess(): bool
     {
-        return auth()->user()->can('view_any_qard_hasan');
+        return auth()->user()->can('view_any_contribution');
     }
 
     public array $report = [
         'branches' => [],
-        'grand_total_principal' => 0,
-        'grand_total_paid' => 0,
-        'grand_total_outstanding' => 0,
-        'grand_total_loans_count' => 0,
+        'grand_total_amount' => 0,
+        'grand_total_members_count' => 0,
     ];
 
     public ?int $branchId = null;
@@ -61,7 +59,7 @@ class QardHasanBranchReport extends Page
         $user = auth()->user();
 
         $targetBranchId = $user->hasRole('super_admin') ? $this->branchId : $user->branch_id;
-        $this->report = $svc->buildBranchQardHasanReport($targetBranchId, $this->from, $this->to);
+        $this->report = $svc->buildBranchContributionReport($targetBranchId, $this->from, $this->to);
     }
 
     public function exportCsv(): StreamedResponse
@@ -70,24 +68,21 @@ class QardHasanBranchReport extends Page
         $headers = [
             'Content-Type' => 'text/csv',
             'Cache-Control' => 'no-store, no-cache',
-            'Content-Disposition' => 'attachment; filename="qard-hasan-branch-report.csv"',
+            'Content-Disposition' => 'attachment; filename="contribution-branch-report.csv"',
         ];
 
         return response()->streamDownload(function () use ($data) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Branch', 'Member', 'Loan ID', 'Principal', 'Paid', 'Outstanding', 'Last Payment', 'Status']);
+            fputcsv($out, ['Branch', 'Member', 'Membership #', 'Total Contributed', 'Last Contribution']);
 
             foreach ($data['branches'] as $branch) {
-                foreach ($branch['loans'] as $loan) {
+                foreach ($branch['members'] as $member) {
                     fputcsv($out, [
                         $branch['branch_name'],
-                        $loan['member_name'],
-                        $loan['loan_id'],
-                        number_format($loan['principal'], 2, '.', ''),
-                        number_format($loan['paid'], 2, '.', ''),
-                        number_format($loan['outstanding'], 2, '.', ''),
-                        $loan['last_payment_date'] ?? 'N/A',
-                        $loan['status'],
+                        $member['member_name'],
+                        $member['membership_number'],
+                        number_format($member['total_contributed'], 2, '.', ''),
+                        $member['last_contribution_date'] ? $member['last_contribution_date'] : 'N/A',
                     ]);
                 }
                 // Branch total
@@ -95,10 +90,7 @@ class QardHasanBranchReport extends Page
                     $branch['branch_name'] . ' TOTAL',
                     '',
                     '',
-                    number_format($branch['total_principal'], 2, '.', ''),
-                    number_format($branch['total_paid'], 2, '.', ''),
-                    number_format($branch['total_outstanding'], 2, '.', ''),
-                    '',
+                    number_format($branch['total_amount'], 2, '.', ''),
                     '',
                 ]);
                 fputcsv($out, []); // Empty line between branches
@@ -108,17 +100,14 @@ class QardHasanBranchReport extends Page
             if (count($data['branches']) > 1) {
                 fputcsv($out, [
                     'GRAND TOTAL',
-                    $data['grand_total_loans_count'] . ' loans',
+                    $data['grand_total_members_count'] . ' members',
                     '',
-                    number_format($data['grand_total_principal'], 2, '.', ''),
-                    number_format($data['grand_total_paid'], 2, '.', ''),
-                    number_format($data['grand_total_outstanding'], 2, '.', ''),
-                    '',
+                    number_format($data['grand_total_amount'], 2, '.', ''),
                     '',
                 ]);
             }
 
             fclose($out);
-        }, 'qard-hasan-branch-report.csv', $headers);
+        }, 'contribution-branch-report.csv', $headers);
     }
 }

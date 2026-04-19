@@ -5,6 +5,7 @@ namespace App\Filament\Resources\UserResource\Pages;
 use App\Filament\Traits\HasWipeAction;
 use App\Exports\MemberImportTemplate;
 use App\Exports\MemberBalanceImportTemplate;
+use App\Filament\Pages\MemberBalancesBranchReport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Filament\Resources\UserResource;
 use App\Services\CsvImportService;
@@ -29,6 +30,11 @@ class ListUsers extends ListRecords
     {
         return [
             $this->getWipeHeaderAction(),
+            Actions\Action::make('branchReport')
+                ->label('Branch Balances Report')
+                ->icon('heroicon-o-banknotes')
+                ->color('info')
+                ->url(fn () => MemberBalancesBranchReport::getUrl()),
             Actions\CreateAction::make(),
             Actions\Action::make('importCsv')
                 ->label('Import CSV')
