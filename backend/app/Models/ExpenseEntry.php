@@ -31,6 +31,18 @@ class ExpenseEntry extends Model
         'created_by',
         'status',
         'processed_at',
+        'vendor_id',
+        'bank_name',
+        'bank_code',
+        'account_number',
+        'account_name',
+        'receipt_path',
+        'source_of_funds',
+        'approved_by',
+        'rejection_reason',
+        'payout_reference',
+        'recipient_code',
+        'transfer_code',
     ];
 
     protected $casts = [
@@ -42,6 +54,16 @@ class ExpenseEntry extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function transactionApprovals(): MorphMany

@@ -570,6 +570,52 @@ class WebhookController extends Controller
             Log::info('Paystack payment processed', ['reference' => $reference, 'user_id' => optional($user)->id]);
         }
 
+        // Handle Transfer Webhooks (for Expenses and Payouts)
+        if (in_array($event, ['transfer.success', 'transfer.failed', 'transfer.reversed'])) {
+            $transfer = $data;
+            $reference = $transfer['reference'] ?? null;
+            $transferCode = $transfer['transfer_code'] ?? null;
+
+            if ($reference) {
+                $expense = \App\Models\ExpenseEntry::where('payout_reference', $reference)->first();
+
+                if ($expense) {
+                    if ($event === 'transfer.success') {
+                        $expense->update(['status' => 'processed', 'processed_at' => now()]);
+                        Log::info("Expense payout successful via webhook", ['expense_id' => $expense->id, 'reference' => $reference]);
+
+                        // Notify creator
+                        if ($expense->creator) {
+                            $expense->creator->notify(new \App\Notifications\GeneralNotification(
+                                title: 'Expense Payout Successful',
+                                message: "The payout for '{$expense->title}' (₦" . number_format($expense->amount, 2) . ") has been successfully processed to the bank.",
+                                data: ['type' => 'expense_payout_success', 'expense_id' => $expense->id]
+                            ));
+                        }
+                    } elseif ($event === 'transfer.failed' || $event === 'transfer.reversed') {
+                        $reason = $transfer['reason'] ?? ($transfer['gateway_response'] ?? 'Unknown error');
+                        $expense->update(['status' => 'approved', 'rejection_reason' => "Transfer failed/reversed: " . $reason]);
+                        Log::warning("Expense payout failed/reversed via webhook", ['expense_id' => $expense->id, 'reference' => $reference, 'event' => $event]);
+
+                        // Notify creator and Treasurer
+                        $message = "The payout for '{$expense->title}' (₦" . number_format($expense->amount, 2) . ") failed: {$reason}. It has been reset to 'approved' for retry.";
+                        $notification = new \App\Notifications\GeneralNotification(
+                            title: 'Expense Payout Failed',
+                            message: $message,
+                            data: ['type' => 'expense_payout_failed', 'expense_id' => $expense->id]
+                        );
+
+                        if ($expense->creator) { $expense->creator->notify($notification); }
+
+                        $treasurers = \App\Models\User::role(['Treasurer', 'super_admin'])->get();
+                        foreach ($treasurers as $treasurer) {
+                            $treasurer->notify($notification);
+                        }
+                    }
+                }
+            }
+        }
+
         return response()->json(['status' => 'success']);
     }
 

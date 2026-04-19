@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SchemeResource\Pages;
 
 use App\Filament\Traits\HasWipeAction;
 
+use App\Filament\Pages\SchemeBranchReport;
 use App\Filament\Resources\SchemeResource;
 use App\Services\CsvImportService;
 use Filament\Actions;
@@ -27,6 +28,11 @@ class ListSchemes extends ListRecords
     {
         return [
             $this->getWipeHeaderAction(),
+            Actions\Action::make('branchSchemeReport')
+                ->label('Branch Schemes Report')
+                ->icon('heroicon-o-document-chart-bar')
+                ->color('info')
+                ->url(fn (): string => SchemeBranchReport::getUrl()),
             Actions\CreateAction::make(),
             Actions\Action::make('importCsv')
                 ->label('Import CSV')

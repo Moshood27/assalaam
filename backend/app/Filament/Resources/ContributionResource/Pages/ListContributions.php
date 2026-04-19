@@ -6,6 +6,7 @@ use App\Filament\Traits\HasWipeAction;
 
 use App\Filament\Resources\ContributionResource;
 use App\Filament\Pages\ContributionBranchReport;
+use App\Filament\Pages\SchemeBranchReport;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables;
@@ -24,6 +25,11 @@ class ListContributions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('branchSchemeReport')
+                ->label('Branch Schemes Report')
+                ->icon('heroicon-o-document-chart-bar')
+                ->color('info')
+                ->url(fn (): string => SchemeBranchReport::getUrl()),
             Actions\Action::make('branchReport')
                 ->label('Branch Contribution Report')
                 ->icon('heroicon-o-document-chart-bar')

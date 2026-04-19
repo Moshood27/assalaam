@@ -60,6 +60,10 @@ class AccountingReportService
                     // Dr Wallets Payable, Cr Murabahah Receivables
                     $post('Wallets Payable', $amount, 0);
                     $post('Murabahah Receivables', 0, $amount);
+                } elseif (($wt->source ?? null) === 'admin_charge') {
+                    // Dr Wallets Payable, Cr Income - Administrative Fees
+                    $post('Wallets Payable', $amount, 0);
+                    $post('Income - Administrative Fees', 0, $amount);
                 } else {
                     // Fallback: Dr Wallets Payable, Cr Cash (e.g., withdrawal)
                     $post('Wallets Payable', $amount, 0);
@@ -130,7 +134,11 @@ class AccountingReportService
 
         // Manual Expense Entries (admin-entered)
         if (Schema::hasTable('expense_entries')) {
-            $meQuery = ExpenseEntry::query();
+            $meQuery = ExpenseEntry::query()
+                ->where(function($q) {
+                    $q->whereIn('status', ['processed', 'approved'])
+                      ->orWhereNull('status');
+                });
             if ($fromDate) {
                 $meQuery->where('date', '>=', $fromDate->toDateString());
             }
@@ -451,6 +459,12 @@ class AccountingReportService
             ->sum('management_fee_amount');
         $addIncome('Investment Management Fees (ROI)', (float)$projectFees);
 
+        // Monthly Administrative Fees
+        $monthlyFees = WalletTransaction::where('source', 'admin_charge')
+            ->whereBetween('created_at', [$fromDate, $toDate])
+            ->sum('amount');
+        $addIncome('Monthly Administrative Fees', (float)$monthlyFees);
+
         // Manual Income Entries (admin-entered)
         if (Schema::hasTable('income_entries')) {
             $manualIncomes = IncomeEntry::query()
@@ -471,6 +485,10 @@ class AccountingReportService
         if (Schema::hasTable('expense_entries')) {
             $manualExpenses = ExpenseEntry::query()
                 ->whereBetween('date', [$fromDate->toDateString(), $toDate->toDateString()])
+                ->where(function($q) {
+                    $q->whereIn('status', ['processed', 'approved'])
+                      ->orWhereNull('status'); // For legacy entries
+                })
                 ->get();
             $expenseByCategory = [];
             foreach ($manualExpenses as $me) {
@@ -1233,5 +1251,94 @@ class AccountingReportService
                 'payload' => $l->payload,
             ]),
         ];
+    }
+    /**
+     * Build Branch-by-Branch Member Schemes Report.
+     * Shows a matrix of members and their total contributions per scheme.
+     */
+    public function buildBranchSchemeReport(?int $branchId = null, ?string $from = null, ?string $to = null): array
+    {
+        $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
+        $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
+
+        $schemes = \App\Models\Scheme::where('active', true)->get();
+
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users.contributions' => function ($query) use ($fromDate, $toDate) {
+                $query->whereIn('status', ['success', 'paid', 'completed']);
+                if ($fromDate) {
+                    $query->where('created_at', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('created_at', '<=', $toDate);
+                }
+            }])->get();
+
+        $report = [
+            'branches' => [],
+            'schemes' => $schemes->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->toArray(),
+            'grand_totals' => [], // scheme_id => amount
+            'grand_total_all' => 0,
+            'grand_total_members_count' => 0,
+            'from' => $from,
+            'to' => $to,
+        ];
+
+        foreach ($schemes as $s) {
+            $report['grand_totals'][$s->id] = 0;
+        }
+
+        foreach ($branches as $branch) {
+            $branchData = [
+                'branch_id' => $branch->id,
+                'branch_name' => $branch->name,
+                'members' => [],
+                'totals' => [], // scheme_id => amount
+                'branch_total' => 0,
+            ];
+
+            foreach ($schemes as $s) {
+                $branchData['totals'][$s->id] = 0;
+            }
+
+            foreach ($branch->users as $user) {
+                $memberSchemes = [];
+                $memberTotal = 0;
+                $hasContribution = false;
+
+                $userContributions = $user->contributions->groupBy('scheme_id');
+
+                foreach ($schemes as $s) {
+                    $sum = $userContributions->has($s->id) ? $userContributions->get($s->id)->sum('amount') : 0;
+                    $memberSchemes[$s->id] = (float)$sum;
+                    $memberTotal += (float)$sum;
+
+                    $branchData['totals'][$s->id] += (float)$sum;
+                    $report['grand_totals'][$s->id] += (float)$sum;
+
+                    if ($sum > 0) $hasContribution = true;
+                }
+
+                if ($hasContribution) {
+                    $branchData['members'][] = [
+                        'member_name' => $user->full_name,
+                        'membership_number' => $user->membership_number,
+                        'schemes' => $memberSchemes,
+                        'total' => $memberTotal,
+                    ];
+                    $branchData['branch_total'] += $memberTotal;
+                    $report['grand_total_all'] += $memberTotal;
+                }
+            }
+
+            if (!empty($branchData['members'])) {
+                // Sort members by total amount descending
+                usort($branchData['members'], fn($a, $b) => $b['total'] <=> $a['total']);
+                $report['branches'][] = $branchData;
+                $report['grand_total_members_count'] += count($branchData['members']);
+            }
+        }
+
+        return $report;
     }
 }
