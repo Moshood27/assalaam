@@ -47,11 +47,22 @@
             </x-slot>
             <p class="text-sm text-gray-500 mb-4">Import Savings, Shares, Takaful, Building, Development, AGM, Welfare, H Savings, Gold, and all other cooperative funds.</p>
 
-            <div class="mb-4">
-                <a href="/admin/templates/migration-balances.xlsx" class="text-primary-600 hover:underline flex items-center gap-1 text-sm font-medium">
+            <div class="mb-4 space-y-4">
+                <div class="max-w-xs">
+                     <x-filament::input.wrapper label="Filter by Branch (Optional)">
+                        <x-filament::input.select wire:model.live="selectedBranch">
+                            <option value="">All Branches</option>
+                            @foreach(\App\Models\Branch::all() as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </x-filament::input.select>
+                    </x-filament::input.wrapper>
+                </div>
+
+                <button type="button" wire:click="downloadBalanceTemplate" class="text-primary-600 hover:underline flex items-center gap-1 text-sm font-medium">
                     <x-heroicon-o-document-arrow-down class="w-4 h-4" />
                     Download Balance Template (Excel)
-                </a>
+                </button>
             </div>
 
             <form wire:submit.prevent="importBalances">

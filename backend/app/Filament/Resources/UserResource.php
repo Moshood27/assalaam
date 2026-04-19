@@ -335,7 +335,7 @@ class UserResource extends Resource
     {
         return $table
             ->defaultSort(function (Builder $query): Builder {
-                return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
+                return $query->orderByRaw('LENGTH(surname) ASC')->orderBy('surname', 'asc');
             })
             ->columns([
                 ImageColumn::make('passport_path')

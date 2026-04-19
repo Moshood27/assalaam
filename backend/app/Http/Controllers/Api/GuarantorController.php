@@ -102,7 +102,7 @@ class GuarantorController extends Controller
             if ($loan->user) {
                 $push = app(\App\Services\PushService::class);
                 $title = 'Guarantor Accepted';
-                $body = ($user->name ?: 'A guarantor').' accepted your loan request '.$loan->qard_id_string.'.';
+                $body = ($user->full_name ?: 'A guarantor').' accepted your loan request '.$loan->qard_id_string.'.';
                 $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
                 $push->send($token, $title, $body, [
                     'type' => 'guarantor_decision',
@@ -179,7 +179,7 @@ class GuarantorController extends Controller
             if ($loan->user) {
                 $push = app(\App\Services\PushService::class);
                 $title = 'Guarantor Declined';
-                $body = ($user->name ?: 'A guarantor').' declined your loan request '.$loan->qard_id_string.'.';
+                $body = ($user->full_name ?: 'A guarantor').' declined your loan request '.$loan->qard_id_string.'.';
                 $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
                 $push->send($token, $title, $body, [
                     'type' => 'guarantor_decision',

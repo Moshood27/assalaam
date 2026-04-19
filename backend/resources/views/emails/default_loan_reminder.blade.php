@@ -38,7 +38,7 @@
             <div class="brand">{{ config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $user->name }},</p>
+            <p class="salam">Assalāmu ‘alaykum {{ $user->full_name }},</p>
             <p>We pray this message finds you in good health and īmān. As a gentle reminder, you have outstanding Qard Hasan repayment(s) with {{ config('app.name') }}. Kindly review the summary below and, if able, make payment at your earliest convenience. May Allāh put barakah in your wealth and make repayment easy for you. Āmīn.</p>
 
             <div class="divider"></div>

@@ -26,7 +26,7 @@
                 </td>
                 <td style="border:none; width: 50%; text-align: right; vertical-align: top;">
                     @if(!empty($user))
-                        <div><strong>{{ $user->name }}</strong></div>
+                        <div><strong>{{ $user->full_name }}</strong></div>
                         <div class="muted">Membership ID: {{ $user->membership_number }}</div>
                     @endif
                     <div class="muted">Generated: {{ now()->format('Y-m-d H:i') }}</div>

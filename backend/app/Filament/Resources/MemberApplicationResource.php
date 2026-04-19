@@ -231,7 +231,7 @@ class MemberApplicationResource extends Resource
                         $user = DB::transaction(function () use ($record) {
                             $now = now();
                             $admissionDate = $record->admission_date ?? $now;
-                            $admissionOfficer = $record->admission_officer_name ?? auth()->user()->name;
+                            $admissionOfficer = $record->admission_officer_name ?? auth()->user()->full_name;
 
                             // Decrypt the stored password
                             $password = null;

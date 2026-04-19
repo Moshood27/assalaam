@@ -38,7 +38,7 @@
                         <div class="muted">Automated Wealth Assessment & Purification</div>
                     </td>
                     <td style="border:none; width: 40%; text-align: right; vertical-align: top;">
-                        <div class="font-bold">{{ $user->name }}</div>
+                        <div class="font-bold">{{ $user->full_name }}</div>
                         <div class="muted">Membership ID: {{ $user->membership_number }}</div>
                         <div class="muted">Branch: {{ $branch ?? 'Main' }}</div>
                         <div class="muted">Date: {{ now()->format('F d, Y') }}</div>

@@ -86,7 +86,7 @@ class WalletController extends Controller
 
         return response()->json([
             'id' => $recipient->id,
-            'name' => $recipient->name,
+            'name' => $recipient->full_name,
             'membership_number' => $recipient->membership_number,
             'branch_id' => $recipient->branch_id,
             'branch_name' => $branchName,
@@ -181,7 +181,7 @@ class WalletController extends Controller
                 'redirect_url' => $validated['callback_url'] ?? null,
                 'customer' => [
                     'email' => $user->email,
-                    'name' => $user->name,
+                    'name' => $user->full_name,
                     'phonenumber' => $user->phone,
                 ],
                 'meta' => [
@@ -506,7 +506,7 @@ class WalletController extends Controller
 
             $metaDebit = [
                 'to_user_id' => $lockedRecipient->id,
-                'to_name' => $lockedRecipient->name,
+                'to_name' => $lockedRecipient->full_name,
                 'to_membership' => $lockedRecipient->membership_number,
                 'group_ref' => $groupRef,
             ];
@@ -514,7 +514,7 @@ class WalletController extends Controller
 
             $metaCredit = [
                 'from_user_id' => $lockedSender->id,
-                'from_name' => $lockedSender->name,
+                'from_name' => $lockedSender->full_name,
                 'from_membership' => $lockedSender->membership_number,
                 'group_ref' => $groupRef,
             ];
@@ -575,7 +575,7 @@ class WalletController extends Controller
         }
 
         // Notify members via preferences
-        $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->name.' ('.$recipient->membership_number.'). Ref: '.$groupRef.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
+        $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->full_name.' ('.$recipient->membership_number.'). Ref: '.$groupRef.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
         $sender->notifyMember('Wallet Transfer Sent', $msgFrom, [
             'type' => 'p2p_transfer_sent',
             'amount' => $amount,
@@ -584,7 +584,7 @@ class WalletController extends Controller
             'balance' => (float)$finalSenderBal,
         ], ['mail', 'sms', 'push', 'database']); // respect prefs but we can force certain channels if we wanted
 
-        $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->name.' ('.$sender->membership_number.'). Ref: '.$groupRef.'.';
+        $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->full_name.' ('.$sender->membership_number.'). Ref: '.$groupRef.'.';
         $recipient->notifyMember('Wallet Transfer Received', $msgTo, [
             'type' => 'p2p_transfer_received',
             'amount' => $amount,
@@ -598,7 +598,7 @@ class WalletController extends Controller
             'balance' => (float) $finalSenderBal,
             'recipient' => [
                 'id' => $recipient->id,
-                'name' => $recipient->name,
+                'name' => $recipient->full_name,
                 'membership_number' => $recipient->membership_number,
                 'branch_id' => $recipient->branch_id,
             ],
@@ -711,7 +711,7 @@ class WalletController extends Controller
             User::where('is_admin', true)->each(function ($admin) use ($user, $amount, $reference, $req) {
                 $admin->notifyMember(
                     "New Withdrawal Request",
-                    "Member {$user->name} requested ₦" . number_format($amount, 2) . " (Ref: {$reference}).",
+                    "Member {$user->full_name} requested ₦" . number_format($amount, 2) . " (Ref: {$reference}).",
                     ['type' => 'withdrawal_request', 'request_id' => $req->id]
                 );
             });

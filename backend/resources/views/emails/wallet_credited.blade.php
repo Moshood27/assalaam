@@ -47,7 +47,7 @@
             <table class="meta" role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
                     <th>Member</th>
-                    <td>{{ $user->name }} @if(!empty($user->membership_number)) ({{ $user->membership_number }}) @endif</td>
+                    <td>{{ $user->full_name }} @if(!empty($user->membership_number)) ({{ $user->membership_number }}) @endif</td>
                 </tr>
                 <tr>
                     <th>Date & Time</th>

@@ -38,7 +38,7 @@
         <p class="section-title">1. THE PARTIES</p>
         <p>This Agreement is made between:</p>
         <p><strong>The Financier:</strong> Islamic Cooperative Society (hereinafter referred to as "the Cooperative").</p>
-        <p><strong>The Member (Purchaser):</strong> {{ $user->name }} (Membership No: {{ $user->membership_number }}).</p>
+        <p><strong>The Member (Purchaser):</strong> {{ $user->full_name }} (Membership No: {{ $user->membership_number }}).</p>
     </div>
 
     <div class="section">
@@ -109,7 +109,7 @@
             </div>
             <div class="sig-spacer"></div>
             <div class="sig-box">
-                <p>{{ $user->name }}</p>
+                <p>{{ $user->full_name }}</p>
                 <p>(The Member)</p>
             </div>
         </div>

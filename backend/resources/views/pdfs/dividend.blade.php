@@ -25,7 +25,7 @@
                     <div class="muted">Year: {{ $year }}</div>
                 </td>
                 <td style="border:none; width: 50%; text-align: right; vertical-align: top;">
-                    <div><strong>{{ $user->name }}</strong></div>
+                    <div><strong>{{ $user->full_name }}</strong></div>
                     <div class="muted">Membership ID: {{ $user->membership_number }}</div>
                     @if(optional($user->branch)->name)
                         <div class="muted">Branch: {{ $user->branch->name }}</div>

@@ -42,48 +42,40 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
         }
 
         DB::transaction(function () use ($user, $data) {
-            // Standard Schemes mapping Excel keys to Scheme names
-            $schemes = [
-                'Savings' => 'savings_balance',
-                'Shares' => 'shares_balance',
-                'Development' => 'development_fund_balance',
-                'Building' => 'building_balance',
-                'AGM' => 'agm_balance',
-                'Loan Repayment' => 'loan_repayment_balance',
-                'Fine' => 'fine_balance',
-                'Welfare' => 'welfare_balance',
-                'Lateness' => 'lateness_balance',
-                'Stationery' => 'stationery_balance',
-                'Loan Form' => 'loan_form_balance',
-                'Others' => 'others_balance',
-                'ID Card' => 'id_card_balance',
-                'Emergency' => 'emergency_balance',
-                'Entrance' => 'entrance_balance',
-                'H Savings' => 'h_savings_balance',
-                'Investment' => 'investment_balance',
-                'Group Savings' => 'group_savings_balance',
-            ];
-
-            foreach ($schemes as $schemeName => $excelKey) {
-                $target = (float) ($data[$excelKey] ?? 0);
-                $this->reconcileScheme($user, $schemeName, $target);
+            // Standard Schemes from Database (Dynamic mapping)
+            $dbSchemes = Scheme::all();
+            foreach ($dbSchemes as $scheme) {
+                // Map scheme name to Excel key used in BranchMigrationTemplateExport
+                $excelKey = strtolower(str_replace(' ', '_', $scheme->name)) . '_balance';
+                if (isset($data[$excelKey])) {
+                    $target = (float) $data[$excelKey];
+                    $this->reconcileScheme($user, $scheme->name, $target);
+                }
             }
 
             // Takaful (uses separate tables)
-            $takafulTarget = (float) ($data['takaful_balance'] ?? 0);
-            $this->reconcileTakaful($user, $takafulTarget);
+            if (isset($data['takaful_balance'])) {
+                $takafulTarget = (float) $data['takaful_balance'];
+                $this->reconcileTakaful($user, $takafulTarget);
+            }
 
             // Digital Gold (Weight in grams)
-            $goldTarget = (float) ($data['digital_gold_balance'] ?? 0);
-            $this->reconcileGold($user, $goldTarget);
+            if (isset($data['digital_gold_balance'])) {
+                $goldTarget = (float) $data['digital_gold_balance'];
+                $this->reconcileGold($user, $goldTarget);
+            }
 
             // Outstanding Fines (Debt)
-            $finesTarget = (float) ($data['outstanding_fines'] ?? 0);
-            $this->reconcileDebt($user, 'outstanding_fines', 'Outstanding Fines', $finesTarget);
+            if (isset($data['outstanding_fines'])) {
+                $finesTarget = (float) $data['outstanding_fines'];
+                $this->reconcileDebt($user, 'outstanding_fines', 'Outstanding Fines', $finesTarget);
+            }
 
             // Core Wallet Balance
-            $walletTarget = (float) ($data['wallet_balance'] ?? 0);
-            $this->reconcileWallet($user, $walletTarget);
+            if (isset($data['wallet_balance'])) {
+                $walletTarget = (float) $data['wallet_balance'];
+                $this->reconcileWallet($user, $walletTarget);
+            }
         });
     }
 
@@ -355,30 +347,23 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'membership_no' => 'required|exists:users,membership_number',
-            'savings_balance' => 'nullable|numeric|min:0',
-            'shares_balance' => 'nullable|numeric|min:0',
-            'takaful_balance' => 'nullable|numeric|min:0',
-            'development_fund_balance' => 'nullable|numeric|min:0',
-            'outstanding_fines' => 'nullable|numeric|min:0',
-            'wallet_balance' => 'nullable|numeric|min:0',
-            'building_balance' => 'nullable|numeric|min:0',
-            'agm_balance' => 'nullable|numeric|min:0',
-            'loan_repayment_balance' => 'nullable|numeric|min:0',
-            'fine_balance' => 'nullable|numeric|min:0',
-            'welfare_balance' => 'nullable|numeric|min:0',
-            'lateness_balance' => 'nullable|numeric|min:0',
-            'stationery_balance' => 'nullable|numeric|min:0',
-            'loan_form_balance' => 'nullable|numeric|min:0',
-            'others_balance' => 'nullable|numeric|min:0',
-            'id_card_balance' => 'nullable|numeric|min:0',
-            'emergency_balance' => 'nullable|numeric|min:0',
-            'entrance_balance' => 'nullable|numeric|min:0',
-            'h_savings_balance' => 'nullable|numeric|min:0',
-            'investment_balance' => 'nullable|numeric|min:0',
-            'digital_gold_balance' => 'nullable|numeric|min:0',
-            'group_savings_balance' => 'nullable|numeric|min:0',
         ];
+
+        // Dynamic rules for all schemes in database
+        $dbSchemes = Scheme::all();
+        foreach ($dbSchemes as $scheme) {
+            $excelKey = strtolower(str_replace(' ', '_', $scheme->name)) . '_balance';
+            $rules[$excelKey] = 'nullable|numeric';
+        }
+
+        // Extra migration-specific balance columns
+        $rules['takaful_balance'] = 'nullable|numeric';
+        $rules['digital_gold_balance'] = 'nullable|numeric';
+        $rules['outstanding_fines'] = 'nullable|numeric';
+        $rules['wallet_balance'] = 'nullable|numeric';
+
+        return $rules;
     }
 }

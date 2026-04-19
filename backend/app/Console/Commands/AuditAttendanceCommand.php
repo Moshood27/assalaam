@@ -55,7 +55,7 @@ class AuditAttendanceCommand extends Command
                 if (!$record || $record->status === 'absent') {
                     $this->chargeFine($user, $meeting, $record);
                 } else {
-                    $this->line("Skipping User: {$user->name} (Status: {$record->status})");
+                    $this->line("Skipping User: {$user->full_name} (Status: {$record->status})");
                 }
             }
 
@@ -104,13 +104,13 @@ class AuditAttendanceCommand extends Command
                     'processed_at' => now(),
                 ]);
 
-                $this->line("Charged fine of {$amount} to User: {$user->name} (ID: {$user->id})");
+                $this->line("Charged fine of {$amount} to User: {$user->full_name} (ID: {$user->id})");
             } else {
                 // Not enough balance, add to outstanding fines
                 $lockedUser->increment('outstanding_fines', $amount);
                 $status = 'fine_pending';
                 $paidAt = null;
-                $this->warn("Insufficient balance for User: {$user->name}. Added {$amount} to outstanding fines.");
+                $this->warn("Insufficient balance for User: {$user->full_name}. Added {$amount} to outstanding fines.");
             }
 
             if ($record) {

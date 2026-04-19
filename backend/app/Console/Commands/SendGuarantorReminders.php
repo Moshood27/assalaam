@@ -49,11 +49,11 @@ class SendGuarantorReminders extends Command
             foreach ($pending as $g) {
                 $token = $g->fcm_token ?: ($g->device_token ?? null);
                 if ($dry) {
-                    $this->info(sprintf('[DRY] Would push to %s (ID %d) for loan %s', $g->name, $g->id, $loan->qard_id_string));
+                    $this->info(sprintf('[DRY] Would push to %s (ID %d) for loan %s', $g->full_name, $g->id, $loan->qard_id_string));
                 } else {
                     if ($push->send($token, $title, $body, $data)) {
                         $countPushes++;
-                        $this->info(sprintf('Pushed to %s (ID %d) for loan %s', $g->name, $g->id, $loan->qard_id_string));
+                        $this->info(sprintf('Pushed to %s (ID %d) for loan %s', $g->full_name, $g->id, $loan->qard_id_string));
                     }
 
                     // Track nudges on pivot

@@ -10,6 +10,9 @@ use App\Imports\TransactionsImport;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Models\QardHasan;
+use App\Models\Branch;
+use App\Models\Scheme;
+use App\Exports\BranchMigrationTemplateExport;
 use Filament\Pages\Page;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -39,10 +42,19 @@ class MigrationImport extends Page implements HasForms
     public $passbookFile;
     public $transactionsFile;
     public $migrationDate;
+    public $selectedBranch;
 
     public function mount()
     {
         $this->migrationDate = now()->format('Y-m-d');
+    }
+
+    public function downloadBalanceTemplate()
+    {
+        return Excel::download(
+            new BranchMigrationTemplateExport($this->selectedBranch),
+            'migration-balances-' . ($this->selectedBranch ? Branch::find($this->selectedBranch)->name : 'all') . '.xlsx'
+        );
     }
 
     public function getSubheading(): ?string
