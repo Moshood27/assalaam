@@ -36,7 +36,7 @@
                 </tr>
                 <tr>
                     <td class="label">Member</td>
-                    <td class="value">{{ $member?->name }} ({{ $member?->email }})</td>
+                    <td class="value">{{ $member?->full_name }} ({{ $member?->email }})</td>
                 </tr>
                 <tr>
                     <td class="label">Principal</td>
@@ -58,7 +58,7 @@
                         @if($gs->isEmpty())
                             -
                         @else
-                            {{ $gs->pluck('name')->filter()->implode(', ') }}
+                            {{ $gs->map(fn($u) => $u->full_name)->filter()->implode(', ') }}
                         @endif
                     </td>
                 </tr>

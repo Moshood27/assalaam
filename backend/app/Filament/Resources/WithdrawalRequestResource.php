@@ -52,7 +52,7 @@ class WithdrawalRequestResource extends Resource
             ->schema([
                 InfoSection::make('Withdrawal Details')
                     ->schema([
-                        TextEntry::make('user.name')->label('Member'),
+                        TextEntry::make('user.full_name')->label('Member'),
                         TextEntry::make('amount')->money('ngn'),
                         TextEntry::make('reference')->label('Ref'),
                         TextEntry::make('status')->badge(),
@@ -64,7 +64,7 @@ class WithdrawalRequestResource extends Resource
                         RepeatableEntry::make('transactionApprovals')
                             ->label('Approvals Log')
                             ->schema([
-                                TextEntry::make('approver.name')->label('Approver'),
+                                TextEntry::make('approver.full_name')->label('Approver'),
                                 TextEntry::make('status')->badge()->color('success'),
                                 TextEntry::make('responded_at')->label('Signed At')->dateTime(),
                             ])->columns(3)
@@ -77,7 +77,9 @@ class WithdrawalRequestResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('created_at')->label('Requested')->since()->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names']),
                 TextColumn::make('user.membership_number')
                     ->label('Member #')
                     ->toggleable(isToggledHiddenByDefault: true)

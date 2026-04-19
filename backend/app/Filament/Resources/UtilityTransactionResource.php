@@ -31,8 +31,9 @@ class UtilityTransactionResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label('Member')
-                            ->relationship('user', 'name')
-                            ->searchable()
+                            ->relationship('user', 'surname')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names'])
                             ->required(),
                         Forms\Components\Select::make('type')
                             ->options([
@@ -96,7 +97,10 @@ class UtilityTransactionResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('created_at')->label('Time')->dateTime()->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable()->sortable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 TextColumn::make('type')->badge()->sortable(),
                 TextColumn::make('network')->searchable(),
                 TextColumn::make('phone_number')->searchable(),

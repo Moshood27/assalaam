@@ -36,7 +36,10 @@ class ProjectInvestmentResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('created_at')->since()->label('Time')->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable()->sortable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 TextColumn::make('project.name')->label('Project')->searchable()->sortable(),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
                 TextColumn::make('reference')->label('Ref')->toggleable(isToggledHiddenByDefault: true),

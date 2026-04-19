@@ -38,7 +38,7 @@
         <div class="brand">{{ config('app.name') }}</div>
     </div>
     <div class="content">
-        <p class="salam">Assalāmu ‘alaykum {{ $loan->user->name }},</p>
+        <p class="salam">Assalāmu ‘alaykum {{ $loan->user->full_name }},</p>
         <p>Alhamdulillāh, your Qard Hasan has been disbursed successfully. The amount below has been credited to your cooperative wallet.</p>
 
         <p class="amount">+ ₦{{ number_format($creditedAmount, 2) }}</p>

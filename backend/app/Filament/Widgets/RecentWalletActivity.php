@@ -28,9 +28,9 @@ class RecentWalletActivity extends BaseWidget
                 TextColumn::make('created_at')
                     ->label('Time')
                     ->since(),
-                TextColumn::make('user.name')
+                TextColumn::make('user.full_name')
                     ->label('Member')
-                    ->searchable(),
+                    ->searchable(['surname', 'name', 'other_names']),
                 TextColumn::make('type')
                     ->badge()
                     ->colors([

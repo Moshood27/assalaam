@@ -116,7 +116,7 @@ class QardHasan extends Model
         static::deleting(function (QardHasan $loan) {
             // Prevent deletion if any repayment exists or any amount has been paid
             if ($loan->repayments()->exists() || (float) $loan->paid_amount > 0) {
-                throw new \RuntimeException('Cannot delete this loan because repayments have already started.');
+                return false;
             }
             // Guarantor pivot will be cascaded by FK; no manual detach required
         });

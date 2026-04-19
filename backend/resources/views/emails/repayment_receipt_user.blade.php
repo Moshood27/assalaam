@@ -29,7 +29,7 @@
             <p class="brand">{{ config('app.name') }} • Payment receipt</p>
         </div>
         <div class="content">
-            <p>Dear {{ $loan->user->name }},</p>
+            <p>Dear {{ $loan->user->full_name }},</p>
             <p>We received your loan repayment. Here are the details for your records:</p>
             <table class="table" role="presentation">
                 <tr>

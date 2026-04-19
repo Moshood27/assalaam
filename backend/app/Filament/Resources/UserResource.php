@@ -61,7 +61,7 @@ class UserResource extends Resource
                             ->schema([
                                 Forms\Components\Section::make('Basic Personal Information')
                                     ->schema([
-                                        Forms\Components\TextInput::make('name')->required()->maxLength(255),
+                                        Forms\Components\TextInput::make('name')->label('First Name')->required()->maxLength(255),
                                         Forms\Components\TextInput::make('surname')->maxLength(255),
                                         Forms\Components\TextInput::make('other_names')->maxLength(255),
                                         Forms\Components\Select::make('gender')

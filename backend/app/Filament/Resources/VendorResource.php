@@ -34,8 +34,10 @@ class VendorResource extends Resource
                             ->required()
                             ->maxLength(255),
                         Forms\Components\Select::make('owner_user_id')
-                            ->relationship('owner', 'name')
-                            ->searchable()
+                            ->label('Owner')
+                            ->relationship('owner', 'surname')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names'])
                             ->preload()
                             ->required(),
                         Forms\Components\TextInput::make('phone')
@@ -87,7 +89,10 @@ class VendorResource extends Resource
                         ->orderByRaw("LENGTH(name) $direction")
                         ->orderBy("name", $direction);
                 }),
-                TextColumn::make('owner.name')->label('Owner')->searchable()->sortable(),
+                TextColumn::make('owner.full_name')
+                    ->label('Owner')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 TextColumn::make('phone')->searchable(),
                 IconColumn::make('is_approved')->boolean()->label('Approved')->sortable(),
                 ToggleColumn::make('is_active')->label('Active'),

@@ -25,8 +25,12 @@ class GoalBookingResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->searchable()->preload()->required()->label('Member'),
+                    ->label('Member')
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->preload()
+                    ->required(),
                 Forms\Components\Select::make('savings_goal_id')
                     ->relationship('goal', 'title')
                     ->searchable()->preload()->required()->label('Savings Goal'),
@@ -49,7 +53,10 @@ class GoalBookingResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id')->sortable(),
-                TextColumn::make('user.name')->label('Member')->sortable()->searchable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 TextColumn::make('goal.title')->label('Goal')->sortable()->searchable()->wrap()->limit(30),
                 TextColumn::make('partner_name')->sortable()->searchable()->wrap()->limit(30),
                 TextColumn::make('booking_amount')->label('Amount')->money('ngn', true)->sortable(),

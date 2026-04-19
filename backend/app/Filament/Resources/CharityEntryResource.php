@@ -40,8 +40,9 @@ class CharityEntryResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->searchable()
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->placeholder('General / Anonymous if null'),
                 Forms\Components\TextInput::make('source')
                     ->required()
@@ -63,7 +64,7 @@ class CharityEntryResource extends Resource
                 InfoSection::make('Charity Details')
                     ->schema([
                         TextEntry::make('created_at')->dateTime(),
-                        TextEntry::make('user.name')->label('Member'),
+                        TextEntry::make('user.full_name')->label('Member'),
                         TextEntry::make('source'),
                         TextEntry::make('amount')->money('ngn'),
                         TextEntry::make('status')->badge()
@@ -91,7 +92,9 @@ class CharityEntryResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('created_at')->dateTime()->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names']),
                 TextColumn::make('source')->searchable(),
                 TextColumn::make('amount')
                     ->money('ngn', true)

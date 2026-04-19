@@ -27,7 +27,10 @@ class ShariahAuditLogResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
+                    ->label('Member/User')
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->disabled(),
                 Forms\Components\TextInput::make('action')
                     ->disabled(),
@@ -64,9 +67,9 @@ class ShariahAuditLogResource extends Resource
                     ->label('Timestamp')
                     ->dateTime()
                     ->sortable(),
-                TextColumn::make('user.name')
+                TextColumn::make('user.full_name')
                     ->label('Member/User')
-                    ->searchable()
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 TextColumn::make('action')
                     ->searchable()

@@ -565,7 +565,7 @@ class AccountingReportService
         $memberZakatData = $members->map(function ($user) use ($goldPrice, $nisabNgn, $rate) {
             $baseWealth = $user->zakatBaseWealth($goldPrice);
             return [
-                'name' => $user->name,
+                'name' => $user->full_name,
                 'membership_number' => $user->membership_number,
                 'base_wealth' => $baseWealth,
                 'zakat_due' => $baseWealth >= $nisabNgn ? $baseWealth * $rate : 0,
@@ -690,7 +690,7 @@ class AccountingReportService
         usort($history, fn($a, $b) => strcmp($b['date'], $a['date']));
 
         return [
-            'member_name' => $user->name,
+            'member_name' => $user->full_name,
             'membership_number' => $user->membership_number,
             'current_savings' => (float)$user->ordinary_savings,
             'current_shares' => (float)$user->shares_capital,
@@ -728,7 +728,7 @@ class AccountingReportService
 
             $agingData[] = [
                 'type' => 'Qard Hasan',
-                'member' => $l->user->name,
+                'member' => $l->user->full_name,
                 'principal' => (float)$l->principal_amount,
                 'repaid' => (float)$repaid,
                 'balance' => $balance,
@@ -765,7 +765,7 @@ class AccountingReportService
 
             $agingData[] = [
                 'type' => 'Murabahah',
-                'member' => $order->user->name,
+                'member' => $order->user->full_name,
                 'principal' => (float)$order->total_amount,
                 'repaid' => $totalPaid,
                 'balance' => $balance,
@@ -797,7 +797,7 @@ class AccountingReportService
         $summary = $contributions->groupBy('user_id')->map(function ($group) {
             $user = $group->first()->user;
             return [
-                'name' => $user?->name ?? 'Unknown',
+                'name' => $user?->full_name ?? 'Unknown',
                 'membership_number' => $user?->membership_number ?? '-',
                 'total_paid' => (float)$group->sum('amount'),
                 'last_payment_date' => $group->max('created_at')->toDateString(),
@@ -822,7 +822,7 @@ class AccountingReportService
         $project = \App\Models\Project::with(['investments.user', 'profits.payouts.user'])->findOrFail($projectId);
 
         $investments = $project->investments->map(fn($i) => [
-            'member' => $i->user?->name,
+            'member' => $i->user?->full_name,
             'amount' => (float)$i->amount,
             'date' => $i->created_at->toDateString(),
         ]);
@@ -833,7 +833,7 @@ class AccountingReportService
             'management_fee' => (float)$p->management_fee_amount,
             'net_distributable' => (float)$p->net_distributable,
             'payouts' => $p->payouts->map(fn($pay) => [
-                'member' => $pay->user?->name,
+                'member' => $pay->user?->full_name,
                 'amount' => (float)$pay->amount,
                 'status' => $pay->status,
             ]),
@@ -864,7 +864,7 @@ class AccountingReportService
             'net_pool_balance' => (float)($totalContributions - $totalClaims),
             'recent_activity' => $entries->take(20)->map(fn($e) => [
                 'date' => $e->created_at->toDateString(),
-                'member' => $e->user?->name ?? 'System',
+                'member' => $e->user?->full_name ?? 'System',
                 'amount' => (float)$e->amount,
                 'type' => $e->direction === 'credit' ? 'Contribution' : 'Claim/Payout',
             ]),
@@ -884,7 +884,7 @@ class AccountingReportService
             'total_weight_grams' => (float)$totalWeight,
             'total_market_value' => round($totalWeight * $goldPrice, 2),
             'top_holders' => $users->sortByDesc('gold_balance')->take(10)->map(fn($u) => [
-                'name' => $u->name,
+                'name' => $u->full_name,
                 'weight' => (float)$u->gold_balance,
                 'value' => round($u->gold_balance * $goldPrice, 2),
             ])->values(),
@@ -905,7 +905,7 @@ class AccountingReportService
 
             return [
                 'vendor_name' => $v->name,
-                'owner' => $v->owner?->name,
+                'owner' => $v->owner?->full_name,
                 'total_sales' => (float)$totalSales,
                 'vendor_payouts' => (float)$vendorEarnings,
                 'coop_commission' => $coopCommission,

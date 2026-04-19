@@ -29,8 +29,9 @@ class ContributionResource extends Resource
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->label('Member')
-                    ->options(User::query()->pluck('name', 'id'))
-                    ->searchable()
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->required(),
 
                 // For create: allow multiple schemes with amounts
@@ -112,7 +113,9 @@ class ContributionResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('created_at')->label('Time')->since()->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names']),
                 TextColumn::make('user.membership_number')
                     ->label('Member #')
                     ->toggleable(isToggledHiddenByDefault: true)

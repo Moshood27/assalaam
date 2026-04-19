@@ -27,8 +27,9 @@ class UserBadgeResource extends Resource
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->label('Member')
-                    ->options(User::query()->pluck('name', 'id'))
-                    ->searchable()
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->required(),
                 Forms\Components\TextInput::make('badge_type')
                     ->required()
@@ -52,9 +53,9 @@ class UserBadgeResource extends Resource
                 return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
             })
             ->columns([
-                TextColumn::make('user.name')
+                TextColumn::make('user.full_name')
                     ->label('Member')
-                    ->searchable()
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 TextColumn::make('name')
                     ->searchable()

@@ -83,7 +83,10 @@ class ProjectProposalResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('user.name')->label('Proposer')->searchable()->sortable(),
+                TextColumn::make('user.full_name')
+                    ->label('Proposer')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 TextColumn::make('title')->searchable()->sortable(),
                 TextColumn::make('status')->badge()
                     ->colors([

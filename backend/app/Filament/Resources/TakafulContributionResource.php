@@ -36,9 +36,9 @@ class TakafulContributionResource extends Resource
                     ->label('Date')
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
-                TextColumn::make('user.name')
+                TextColumn::make('user.full_name')
                     ->label('Member')
-                    ->searchable()
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 TextColumn::make('user.membership_number')
                     ->label('Member #')
@@ -93,8 +93,9 @@ class TakafulContributionResource extends Resource
                     ->form([
                         Forms\Components\Select::make('user_id')
                             ->label('Member')
-                            ->searchable()
-                            ->options(User::orderBy('name')->pluck('name', 'id')),
+                            ->relationship('user', 'surname')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names']),
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['user_id'])) {
@@ -116,8 +117,9 @@ class TakafulContributionResource extends Resource
                             ->prefix('₦'),
                         Forms\Components\Select::make('user_id')
                             ->label('Only Member (optional)')
-                            ->searchable()
-                            ->options(User::orderBy('name')->pluck('name', 'id')),
+                            ->relationship('user', 'surname')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names']),
                         Forms\Components\Toggle::make('dry_run')
                             ->label('Dry-run (no writes)')
                             ->default(false),

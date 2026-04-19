@@ -19,9 +19,11 @@ class CommentsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->required()
-                    ->searchable(),
+                    ->label('User')
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->required(),
                 Forms\Components\Textarea::make('comment')
                     ->required()
                     ->columnSpanFull(),
@@ -33,7 +35,10 @@ class CommentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('comment')
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('user.full_name')
+                    ->label('User')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('comment')->limit(50),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])

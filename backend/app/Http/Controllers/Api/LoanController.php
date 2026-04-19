@@ -275,7 +275,7 @@ class LoanController extends Controller
                 if ($admins->isNotEmpty()) {
                     $push = app(\App\Services\PushService::class);
                     $title = 'Loan Disbursed';
-                    $memberName = $q->user?->name ?: 'Member';
+                    $memberName = $q->user?->full_name ?: 'Member';
                     $body = 'Loan ' . $q->qard_id_string . ' disbursed: ₦' . number_format($credit, 2) . ' to ' . $memberName;
                     foreach ($admins as $a) {
                         $token = $a->fcm_token ?: $a->device_token;

@@ -152,7 +152,7 @@ class AdminReportsController extends Controller
                 'qard_id_string' => $loan->qard_id_string,
                 'member' => [
                     'id' => $loan->user->id ?? null,
-                    'name' => $loan->user->name ?? null,
+                    'name' => $loan->user->full_name ?? null,
                     'membership_number' => $loan->user->membership_number ?? null,
                     'branch' => $loan->user->branch->name ?? null,
                 ],
@@ -284,7 +284,8 @@ class AdminReportsController extends Controller
 
         $userMap = User::query()
             ->whereIn('id', $logs->pluck('user_id')->filter()->unique()->values())
-            ->pluck('name', 'id');
+            ->get(['id', 'surname', 'name', 'other_names'])
+            ->mapWithKeys(fn ($u) => [$u->id => $u->full_name]);
 
         $rows = $logs->map(function ($l) use ($userMap) {
             return [

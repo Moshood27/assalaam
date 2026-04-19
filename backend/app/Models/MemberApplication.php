@@ -98,6 +98,11 @@ class MemberApplication extends Model
         'last_otp_sent_at' => 'datetime',
     ];
 
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->surname} {$this->name} {$this->other_names}");
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);

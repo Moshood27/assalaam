@@ -21,8 +21,10 @@ class MembersRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->searchable()
+                    ->label('Member')
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('status')
@@ -42,9 +44,9 @@ class MembersRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label('Member Name')
-                    ->searchable()
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()

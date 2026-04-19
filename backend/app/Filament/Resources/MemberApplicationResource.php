@@ -175,12 +175,15 @@ class MemberApplicationResource extends Resource
                 Tables\Columns\ImageColumn::make('passport_path')
                     ->label('Photo')
                     ->circular(),
-                TextColumn::make('surname')->searchable()->sortable(query: function (Builder $query, string $direction): Builder {
-                    return $query
-                        ->orderByRaw("LENGTH(surname) $direction")
-                        ->orderBy("surname", $direction);
-                }),
-                TextColumn::make('name')->label('First Name')->searchable()->sortable(),
+                TextColumn::make('full_name')
+                    ->label('Name')
+                    ->searchable(['name', 'surname', 'other_names'])
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->orderBy("surname", $direction)
+                            ->orderBy("name", $direction)
+                            ->orderBy("other_names", $direction);
+                    }),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('phone')->searchable(),
                 Tables\Columns\TextColumn::make('approval_status')

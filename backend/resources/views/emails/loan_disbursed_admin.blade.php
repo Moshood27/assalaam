@@ -35,7 +35,7 @@
                 </tr>
                 <tr>
                     <td class="label">Member</td>
-                    <td class="value">{{ $loan->user->name }} ({{ $loan->user->email }})</td>
+                    <td class="value">{{ $loan->user->full_name }} ({{ $loan->user->email }})</td>
                 </tr>
                 <tr>
                     <td class="label">Principal</td>

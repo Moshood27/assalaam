@@ -56,8 +56,9 @@ class QardHasanResource extends Resource
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->label('Member')
-                    ->options(User::query()->pluck('name', 'id'))
-                    ->searchable()
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -83,7 +84,8 @@ class QardHasanResource extends Resource
                         return User::query()
                             ->when($selectedUserId, fn ($q) => $q->where('id', '!=', $selectedUserId))
                             ->where('is_defaulter', false)
-                            ->pluck('name', 'id');
+                            ->get()
+                            ->mapWithKeys(fn ($u) => [$u->id => $u->full_name]);
                     })
                     ->searchable()
                     ->required()
@@ -172,7 +174,9 @@ class QardHasanResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['user', 'guarantors', 'approvedBy']))
             ->columns([
                 TextColumn::make('created_at')->label('Created')->since()->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names']),
                 TextColumn::make('user.membership_number')
                     ->label('Member #')
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -185,7 +189,7 @@ class QardHasanResource extends Resource
                 TextColumn::make('guarantors_list')
                     ->label('Guarantors')
                     ->wrap()
-                    ->getStateUsing(fn (QardHasan $record) => $record->guarantors?->pluck('name')->filter()->implode(', ') ?: '-'),
+                    ->getStateUsing(fn (QardHasan $record) => $record->guarantors?->map(fn ($u) => $u->full_name)->filter()->implode(', ') ?: '-'),
                 TextColumn::make('qard_id_string')->label('Loan ID')->searchable(),
                 TextColumn::make('principal_amount')->money('ngn', true)->label('Principal')->sortable(),
                 TextColumn::make('credited_amount')
@@ -203,7 +207,7 @@ class QardHasanResource extends Resource
                         }
                     ),
                 TextColumn::make('paid_amount')->money('ngn', true)->label('Paid')->sortable(),
-                TextColumn::make('approvedBy.name')->label('Approved By')->formatStateUsing(fn ($state) => $state ?: '-')->toggleable(),
+                TextColumn::make('approvedBy.full_name')->label('Approved By')->formatStateUsing(fn ($state) => $state ?: '-')->toggleable(),
                 TextColumn::make('approved_at')->label('Approved At')->dateTime()->sortable()->toggleable(),
                 TextColumn::make('status')->badge()->colors([
                     'warning' => ['pending'],
@@ -245,7 +249,20 @@ class QardHasanResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')) // Only visible to Super Admin
+                    ->visible(fn (QardHasan $record) => auth()->user()->hasRole('super_admin')
+                        && (float) $record->paid_amount <= 0
+                        && ! $record->repayments()->exists())
+                    ->before(function (QardHasan $record, Tables\Actions\DeleteAction $action) {
+                        if ($record->repayments()->exists() || (float) $record->paid_amount > 0) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Cannot delete loan')
+                                ->body('Repayments have already started for this loan.')
+                                ->send();
+
+                            $action->halt();
+                        }
+                    })
                     ->requiresConfirmation()
                     ->successNotificationTitle('Loan deleted successfully'),
                 Action::make('approve')
@@ -785,7 +802,7 @@ class QardHasanResource extends Resource
                 InfoSection::make('Loan Details')
                     ->schema([
                         TextEntry::make('qard_id_string')->label('Loan ID'),
-                        TextEntry::make('user.name')->label('Member'),
+                        TextEntry::make('user.full_name')->label('Member'),
                         TextEntry::make('principal_amount')->money('ngn'),
                         TextEntry::make('status')->badge(),
                     ])->columns(2),
@@ -794,7 +811,7 @@ class QardHasanResource extends Resource
                         RepeatableEntry::make('transactionApprovals')
                             ->label('Approvals Log')
                             ->schema([
-                                TextEntry::make('approver.name')->label('Approver'),
+                                TextEntry::make('approver.full_name')->label('Approver'),
                                 TextEntry::make('status')->badge()->color('success'),
                                 TextEntry::make('responded_at')->label('Signed At')->dateTime(),
                             ])->columns(3)

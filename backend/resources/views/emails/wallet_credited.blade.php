@@ -39,7 +39,7 @@
             <div class="brand">{{ $appName ?? config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $user->name }},</p>
+            <p class="salam">Assalāmu ‘alaykum {{ $user->full_name }},</p>
             <p>Alhamdulillāh, your cooperative wallet has just been credited.</p>
 
             <p class="amount">+ {{ '₦' . number_format($amount, 2) }}</p>

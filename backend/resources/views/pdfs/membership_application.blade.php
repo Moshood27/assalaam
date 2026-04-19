@@ -117,10 +117,8 @@
         <div class="section-title">1. Basic Personal Information</div>
         <table>
             <tr>
-                <td class="label">Surname (Last Name):</td>
-                <td class="value">{{ $application->surname }}</td>
-                <td class="label">Other Names:</td>
-                <td class="value">{{ $application->other_names }}</td>
+                <td class="label">Full Name:</td>
+                <td class="value" colspan="3">{{ $application->full_name }}</td>
             </tr>
             <tr>
                 <td class="label">Sex (Gender):</td>

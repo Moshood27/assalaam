@@ -34,8 +34,10 @@ class StoreOrderResource extends Resource
                             ->disabled()
                             ->dehydrated(false),
                         Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'name')
-                            ->searchable()
+                            ->label('Member')
+                            ->relationship('user', 'surname')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names'])
                             ->preload()
                             ->required(),
                         Forms\Components\Select::make('status')
@@ -162,7 +164,10 @@ class StoreOrderResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('reference')->searchable()->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable()->sortable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 TextColumn::make('total_amount')->label('Total')->money('ngn', true)->sortable(),
                 TextColumn::make('status')
                     ->badge()

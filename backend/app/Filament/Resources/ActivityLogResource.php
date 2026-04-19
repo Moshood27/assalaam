@@ -32,9 +32,9 @@ class ActivityLogResource extends Resource
                     ->label('Logged At')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('causer.name')
+                Tables\Columns\TextColumn::make('causer.full_name')
                     ->label('User/Admin')
-                    ->searchable(),
+                    ->searchable(['surname', 'name', 'other_names']),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Action')
                     ->searchable(),
@@ -63,7 +63,7 @@ class ActivityLogResource extends Resource
                     ->schema([
                         TextEntry::make('created_at')->dateTime(),
                         TextEntry::make('description'),
-                        TextEntry::make('causer.name')->label('Admin/User'),
+                        TextEntry::make('causer.full_name')->label('Admin/User'),
                         TextEntry::make('subject_type')->label('Resource Type'),
                         TextEntry::make('subject_id')->label('Resource ID'),
                     ])->columns(2),

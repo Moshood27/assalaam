@@ -94,8 +94,9 @@ class TakafulPoolEntryResource extends Resource
                     ->form([
                         Forms\Components\Select::make('user_id')
                             ->label('Member')
-                            ->searchable()
-                            ->options(User::orderBy('name')->pluck('name', 'id')),
+                            ->relationship('user', 'surname')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names']),
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (! empty($data['user_id'])) {
@@ -125,8 +126,9 @@ class TakafulPoolEntryResource extends Resource
                             ->maxLength(255),
                         Forms\Components\Select::make('user_id')
                             ->label('Related Member (optional)')
-                            ->searchable()
-                            ->options(User::orderBy('name')->pluck('name', 'id')),
+                            ->relationship('user', 'surname')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names']),
                     ])
                     ->action(function (array $data) {
                         $direction = $data['direction'];

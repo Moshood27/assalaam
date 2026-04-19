@@ -27,9 +27,9 @@ class RecentPayouts extends BaseWidget
                 TextColumn::make('updated_at')
                     ->label('Disbursed')
                     ->since(),
-                TextColumn::make('user.name')
+                TextColumn::make('user.full_name')
                     ->label('Member')
-                    ->searchable(),
+                    ->searchable(['surname', 'name', 'other_names']),
                 TextColumn::make('qard_id_string')
                     ->label('Loan ID')
                     ->searchable(),

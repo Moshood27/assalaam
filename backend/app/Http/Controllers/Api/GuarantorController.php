@@ -36,7 +36,7 @@ class GuarantorController extends Controller
                     'qard_id_string' => $loan->qard_id_string,
                     'member' => [
                         'id' => $loan->user?->id,
-                        'name' => $loan->user?->name,
+                        'name' => $loan->user?->full_name,
                         'branch' => $loan->user?->branch?->name,
                     ],
                     'principal_amount' => (float) $loan->principal_amount,
@@ -235,7 +235,7 @@ class GuarantorController extends Controller
 
                 $push = app(\App\Services\PushService::class);
                 $token = $g->fcm_token ?: ($g->device_token ?? null);
-                $push->send($token, 'Guarantor Reminder', sprintf('Please review and respond to loan %s for %s.', $loan->qard_id_string, $loan->user?->name ?? 'member'), [
+                $push->send($token, 'Guarantor Reminder', sprintf('Please review and respond to loan %s for %s.', $loan->qard_id_string, $loan->user?->full_name ?? 'member'), [
                     'type' => 'guarantor_reminder_manual',
                     'loan_id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,
@@ -291,7 +291,7 @@ class GuarantorController extends Controller
             $push = app(\App\Services\PushService::class);
             foreach ($admins as $a) {
                 $token = $a->fcm_token ?: ($a->device_token ?? null);
-                $push->send($token, 'Guarantor Escalation', sprintf('Loan %s for %s requires attention. Pending guarantors: %d', $loan->qard_id_string, $loan->user?->name ?? 'member', $pending->count()), [
+                $push->send($token, 'Guarantor Escalation', sprintf('Loan %s for %s requires attention. Pending guarantors: %d', $loan->qard_id_string, $loan->user?->full_name ?? 'member', $pending->count()), [
                     'type' => 'guarantor_escalation',
                     'loan_id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,

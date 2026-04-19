@@ -27,11 +27,12 @@ class SavingsGoalResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->searchable()
+                    ->label('Member')
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->preload()
-                    ->required()
-                    ->label('Member'),
+                    ->required(),
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(120),
@@ -79,7 +80,10 @@ class SavingsGoalResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('user.name')->label('Member')->searchable()->sortable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(),
                 TextColumn::make('title')->wrap()->limit(40)->searchable(),
                 TextColumn::make('target_amount')->label('Target')->money('ngn', true)->sortable(),
                 TextColumn::make('saved_amount')->label('Saved')->money('ngn', true)->sortable(),

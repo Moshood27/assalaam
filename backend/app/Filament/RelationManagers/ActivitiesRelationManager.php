@@ -40,8 +40,9 @@ class ActivitiesRelationManager extends RelationManager
                     ->label('Logged At')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('causer.name')
-                    ->label('Admin/User'),
+                Tables\Columns\TextColumn::make('causer.full_name')
+                    ->label('Admin/User')
+                    ->searchable(['surname', 'name', 'other_names']),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Action'),
             ])
@@ -68,7 +69,7 @@ class ActivitiesRelationManager extends RelationManager
                     ->schema([
                         TextEntry::make('created_at')->dateTime(),
                         TextEntry::make('description'),
-                        TextEntry::make('causer.name')->label('Admin/User'),
+                        TextEntry::make('causer.full_name')->label('Admin/User'),
                     ])->columns(2),
 
                 Section::make('Changes')

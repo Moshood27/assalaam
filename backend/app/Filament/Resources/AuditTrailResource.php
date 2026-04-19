@@ -54,9 +54,9 @@ class AuditTrailResource extends Resource
                     ->label('Date/Time')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('causer.name')
+                Tables\Columns\TextColumn::make('causer.full_name')
                     ->label('Admin')
-                    ->searchable()
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->placeholder('System/Unknown'),
                 Tables\Columns\TextColumn::make('subject_type')
                     ->label('Record Type')
@@ -148,7 +148,7 @@ class AuditTrailResource extends Resource
                 Section::make('Audit Details')
                     ->schema([
                         TextEntry::make('created_at')->label('Timestamp')->dateTime(),
-                        TextEntry::make('causer.name')->label('Admin/User'),
+                        TextEntry::make('causer.full_name')->label('Admin/User'),
                         TextEntry::make('subject_type')->label('Resource Type')->formatStateUsing(fn ($state) => class_basename($state)),
                         TextEntry::make('subject_id')->label('Resource ID'),
                         TextEntry::make('description')->label('Event'),

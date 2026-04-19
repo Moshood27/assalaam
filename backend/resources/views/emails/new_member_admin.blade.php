@@ -30,7 +30,7 @@
             <table class="table" role="presentation">
                 <tr>
                     <td class="label">Name</td>
-                    <td class="value">{{ $user->name }}</td>
+                    <td class="value">{{ $user->full_name }}</td>
                 </tr>
                 <tr>
                     <td class="label">Email</td>

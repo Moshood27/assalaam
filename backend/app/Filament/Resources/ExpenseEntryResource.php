@@ -64,7 +64,7 @@ class ExpenseEntryResource extends Resource
                         TextEntry::make('title'),
                         TextEntry::make('category'),
                         TextEntry::make('amount')->money('ngn'),
-                        TextEntry::make('creator.name')->label('Entered By'),
+                        TextEntry::make('creator.full_name')->label('Entered By'),
                         TextEntry::make('status')->badge()
                             ->colors([
                                 'warning' => 'pending',
@@ -77,7 +77,7 @@ class ExpenseEntryResource extends Resource
                         RepeatableEntry::make('transactionApprovals')
                             ->label('Approvals Log')
                             ->schema([
-                                TextEntry::make('approver.name')->label('Approver'),
+                                TextEntry::make('approver.full_name')->label('Approver'),
                                 TextEntry::make('status')->badge()->color('success'),
                                 TextEntry::make('responded_at')->label('Signed At')->dateTime(),
                             ])->columns(3)
@@ -110,7 +110,10 @@ class ExpenseEntryResource extends Resource
                     ->badge()
                     ->color(fn (ExpenseEntry $record) => $record->isHighValue() ? ($record->hasSufficientApprovals() ? 'success' : 'warning') : 'gray')
                     ->toggleable(),
-                TextColumn::make('creator.name')->label('Entered By')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('creator.full_name')
+                    ->label('Entered By')
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')->since()->label('Created')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

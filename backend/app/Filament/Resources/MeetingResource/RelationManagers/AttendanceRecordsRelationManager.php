@@ -42,9 +42,9 @@ class AttendanceRecordsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label('Member Name')
-                    ->searchable()
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.membership_number')
                     ->label('ID')

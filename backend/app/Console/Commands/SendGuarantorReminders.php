@@ -39,7 +39,7 @@ class SendGuarantorReminders extends Command
             $countLoans++;
 
             $title = 'Guarantor Reminder';
-            $body = 'Please review loan '.($loan->qard_id_string).' for '.($loan->user?->name).'. Accept or Decline in the app.';
+            $body = 'Please review loan '.($loan->qard_id_string).' for '.($loan->user?->full_name ?? 'member').'. Accept or Decline in the app.';
             $data = [
                 'type' => 'guarantor_reminder',
                 'loan_id' => $loan->id,
@@ -90,7 +90,7 @@ class SendGuarantorReminders extends Command
                     $admins = User::query()->where('is_admin', true)->get();
                     foreach ($admins as $a) {
                         $token = $a->fcm_token ?: ($a->device_token ?? null);
-                        $push->send($token, 'Guarantor Escalation', sprintf('Loan %s for %s stalled. Pending guarantors escalated: %d', $loan->qard_id_string, $loan->user?->name ?? 'member', $affected), [
+                        $push->send($token, 'Guarantor Escalation', sprintf('Loan %s for %s stalled. Pending guarantors escalated: %d', $loan->qard_id_string, $loan->user?->full_name ?? 'member', $affected), [
                             'type' => 'guarantor_escalation_auto',
                             'loan_id' => $loan->id,
                             'qard_id_string' => $loan->qard_id_string,

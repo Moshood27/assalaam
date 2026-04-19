@@ -24,8 +24,10 @@ class SupportMessageResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->searchable()
+                    ->label('Member')
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->disabled(),
                 Forms\Components\TextInput::make('sender_type')
                     ->disabled(),
@@ -42,7 +44,9 @@ class SupportMessageResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('created_at')->dateTime()->sortable(),
-                TextColumn::make('user.name')->label('Member')->searchable(),
+                TextColumn::make('user.full_name')
+                    ->label('Member')
+                    ->searchable(['surname', 'name', 'other_names']),
                 TextColumn::make('sender_type')->badge()->colors([
                     'success' => ['admin'],
                     'info' => ['user'],
