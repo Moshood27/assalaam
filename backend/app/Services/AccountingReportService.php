@@ -941,6 +941,70 @@ class AccountingReportService
     }
 
     /**
+     * Build Branch-by-Branch Outstanding Qard Hasan Report.
+     */
+    public function buildBranchQardHasanReport(?int $branchId = null): array
+    {
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users.qardHasans' => function ($query) {
+                $query->where('status', 'active');
+            }, 'users.qardHasans.repayments' => function($q) {
+                $q->whereIn('status', ['success', 'paid', 'completed'])->orderBy('paid_at', 'desc');
+            }])->get();
+
+        $report = [
+            'branches' => [],
+            'grand_total_principal' => 0,
+            'grand_total_paid' => 0,
+            'grand_total_outstanding' => 0,
+            'grand_total_loans_count' => 0,
+        ];
+
+        foreach ($branches as $branch) {
+            $branchData = [
+                'branch_id' => $branch->id,
+                'branch_name' => $branch->name,
+                'loans' => [],
+                'total_principal' => 0,
+                'total_paid' => 0,
+                'total_outstanding' => 0,
+            ];
+
+            foreach ($branch->users as $user) {
+                foreach ($user->qardHasans as $loan) {
+                    $outstanding = max(0, (float)$loan->principal_amount - (float)$loan->paid_amount);
+                    if ($outstanding > 0) {
+                        $lastPayment = $loan->repayments->first();
+
+                        $branchData['loans'][] = [
+                            'member_name' => $user->full_name,
+                            'loan_id' => $loan->qard_id_string,
+                            'principal' => (float)$loan->principal_amount,
+                            'paid' => (float)$loan->paid_amount,
+                            'outstanding' => $outstanding,
+                            'status' => $loan->status,
+                            'last_payment_date' => $lastPayment ? $lastPayment->paid_at : null,
+                        ];
+                        $branchData['total_principal'] += (float)$loan->principal_amount;
+                        $branchData['total_paid'] += (float)$loan->paid_amount;
+                        $branchData['total_outstanding'] += $outstanding;
+                    }
+                }
+            }
+
+            if (!empty($branchData['loans'])) {
+                $report['branches'][] = $branchData;
+                $report['grand_total_principal'] += $branchData['total_principal'];
+                $report['grand_total_paid'] += $branchData['total_paid'];
+                $report['grand_total_outstanding'] += $branchData['total_outstanding'];
+                $report['grand_total_loans_count'] += count($branchData['loans']);
+            }
+        }
+
+        return $report;
+    }
+
+    /**
      * Build Sharia Audit Report Summary.
      */
     public function buildShariaAuditReport(?string $from = null, ?string $to = null): array

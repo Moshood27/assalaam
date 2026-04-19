@@ -7,6 +7,7 @@ use App\Filament\Traits\HasWipeAction;
 use App\Exports\LoanImportTemplate;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Filament\Resources\QardHasanResource;
+use App\Filament\Pages\QardHasanBranchReport;
 use App\Services\CsvImportService;
 use Filament\Actions;
 use Filament\Forms;
@@ -30,6 +31,11 @@ class ListQardHasans extends ListRecords
         return [
             $this->getWipeHeaderAction(),
             Actions\CreateAction::make(),
+            Actions\Action::make('branchReport')
+                ->label('Branch Outstanding Report')
+                ->icon('heroicon-o-document-chart-bar')
+                ->color('info')
+                ->url(fn () => QardHasanBranchReport::getUrl()),
             Actions\Action::make('importCsv')
                 ->label('Import CSV')
                 ->icon('heroicon-o-arrow-up-tray')
