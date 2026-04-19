@@ -40,6 +40,8 @@ return new class extends Migration
             $table->dropForeign(['vendor_id']);
             $table->dropForeign(['approved_by']);
             $table->dropColumn([
+                'status',
+                'processed_at',
                 'vendor_id',
                 'bank_name',
                 'bank_code',

@@ -17,6 +17,7 @@ class AttendanceRecord extends Model
         'attended_at',
         'lat',
         'lng',
+        'device_uuid',
         'fine_paid_at',
     ];
 

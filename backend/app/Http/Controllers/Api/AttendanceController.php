@@ -117,6 +117,7 @@ class AttendanceController extends Controller
             'pin' => 'required|string',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
+            'device_uuid' => 'required|string',
         ]);
 
         if ($meeting->status !== 'ongoing') {
@@ -148,6 +149,19 @@ class AttendanceController extends Controller
         }
 
         $user = $request->user();
+
+        // One Person, One Vote: Check if this phone has already been used by someone else for THIS meeting
+        $alreadyUsed = AttendanceRecord::where('meeting_id', $meeting->id)
+            ->where('device_uuid', $request->device_uuid)
+            ->where('user_id', '!=', $user->id)
+            ->exists();
+
+        if ($alreadyUsed) {
+            return response()->json([
+                'message' => 'This device has already been used to mark attendance for another member in this meeting.'
+            ], 403);
+        }
+
         $record = AttendanceRecord::updateOrCreate(
             ['user_id' => $user->id, 'meeting_id' => $meeting->id],
             [
@@ -155,6 +169,7 @@ class AttendanceController extends Controller
                 'attended_at' => now(),
                 'lat' => $request->lat,
                 'lng' => $request->lng,
+                'device_uuid' => $request->device_uuid,
             ]
         );
 
