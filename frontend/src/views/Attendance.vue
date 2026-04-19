@@ -144,6 +144,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Geolocation } from '@capacitor/geolocation'
+import { Device } from '@capacitor/device'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
@@ -275,10 +276,12 @@ const submitAttendance = async () => {
   if (!pin.value) return
   submitting.value = true
   try {
+    const info = await Device.getId()
     const res = await axios.post(`/api/meetings/${meeting.value.id}/mark-attendance`, {
       pin: pin.value,
       lat: location.value.lat,
-      lng: location.value.lng
+      lng: location.value.lng,
+      device_uuid: info.identifier
     })
     record.value = res.data.record
     modal.alert("Attendance marked successfully!")

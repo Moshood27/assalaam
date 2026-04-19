@@ -27,6 +27,7 @@ return [
     ],
     'attendance' => [
         'default_fine' => env('COOP_ATTENDANCE_FINE', 500),
+        'apology_fine' => env('COOP_APOLOGY_FINE', 100),
         'radius_meters' => env('COOP_ATTENDANCE_RADIUS', 50),
     ],
     'wallet' => [

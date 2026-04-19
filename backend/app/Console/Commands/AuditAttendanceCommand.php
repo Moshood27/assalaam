@@ -7,6 +7,7 @@ use App\Models\Meeting;
 use App\Models\AttendanceRecord;
 use App\Models\User;
 use App\Models\WalletTransaction;
+use App\Services\AttendanceService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -15,7 +16,7 @@ class AuditAttendanceCommand extends Command
     protected $signature = 'app:audit-attendance';
     protected $description = 'Audit completed meetings and charge fines for absent members';
 
-    public function handle()
+    public function handle(AttendanceService $attendanceService)
     {
         // Audit meetings that are completed but not yet audited
         $meetings = Meeting::where('status', 'completed')->get();
@@ -53,7 +54,8 @@ class AuditAttendanceCommand extends Command
                 // If no record, or status is still 'absent', charge fine
                 // Possible statuses are 'present', 'fine_paid', 'fine_pending', or 'absent'
                 if (!$record || $record->status === 'absent') {
-                    $this->chargeFine($user, $meeting, $record);
+                    $attendanceService->chargeAbsenceFine($user, $meeting, $record);
+                    $this->line("Processed absence fine for User: {$user->full_name} (ID: {$user->id})");
                 } else {
                     $this->line("Skipping User: {$user->full_name} (Status: {$record->status})");
                 }
@@ -65,67 +67,6 @@ class AuditAttendanceCommand extends Command
 
     private function chargeFine(User $user, Meeting $meeting, $record)
     {
-        $amount = (float) $meeting->fine_amount;
-        if ($amount <= 0) return;
-
-        DB::transaction(function () use ($user, $meeting, $amount, $record) {
-            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
-
-            // Check if user has enough balance
-            if ((float)$lockedUser->balance >= $amount) {
-                // Deduct from balance
-                $lockedUser->decrement('balance', $amount);
-
-                $reference = 'FINE_' . $meeting->id . '_' . Str::random(8);
-
-                WalletTransaction::create([
-                    'user_id' => $lockedUser->id,
-                    'type' => 'debit',
-                    'amount' => $amount,
-                    'reference' => $reference,
-                    'source' => 'attendance_fine',
-                    'withdrawable' => true,
-                    'meta' => [
-                        'meeting_id' => $meeting->id,
-                        'meeting_name' => $meeting->name,
-                    ],
-                ]);
-
-                $status = 'fine_paid';
-                $paidAt = now();
-
-                // Record in Charity Ledger (Sadaqah fund)
-                \App\Models\CharityEntry::create([
-                    'user_id' => $lockedUser->id,
-                    'source' => 'Attendance Fine',
-                    'amount' => $amount,
-                    'note' => "Fine for meeting: {$meeting->name} (ID: {$meeting->id})",
-                    'status' => 'processed',
-                    'processed_at' => now(),
-                ]);
-
-                $this->line("Charged fine of {$amount} to User: {$user->full_name} (ID: {$user->id})");
-            } else {
-                // Not enough balance, add to outstanding fines
-                $lockedUser->increment('outstanding_fines', $amount);
-                $status = 'fine_pending';
-                $paidAt = null;
-                $this->warn("Insufficient balance for User: {$user->full_name}. Added {$amount} to outstanding fines.");
-            }
-
-            if ($record) {
-                $record->update([
-                    'status' => $status,
-                    'fine_paid_at' => $paidAt,
-                ]);
-            } else {
-                AttendanceRecord::create([
-                    'user_id' => $lockedUser->id,
-                    'meeting_id' => $meeting->id,
-                    'status' => $status,
-                    'fine_paid_at' => $paidAt,
-                ]);
-            }
-        });
+        // Removed as it is now in AttendanceService
     }
 }

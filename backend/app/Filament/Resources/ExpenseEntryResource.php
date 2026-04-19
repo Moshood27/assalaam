@@ -263,7 +263,7 @@ class ExpenseEntryResource extends Resource
                     ->color('success')
                     ->visible(fn (ExpenseEntry $record) =>
                         $record->status === 'pending' &&
-                        auth()->user()->hasAnyRole(['Chairman', 'Treasurer', 'Sharia Auditor', 'super_admin']) &&
+                        auth()->user()->roles()->whereIn('name', ['Chairman', 'Treasurer', 'Sharia Auditor', 'super_admin'])->exists() &&
                         !$record->transactionApprovals()->where('approver_id', auth()->id())->exists()
                     )
                     ->requiresConfirmation()
@@ -289,7 +289,7 @@ class ExpenseEntryResource extends Resource
                         $record->status === 'approved' &&
                         $record->account_number &&
                         $record->receipt_path &&
-                        auth()->user()->hasAnyRole(['Treasurer', 'super_admin'])
+                        auth()->user()->roles()->whereIn('name', ['Treasurer', 'super_admin'])->exists()
                     )
                     ->requiresConfirmation()
                     ->modalDescription('This will send real money via the payment gateway. Ensure account details are correct.')
@@ -324,7 +324,7 @@ class ExpenseEntryResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->visible(fn (ExpenseEntry $record) => $record->status === 'pending'),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn (ExpenseEntry $record) => $record->status === 'pending' && auth()->user()->hasRole('super_admin')),
+                    ->visible(fn (ExpenseEntry $record) => $record->status === 'pending' && auth()->user()->roles()->where('name', 'super_admin')->exists()),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -357,7 +357,7 @@ class ExpenseEntryResource extends Resource
     {
         return parent::getEloquentQuery()
             ->when(
-                auth()->user()->hasRole('Branch Manager'),
+                auth()->user()->roles()->where('name', 'Branch Manager')->exists(),
                 fn ($query) => $query->whereHas('creator', fn ($q) => $q->where('branch_id', auth()->user()->branch_id))
             );
     }

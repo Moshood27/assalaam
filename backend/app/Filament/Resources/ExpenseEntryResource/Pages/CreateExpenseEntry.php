@@ -19,7 +19,19 @@ class CreateExpenseEntry extends CreateRecord
     protected function afterCreate(): void
     {
         $record = $this->record;
-        $admins = \App\Models\User::role(['Chairman', 'Treasurer', 'super_admin'])->get();
+
+        // Ensure roles exist before querying to avoid RoleDoesNotExist exception
+        $targetRoles = ['Chairman', 'Treasurer', 'super_admin'];
+        $existingRoles = \Spatie\Permission\Models\Role::whereIn('name', $targetRoles)
+            ->where('guard_name', 'web')
+            ->pluck('name')
+            ->toArray();
+
+        if (empty($existingRoles)) {
+            return;
+        }
+
+        $admins = \App\Models\User::role($existingRoles)->get();
 
         $notification = new \App\Notifications\GeneralNotification(
             title: 'New Expense Awaiting Approval',

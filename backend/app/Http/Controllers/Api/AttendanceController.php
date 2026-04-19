@@ -8,6 +8,7 @@ use App\Models\AttendanceRecord;
 use App\Models\WalletTransaction;
 use App\Models\User;
 use App\Services\GeoService;
+use App\Services\AttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
@@ -16,10 +17,12 @@ use Illuminate\Support\Str;
 class AttendanceController extends Controller
 {
     protected GeoService $geoService;
+    protected AttendanceService $attendanceService;
 
-    public function __construct(GeoService $geoService)
+    public function __construct(GeoService $geoService, AttendanceService $attendanceService)
     {
         $this->geoService = $geoService;
+        $this->attendanceService = $attendanceService;
     }
 
     public function current(Request $request)
@@ -173,7 +176,13 @@ class AttendanceController extends Controller
             ]
         );
 
-        return response()->json(['message' => 'Attendance marked successfully', 'record' => $record]);
+        $message = 'Attendance marked successfully';
+        if ($this->attendanceService->isLate($meeting, $record->attended_at)) {
+            $this->attendanceService->chargeLatenessFine($user, $meeting);
+            $message .= '. You were late and charged a lateness fine of 100.';
+        }
+
+        return response()->json(['message' => $message, 'record' => $record]);
     }
 
 }

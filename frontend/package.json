@@ -22,6 +22,7 @@
     "@capacitor/cli": "^6.2.1",
     "@capacitor/clipboard": "^6.0.3",
     "@capacitor/core": "^6.2.1",
+    "@capacitor/device": "^6.0.3",
     "@capacitor/geolocation": "^6.1.1",
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",

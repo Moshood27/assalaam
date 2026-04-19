@@ -33,6 +33,9 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ])
                     ->required(),
                 Forms\Components\DateTimePicker::make('attended_at'),
+                Forms\Components\TextInput::make('device_uuid')
+                    ->label('Device ID')
+                    ->readOnly(),
                 Forms\Components\DateTimePicker::make('fine_paid_at'),
             ]);
     }
@@ -61,6 +64,10 @@ class AttendanceRecordsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('attended_at')
                     ->dateTime()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('device_uuid')
+                    ->label('Device ID')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -72,7 +79,16 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ]),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->after(function ($record) {
+                        if ($record->status === 'present' && $record->attended_at) {
+                            $meeting = $this->getOwnerRecord();
+                            $attendanceService = app(\App\Services\AttendanceService::class);
+                            if ($attendanceService->isLate($meeting, $record->attended_at)) {
+                                $attendanceService->chargeLatenessFine($record->user, $meeting);
+                            }
+                        }
+                    }),
                 Tables\Actions\Action::make('syncMembers')
                     ->label('Sync Branch Members')
                     ->color('gray')
@@ -103,16 +119,38 @@ class AttendanceRecordsRelationManager extends RelationManager
                     })
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->after(function ($record) {
+                        if ($record->status === 'present' && $record->attended_at) {
+                            $meeting = $this->getOwnerRecord();
+                            $attendanceService = app(\App\Services\AttendanceService::class);
+                            if ($attendanceService->isLate($meeting, $record->attended_at)) {
+                                $attendanceService->chargeLatenessFine($record->user, $meeting);
+                            }
+                        }
+                    }),
                 Tables\Actions\Action::make('markPresent')
                     ->label('Present')
                     ->icon('heroicon-m-check-circle')
                     ->color('success')
                     ->hidden(fn ($record) => $record->status === 'present')
-                    ->action(fn ($record) => $record->update([
-                        'status' => 'present',
-                        'attended_at' => now(),
-                    ])),
+                    ->action(function ($record) {
+                        $meeting = $this->getOwnerRecord();
+                        $attendanceService = app(\App\Services\AttendanceService::class);
+
+                        $record->update([
+                            'status' => 'present',
+                            'attended_at' => now(),
+                        ]);
+
+                        if ($attendanceService->isLate($meeting, $record->attended_at)) {
+                            $attendanceService->chargeLatenessFine($record->user, $meeting);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Lateness fine charged for ' . $record->user->full_name)
+                                ->warning()
+                                ->send();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -121,10 +159,26 @@ class AttendanceRecordsRelationManager extends RelationManager
                         ->label('Mark as Present')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each->update([
-                            'status' => 'present',
-                            'attended_at' => now(),
-                        ])),
+                        ->action(function (Collection $records) {
+                            $meeting = $this->getOwnerRecord();
+                            $attendanceService = app(\App\Services\AttendanceService::class);
+
+                            $records->each(function ($record) use ($meeting, $attendanceService) {
+                                $record->update([
+                                    'status' => 'present',
+                                    'attended_at' => now(),
+                                ]);
+
+                                if ($attendanceService->isLate($meeting, $record->attended_at)) {
+                                    $attendanceService->chargeLatenessFine($record->user, $meeting);
+                                }
+                            });
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Selected members marked as present.')
+                                ->success()
+                                ->send();
+                        }),
                 ]),
             ]);
     }
