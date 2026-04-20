@@ -232,10 +232,10 @@ class QardHasanResource extends Resource
                     ->getStateUsing(fn (QardHasan $record) => $record->getOverdueAmount())
                     ->color(fn ($state) => $state > 0 ? 'danger' : 'gray')
                     ->toggleable(),
-                TextColumn::make('overdue_days')
-                    ->label('Days Overdue')
-                    ->getStateUsing(fn (QardHasan $record) => $record->getOverdueDays())
-                    ->color(fn ($state) => $state > 7 ? 'danger' : ($state > 0 ? 'warning' : 'gray'))
+                TextColumn::make('period_of_default')
+                    ->label('Period of Default')
+                    ->getStateUsing(fn (QardHasan $record) => $record->period_of_default)
+                    ->color(fn (QardHasan $record) => $record->getOverdueDays() > 7 ? 'danger' : ($record->getOverdueDays() > 0 ? 'warning' : 'gray'))
                     ->toggleable(),
                 IconColumn::make('agreement_verified_at')
                     ->label('Agreement Verified')

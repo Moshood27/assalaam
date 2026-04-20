@@ -374,15 +374,46 @@ class QardHasan extends Model
     {
         $per = (float) $this->per_installment;
         if ($per <= 0) {
-            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
+            $per = round(((float)$this->principal_amount) / max((int)$totalInstallments = $this->total_installments, 1), 2);
         }
         return min($per, $this->remaining_principal);
     }
 
+    public function getDefaultStartDate(?Carbon $asAt = null): ?Carbon
+    {
+        $asAt = $asAt ?: now();
+        if ($this->defaulted_at && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+            return $this->defaulted_at;
+        }
+
+        if ($this->getOverdueAmount($asAt) <= 0) return null;
+
+        $schedule = $this->generateInstallmentSchedule();
+        $per = (float) $this->per_installment;
+        if ($per <= 0) {
+            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
+        }
+
+        $paid = (float) $this->paid_amount;
+        $installmentsPaid = (int) floor($per > 0 ? ($paid / $per) : 0);
+
+        if (isset($schedule[$installmentsPaid])) {
+            $dueAt = $schedule[$installmentsPaid]['due_at'];
+            if ($dueAt->lessThan($asAt)) {
+                return $dueAt;
+            }
+        }
+
+        return null;
+    }
+
     public function getPeriodOfDefaultAttribute(): string
     {
-        $days = $this->getOverdueDays();
-        return $days > 0 ? $days . ' days' : 'None';
+        $startDate = $this->getDefaultStartDate();
+        if (!$startDate) return 'None';
+
+        $days = now()->diffInDays($startDate);
+        return $startDate->format('d/m/Y') . " ({$days} days)";
     }
     public function transactionApprovals(): MorphMany
     {

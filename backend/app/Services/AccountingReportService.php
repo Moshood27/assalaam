@@ -1012,7 +1012,13 @@ class AccountingReportService
 
             $expectedToDate = (float)$loan->getExpectedAmountToDate($toDate);
             $overdue = (float)$loan->getOverdueAmount($toDate);
-            $periodOfDefaultDays = $loan->getOverdueDays($toDate);
+            $defaultStartDate = $loan->getDefaultStartDate($toDate);
+
+            $periodOfDefault = 'None';
+            if ($defaultStartDate) {
+                $days = $toDate->diffInDays($defaultStartDate);
+                $periodOfDefault = $defaultStartDate->format('d/m/Y') . " ({$days} days)";
+            }
 
             $savingsBalance = (float)$user->contributions->sum('amount');
 
@@ -1028,7 +1034,7 @@ class AccountingReportService
                 'loan_balance' => $balance,
                 'savings_balance' => $savingsBalance,
                 'phone_number' => $user->phone,
-                'period_of_default' => $periodOfDefaultDays > 0 ? $periodOfDefaultDays . ' days' : 'None',
+                'period_of_default' => $periodOfDefault,
             ];
 
             $totals['loan_granted'] += $principal;
