@@ -1008,35 +1008,11 @@ class AccountingReportService
 
             $principal = (float)$loan->principal_amount;
             $paid = (float)$loan->paid_amount;
-            $balance = max(0.0, $principal - $paid);
+            $balance = (float)$loan->remaining_principal;
 
-            // Replicate overdue logic for specific date
-            $expectedToDate = 0.0;
-            $overdue = 0.0;
-            $periodOfDefault = 0;
-
-            if ($loan->status !== 'completed' || $loan->updated_at->gte($toDate->copy()->startOfMonth())) {
-                $schedule = $loan->generateInstallmentSchedule();
-                foreach ($schedule as $item) {
-                    if ($item['due_at']->lte($toDate)) {
-                        $expectedToDate += $item['amount'];
-                    }
-                }
-                $expectedToDate = round(min($expectedToDate, $principal), 2);
-                $overdue = round(max(0.0, $expectedToDate - $paid), 2);
-
-                if ($overdue > 0) {
-                    // Find earliest unpaid installment
-                    $per = (float) $loan->per_installment ?: ($principal / max(1, $loan->total_installments));
-                    $installmentsPaid = (int) floor($paid / $per);
-                    if (isset($schedule[$installmentsPaid])) {
-                        $dueAt = $schedule[$installmentsPaid]['due_at'];
-                        if ($dueAt->lt($toDate)) {
-                            $periodOfDefault = $toDate->diffInDays($dueAt);
-                        }
-                    }
-                }
-            }
+            $expectedToDate = (float)$loan->getExpectedAmountToDate($toDate);
+            $overdue = (float)$loan->getOverdueAmount($toDate);
+            $periodOfDefaultDays = $loan->getOverdueDays($toDate);
 
             $savingsBalance = (float)$user->contributions->sum('amount');
 
@@ -1052,7 +1028,7 @@ class AccountingReportService
                 'loan_balance' => $balance,
                 'savings_balance' => $savingsBalance,
                 'phone_number' => $user->phone,
-                'period_of_default' => $periodOfDefault > 0 ? $periodOfDefault . ' days' : 'None',
+                'period_of_default' => $periodOfDefaultDays > 0 ? $periodOfDefaultDays . ' days' : 'None',
             ];
 
             $totals['loan_granted'] += $principal;

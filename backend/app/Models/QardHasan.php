@@ -245,16 +245,12 @@ class QardHasan extends Model
     }
 
     /**
-     * Calculate the overdue amount for this loan.
+     * Calculate the expected amount to be paid by a certain date.
      */
-    public function getOverdueAmount(): float
+    public function getExpectedAmountToDate(?Carbon $asAt = null): float
     {
-        if ($this->status !== 'active') return 0.0;
-
-        // If the loan is marked as defaulted, the full remaining balance is considered overdue (acceleration)
-        if ($this->defaulted_at) {
-            return $this->remaining_principal;
-        }
+        $asAt = $asAt ?: now();
+        if ($this->status === 'pending') return 0.0;
 
         $per = (float) $this->per_installment;
         if ($per <= 0) {
@@ -265,19 +261,34 @@ class QardHasan extends Model
         $schedule = $this->generateInstallmentSchedule();
         if (empty($schedule)) return 0.0;
 
-        $now = now();
         $dueCount = 0;
         foreach ($schedule as $item) {
             $dueAt = $item['due_at'] instanceof Carbon ? $item['due_at'] : Carbon::parse((string) $item['due_at']);
-            if ($dueAt->lessThanOrEqualTo($now)) {
+            if ($dueAt->lessThanOrEqualTo($asAt)) {
                 $dueCount++;
             } else {
                 break;
             }
         }
-        if ($dueCount <= 0) return 0.0;
 
-        $expectedPaid = round(min($dueCount * $per, (float) $this->principal_amount), 2);
+        return round(min($dueCount * $per, (float) $this->principal_amount), 2);
+    }
+
+    /**
+     * Calculate the overdue amount for this loan.
+     */
+    public function getOverdueAmount(?Carbon $asAt = null): float
+    {
+        $asAt = $asAt ?: now();
+
+        if ($this->status !== 'active' && $this->status !== 'defaulted') return 0.0;
+
+        // If the loan is marked as defaulted, the full remaining balance is considered overdue (acceleration)
+        if ($this->defaulted_at && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+            return (float) $this->remaining_principal;
+        }
+
+        $expectedPaid = $this->getExpectedAmountToDate($asAt);
         $alreadyPaid = (float) $this->paid_amount;
         $overdue = round(max(0.0, $expectedPaid - $alreadyPaid), 2);
 
@@ -290,14 +301,18 @@ class QardHasan extends Model
     /**
      * Get the number of days the loan is overdue.
      */
-    public function getOverdueDays(): int
+    public function getOverdueDays(?Carbon $asAt = null): int
     {
-        if ($this->getOverdueAmount() <= 0) return 0;
+        $asAt = $asAt ?: now();
+
+        // If explicitly marked as defaulted, calculate from defaulted_at
+        if ($this->defaulted_at && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+            return (int) $asAt->diffInDays($this->defaulted_at);
+        }
+
+        if ($this->getOverdueAmount($asAt) <= 0) return 0;
 
         $schedule = $this->generateInstallmentSchedule();
-        $now = now();
-        $earliestOverdueDueAt = null;
-
         $per = (float) $this->per_installment;
         if ($per <= 0) {
             $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
@@ -309,8 +324,8 @@ class QardHasan extends Model
         // The first installment that is NOT paid but its due_at is in the past
         if (isset($schedule[$installmentsPaid])) {
             $dueAt = $schedule[$installmentsPaid]['due_at'];
-            if ($dueAt->lessThan($now)) {
-                return (int) $now->diffInDays($dueAt);
+            if ($dueAt->lessThan($asAt)) {
+                return (int) $asAt->diffInDays($dueAt);
             }
         }
 
@@ -353,6 +368,21 @@ class QardHasan extends Model
         $credit = $p - $fee;
 
         return $credit > 0 ? round($credit, 2) : 0.0;
+    }
+
+    public function getNextInstallmentAmountAttribute(): float
+    {
+        $per = (float) $this->per_installment;
+        if ($per <= 0) {
+            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
+        }
+        return min($per, $this->remaining_principal);
+    }
+
+    public function getPeriodOfDefaultAttribute(): string
+    {
+        $days = $this->getOverdueDays();
+        return $days > 0 ? $days . ' days' : 'None';
     }
     public function transactionApprovals(): MorphMany
     {

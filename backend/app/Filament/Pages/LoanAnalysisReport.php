@@ -38,7 +38,7 @@ class LoanAnalysisReport extends Page
         ],
         'month' => '',
         'year' => '',
-        'cooperative_name' => 'AT-TQWA C.I.C.D.',
+        'cooperative_name' => 'AT-TQWA C.I.C.S.',
     ];
 
     public ?int $branchId = null;
