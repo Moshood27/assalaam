@@ -961,14 +961,19 @@ class AccountingReportService
     /**
      * Build Branch-by-Branch Outstanding Qard Hasan Report.
      */
-    public function buildBranchQardHasanReport(?int $branchId = null, ?string $from = null, ?string $to = null): array
+    public function buildBranchQardHasanReport(?int $branchId = null, ?string $from = null, ?string $to = null, bool $onlyDefaulted = false): array
     {
         $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
         $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
 
         $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
-            ->with(['users.qardHasans' => function ($query) use ($fromDate, $toDate) {
+            ->with(['users.qardHasans' => function ($query) use ($fromDate, $toDate, $onlyDefaulted) {
                 $query->where('status', 'active');
+
+                if ($onlyDefaulted) {
+                    $query->whereNotNull('defaulted_at');
+                }
+
                 if ($fromDate) {
                     $query->where('created_at', '>=', $fromDate);
                 }
@@ -1015,7 +1020,7 @@ class AccountingReportService
                             'paid' => (float)$loan->paid_amount,
                             'outstanding' => $outstanding,
                             'overdue' => $overdue,
-                            'status' => $loan->status,
+                            'status' => $loan->defaulted_at ? 'DEFAULTED' : $loan->status,
                             'last_payment_date' => $lastPayment ? $lastPayment->paid_at : null,
                         ];
                         $branchData['total_principal'] += (float)$loan->principal_amount;

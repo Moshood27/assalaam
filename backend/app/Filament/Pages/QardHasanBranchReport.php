@@ -15,9 +15,16 @@ class QardHasanBranchReport extends Page
 
     protected static string $view = 'filament.pages.qard-hasan-branch-report';
 
+    public function getTitle(): string
+    {
+        return $this->onlyDefaulted ? 'Defaulted Qard Hasan Report' : 'Qard Hasan Branch Report';
+    }
+
     public function getSubheading(): ?string
     {
-        return 'Detailed list of outstanding Qard Hasan loans grouped by branch.';
+        return $this->onlyDefaulted
+            ? 'Detailed list of defaulted Qard Hasan loans grouped by branch.'
+            : 'Detailed list of outstanding Qard Hasan loans grouped by branch.';
     }
 
     public static function canAccess(): bool
@@ -36,6 +43,7 @@ class QardHasanBranchReport extends Page
     public ?int $branchId = null;
     public ?string $from = null;
     public ?string $to = null;
+    public bool $onlyDefaulted = false;
 
     public function mount(): void
     {
@@ -49,7 +57,7 @@ class QardHasanBranchReport extends Page
 
     public function updated($name): void
     {
-        if (in_array($name, ['branchId', 'from', 'to'])) {
+        if (in_array($name, ['branchId', 'from', 'to', 'onlyDefaulted'])) {
             $this->refreshReport();
         }
     }
@@ -61,16 +69,17 @@ class QardHasanBranchReport extends Page
         $user = auth()->user();
 
         $targetBranchId = $user->hasRole('super_admin') ? $this->branchId : $user->branch_id;
-        $this->report = $svc->buildBranchQardHasanReport($targetBranchId, $this->from, $this->to);
+        $this->report = $svc->buildBranchQardHasanReport($targetBranchId, $this->from, $this->to, $this->onlyDefaulted);
     }
 
     public function exportCsv(): StreamedResponse
     {
         $data = $this->report;
+        $filename = $this->onlyDefaulted ? 'qard-hasan-default-report.csv' : 'qard-hasan-branch-report.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Cache-Control' => 'no-store, no-cache',
-            'Content-Disposition' => 'attachment; filename="qard-hasan-branch-report.csv"',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
         return response()->streamDownload(function () use ($data) {
@@ -120,6 +129,6 @@ class QardHasanBranchReport extends Page
             }
 
             fclose($out);
-        }, 'qard-hasan-branch-report.csv', $headers);
+        }, $filename, $headers);
     }
 }

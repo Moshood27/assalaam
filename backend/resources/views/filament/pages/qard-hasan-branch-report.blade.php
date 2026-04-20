@@ -22,6 +22,10 @@
                     <label class="text-xs font-medium text-gray-500 dark:text-gray-400">To Date</label>
                     <input type="date" wire:model.live="to" class="fi-input block w-full rounded-lg border-none bg-white py-1.5 text-base text-gray-950 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:focus:ring-primary-500 sm:text-sm sm:leading-6">
                 </div>
+                <div class="flex items-center gap-2 pt-5">
+                    <input type="checkbox" wire:model.live="onlyDefaulted" id="onlyDefaulted" class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-600 dark:bg-white/5 dark:border-white/10">
+                    <label for="onlyDefaulted" class="text-sm font-medium text-gray-700 dark:text-gray-200">Only Defaulted</label>
+                </div>
             </div>
             <div class="flex gap-2 ml-auto">
                 <x-filament::button wire:click="refreshReport" color="gray" icon="heroicon-m-arrow-path">Refresh</x-filament::button>
@@ -65,7 +69,12 @@
                                         {{ $loan['last_payment_date'] ? \Carbon\Carbon::parse($loan['last_payment_date'])->format('d M Y') : 'None' }}
                                     </td>
                                     <td class="px-5 py-3 text-center">
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20 capitalize">
+                                        <span @class([
+                                            'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ring-1 ring-inset capitalize',
+                                            'bg-red-50 text-red-700 ring-red-600/20' => $loan['status'] === 'DEFAULTED',
+                                            'bg-green-50 text-green-700 ring-green-600/20' => $loan['status'] === 'active',
+                                            'bg-blue-50 text-blue-700 ring-blue-600/20' => !in_array($loan['status'], ['DEFAULTED', 'active']),
+                                        ])>
                                             {{ $loan['status'] }}
                                         </span>
                                     </td>
@@ -87,7 +96,7 @@
             </div>
         @empty
             <div class="flex flex-col items-center justify-center p-12 bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 no-print">
-                <p class="text-gray-500 dark:text-gray-400 font-medium">No outstanding loans found.</p>
+                <p class="text-gray-500 dark:text-gray-400 font-medium">No {{ $this->onlyDefaulted ? 'defaulted' : 'outstanding' }} loans found.</p>
             </div>
         @endforelse
 
