@@ -1050,7 +1050,7 @@ class AccountingReportService
             'totals' => $totals,
             'month' => $monthStr,
             'year' => $yearStr,
-            'cooperative_name' => 'AT-TQWA C.I.C.D.',
+            'cooperative_name' => 'AT-TQWA C.I.C.S.',
         ];
     }
 
