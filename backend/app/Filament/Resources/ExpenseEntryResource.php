@@ -70,11 +70,24 @@ class ExpenseEntryResource extends Resource
                 Forms\Components\Section::make('Vendor & Payout Details')
                     ->description('Fill this if you want to process an automated payout via the payment gateway.')
                     ->schema([
+                        Forms\Components\Select::make('recipient_type')
+                            ->options([
+                                'vendor' => 'Vendor',
+                                'member' => 'Member',
+                                'other' => 'Other / Outsider',
+                            ])
+                            ->default('vendor')
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set) {
+                                $set('vendor_id', null);
+                                $set('member_id', null);
+                            }),
                         Forms\Components\Select::make('vendor_id')
                             ->relationship('vendor', 'name')
                             ->searchable()
                             ->preload()
                             ->live()
+                            ->visible(fn (Forms\Get $get) => $get('recipient_type') === 'vendor')
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                 if ($state) {
                                     $vendor = Vendor::find($state);
@@ -83,6 +96,25 @@ class ExpenseEntryResource extends Resource
                                         $set('bank_code', $vendor->settlement_bank_code);
                                         $set('account_number', $vendor->settlement_account_number);
                                         $set('account_name', $vendor->settlement_account_name);
+                                    }
+                                }
+                            }),
+                        Forms\Components\Select::make('member_id')
+                            ->label('Member')
+                            ->relationship('member', 'surname', fn (Builder $query) => $query->selectRaw("id, CONCAT(surname, ' ', name, ' (', membership_number, ')') as full_name"))
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->surname} {$record->name} ({$record->membership_number})")
+                            ->searchable(['surname', 'name', 'membership_number'])
+                            ->preload()
+                            ->live()
+                            ->visible(fn (Forms\Get $get) => $get('recipient_type') === 'member')
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                if ($state) {
+                                    $user = User::find($state);
+                                    if ($user) {
+                                        $set('bank_name', $user->bank_name);
+                                        $set('bank_code', $user->bank_code);
+                                        $set('account_number', $user->account_number);
+                                        $set('account_name', $user->account_name);
                                     }
                                 }
                             }),
@@ -164,7 +196,9 @@ class ExpenseEntryResource extends Resource
 
                 InfoSection::make('Payout Information')
                     ->schema([
-                        TextEntry::make('vendor.name')->label('Vendor'),
+                        TextEntry::make('recipient_type')->badge()->formatStateUsing(fn ($state) => ucfirst($state)),
+                        TextEntry::make('vendor.name')->label('Vendor')->visible(fn (ExpenseEntry $record) => $record->recipient_type === 'vendor'),
+                        TextEntry::make('member.full_name')->label('Member')->visible(fn (ExpenseEntry $record) => $record->recipient_type === 'member'),
                         TextEntry::make('bank_name'),
                         TextEntry::make('account_number'),
                         TextEntry::make('account_name'),
@@ -210,6 +244,14 @@ class ExpenseEntryResource extends Resource
             ->columns([
                 TextColumn::make('date')->date('Y-m-d')->sortable(),
                 TextColumn::make('title')->searchable()->wrap(),
+                TextColumn::make('recipient')
+                    ->getStateUsing(fn (ExpenseEntry $record) => match($record->recipient_type) {
+                        'vendor' => $record->vendor?->name ?? 'Vendor (N/A)',
+                        'member' => $record->member?->full_name ?? 'Member (N/A)',
+                        default => 'Other / ' . ($record->account_name ?: 'Unknown'),
+                    })
+                    ->description(fn (ExpenseEntry $record) => $record->recipient_type === 'other' ? 'Outsider' : ucfirst($record->recipient_type))
+                    ->searchable(['account_name']),
                 TextColumn::make('category')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('amount')->money('ngn', true)->sortable(),
                 TextColumn::make('status')->badge()

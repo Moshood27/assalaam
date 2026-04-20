@@ -284,7 +284,7 @@ const submitAttendance = async () => {
       device_uuid: info.identifier
     })
     record.value = res.data.record
-    modal.alert("Attendance marked successfully!")
+    modal.alert(res.data.message || "Attendance marked successfully!")
     fetchHistory()
   } catch (err) {
     modal.alert(err.response?.data?.message || "Failed to mark attendance")

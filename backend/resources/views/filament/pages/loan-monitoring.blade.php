@@ -17,6 +17,8 @@
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Branch</th>
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Email</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Loans</th>
+                        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Received At</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (₦)</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (₦)</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Actions</th>
                     </tr>
@@ -35,6 +37,10 @@
                             <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $m['branch'] ?? '—' }}</td>
                             <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $m['email'] ?? '—' }}</td>
                             <td class="px-5 py-3 text-right text-gray-900 dark:text-gray-100">{{ $m['loans_count'] }}</td>
+                            <td class="px-5 py-3 text-left text-gray-900 dark:text-gray-100">{{ $m['received_at'] }}</td>
+                            <td class="px-5 py-3 text-right font-mono tabular-nums text-red-600 dark:text-red-400 font-bold">
+                                {{ number_format($m['overdue'], 2) }}
+                            </td>
                             <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">{{ number_format($m['outstanding'], 2) }}</td>
                             <td class="px-5 py-3 text-right">
                                 <x-filament::button size="sm" wire:click="sendReminder({{ $m['id'] }})">Send Reminder</x-filament::button>
@@ -42,7 +48,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-6 text-center text-gray-500 dark:text-gray-400">No members with active or pending loans.</td>
+                            <td colspan="7" class="px-5 py-6 text-center text-gray-500 dark:text-gray-400">No members with active or pending loans.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -64,8 +70,9 @@
                     <tr class="bg-gray-50 dark:bg-gray-800/60">
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Member</th>
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Branch</th>
-                        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Email</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Loans</th>
+                        <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Default Since</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (₦)</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (₦)</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Actions</th>
                     </tr>
@@ -75,8 +82,11 @@
                         <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
                             <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $d['name'] }}</td>
                             <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $d['branch'] ?? '—' }}</td>
-                            <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $d['email'] ?? '—' }}</td>
                             <td class="px-5 py-3 text-right text-gray-900 dark:text-gray-100">{{ $d['loans_count'] }}</td>
+                            <td class="px-5 py-3 text-left text-gray-900 dark:text-gray-100">{{ $d['defaulted_at'] }}</td>
+                            <td class="px-5 py-3 text-right font-mono tabular-nums text-red-600 dark:text-red-400 font-bold">
+                                {{ number_format($d['overdue'], 2) }}
+                            </td>
                             <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">{{ number_format($d['outstanding'], 2) }}</td>
                             <td class="px-5 py-3 text-right">
                                 <x-filament::button size="sm" color="danger" wire:click="sendReminder({{ $d['id'] }})">Send Reminder</x-filament::button>
@@ -84,7 +94,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-6 text-center text-gray-500 dark:text-gray-400">No defaulters have been flagged.</td>
+                            <td colspan="7" class="px-5 py-6 text-center text-gray-500 dark:text-gray-400">No defaulters have been flagged.</td>
                         </tr>
                     @endforelse
                 </tbody>

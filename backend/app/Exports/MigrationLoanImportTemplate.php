@@ -26,6 +26,8 @@ class MigrationLoanImportTemplate implements FromCollection, WithHeadings
                     'total_repaid_to_date' => '60000',
                     'interval' => 'monthly',
                     'total_installments' => '10',
+                    'received_at' => now()->subMonths(2)->format('Y-m-d'),
+                    'defaulted_at' => '',
                 ]
             ]);
         }
@@ -39,6 +41,8 @@ class MigrationLoanImportTemplate implements FromCollection, WithHeadings
                 'total_repaid_to_date' => '0',
                 'interval' => 'monthly',
                 'total_installments' => '0',
+                'received_at' => '',
+                'defaulted_at' => '',
             ];
         });
     }
@@ -53,6 +57,8 @@ class MigrationLoanImportTemplate implements FromCollection, WithHeadings
             'total_repaid_to_date',
             'interval',
             'total_installments',
+            'received_at',
+            'defaulted_at',
         ];
     }
 }

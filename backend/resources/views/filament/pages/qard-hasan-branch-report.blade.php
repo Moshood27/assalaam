@@ -46,6 +46,7 @@
                                 <th class="px-5 py-3 text-left font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Loan ID</th>
                                 <th class="px-5 py-3 text-right font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Principal</th>
                                 <th class="px-5 py-3 text-right font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Paid</th>
+                                <th class="px-5 py-3 text-right font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Overdue</th>
                                 <th class="px-5 py-3 text-right font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Outstanding</th>
                                 <th class="px-5 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Last Payment</th>
                                 <th class="px-5 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Status</th>
@@ -58,6 +59,7 @@
                                     <td class="px-5 py-3 text-gray-600 dark:text-gray-400 font-mono text-xs">{{ $loan['loan_id'] }}</td>
                                     <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($loan['principal'], 2) }}</td>
                                     <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($loan['paid'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right tabular-nums text-red-600 dark:text-red-400 font-bold">₦{{ number_format($loan['overdue'] ?? 0, 2) }}</td>
                                     <td class="px-5 py-3 text-right tabular-nums font-semibold text-primary-600 dark:text-primary-400">₦{{ number_format($loan['outstanding'], 2) }}</td>
                                     <td class="px-5 py-3 text-center text-gray-500 dark:text-gray-400">
                                         {{ $loan['last_payment_date'] ? \Carbon\Carbon::parse($loan['last_payment_date'])->format('d M Y') : 'None' }}
@@ -75,6 +77,7 @@
                                 <td colspan="2" class="px-5 py-4 text-gray-900 dark:text-gray-100 uppercase tracking-tight">Branch Totals</td>
                                 <td class="px-5 py-4 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($branch['total_principal'], 2) }}</td>
                                 <td class="px-5 py-4 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($branch['total_paid'], 2) }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums text-red-600 dark:text-red-400">₦{{ number_format($branch['total_overdue'] ?? 0, 2) }}</td>
                                 <td class="px-5 py-4 text-right tabular-nums text-primary-600 dark:text-primary-400">₦{{ number_format($branch['total_outstanding'], 2) }}</td>
                                 <td colspan="2"></td>
                             </tr>
@@ -91,7 +94,7 @@
         @if(count($report['branches']) > 1)
             <div class="rounded-xl border-2 border-primary-500 dark:border-primary-400 bg-primary-50/50 dark:bg-primary-900/20 p-6 break-inside-avoid">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Organization Grand Totals</h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Loans</div>
                         <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $report['grand_total_loans_count'] }}</div>
@@ -103,6 +106,10 @@
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Paid</div>
                         <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">₦{{ number_format($report['grand_total_paid'], 2) }}</div>
+                    </div>
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-red-200 dark:border-red-800 ring-2 ring-red-500/10">
+                        <div class="text-xs text-red-600 dark:text-red-400 uppercase font-bold">Total Overdue</div>
+                        <div class="text-2xl font-black text-red-700 dark:text-red-300">₦{{ number_format($report['grand_total_overdue'] ?? 0, 2) }}</div>
                     </div>
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-primary-200 dark:border-primary-800 ring-2 ring-primary-500/20">
                         <div class="text-xs text-primary-600 dark:text-primary-400 uppercase font-bold">Total Outstanding</div>

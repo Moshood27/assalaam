@@ -82,6 +82,8 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             'interval' => strtolower($row['interval'] ?? 'monthly'),
             'status' => 'active',
             'approved_at' => $this->migrationDate,
+            'received_at' => isset($row['received_at']) ? \Carbon\Carbon::parse($row['received_at']) : $this->migrationDate,
+            'defaulted_at' => isset($row['defaulted_at']) ? \Carbon\Carbon::parse($row['defaulted_at']) : null,
             'created_at' => $this->migrationDate,
         ]);
     }
@@ -93,6 +95,8 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             'original_loan_amount' => 'required|numeric',
             'remaining_principal' => 'required|numeric',
             'next_installment_amount' => 'required|numeric',
+            'received_at' => 'nullable',
+            'defaulted_at' => 'nullable',
         ];
     }
 }

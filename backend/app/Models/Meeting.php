@@ -24,6 +24,7 @@ class Meeting extends Model
         'radius_meters',
         'pin',
         'fine_amount',
+        'apology_fine_amount',
         'status',
         'reminder_sent_at',
     ];
@@ -35,6 +36,7 @@ class Meeting extends Model
         'venue_lat' => 'decimal:8',
         'venue_lng' => 'decimal:8',
         'fine_amount' => 'decimal:2',
+        'apology_fine_amount' => 'decimal:2',
         'reminder_sent_at' => 'datetime',
     ];
 

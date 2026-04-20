@@ -983,6 +983,7 @@ class AccountingReportService
             'branches' => [],
             'grand_total_principal' => 0,
             'grand_total_paid' => 0,
+            'grand_total_overdue' => 0,
             'grand_total_outstanding' => 0,
             'grand_total_loans_count' => 0,
             'from' => $from,
@@ -996,6 +997,7 @@ class AccountingReportService
                 'loans' => [],
                 'total_principal' => 0,
                 'total_paid' => 0,
+                'total_overdue' => 0,
                 'total_outstanding' => 0,
             ];
 
@@ -1004,6 +1006,7 @@ class AccountingReportService
                     $outstanding = max(0, (float)$loan->principal_amount - (float)$loan->paid_amount);
                     if ($outstanding > 0) {
                         $lastPayment = $loan->repayments->first();
+                        $overdue = (float)$loan->getOverdueAmount();
 
                         $branchData['loans'][] = [
                             'member_name' => $user->full_name,
@@ -1011,11 +1014,13 @@ class AccountingReportService
                             'principal' => (float)$loan->principal_amount,
                             'paid' => (float)$loan->paid_amount,
                             'outstanding' => $outstanding,
+                            'overdue' => $overdue,
                             'status' => $loan->status,
                             'last_payment_date' => $lastPayment ? $lastPayment->paid_at : null,
                         ];
                         $branchData['total_principal'] += (float)$loan->principal_amount;
                         $branchData['total_paid'] += (float)$loan->paid_amount;
+                        $branchData['total_overdue'] += $overdue;
                         $branchData['total_outstanding'] += $outstanding;
                     }
                 }
@@ -1025,6 +1030,7 @@ class AccountingReportService
                 $report['branches'][] = $branchData;
                 $report['grand_total_principal'] += $branchData['total_principal'];
                 $report['grand_total_paid'] += $branchData['total_paid'];
+                $report['grand_total_overdue'] += $branchData['total_overdue'];
                 $report['grand_total_outstanding'] += $branchData['total_outstanding'];
                 $report['grand_total_loans_count'] += count($branchData['loans']);
             }

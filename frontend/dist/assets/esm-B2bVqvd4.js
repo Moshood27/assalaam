@@ -1,0 +1,1 @@
+import{c as e}from"./index-7Vek1l2E.js";export{e as SplashScreen};

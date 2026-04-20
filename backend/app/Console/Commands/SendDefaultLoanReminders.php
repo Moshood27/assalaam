@@ -18,7 +18,39 @@ class SendDefaultLoanReminders extends Command
         $dry = (bool) $this->option('dry-run');
         $countUsers = 0;
         $countEmails = 0;
+        $countFlagged = 0;
 
+        // 1. Identify and flag NEW defaulters
+        $activeLoans = \App\Models\QardHasan::where('status', 'active')
+            ->whereNull('defaulted_at')
+            ->get();
+
+        foreach ($activeLoans as $loan) {
+            if ($loan->getOverdueDays() >= 7) { // 7 days threshold
+                $countFlagged++;
+                if (!$dry) {
+                    $loan->update(['defaulted_at' => now()]);
+                    $this->info("Flagged loan {$loan->qard_id_string} for member {$loan->user?->name} as defaulted (Overdue {$loan->getOverdueDays()} days).");
+                } else {
+                    $this->info("[DRY] Would flag loan {$loan->qard_id_string} as defaulted.");
+                }
+            }
+        }
+
+        // 2. Clear default flag if loan is NO LONGER overdue
+        $defaultedLoans = \App\Models\QardHasan::where('status', 'active')
+            ->whereNotNull('defaulted_at')
+            ->get();
+        foreach ($defaultedLoans as $loan) {
+            if ($loan->getOverdueAmount() <= 0) {
+                if (!$dry) {
+                    $loan->update(['defaulted_at' => null]);
+                    $this->info("Cleared default flag for loan {$loan->qard_id_string} (No longer overdue).");
+                }
+            }
+        }
+
+        // 3. Send reminders to current defaulters
         $users = User::query()
             ->where('is_defaulter', true)
             ->whereNotNull('email')
@@ -61,7 +93,7 @@ class SendDefaultLoanReminders extends Command
             $this->info(sprintf('Sent reminder to %s <%s> | Loans: %d | Outstanding: %.2f', $user->name, $user->email, count($loansData), $totalOutstanding));
         }
 
-        $this->info(sprintf('Completed. Defaulters checked: %d, Emails sent: %d', $countUsers, $countEmails));
+        $this->info(sprintf('Completed. Defaulters checked: %d, Flagged: %d, Emails sent: %d', $countUsers, $countFlagged, $countEmails));
         return self::SUCCESS;
     }
 }

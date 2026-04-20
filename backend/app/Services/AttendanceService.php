@@ -29,12 +29,22 @@ class AttendanceService
      */
     public function chargeLatenessFine(User $user, Meeting $meeting, float $amount = null): void
     {
-        $amount = $amount ?: (float) config('cooperative.attendance.apology_fine', 100.00);
+        $record = AttendanceRecord::where('user_id', $user->id)
+            ->where('meeting_id', $meeting->id)
+            ->first();
+
+        // If fine already paid, skip
+        if ($record && $record->lateness_fine_paid) {
+            return;
+        }
+
+        $amount = !is_null($amount) ? $amount : (float) ($meeting->apology_fine_amount ?? config('cooperative.attendance.apology_fine', 100.00));
         if ($amount <= 0) return;
 
-        DB::transaction(function () use ($user, $meeting, $amount) {
+        DB::transaction(function () use ($user, $meeting, $amount, $record) {
             $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
 
+            $isPaid = false;
             if ((float) $lockedUser->balance >= $amount) {
                 // Deduct from balance
                 $lockedUser->decrement('balance', $amount);
@@ -64,9 +74,28 @@ class AttendanceService
                     'status' => 'processed',
                     'processed_at' => now(),
                 ]);
+
+                $isPaid = true;
             } else {
                 // Not enough balance, add to outstanding fines
                 $lockedUser->increment('outstanding_fines', $amount);
+            }
+
+            // Update or create record with lateness info
+            if ($record) {
+                $record->update([
+                    'lateness_fine_paid' => $isPaid,
+                    'lateness_fine_amount' => $amount,
+                ]);
+            } else {
+                AttendanceRecord::create([
+                    'user_id' => $user->id,
+                    'meeting_id' => $meeting->id,
+                    'status' => 'present',
+                    'attended_at' => now(),
+                    'lateness_fine_paid' => $isPaid,
+                    'lateness_fine_amount' => $amount,
+                ]);
             }
         });
     }
@@ -76,7 +105,7 @@ class AttendanceService
      */
     public function chargeAbsenceFine(User $user, Meeting $meeting, AttendanceRecord $record = null): void
     {
-        $amount = (float) $meeting->fine_amount;
+        $amount = (float) ($meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
         if ($amount <= 0) return;
 
         DB::transaction(function () use ($user, $meeting, $amount, $record) {

@@ -69,7 +69,7 @@ class UserObserver
                 'processed_at' => now(),
             ]);
 
-            // Try to mark pending records as paid
+            // Try to mark pending records as paid (Absence Fines)
             $pendingRecords = AttendanceRecord::where('user_id', $lockedUser->id)
                 ->where('status', 'fine_pending')
                 ->orderBy('created_at', 'asc')
@@ -85,10 +85,28 @@ class UserObserver
                     ]);
                     $remainingToMark -= $fineAmount;
                 } else {
-                    // Partially paid? We don't have a partial status, so we leave it as pending
-                    // or maybe we should have a partial_paid status?
-                    // For now, keep it simple.
                     break;
+                }
+            }
+
+            // Try to mark lateness fines as paid
+            if ($remainingToMark > 0) {
+                $lateRecords = AttendanceRecord::where('user_id', $lockedUser->id)
+                    ->where('lateness_fine_paid', false)
+                    ->where('lateness_fine_amount', '>', 0)
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                foreach ($lateRecords as $record) {
+                    $lateFineAmount = (float) $record->lateness_fine_amount;
+                    if ($remainingToMark >= $lateFineAmount) {
+                        $record->update([
+                            'lateness_fine_paid' => true,
+                        ]);
+                        $remainingToMark -= $lateFineAmount;
+                    } else {
+                        break;
+                    }
                 }
             }
         });

@@ -79,7 +79,7 @@ class QardHasan extends Model
         }
 
         $interval = strtolower((string) $this->interval ?: 'monthly');
-        $start = $startAt ?: ($this->approved_at ?: $this->created_at ?: now());
+        $start = $startAt ?: ($this->received_at ?: ($this->approved_at ?: ($this->created_at ?: now())));
         $start = ($start instanceof Carbon) ? $start->copy() : Carbon::parse((string) $start);
 
         $items = [];
@@ -113,12 +113,28 @@ class QardHasan extends Model
 
     protected static function booted(): void
     {
+        static::updated(function (QardHasan $loan) {
+            if ($loan->wasChanged(['defaulted_at', 'status'])) {
+                $loan->syncUserDefaulterStatus();
+            }
+        });
+
+        static::created(function (QardHasan $loan) {
+            if ($loan->defaulted_at) {
+                $loan->syncUserDefaulterStatus();
+            }
+        });
+
         static::deleting(function (QardHasan $loan) {
             // Prevent deletion if any repayment exists or any amount has been paid
             if ($loan->repayments()->exists() || (float) $loan->paid_amount > 0) {
                 return false;
             }
             // Guarantor pivot will be cascaded by FK; no manual detach required
+        });
+
+        static::deleted(function (QardHasan $loan) {
+            $loan->syncUserDefaulterStatus();
         });
     }
 
@@ -136,6 +152,8 @@ class QardHasan extends Model
         'rejection_reason',
         'approved_by',
         'approved_at',
+        'received_at',
+        'defaulted_at',
         'agreement_template',
         'signed_agreement',
         'agreement_uploaded_at',
@@ -150,6 +168,8 @@ class QardHasan extends Model
         'admin_fee_pct' => 'float',
         'paid_amount' => 'float',
         'approved_at' => 'datetime',
+        'received_at' => 'datetime',
+        'defaulted_at' => 'datetime',
         'agreement_uploaded_at' => 'datetime',
         'agreement_verified_at' => 'datetime',
     ];
@@ -203,6 +223,98 @@ class QardHasan extends Model
     public function pendingGuarantorCount(): int
     {
         return (int) ($this->guarantors?->filter(fn ($u) => ($u->pivot?->status) === 'pending')->count() ?? 0);
+    }
+
+    /**
+     * Sync the user's is_defaulter status based on all their loans.
+     */
+    public function syncUserDefaulterStatus(): void
+    {
+        $user = $this->user;
+        if (!$user) return;
+
+        $hasDefaultedLoan = QardHasan::where('user_id', $user->id)
+            ->whereNotNull('defaulted_at')
+            ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
+            ->exists();
+
+        if ($user->is_defaulter !== $hasDefaultedLoan) {
+            $user->is_defaulter = $hasDefaultedLoan;
+            $user->save();
+        }
+    }
+
+    /**
+     * Calculate the overdue amount for this loan.
+     */
+    public function getOverdueAmount(): float
+    {
+        if ($this->status !== 'active') return 0.0;
+
+        // If the loan is marked as defaulted, the full remaining balance is considered overdue (acceleration)
+        if ($this->defaulted_at) {
+            return $this->remaining_principal;
+        }
+
+        $per = (float) $this->per_installment;
+        if ($per <= 0) {
+            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
+        }
+        if ($per <= 0) return 0.0;
+
+        $schedule = $this->generateInstallmentSchedule();
+        if (empty($schedule)) return 0.0;
+
+        $now = now();
+        $dueCount = 0;
+        foreach ($schedule as $item) {
+            $dueAt = $item['due_at'] instanceof Carbon ? $item['due_at'] : Carbon::parse((string) $item['due_at']);
+            if ($dueAt->lessThanOrEqualTo($now)) {
+                $dueCount++;
+            } else {
+                break;
+            }
+        }
+        if ($dueCount <= 0) return 0.0;
+
+        $expectedPaid = round(min($dueCount * $per, (float) $this->principal_amount), 2);
+        $alreadyPaid = (float) $this->paid_amount;
+        $overdue = round(max(0.0, $expectedPaid - $alreadyPaid), 2);
+
+        $remaining = max(0.0, (float) $this->principal_amount - $alreadyPaid);
+        if ($overdue > $remaining) $overdue = $remaining;
+
+        return $overdue;
+    }
+
+    /**
+     * Get the number of days the loan is overdue.
+     */
+    public function getOverdueDays(): int
+    {
+        if ($this->getOverdueAmount() <= 0) return 0;
+
+        $schedule = $this->generateInstallmentSchedule();
+        $now = now();
+        $earliestOverdueDueAt = null;
+
+        $per = (float) $this->per_installment;
+        if ($per <= 0) {
+            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
+        }
+
+        $paid = (float) $this->paid_amount;
+        $installmentsPaid = (int) floor($per > 0 ? ($paid / $per) : 0);
+
+        // The first installment that is NOT paid but its due_at is in the past
+        if (isset($schedule[$installmentsPaid])) {
+            $dueAt = $schedule[$installmentsPaid]['due_at'];
+            if ($dueAt->lessThan($now)) {
+                return (int) $now->diffInDays($dueAt);
+            }
+        }
+
+        return 0;
     }
 
     // Accessors for transparency

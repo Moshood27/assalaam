@@ -44,13 +44,22 @@ class LoanMonitoring extends Page
 
         $this->membersOnLoan = $members->map(function (User $u) {
             $outstanding = 0.0;
+            $overdue = 0.0;
             $count = 0;
+            $earliestReceived = null;
             foreach ($u->qardHasans as $loan) {
                 $rem = max((float) $loan->principal_amount - (float) $loan->paid_amount, 0);
                 if ($rem > 0) {
                     $outstanding += $rem;
                 }
+                $overdue += (float) $loan->getOverdueAmount();
                 $count++;
+
+                if ($loan->received_at) {
+                    if (!$earliestReceived || $loan->received_at->lt($earliestReceived)) {
+                        $earliestReceived = $loan->received_at;
+                    }
+                }
             }
             return [
                 'id' => $u->id,
@@ -59,9 +68,11 @@ class LoanMonitoring extends Page
                 'branch' => optional($u->branch)->name,
                 'loans_count' => $count,
                 'outstanding' => round($outstanding, 2),
+                'overdue' => round($overdue, 2),
                 'is_defaulter' => (bool) $u->is_defaulter,
+                'received_at' => $earliestReceived ? $earliestReceived->format('Y-m-d') : '—',
             ];
-        })->sortByDesc('outstanding')->values()->all();
+        })->sortByDesc('overdue')->values()->all();
 
         // Defaulters (flagged) and their outstanding
         $defs = User::query()
@@ -73,13 +84,22 @@ class LoanMonitoring extends Page
 
         $this->defaulters = $defs->map(function (User $u) {
             $outstanding = 0.0;
+            $overdue = 0.0;
             $loans = 0;
+            $earliestDefault = null;
             foreach ($u->qardHasans as $loan) {
                 $rem = max((float) $loan->principal_amount - (float) $loan->paid_amount, 0);
                 if ($rem > 0) {
                     $outstanding += $rem;
                 }
+                $overdue += (float) $loan->getOverdueAmount();
                 $loans++;
+
+                if ($loan->defaulted_at) {
+                    if (!$earliestDefault || $loan->defaulted_at->lt($earliestDefault)) {
+                        $earliestDefault = $loan->defaulted_at;
+                    }
+                }
             }
             return [
                 'id' => $u->id,
@@ -88,8 +108,10 @@ class LoanMonitoring extends Page
                 'branch' => optional($u->branch)->name,
                 'loans_count' => $loans,
                 'outstanding' => round($outstanding, 2),
+                'overdue' => round($overdue, 2),
+                'defaulted_at' => $earliestDefault ? $earliestDefault->format('Y-m-d') : '—',
             ];
-        })->sortByDesc('outstanding')->values()->all();
+        })->sortByDesc('overdue')->values()->all();
     }
 
     public function sendReminder(int $userId): void

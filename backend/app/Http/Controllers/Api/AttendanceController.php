@@ -179,7 +179,8 @@ class AttendanceController extends Controller
         $message = 'Attendance marked successfully';
         if ($this->attendanceService->isLate($meeting, $record->attended_at)) {
             $this->attendanceService->chargeLatenessFine($user, $meeting);
-            $message .= '. You were late and charged a lateness fine of 100.';
+            $fineAmount = $meeting->apology_fine_amount ?? config('cooperative.attendance.apology_fine', 100);
+            $message .= '. You were late and charged a lateness fine of ' . number_format($fineAmount) . '.';
         }
 
         return response()->json(['message' => $message, 'record' => $record]);

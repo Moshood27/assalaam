@@ -19,6 +19,8 @@ class AttendanceRecord extends Model
         'lng',
         'device_uuid',
         'fine_paid_at',
+        'lateness_fine_paid',
+        'lateness_fine_amount',
     ];
 
     protected $casts = [
@@ -26,6 +28,8 @@ class AttendanceRecord extends Model
         'fine_paid_at' => 'datetime',
         'lat' => 'decimal:8',
         'lng' => 'decimal:8',
+        'lateness_fine_paid' => 'boolean',
+        'lateness_fine_amount' => 'decimal:2',
     ];
 
     public function user(): BelongsTo

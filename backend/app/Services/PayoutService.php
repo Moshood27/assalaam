@@ -104,7 +104,7 @@ class PayoutService
         }
 
         if (!$expense->account_number || !$expense->bank_code) {
-            throw new Exception('Vendor bank account details are missing.');
+            throw new Exception('Recipient bank account details are missing.');
         }
 
         $reference = 'EXP-' . $expense->id . '-' . time();

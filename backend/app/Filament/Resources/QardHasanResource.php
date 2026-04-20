@@ -154,6 +154,12 @@ class QardHasanResource extends Resource
                     ])
                     ->default('pending')
                     ->required(),
+                Forms\Components\DateTimePicker::make('received_at')
+                    ->label('Date Received')
+                    ->helperText('When the member actually received the loan funds.'),
+                Forms\Components\DateTimePicker::make('defaulted_at')
+                    ->label('Default Date')
+                    ->helperText('If this loan is in default, when did it happen?'),
                 FileUpload::make('agreement_template')
                     ->label('Agreement Template')
                     ->directory('loan-templates')
@@ -209,11 +215,28 @@ class QardHasanResource extends Resource
                 TextColumn::make('paid_amount')->money('ngn', true)->label('Paid')->sortable(),
                 TextColumn::make('approvedBy.full_name')->label('Approved By')->formatStateUsing(fn ($state) => $state ?: '-')->toggleable(),
                 TextColumn::make('approved_at')->label('Approved At')->dateTime()->sortable()->toggleable(),
-                TextColumn::make('status')->badge()->colors([
-                    'warning' => ['pending'],
-                    'success' => ['active', 'completed'],
-                    'danger' => ['cancelled'],
-                ]),
+                TextColumn::make('received_at')->label('Received At')->dateTime()->sortable()->toggleable(),
+                TextColumn::make('defaulted_at')->label('Defaulted At')->dateTime()->sortable()->toggleable(),
+                TextColumn::make('status')
+                    ->badge()
+                    ->formatStateUsing(fn ($record, $state) => $record->defaulted_at ? 'DEFAULTED' : strtoupper($state))
+                    ->color(fn ($record, $state) => $record->defaulted_at ? 'danger' : match ($state) {
+                        'pending' => 'warning',
+                        'active', 'completed' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('overdue_amount')
+                    ->label('Overdue')
+                    ->money('ngn', true)
+                    ->getStateUsing(fn (QardHasan $record) => $record->getOverdueAmount())
+                    ->color(fn ($state) => $state > 0 ? 'danger' : 'gray')
+                    ->toggleable(),
+                TextColumn::make('overdue_days')
+                    ->label('Days Overdue')
+                    ->getStateUsing(fn (QardHasan $record) => $record->getOverdueDays())
+                    ->color(fn ($state) => $state > 7 ? 'danger' : ($state > 0 ? 'warning' : 'gray'))
+                    ->toggleable(),
                 IconColumn::make('agreement_verified_at')
                     ->label('Agreement Verified')
                     ->boolean()
@@ -239,6 +262,15 @@ class QardHasanResource extends Resource
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
                     ]),
+                Tables\Filters\TernaryFilter::make('is_defaulted')
+                    ->label('Default Status')
+                    ->placeholder('All Loans')
+                    ->trueLabel('Defaulted Only')
+                    ->falseLabel('Non-Defaulted')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('defaulted_at'),
+                        false: fn (Builder $query) => $query->whereNull('defaulted_at'),
+                    ),
             ])
             ->headerActions([
                 Action::make('print')
@@ -790,6 +822,48 @@ class QardHasanResource extends Resource
                             ->success()
                             ->send();
                     }),
+                Action::make('mark_defaulted')
+                    ->label('Mark as Defaulted')
+                    ->icon('heroicon-o-exclamation-triangle')
+                    ->color('danger')
+                    ->visible(fn (QardHasan $record) => in_array($record->status, ['active', 'pending']) && empty($record->defaulted_at))
+                    ->form([
+                        Forms\Components\DateTimePicker::make('defaulted_at')
+                            ->label('Default Date')
+                            ->default(now())
+                            ->required(),
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Notes')
+                            ->placeholder('Why is this loan being marked as defaulted?'),
+                    ])
+                    ->action(function (QardHasan $record, array $data) {
+                        $record->update([
+                            'defaulted_at' => $data['defaulted_at'],
+                        ]);
+
+                        Notification::make()
+                            ->title('Loan marked as defaulted')
+                            ->body('The loan has been updated. Member status has been synced.')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('clear_default')
+                    ->label('Clear Default')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (QardHasan $record) => ! empty($record->defaulted_at))
+                    ->requiresConfirmation()
+                    ->action(function (QardHasan $record) {
+                        $record->update([
+                            'defaulted_at' => null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Default status cleared')
+                            ->body('The loan is no longer in default. Member status has been synced.')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
             ]);
@@ -804,7 +878,26 @@ class QardHasanResource extends Resource
                         TextEntry::make('qard_id_string')->label('Loan ID'),
                         TextEntry::make('user.full_name')->label('Member'),
                         TextEntry::make('principal_amount')->money('ngn'),
-                        TextEntry::make('status')->badge(),
+                        TextEntry::make('status')
+                            ->badge()
+                            ->formatStateUsing(fn ($record, $state) => $record->defaulted_at ? 'DEFAULTED' : strtoupper($state))
+                            ->color(fn ($record, $state) => $record->defaulted_at ? 'danger' : match ($state) {
+                                'pending' => 'warning',
+                                'active', 'completed' => 'success',
+                                'cancelled' => 'danger',
+                                default => 'gray',
+                            }),
+                        TextEntry::make('received_at')->label('Date Received')->dateTime(),
+                        TextEntry::make('defaulted_at')->label('Date Defaulted')->dateTime()->placeholder('Not in default'),
+                        TextEntry::make('overdue_amount')
+                            ->label('Current Overdue Amount')
+                            ->money('ngn')
+                            ->getStateUsing(fn (QardHasan $record) => $record->getOverdueAmount())
+                            ->color(fn ($state) => $state > 0 ? 'danger' : null),
+                        TextEntry::make('overdue_days')
+                            ->label('Days Overdue')
+                            ->getStateUsing(fn (QardHasan $record) => $record->getOverdueDays())
+                            ->color(fn ($state) => $state > 0 ? 'danger' : null),
                     ])->columns(2),
                 InfoSection::make('Multi-Sig Approvals')
                     ->schema([

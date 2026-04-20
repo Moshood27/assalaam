@@ -37,6 +37,11 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ->label('Device ID')
                     ->readOnly(),
                 Forms\Components\DateTimePicker::make('fine_paid_at'),
+                Forms\Components\Toggle::make('lateness_fine_paid')
+                    ->label('Lateness Fine Paid'),
+                Forms\Components\TextInput::make('lateness_fine_amount')
+                    ->numeric()
+                    ->prefix('₦'),
             ]);
     }
 
@@ -67,6 +72,15 @@ class AttendanceRecordsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('device_uuid')
                     ->label('Device ID')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\IconColumn::make('lateness_fine_paid')
+                    ->label('Late Fine')
+                    ->boolean()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('lateness_fine_amount')
+                    ->label('Late Amount')
+                    ->money('NGN')
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

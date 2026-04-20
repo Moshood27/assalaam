@@ -157,35 +157,6 @@ class AutoRecoverOverdueLoans implements ShouldQueue
      */
     protected function computeOverdueAmount(QardHasan $loan): float
     {
-        if ($loan->status !== 'active') return 0.0;
-        $per = (float) $loan->per_installment;
-        if ($per <= 0) {
-            $per = round(((float)$loan->principal_amount) / max((int)$loan->total_installments, 1), 2);
-        }
-        if ($per <= 0) return 0.0;
-
-        $schedule = $loan->generateInstallmentSchedule();
-        if (empty($schedule)) return 0.0;
-
-        $now = Carbon::now();
-        $dueCount = 0;
-        foreach ($schedule as $item) {
-            $dueAt = $item['due_at'] instanceof Carbon ? $item['due_at'] : Carbon::parse((string) $item['due_at']);
-            if ($dueAt->lessThanOrEqualTo($now)) {
-                $dueCount++;
-            } else {
-                break; // schedule is in order; stop at first future item
-            }
-        }
-        if ($dueCount <= 0) return 0.0;
-
-        $expectedPaid = round(min($dueCount * $per, (float) $loan->principal_amount), 2);
-        $alreadyPaid = (float) $loan->paid_amount;
-        $overdue = round(max(0.0, $expectedPaid - $alreadyPaid), 2);
-
-        // Never exceed remaining principal
-        $remaining = max(0.0, (float) $loan->principal_amount - $alreadyPaid);
-        if ($overdue > $remaining) $overdue = $remaining;
-        return $overdue;
+        return $loan->getOverdueAmount();
     }
 }

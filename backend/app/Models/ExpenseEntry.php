@@ -32,6 +32,8 @@ class ExpenseEntry extends Model
         'status',
         'processed_at',
         'vendor_id',
+        'recipient_type',
+        'member_id',
         'bank_name',
         'bank_code',
         'account_number',
@@ -59,6 +61,11 @@ class ExpenseEntry extends Model
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function member()
+    {
+        return $this->belongsTo(User::class, 'member_id');
     }
 
     public function approver()

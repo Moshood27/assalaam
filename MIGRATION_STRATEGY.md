@@ -26,8 +26,8 @@ Excel sheets must be formatted exactly to match the import logic.
 - **Constraint:** All values must be numeric. `digital_gold_balance` is the weight in grams (e.g., 0.50).
 
 ### Loan Master
-- **Fields:** `membership_no`, `original_loan_amount`, `total_repaid_to_date`, `remaining_principal`, `next_installment_amount`.
-- **Constraint:** All values must be numeric. `membership_no` must exist in the system.
+- **Fields:** `membership_no`, `original_loan_amount`, `total_repaid_to_date`, `remaining_principal`, `next_installment_amount`, `interval`, `total_installments`, `received_at`, `defaulted_at`.
+- **Constraint:** All values must be numeric except `membership_no`, `interval`, and date fields. `received_at` and `defaulted_at` should be in YYYY-MM-DD format.
 
 ---
 

@@ -75,7 +75,7 @@ class QardHasanBranchReport extends Page
 
         return response()->streamDownload(function () use ($data) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Branch', 'Member', 'Loan ID', 'Principal', 'Paid', 'Outstanding', 'Last Payment', 'Status']);
+            fputcsv($out, ['Branch', 'Member', 'Loan ID', 'Principal', 'Paid', 'Overdue', 'Outstanding', 'Last Payment', 'Status']);
 
             foreach ($data['branches'] as $branch) {
                 foreach ($branch['loans'] as $loan) {
@@ -85,6 +85,7 @@ class QardHasanBranchReport extends Page
                         $loan['loan_id'],
                         number_format($loan['principal'], 2, '.', ''),
                         number_format($loan['paid'], 2, '.', ''),
+                        number_format($loan['overdue'], 2, '.', ''),
                         number_format($loan['outstanding'], 2, '.', ''),
                         $loan['last_payment_date'] ?? 'N/A',
                         $loan['status'],
