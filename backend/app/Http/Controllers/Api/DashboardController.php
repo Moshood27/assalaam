@@ -143,6 +143,7 @@ class DashboardController extends Controller
             ];
         }
 
+        $eligibility = $user->adjustedLoanEligibility();
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
@@ -157,6 +158,9 @@ class DashboardController extends Controller
             'active_disputes_count' => $activeDisputesCount,
             'outstanding_fines' => (float) $user->outstanding_fines,
             'has_ongoing_meeting' => (bool) $ongoingMeeting,
+            'savings_balance' => (float) ($eligibility['savings'] ?? 0),
+            'shares_balance' => (float) ($eligibility['shares'] ?? 0),
+            'loan_limit' => (float) ($eligibility['eligibility_adjusted'] ?? 0),
         ];
 
         return response()->json([

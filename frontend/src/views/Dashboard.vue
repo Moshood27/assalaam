@@ -90,6 +90,37 @@
         </div>
       </div>
 
+      <!-- Loan Eligibility & Savings Section -->
+      <div class="mt-6 bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-slate-800 font-bold text-lg">Loan Eligibility</h3>
+          <div class="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl">💎</div>
+        </div>
+        
+        <div class="flex items-end gap-1 mb-8">
+          <span class="text-3xl font-black text-slate-900">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loan_limit) }}</span>
+          <span class="text-[10px] text-slate-400 font-bold uppercase mb-2 ml-1 tracking-wider">Max Limit</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100">
+            <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Savings</p>
+            <p class="text-sm font-black text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.savings_balance) }}</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100">
+            <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Shares</p>
+            <p class="text-sm font-black text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.shares_balance) }}</p>
+          </div>
+        </div>
+        
+        <div class="mt-6 flex items-center gap-3 bg-blue-50/50 p-4 rounded-3xl border border-blue-100/50">
+          <div class="text-lg">ℹ️</div>
+          <p class="text-[10px] text-blue-700 leading-tight font-medium">
+            Your loan limit is determined by your <span class="font-bold">Member Savings</span> and <span class="font-bold">Shares balance</span>, adjusted by your <span class="font-bold">Attaqwa Score</span>.
+          </p>
+        </div>
+      </div>
+
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
