@@ -22,10 +22,6 @@
                     <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Search Member</label>
                     <input type="text" wire:model.live.debounce.500ms="search" placeholder="Name or Membership #" class="fi-input block w-full rounded-lg border-none bg-white py-1.5 text-base text-gray-950 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:focus:ring-primary-500 sm:text-sm sm:leading-6">
                 </div>
-                <div class="min-w-[150px]">
-                    <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ARM Name</label>
-                    <input type="text" wire:model.live="arm" placeholder="Officer Name" class="fi-input block w-full rounded-lg border-none bg-white py-1.5 text-base text-gray-950 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:focus:ring-primary-500 sm:text-sm sm:leading-6">
-                </div>
             </div>
             <div class="flex gap-2 ml-auto">
                 <x-filament::button wire:click="refreshReport" color="gray" icon="heroicon-m-arrow-path">Refresh</x-filament::button>
@@ -37,7 +33,7 @@
         <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden break-inside-avoid mb-8">
             <div class="bg-gray-50 dark:bg-gray-800/60 px-5 py-6 border-b border-gray-200 dark:border-gray-800 text-center">
                 <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tight">{{ $report['cooperative_name'] }}</h2>
-                <h3 class="text-lg font-bold text-gray-700 dark:text-gray-300 uppercase mt-1">ARM {{ $this->arm ?: '____' }} LOAN ANALYSIS REPORT</h3>
+                <h3 class="text-lg font-bold text-gray-700 dark:text-gray-300 uppercase mt-1">LOAN ANALYSIS REPORT</h3>
                 <h4 class="text-md font-medium text-gray-500 dark:text-gray-400 uppercase">AS AT MONTH OF {{ strtoupper($report['month']) }} {{ $report['year'] }}</h4>
             </div>
             <div class="overflow-x-auto">

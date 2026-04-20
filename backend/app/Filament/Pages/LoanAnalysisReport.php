@@ -44,7 +44,6 @@ class LoanAnalysisReport extends Page
     public ?int $branchId = null;
     public ?string $date = null;
     public ?string $search = null;
-    public ?string $arm = null;
 
     public function mount(): void
     {
@@ -76,7 +75,6 @@ class LoanAnalysisReport extends Page
     public function exportCsv(): StreamedResponse
     {
         $data = $this->report;
-        $armName = $this->arm ?: '____';
         $filename = 'loan-analysis-report-' . ($this->date ?: now()->toDateString()) . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
@@ -84,9 +82,9 @@ class LoanAnalysisReport extends Page
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        return response()->streamDownload(function () use ($data, $armName) {
+        return response()->streamDownload(function () use ($data) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, [$data['cooperative_name'] . ' ARM ' . $armName . ' LOAN ANALYSIS REPORT AS AT MONTH OF ' . strtoupper($data['month']) . ' ' . $data['year']]);
+            fputcsv($out, [$data['cooperative_name'] . ' LOAN ANALYSIS REPORT AS AT MONTH OF ' . strtoupper($data['month']) . ' ' . $data['year']]);
             fputcsv($out, ['S/N', 'NAME OF MEMBERS AND BRANCH', 'DATE GRANTED', 'LOAN GRANTED', 'AMOUNT REPAID', 'EXPECTED AMOUNT TO PAY', 'AMOUNT DEFAULTED', 'LOAN BALANCE', 'SHARE/SAVINGS BALANCE', 'PHONE NUMBER', 'PERIOD OF DEFAULT']);
 
             foreach ($data['rows'] as $row) {
