@@ -6,6 +6,7 @@ use App\Notifications\PaymentNotification;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contribution;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Models\QardHasan;
@@ -1061,15 +1062,15 @@ class WebhookController extends Controller
 
     /**
      * Calculate system maintenance charge for wallet top-ups.
-     * 0.1% of the amount, capped at 500.
+     * Uses dynamic settings if available, otherwise falls back to config.
      *
      * @param float $amount
      * @return float
      */
     private function calculateMaintenanceCharge(float $amount): float
     {
-        $percentage = config('cooperative.wallet.maintenance_charge.percentage', 0.1) / 100;
-        $maxCharge = config('cooperative.wallet.maintenance_charge.max_amount', 500);
+        $percentage = Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage', 1)) / 100;
+        $maxCharge = Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount', 500));
 
         return round(min($amount * $percentage, (float) $maxCharge), 2);
     }

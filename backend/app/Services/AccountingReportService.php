@@ -959,6 +959,120 @@ class AccountingReportService
     }
 
     /**
+     * Build Loan Analysis Report for AT-TQWA C.I.C.D.
+     */
+    public function buildLoanAnalysisReport(?int $branchId = null, ?string $dateStr = null, ?string $search = null): array
+    {
+        $toDate = $dateStr ? Carbon::parse($dateStr)->endOfMonth() : Carbon::now()->endOfMonth();
+        $monthStr = $toDate->format('F');
+        $yearStr = $toDate->format('Y');
+
+        $savingsSchemes = \App\Models\Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id')->toArray();
+
+        // Get all active, defaulted or recently completed loans as of that date
+        $loans = \App\Models\QardHasan::with(['user.branch', 'user.contributions' => function($q) use ($toDate, $savingsSchemes) {
+            $q->where('status', 'success')
+                ->where('created_at', '<=', $toDate)
+                ->whereIn('scheme_id', $savingsSchemes);
+        }])
+            ->where('created_at', '<=', $toDate)
+            ->when($branchId, function($q) use ($branchId) {
+                $q->whereHas('user', fn($u) => $u->where('branch_id', $branchId));
+            })
+            ->when($search, function($q) use ($search) {
+                $q->whereHas('user', function($u) use ($search) {
+                    $u->where('surname', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('other_names', 'like', "%{$search}%")
+                        ->orWhere('membership_number', 'like', "%{$search}%");
+                });
+            })
+            ->whereIn('status', ['active', 'defaulted', 'completed'])
+            ->get();
+
+        $rows = [];
+        $sn = 1;
+
+        $totals = [
+            'loan_granted' => 0.0,
+            'amount_repaid' => 0.0,
+            'expected_amount_to_pay' => 0.0,
+            'amount_defaulted' => 0.0,
+            'loan_balance' => 0.0,
+            'savings_balance' => 0.0,
+        ];
+
+        foreach ($loans as $loan) {
+            $user = $loan->user;
+            if (!$user) continue;
+
+            $principal = (float)$loan->principal_amount;
+            $paid = (float)$loan->paid_amount;
+            $balance = max(0.0, $principal - $paid);
+
+            // Replicate overdue logic for specific date
+            $expectedToDate = 0.0;
+            $overdue = 0.0;
+            $periodOfDefault = 0;
+
+            if ($loan->status !== 'completed' || $loan->updated_at->gte($toDate->copy()->startOfMonth())) {
+                $schedule = $loan->generateInstallmentSchedule();
+                foreach ($schedule as $item) {
+                    if ($item['due_at']->lte($toDate)) {
+                        $expectedToDate += $item['amount'];
+                    }
+                }
+                $expectedToDate = round(min($expectedToDate, $principal), 2);
+                $overdue = round(max(0.0, $expectedToDate - $paid), 2);
+
+                if ($overdue > 0) {
+                    // Find earliest unpaid installment
+                    $per = (float) $loan->per_installment ?: ($principal / max(1, $loan->total_installments));
+                    $installmentsPaid = (int) floor($paid / $per);
+                    if (isset($schedule[$installmentsPaid])) {
+                        $dueAt = $schedule[$installmentsPaid]['due_at'];
+                        if ($dueAt->lt($toDate)) {
+                            $periodOfDefault = $toDate->diffInDays($dueAt);
+                        }
+                    }
+                }
+            }
+
+            $savingsBalance = (float)$user->contributions->sum('amount');
+
+            $rows[] = [
+                'sn' => $sn++,
+                'member_name' => $user->full_name,
+                'branch_name' => optional($user->branch)->name,
+                'date_granted' => $loan->received_at ?: ($loan->approved_at ?: $loan->created_at),
+                'loan_granted' => $principal,
+                'amount_repaid' => $paid,
+                'expected_amount_to_pay' => $expectedToDate,
+                'amount_defaulted' => $overdue,
+                'loan_balance' => $balance,
+                'savings_balance' => $savingsBalance,
+                'phone_number' => $user->phone,
+                'period_of_default' => $periodOfDefault > 0 ? $periodOfDefault . ' days' : 'None',
+            ];
+
+            $totals['loan_granted'] += $principal;
+            $totals['amount_repaid'] += $paid;
+            $totals['expected_amount_to_pay'] += $expectedToDate;
+            $totals['amount_defaulted'] += $overdue;
+            $totals['loan_balance'] += $balance;
+            $totals['savings_balance'] += $savingsBalance;
+        }
+
+        return [
+            'rows' => $rows,
+            'totals' => $totals,
+            'month' => $monthStr,
+            'year' => $yearStr,
+            'cooperative_name' => 'AT-TQWA C.I.C.D.',
+        ];
+    }
+
+    /**
      * Build Branch-by-Branch Outstanding Qard Hasan Report.
      */
     public function buildBranchQardHasanReport(?int $branchId = null, ?string $from = null, ?string $to = null, bool $onlyDefaulted = false): array

@@ -122,6 +122,7 @@ class ProfileController extends Controller
 
         $scoreSvc = app(\App\Services\AttaqwaScoreService::class);
         $scoreData = $scoreSvc->scoreForUser($user);
+        $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled', true));
 
         return response()->json([
             'id' => (int) $user->id,
@@ -178,6 +179,7 @@ class ProfileController extends Controller
             'attaqwa_band' => $scoreData['band'],
             'attaqwa_breakdown' => $scoreData['breakdown'],
             'attaqwa_tips' => $scoreSvc->getScoreTips($user),
+            'attaqwa_score_enabled' => $scoreEnabled,
             'badges' => $user->badges->map(fn($b) => [
                 'id' => $b->id,
                 'name' => $b->name,

@@ -47,20 +47,30 @@ class LoanController extends Controller
         $canRequest = $months >= 6 && ($adj['eligibility_adjusted'] ?? 0) > 0;
 
         // Attaqwa Score and guidance
+        $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled'));
         $scoreSvc = app(AttaqwaScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
-        $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
-        $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+
+        if ($scoreEnabled) {
+            $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
+            $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+        } else {
+            // If credit score is disabled, default to standard path (not instant, not low)
+            $instant = false;
+            $low = false;
+        }
 
         // Score-based limit boost (applies only after first loan is completed)
         $boostPct = 0.0;
-        $scoreVal = (float) ($score['score'] ?? 0);
-        if ($scoreVal >= 90) {
-            $boostPct = 15.0;
-        } elseif ($scoreVal >= 80) {
-            $boostPct = 10.0;
-        } elseif ($scoreVal >= 70) {
-            $boostPct = 5.0;
+        if ($scoreEnabled) {
+            $scoreVal = (float) ($score['score'] ?? 0);
+            if ($scoreVal >= 90) {
+                $boostPct = 15.0;
+            } elseif ($scoreVal >= 80) {
+                $boostPct = 10.0;
+            } elseif ($scoreVal >= 70) {
+                $boostPct = 5.0;
+            }
         }
         $eligWithScore = (float) ($adj['eligibility_adjusted'] ?? 0);
         $hasCompleted = !$adj['is_first_loan'];
@@ -110,10 +120,18 @@ class LoanController extends Controller
         }
 
         // Compute Attaqwa Score and derived requirements
+        $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled'));
         $scoreSvc = app(AttaqwaScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
-        $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
-        $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+
+        if ($scoreEnabled) {
+            $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
+            $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+        } else {
+            // Default: no instant approval, 2 guarantors
+            $instant = false;
+            $low = false;
+        }
         $requiredGuarantors = $instant ? 0 : ($low ? 3 : 2);
 
         // Enforce 6-month membership before requesting any loan
@@ -130,13 +148,15 @@ class LoanController extends Controller
 
         // Apply score-based limit boost (only after first loan is completed)
         $boostPct = 0.0;
-        $scoreVal = (float) ($score['score'] ?? 0);
-        if ($scoreVal >= 90) {
-            $boostPct = 15.0;
-        } elseif ($scoreVal >= 80) {
-            $boostPct = 10.0;
-        } elseif ($scoreVal >= 70) {
-            $boostPct = 5.0;
+        if ($scoreEnabled) {
+            $scoreVal = (float) ($score['score'] ?? 0);
+            if ($scoreVal >= 90) {
+                $boostPct = 15.0;
+            } elseif ($scoreVal >= 80) {
+                $boostPct = 10.0;
+            } elseif ($scoreVal >= 70) {
+                $boostPct = 5.0;
+            }
         }
         if ($user->hasCompletedLoan() && $principal > 0 && $boostPct > 0) {
             $principal = round($principal * (1 + ($boostPct / 100.0)), 2);

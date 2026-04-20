@@ -32,7 +32,7 @@ return [
     ],
     'wallet' => [
         'maintenance_charge' => [
-            'percentage' => env('COOP_WALLET_MAINTENANCE_CHARGE_PERCENTAGE', 0.1), // 0.1%
+            'percentage' => env('COOP_WALLET_MAINTENANCE_CHARGE_PERCENTAGE', 1), // 1%
             'max_amount' => env('COOP_WALLET_MAINTENANCE_CHARGE_MAX', 500),
         ],
     ],
@@ -55,4 +55,5 @@ return [
     'maintenance_until' => env('MAINTENANCE_UNTIL', 'Approximately 1 hour'),
     'system_announcement' => env('SYSTEM_ANNOUNCEMENT', null),
     'play_store_url' => env('PLAY_STORE_URL', 'https://play.google.com/store/apps/details?id=com.attaqwa.app'),
+    'loan_credit_score_enabled' => env('LOAN_CREDIT_SCORE_ENABLED', true),
 ];

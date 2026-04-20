@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contribution;
+use App\Models\Setting;
 use App\Models\Scheme;
 use App\Models\Project;
 use App\Models\WalletTransaction;
@@ -133,6 +134,10 @@ class WalletController extends Controller
                     : null,
             ],
             'recent_transactions' => $recent,
+            'maintenance_charge_config' => [
+                'percentage' => (float) Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage', 1)),
+                'max_amount' => (float) Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount', 500)),
+            ],
         ]);
     }
 

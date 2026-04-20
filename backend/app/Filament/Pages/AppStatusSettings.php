@@ -32,6 +32,9 @@ class AppStatusSettings extends Page
             'maintenance_until' => Setting::get('maintenance_until', config('cooperative.maintenance_until')),
             'system_announcement' => Setting::get('system_announcement', config('cooperative.system_announcement')),
             'play_store_url' => Setting::get('play_store_url', config('cooperative.play_store_url')),
+            'loan_credit_score_enabled' => (bool) Setting::get('loan_credit_score_enabled', true),
+            'wallet_maintenance_charge_percentage' => Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage')),
+            'wallet_maintenance_charge_max' => Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount')),
         ]);
     }
 
@@ -74,6 +77,34 @@ class AppStatusSettings extends Page
                             ->label('Announcement Text')
                             ->rows(2)
                             ->helperText('Leave empty to hide the announcement.'),
+                    ]),
+                Section::make('Loan Settings')
+                    ->description('Manage loan-related policy settings.')
+                    ->schema([
+                        Toggle::make('loan_credit_score_enabled')
+                            ->label('Enable Credit Score for Loans')
+                            ->helperText('If disabled, the Coop credit score will not be used to determine loan eligibility boost or guarantor requirements.')
+                            ->default(true),
+                    ]),
+                Section::make('Wallet Settings')
+                    ->description('Manage wallet maintenance and transaction charges.')
+                    ->schema([
+                        TextInput::make('wallet_maintenance_charge_percentage')
+                            ->label('Maintenance Charge Percentage (%)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('%')
+                            ->helperText('Percentage of the top-up amount charged as system maintenance fee.'),
+                        TextInput::make('wallet_maintenance_charge_max')
+                            ->label('Maximum Maintenance Charge (NGN)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0)
+                            ->prefix('₦')
+                            ->helperText('The maintenance charge will be capped at this amount.'),
                     ]),
             ])
             ->statePath('data');
