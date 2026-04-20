@@ -307,7 +307,7 @@ class QardHasan extends Model
 
         // If explicitly marked as defaulted, calculate from defaulted_at
         if ($this->defaulted_at && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
-            return (int) $asAt->diffInDays($this->defaulted_at);
+            return (int) abs($asAt->diffInDays($this->defaulted_at));
         }
 
         if ($this->getOverdueAmount($asAt) <= 0) return 0;
@@ -325,7 +325,7 @@ class QardHasan extends Model
         if (isset($schedule[$installmentsPaid])) {
             $dueAt = $schedule[$installmentsPaid]['due_at'];
             if ($dueAt->lessThan($asAt)) {
-                return (int) $asAt->diffInDays($dueAt);
+                return (int) abs($asAt->diffInDays($dueAt));
             }
         }
 
@@ -412,7 +412,7 @@ class QardHasan extends Model
         $startDate = $this->getDefaultStartDate();
         if (!$startDate) return 'None';
 
-        $days = now()->diffInDays($startDate);
+        $days = (int) abs(now()->diffInDays($startDate));
         return $startDate->format('d/m/Y') . " ({$days} days)";
     }
     public function transactionApprovals(): MorphMany

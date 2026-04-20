@@ -148,7 +148,7 @@ class ZakatResource extends Resource
                             ->label('Hawl Progress (Days)')
                             ->getStateUsing(function (User $record) {
                                 if (!$record->zakat_nisab_crossed_at) return 'Not started';
-                                return now()->diffInDays($record->zakat_nisab_crossed_at) . ' days';
+                                return (int) abs(now()->diffInDays($record->zakat_nisab_crossed_at)) . ' days';
                             }),
                         TextEntry::make('zakat_last_paid_at')
                             ->label('Last Zakat Paid')
@@ -189,7 +189,7 @@ class ZakatResource extends Resource
                             ->label('Status')
                             ->getStateUsing(function (User $record) use ($nisabValue, $goldPrice) {
                                 $lunarDays = (int) config('zakat.lunar_days', 354);
-                                $days = $record->zakat_nisab_crossed_at ? now()->diffInDays($record->zakat_nisab_crossed_at) : 0;
+                                $days = $record->zakat_nisab_crossed_at ? (int) abs(now()->diffInDays($record->zakat_nisab_crossed_at)) : 0;
                                 $base = $record->zakatBaseWealth($goldPrice);
 
                                 if ($base < $nisabValue) return 'Below Nisab';

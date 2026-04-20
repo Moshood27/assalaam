@@ -735,8 +735,8 @@ class AccountingReportService
                 ->first();
 
             $daysSinceLastPayment = $lastRepayment
-                ? $now->diffInDays(Carbon::parse($lastRepayment->paid_at))
-                : $now->diffInDays($l->created_at);
+                ? (int) abs($now->diffInDays(Carbon::parse($lastRepayment->paid_at)))
+                : (int) abs($now->diffInDays($l->created_at));
 
             $repaid = QardHasanRepayment::where('qard_hasan_id', $l->id)
                 ->whereIn('status', ['success', 'paid', 'completed'])
@@ -778,8 +778,8 @@ class AccountingReportService
             }
 
             $daysSinceLastPayment = $lastPaidDate
-                ? $now->diffInDays($lastPaidDate)
-                : $now->diffInDays($order->created_at);
+                ? (int) abs($now->diffInDays($lastPaidDate))
+                : (int) abs($now->diffInDays($order->created_at));
 
             $agingData[] = [
                 'type' => 'Murabahah',
@@ -1016,7 +1016,7 @@ class AccountingReportService
 
             $periodOfDefault = 'None';
             if ($defaultStartDate) {
-                $days = $toDate->diffInDays($defaultStartDate);
+                $days = (int) abs($toDate->diffInDays($defaultStartDate));
                 $periodOfDefault = $defaultStartDate->format('d/m/Y') . " ({$days} days)";
             }
 

@@ -469,7 +469,7 @@ class UserResource extends Resource
                     ->getStateUsing(function (User $record) {
                         if (!$record->zakat_nisab_crossed_at) return false;
                         $lunarDays = (int) config('zakat.lunar_days', 354);
-                        return now()->diffInDays($record->zakat_nisab_crossed_at) >= $lunarDays;
+                        return (int) abs(now()->diffInDays($record->zakat_nisab_crossed_at)) >= $lunarDays;
                     })
                     ->sortable(query: function (Builder $query, string $direction) {
                         $lunarDays = (int) config('zakat.lunar_days', 354);
