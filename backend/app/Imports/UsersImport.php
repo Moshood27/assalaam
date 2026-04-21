@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Hash;
+use App\Imports\Concerns\HandlesExcelDates;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Row;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -14,6 +15,8 @@ use Illuminate\Support\Str;
 
 class UsersImport implements OnEachRow, WithHeadingRow, WithValidation, WithChunkReading
 {
+    use HandlesExcelDates;
+
     protected $migrationDate;
 
     public function __construct($migrationDate = null)
@@ -43,7 +46,7 @@ class UsersImport implements OnEachRow, WithHeadingRow, WithValidation, WithChun
                 'email' => $data['email'] ?? null,
                 'gender' => strtolower($data['gender'] ?? 'male'),
                 'native_place' => $data['native_place'] ?? null,
-                'dob' => isset($data['dob']) ? \Carbon\Carbon::parse($data['dob']) : null,
+                'dob' => $this->parseExcelDate($data['dob']),
                 'marital_status' => strtolower($data['marital_status'] ?? 'single'),
                 'occupation' => $data['occupation'] ?? null,
                 'address' => $data['address'] ?? null,
@@ -85,13 +88,13 @@ class UsersImport implements OnEachRow, WithHeadingRow, WithValidation, WithChun
 
                 // Official
                 'admission_form_number' => $data['admission_form_number'] ?? null,
-                'admission_date' => isset($data['admission_date']) ? \Carbon\Carbon::parse($data['admission_date']) : null,
+                'admission_date' => $this->parseExcelDate($data['admission_date']),
                 'admission_officer_name' => $data['admission_officer_name'] ?? null,
                 'approval_status' => strtolower($data['approval_status'] ?? 'approved'),
 
                 'password' => Hash::make($data['phone']), // Default password as phone number
                 'migrated_at' => $this->migrationDate,
-                'created_at' => isset($data['date_joined']) ? \Carbon\Carbon::parse($data['date_joined']) : $this->migrationDate,
+                'created_at' => $this->parseExcelDate($data['date_joined'], $this->migrationDate),
             ]
         );
     }

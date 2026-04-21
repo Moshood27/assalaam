@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
 use App\Models\User;
+use App\Imports\Concerns\HandlesExcelDates;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -13,6 +14,8 @@ use Illuminate\Support\Str;
 
 class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkReading
 {
+    use HandlesExcelDates;
+
     protected $migrationDate;
 
     public function __construct($migrationDate = null)
@@ -82,8 +85,8 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             'interval' => strtolower($row['interval'] ?? 'monthly'),
             'status' => 'active',
             'approved_at' => $this->migrationDate,
-            'received_at' => isset($row['received_at']) ? \Carbon\Carbon::parse($row['received_at']) : $this->migrationDate,
-            'defaulted_at' => isset($row['defaulted_at']) ? \Carbon\Carbon::parse($row['defaulted_at']) : null,
+            'received_at' => $this->parseExcelDate($row['received_at'], $this->migrationDate),
+            'defaulted_at' => $this->parseExcelDate($row['defaulted_at']),
             'created_at' => $this->migrationDate,
         ]);
     }

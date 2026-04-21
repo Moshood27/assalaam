@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
+use App\Imports\Concerns\HandlesExcelDates;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -14,6 +15,8 @@ use Carbon\Carbon;
 
 class TransactionsImport implements ToModel, WithHeadingRow, WithValidation, WithChunkReading
 {
+    use HandlesExcelDates;
+
     protected static $sweptUsers = [];
 
     public function chunkSize(): int
@@ -51,7 +54,7 @@ class TransactionsImport implements ToModel, WithHeadingRow, WithValidation, Wit
 
         $amount = (float) $row['amount'];
         $type = strtolower($row['type'] ?? 'credit');
-        $date = $row['date'] ? Carbon::parse($row['date']) : now();
+        $date = $this->parseExcelDate($row['date'], now());
         $reference = 'MIG-HIST-TX-' . Str::upper($row['reference'] ?? Str::random(8));
 
         // Use standard migration source for historical transactions
