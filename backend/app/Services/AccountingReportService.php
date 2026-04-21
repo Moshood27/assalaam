@@ -216,6 +216,7 @@ class AccountingReportService
                 SUM(entrance_balance) as total_entrance,
                 SUM(h_savings_balance) as total_h_savings,
                 SUM(investment_balance) as total_investment,
+                SUM(special_savings_balance) as total_special_savings,
                 SUM(group_savings_balance) as total_group_savings
             ')
             ->first();
@@ -237,6 +238,7 @@ class AccountingReportService
                           (float) $memberStats->total_emergency +
                           (float) $memberStats->total_entrance +
                           (float) $memberStats->total_h_savings +
+                          (float) $memberStats->total_special_savings +
                           (float) $memberStats->total_investment +
                           (float) $memberStats->total_group_savings;
 
@@ -967,7 +969,7 @@ class AccountingReportService
         $monthStr = $toDate->format('F');
         $yearStr = $toDate->format('Y');
 
-        $savingsSchemes = \App\Models\Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id')->toArray();
+        $savingsSchemes = \App\Models\Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital'])->pluck('id')->toArray();
 
         // Get all active, defaulted or recently completed loans as of that date
         $loans = \App\Models\QardHasan::with(['user.branch', 'user.contributions' => function($q) use ($toDate, $savingsSchemes) {
@@ -1050,7 +1052,7 @@ class AccountingReportService
             'totals' => $totals,
             'month' => $monthStr,
             'year' => $yearStr,
-            'cooperative_name' => 'AT-TQWA C.I.C.S.',
+            'cooperative_name' => 'AT-TAQWA C.I.C.S.',
         ];
     }
 
@@ -1248,6 +1250,7 @@ class AccountingReportService
                               (float)$user->emergency_balance +
                               (float)$user->entrance_balance +
                               (float)$user->h_savings_balance +
+                              (float)$user->special_savings_balance +
                               (float)$user->investment_balance +
                               (float)$user->group_savings_balance;
 

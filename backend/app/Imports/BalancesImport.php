@@ -311,7 +311,9 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
     {
         $columnMap = [
             'Savings' => 'ordinary_savings',
+            'Ordinary Savings' => 'ordinary_savings',
             'Shares' => 'shares_capital',
+            'Share Capital' => 'shares_capital',
             'Development' => 'development_fund_balance',
             'Building' => 'building_balance',
             'AGM' => 'agm_balance',
@@ -328,6 +330,7 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
             'H Savings' => 'h_savings_balance',
             'Investment' => 'investment_balance',
             'Group Savings' => 'group_savings_balance',
+            'Special Savings' => 'special_savings_balance',
             'Takaful' => 'takaful_balance',
             'Digital Gold' => 'gold_balance',
             'Wallet Balance' => 'balance',

@@ -48,7 +48,7 @@ class ZakatCheckNisabHawl extends Command
         $lunarDays = (int) config('zakat.lunar_days', 354);
         $rate = (float) config('zakat.rate', 0.025);
 
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Digital Gold'])->pluck('id', 'name');
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital', 'Digital Gold'])->pluck('id', 'name');
 
         $this->info("Checking Zakat Hawl for users. Current Gold Nisab: " . number_format($nisabValue, 2) . " NGN (Gold price: " . number_format($goldPrice, 2) . " NGN/g)");
 
@@ -87,21 +87,25 @@ class ZakatCheckNisabHawl extends Command
 
     protected function calculateTotalAssets(User $user, $goldPrice, $schemes)
     {
-        $savings = 0.0;
-        $shares = 0.0;
+        $savingsNames = ['Savings', 'Ordinary Savings', 'Special Savings'];
+        $sharesNames = ['Shares', 'Share Capital'];
 
-        if (isset($schemes['Savings'])) {
-            $savings = (float) $user->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Savings'])
-                ->sum('amount');
+        $savingsIds = [];
+        foreach ($savingsNames as $name) {
+            if (isset($schemes[$name])) $savingsIds[] = $schemes[$name];
         }
-        if (isset($schemes['Shares'])) {
-            $shares = (float) $user->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Shares'])
-                ->sum('amount');
+
+        $sharesIds = [];
+        foreach ($sharesNames as $name) {
+            if (isset($schemes[$name])) $sharesIds[] = $schemes[$name];
         }
+
+        $savings = (float) $user->contributions()->where('status', 'success')
+            ->whereIn('scheme_id', $savingsIds)
+            ->sum('amount');
+        $shares = (float) $user->contributions()->where('status', 'success')
+            ->whereIn('scheme_id', $sharesIds)
+            ->sum('amount');
 
         $currentGoldValue = round($user->gold_balance * $goldPrice, 2);
         $walletBalance = (float) $user->balance;

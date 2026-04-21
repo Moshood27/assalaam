@@ -29,6 +29,7 @@ class SchemesSeederOldMap extends Seeder
             'Investment',
             'Sav',
             'Group Savings',
+            'Special Savings',
         ];
 
         foreach ($names as $name) {

@@ -52,6 +52,7 @@ class User extends Authenticatable implements FilamentUser
         'outstanding_fines',
         'gold_balance',
         'ordinary_savings',
+        'special_savings_balance',
         'shares_capital',
         'building_balance',
         'development_fund_balance',
@@ -177,6 +178,7 @@ class User extends Authenticatable implements FilamentUser
             'balance' => 'decimal:2',
             'outstanding_fines' => 'decimal:2',
             'ordinary_savings' => 'decimal:2',
+            'special_savings_balance' => 'decimal:2',
             'shares_capital' => 'decimal:2',
             'building_balance' => 'decimal:2',
             'development_fund_balance' => 'decimal:2',
@@ -431,30 +433,50 @@ class User extends Authenticatable implements FilamentUser
     public function savingsSharesEligibility(): array
     {
         // Scheme IDs for Savings and Shares
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id', 'name');
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital'])->pluck('id', 'name');
 
         $savings = 0.0;
         $shares = 0.0;
+        $specialSavings = 0.0;
 
         if (isset($schemes['Savings'])) {
-            $savings = (float) $this->contributions()
+            $savings += (float) $this->contributions()
                 ->where('status', 'success')
                 ->where('scheme_id', $schemes['Savings'])
                 ->sum('amount');
         }
+        if (isset($schemes['Ordinary Savings'])) {
+            $savings += (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Ordinary Savings'])
+                ->sum('amount');
+        }
         if (isset($schemes['Shares'])) {
-            $shares = (float) $this->contributions()
+            $shares += (float) $this->contributions()
                 ->where('status', 'success')
                 ->where('scheme_id', $schemes['Shares'])
                 ->sum('amount');
         }
+        if (isset($schemes['Share Capital'])) {
+            $shares += (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Share Capital'])
+                ->sum('amount');
+        }
+        if (isset($schemes['Special Savings'])) {
+            $specialSavings = (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Special Savings'])
+                ->sum('amount');
+        }
 
-        $base = round($savings + $shares, 2);
+        $base = round($savings + $shares + $specialSavings, 2);
         $eligibility = round($base * 2, 2);
 
         return [
             'savings' => $savings,
             'shares' => $shares,
+            'special_savings' => $specialSavings,
             'base' => $base,
             'eligibility' => $eligibility,
         ];
@@ -629,7 +651,7 @@ class User extends Authenticatable implements FilamentUser
     public function zakatBaseWealth(float $goldPrice): float
     {
         // Savings, Shares are usually stored in Contributions
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares'])->pluck('id');
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital'])->pluck('id');
 
         $savingsAndShares = (float) $this->contributions()
             ->where('status', 'success')

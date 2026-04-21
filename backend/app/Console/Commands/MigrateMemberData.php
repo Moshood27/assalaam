@@ -13,14 +13,16 @@ use Illuminate\Support\Str;
 
 class MigrateMemberData extends Command
 {
-    protected $signature = 'app:migrate-member-data {--dry-run}';
+    protected $signature = 'app:migrate-member-data {--dry-run} {--branch=1}';
     protected $description = 'Migrate member loan and contribution records from text data';
 
     private $schemesMap = [];
+    private $branchId;
 
     public function handle()
     {
         $dryRun = $this->option('dry-run');
+        $this->branchId = $this->option('branch');
 
         $data = <<<'EOD'
 ABDULAZEEZ KADRI OLADIMEJI	001	 33,500.00 	 33,500.00 	 2,000.00 	 30,000.00 	7/12/2025	7/12/2026	8,000.00	 22,000.00 	 -   	 2,325.42 	 -   	 -   	 -   	 -   	 -   	 -   	08066067163
@@ -109,15 +111,17 @@ EOD;
             $line = trim($line);
             if (empty($line)) continue;
 
-            $parts = preg_split('/\t+/', $line);
-            // Some lines might have spaces instead of tabs due to copy-paste
+            $parts = explode("\t", $line);
             if (count($parts) < 10) {
-                // Try splitting by multiple spaces
-                $parts = preg_split('/\s{2,}/', $line);
+                // Try splitting by 3+ spaces if tabs are missing (sometimes tabs are converted to spaces in terminals)
+                $parts = preg_split('/\s{3,}/', $line);
             }
 
+            // Trim each part
+            $parts = array_map('trim', $parts);
+
             if (count($parts) < 10) {
-                $this->warn("Skipping line due to insufficient parts: " . $line);
+                $this->warn("Skipping line due to insufficient parts (" . count($parts) . "): " . $line);
                 continue;
             }
 
@@ -143,12 +147,14 @@ EOD;
             // 18: PHONE NO
 
             $name = trim($parts[0]);
-            $phone = trim(end($parts));
+            $phone = (count($parts) >= 19) ? trim($parts[18]) : null;
 
-            // Basic phone validation/cleaning
-            $phone = preg_replace('/[^0-9]/', '', $phone);
-            if (strlen($phone) < 10) {
-                $phone = null;
+            if ($phone) {
+                // Basic phone validation/cleaning
+                $phone = preg_replace('/[^0-9]/', '', $phone);
+                if (strlen($phone) < 10) {
+                    $phone = null;
+                }
             }
 
             $this->comment("Processing: $name ($phone)");
@@ -157,6 +163,8 @@ EOD;
                 DB::beginTransaction();
                 try {
                     $user = $this->findOrCreateUser($name, $phone, trim($parts[1] ?? ''));
+
+                    $dateOfLoan = $this->parseDate($parts[6]);
 
                     // Process Loan
                     $loanGranted = $this->parseAmount($parts[5]);
@@ -179,7 +187,7 @@ EOD;
 
                     foreach ($contributions as $schemeName => $amount) {
                         if ($amount > 0) {
-                            $this->importContribution($user, $schemeName, $amount);
+                            $this->importContribution($user, $schemeName, $amount, $dateOfLoan);
                         }
                     }
 
@@ -225,7 +233,7 @@ EOD;
             $user = User::where('phone', $phone)->first();
         }
 
-        if (!$user && $cardNo) {
+        if (!$user && $cardNo && $cardNo !== '-' && $cardNo !== '') {
             $user = User::where('membership_number', $cardNo)->first();
         }
 
@@ -254,17 +262,17 @@ EOD;
                 'name' => $name,
                 'surname' => $surname,
                 'other_names' => $otherNames,
-                'membership_number' => $cardNo,
+                'membership_number' => ($cardNo && $cardNo !== '-' && $cardNo !== '') ? $cardNo : null,
                 'phone' => $phone ?? '0000000000',
                 'email' => $email,
                 'password' => bcrypt('password'),
-                'branch_id' => \App\Models\Branch::first()?->id ?? 1,
+                'branch_id' => $this->branchId,
                 'approval_status' => 'approved',
             ]);
-            $this->line(" Created new user: $name (Member No: $cardNo)");
+            $this->line(" Created new user: $name (Member No: " . ($user->membership_number ?? 'N/A') . ")");
         } else {
             // Update existing user with membership number if missing
-            if ($cardNo && (empty($user->membership_number) || $user->membership_number == '')) {
+            if ($cardNo && $cardNo !== '-' && $cardNo !== '' && (empty($user->membership_number) || $user->membership_number == '')) {
                 $user->membership_number = $cardNo;
                 $user->save();
             }
@@ -281,20 +289,31 @@ EOD;
         $dateOfLoan = $this->parseDate($parts[6]);
         $expiryDate = $this->parseDate($parts[7]);
 
-        $admin = User::where('is_admin', true)->first();
+        $installments = 12;
+        if ($dateOfLoan && $expiryDate) {
+            $installments = $dateOfLoan->diffInMonths($expiryDate);
+            if ($installments <= 0) $installments = 12;
+        }
+
+        $perInstallment = round($principal / $installments, 2);
+
+        $admin = User::where('is_admin', true)->where('id', '!=', $user->id)->first() ?? User::where('is_admin', true)->first();
 
         $loan = QardHasan::create([
             'user_id' => $user->id,
             'qard_id_string' => 'MGR-' . strtoupper(Str::random(6)),
             'principal_amount' => $principal,
+            'total_installments' => $installments,
+            'per_installment' => $perInstallment,
+            'interval' => 'monthly',
             'paid_amount' => $paid,
             'status' => ($principal - $paid <= 0) ? 'completed' : 'active',
             'created_at' => $dateOfLoan,
             'due_at' => $expiryDate,
-            'reason' => 'System Migration Migration',
+            'reason' => 'System Migration',
             'approved_at' => $dateOfLoan,
             'approved_by' => $admin?->id,
-            'disbursed_at' => $dateOfLoan,
+            'received_at' => $dateOfLoan,
         ]);
 
         if ($paid > 0) {
@@ -310,7 +329,7 @@ EOD;
         $this->line("  Imported loan: ₦" . number_format($principal, 2) . " (Paid: ₦" . number_format($paid, 2) . ")");
     }
 
-    private function importContribution($user, $schemeName, $amount)
+    private function importContribution($user, $schemeName, $amount, $date = null)
     {
         Contribution::create([
             'user_id' => $user->id,
@@ -318,7 +337,7 @@ EOD;
             'amount' => $amount,
             'status' => 'success',
             'reference' => 'MIGRATION-' . Str::random(10),
-            'created_at' => now(),
+            'created_at' => $date ?? now(),
         ]);
         $this->line("  Imported $schemeName: ₦" . number_format($amount, 2));
     }

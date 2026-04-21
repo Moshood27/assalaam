@@ -19,7 +19,7 @@ class ZakatService
     public function getEstimate(User $user)
     {
         // Resolve scheme IDs for Savings, Shares and Digital Gold
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Digital Gold'])->pluck('id', 'name');
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital', 'Digital Gold'])->pluck('id', 'name');
 
         // Gold market value (Sell price)
         $goldPrice = $this->priceService->getSellPrice();
@@ -28,8 +28,12 @@ class ZakatService
         $base = $user->zakatBaseWealth($goldPrice ?? 0);
 
         // Individual components for report
-        $savings = (float) $user->contributions()->where('status', 'success')->where('scheme_id', $schemes['Savings'] ?? 0)->sum('amount');
-        $shares = (float) $user->contributions()->where('status', 'success')->where('scheme_id', $schemes['Shares'] ?? 0)->sum('amount');
+        $savings = (float) $user->contributions()->where('status', 'success')
+            ->whereIn('scheme_id', Scheme::whereIn('name', ['Savings', 'Ordinary Savings', 'Special Savings'])->pluck('id'))
+            ->sum('amount');
+        $shares = (float) $user->contributions()->where('status', 'success')
+            ->whereIn('scheme_id', Scheme::whereIn('name', ['Shares', 'Share Capital'])->pluck('id'))
+            ->sum('amount');
         $currentGoldValue = $goldPrice ? round($user->gold_balance * $goldPrice, 2) : 0;
         $walletBalance = (float) $user->balance;
 
