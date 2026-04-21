@@ -155,7 +155,7 @@ class MigrationImport extends Page implements HasForms
             'loan_repayment_balance', 'fine_balance', 'welfare_balance',
             'lateness_balance', 'stationery_balance', 'loan_form_balance',
             'others_balance', 'id_card_balance', 'emergency_balance',
-            'entrance_balance', 'h_savings_balance', 'investment_balance',
+            'entrance_balance', 'h_savings_balance', 'special_savings_balance', 'investment_balance',
             'group_savings_balance'
         ];
 
@@ -190,6 +190,7 @@ class MigrationImport extends Page implements HasForms
             'emergencyBalance' => User::sum('emergency_balance'),
             'entranceBalance' => User::sum('entrance_balance'),
             'hSavingsBalance' => User::sum('h_savings_balance'),
+            'specialSavingsBalance' => User::sum('special_savings_balance'),
             'investmentBalance' => User::sum('investment_balance'),
             'groupSavingsBalance' => User::sum('group_savings_balance'),
             'loanCount' => $loanCount,
@@ -311,7 +312,7 @@ class MigrationImport extends Page implements HasForms
                 'loan_repayment_balance', 'fine_balance', 'welfare_balance',
                 'lateness_balance', 'stationery_balance', 'loan_form_balance',
                 'others_balance', 'id_card_balance', 'emergency_balance',
-                'entrance_balance', 'h_savings_balance', 'investment_balance',
+                'entrance_balance', 'h_savings_balance', 'special_savings_balance', 'investment_balance',
                 'group_savings_balance', 'gold_balance', 'outstanding_fines'
             ];
 
@@ -341,7 +342,7 @@ class MigrationImport extends Page implements HasForms
             'loan_repayment_balance', 'fine_balance', 'welfare_balance',
             'lateness_balance', 'stationery_balance', 'loan_form_balance',
             'others_balance', 'id_card_balance', 'emergency_balance',
-            'entrance_balance', 'h_savings_balance', 'investment_balance',
+            'entrance_balance', 'h_savings_balance', 'special_savings_balance', 'investment_balance',
             'group_savings_balance'
         ];
 

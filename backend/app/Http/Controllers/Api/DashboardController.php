@@ -207,6 +207,7 @@ class DashboardController extends Controller
                                   (float) $user->emergency_balance +
                                   (float) $user->entrance_balance +
                                   (float) $user->h_savings_balance +
+                                  (float) $user->special_savings_balance +
                                   (float) $user->investment_balance +
                                   (float) $user->group_savings_balance,
                 'breakdown' => [
@@ -228,6 +229,7 @@ class DashboardController extends Controller
                     'Emergency' => (float) $user->emergency_balance,
                     'Entrance' => (float) $user->entrance_balance,
                     'H Savings' => (float) $user->h_savings_balance,
+                    'Special Savings' => (float) $user->special_savings_balance,
                     'Investment' => (float) $user->investment_balance,
                     'Group Savings' => (float) $user->group_savings_balance,
                 ]

@@ -235,7 +235,7 @@ class AdminReportsController extends Controller
             'loan_repayment_balance', 'fine_balance', 'welfare_balance',
             'lateness_balance', 'stationery_balance', 'loan_form_balance',
             'others_balance', 'id_card_balance', 'emergency_balance',
-            'entrance_balance', 'h_savings_balance', 'investment_balance',
+            'entrance_balance', 'h_savings_balance', 'special_savings_balance', 'investment_balance',
             'group_savings_balance'
         ];
 
