@@ -46,6 +46,7 @@ class BranchMigrationTemplateExport implements FromCollection, WithHeadings, Wit
         // Add extra columns that are not in schemes table but in BalancesImport
         $extraColumns = [
             'takaful_balance',
+            'special_savings_balance',
             'digital_gold_balance',
             'outstanding_fines',
             'wallet_balance',
@@ -76,6 +77,7 @@ class BranchMigrationTemplateExport implements FromCollection, WithHeadings, Wit
         // Add extra columns
         $extraColumns = [
             'takaful_balance',
+            'special_savings_balance',
             'digital_gold_balance',
             'outstanding_fines',
             'wallet_balance',

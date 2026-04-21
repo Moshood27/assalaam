@@ -146,6 +146,7 @@ class PassbookImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
             'Emergency' => 'emergency_balance',
             'Entrance' => 'entrance_balance',
             'H Savings' => 'h_savings_balance',
+            'Special Savings' => 'special_savings_balance',
             'Investment' => 'investment_balance',
             'Digital Gold' => 'gold_balance',
             'Group Savings' => 'group_savings_balance',

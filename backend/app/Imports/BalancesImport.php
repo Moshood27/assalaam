@@ -76,6 +76,16 @@ class BalancesImport implements OnEachRow, WithHeadingRow, WithValidation, WithC
                 $walletTarget = (float) $data['wallet_balance'];
                 $this->reconcileWallet($user, $walletTarget);
             }
+
+            // Explicitly handle Special Savings if it wasn't caught in the dynamic loop
+            // (e.g. if the scheme hasn't been created yet)
+            if (isset($data['special_savings_balance'])) {
+                $isProcessed = $dbSchemes->contains(fn($s) => $s->name === 'Special Savings');
+                if (!$isProcessed) {
+                    $target = (float) $data['special_savings_balance'];
+                    $this->reconcileScheme($user, 'Special Savings', $target);
+                }
+            }
         });
     }
 
