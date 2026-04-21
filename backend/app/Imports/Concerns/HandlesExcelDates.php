@@ -20,13 +20,23 @@ trait HandlesExcelDates
             return $fallback;
         }
 
-        // If it's a numeric value, it might be an Excel serial date
+        // If it's a numeric value, it might be an Excel serial date or YYYYMMDD
         if (is_numeric($value)) {
+            $numValue = (int)$value;
+
+            // Check if it's in YYYYMMDD format (e.g. 20230512)
+            if ($numValue >= 19000101 && $numValue <= 20991231) {
+                try {
+                    return Carbon::createFromFormat('Ymd', (string)$numValue)->startOfDay();
+                } catch (\Exception $e) {
+                    // Fall through if not a valid Ymd
+                }
+            }
+
             try {
-                // Excel dates are usually > 20000 (roughly 1954)
+                // Excel dates are usually < 100,000 (45058 is 2023)
                 // Unix timestamps for current years are > 1,000,000,000
-                // If it's small, it's likely an Excel serial number
-                if ($value < 1000000) {
+                if ($numValue < 2000000) {
                     return Carbon::instance(Date::excelToDateTimeObject($value));
                 }
             } catch (\Exception $e) {
