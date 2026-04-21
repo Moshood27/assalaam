@@ -47,6 +47,13 @@ class Contribution extends Model
         });
 
         static::created(function (self $model) {
+            // Sync user scheme balance if successful
+            try {
+                if ($model->status === 'success' && $model->scheme) {
+                    $model->user->syncSchemeBalance($model->scheme->name);
+                }
+            } catch (\Throwable $e) {}
+
             // If created already successful and linked to a project (e.g., wallet allocation), create investment
             try {
                 if ($model->project_id && $model->status === 'success') {
@@ -77,7 +84,14 @@ class Contribution extends Model
         static::updated(function (self $model) {
             // When a contribution tied to a project is marked successful, create a ProjectInvestment once
             try {
-                if ($model->status === 'success' && $model->wasChanged('status')) {
+                if ($model->status === 'success' && ($model->wasChanged('status') || $model->wasChanged('amount'))) {
+                    // Sync user scheme balance
+                    try {
+                        if ($model->scheme) {
+                            $model->user->syncSchemeBalance($model->scheme->name);
+                        }
+                    } catch (\Throwable $e) {}
+
                     // Update Attaqwa Score
                     try {
                         app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
@@ -121,6 +135,15 @@ class Contribution extends Model
             } catch (\Throwable $e) {
                 // Swallow to prevent blocking payment finalization; logs can be added if needed
             }
+        });
+
+        static::deleted(function (self $model) {
+            // Sync user scheme balance if it was successful
+            try {
+                if ($model->status === 'success' && $model->scheme) {
+                    $model->user->syncSchemeBalance($model->scheme->name);
+                }
+            } catch (\Throwable $e) {}
         });
     }
 

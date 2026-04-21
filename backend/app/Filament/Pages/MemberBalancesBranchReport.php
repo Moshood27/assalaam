@@ -29,6 +29,7 @@ class MemberBalancesBranchReport extends Page
     public array $report = [
         'branches' => [],
         'grand_total_savings' => 0,
+        'grand_total_special_savings' => 0,
         'grand_total_shares' => 0,
         'grand_total_gold_weight' => 0,
         'grand_total_gold_value' => 0,
@@ -75,7 +76,7 @@ class MemberBalancesBranchReport extends Page
 
         return response()->streamDownload(function () use ($data) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Branch', 'Member', 'Membership #', 'Savings', 'Shares', 'Gold (g)', 'Gold (Val)', 'Other Funds', 'Total Wealth']);
+            fputcsv($out, ['Branch', 'Member', 'Membership #', 'Savings', 'Special Savings', 'Shares', 'Gold (g)', 'Gold (Val)', 'Other Funds', 'Total Wealth']);
 
             foreach ($data['branches'] as $branch) {
                 foreach ($branch['members'] as $member) {
@@ -84,6 +85,7 @@ class MemberBalancesBranchReport extends Page
                         $member['member_name'],
                         $member['membership_number'],
                         number_format($member['savings'], 2, '.', ''),
+                        number_format($member['special_savings'], 2, '.', ''),
                         number_format($member['shares'], 2, '.', ''),
                         number_format($member['gold_weight'], 2, '.', ''),
                         number_format($member['gold_value'], 2, '.', ''),
@@ -97,11 +99,12 @@ class MemberBalancesBranchReport extends Page
                     '',
                     '',
                     number_format($branch['total_savings'], 2, '.', ''),
+                    number_format($branch['total_special_savings'], 2, '.', ''),
                     number_format($branch['total_shares'], 2, '.', ''),
                     number_format($branch['total_gold_weight'], 2, '.', ''),
                     number_format($branch['total_gold_value'], 2, '.', ''),
                     number_format($branch['total_other'], 2, '.', ''),
-                    number_format($branch['total_savings'] + $branch['total_shares'] + $branch['total_gold_value'] + $branch['total_other'], 2, '.', ''),
+                    number_format($branch['total_savings'] + $branch['total_special_savings'] + $branch['total_shares'] + $branch['total_gold_value'] + $branch['total_other'], 2, '.', ''),
                 ]);
                 fputcsv($out, []);
             }
@@ -113,11 +116,12 @@ class MemberBalancesBranchReport extends Page
                     $data['grand_total_members_count'] . ' members',
                     '',
                     number_format($data['grand_total_savings'], 2, '.', ''),
+                    number_format($data['grand_total_special_savings'], 2, '.', ''),
                     number_format($data['grand_total_shares'], 2, '.', ''),
                     number_format($data['grand_total_gold_weight'], 2, '.', ''),
                     number_format($data['grand_total_gold_value'], 2, '.', ''),
                     number_format($data['grand_total_other'], 2, '.', ''),
-                    number_format($data['grand_total_savings'] + $data['grand_total_shares'] + $data['grand_total_gold_value'] + $data['grand_total_other'], 2, '.', ''),
+                    number_format($data['grand_total_savings'] + $data['grand_total_special_savings'] + $data['grand_total_shares'] + $data['grand_total_gold_value'] + $data['grand_total_other'], 2, '.', ''),
                 ]);
             }
 

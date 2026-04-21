@@ -663,4 +663,43 @@ class User extends Authenticatable implements FilamentUser
 
         return (float) round($savingsAndShares + $goldValue + $walletBalance, 2);
     }
+    public function syncSchemeBalance(string $schemeName): void
+    {
+        $columnMap = [
+            'Savings' => 'ordinary_savings',
+            'Ordinary Savings' => 'ordinary_savings',
+            'Shares' => 'shares_capital',
+            'Share Capital' => 'shares_capital',
+            'Development' => 'development_fund_balance',
+            'Building' => 'building_balance',
+            'AGM' => 'agm_balance',
+            'Loan Repayment' => 'loan_repayment_balance',
+            'Fine' => 'fine_balance',
+            'Welfare' => 'welfare_balance',
+            'Lateness' => 'lateness_balance',
+            'Stationery' => 'stationery_balance',
+            'Loan Form' => 'loan_form_balance',
+            'Others' => 'others_balance',
+            'ID Card' => 'id_card_balance',
+            'Emergency' => 'emergency_balance',
+            'Entrance' => 'entrance_balance',
+            'H Savings' => 'h_savings_balance',
+            'Investment' => 'investment_balance',
+            'Group Savings' => 'group_savings_balance',
+            'Special Savings' => 'special_savings_balance',
+            'Takaful' => 'takaful_balance',
+            'Digital Gold' => 'gold_balance',
+        ];
+
+        if (isset($columnMap[$schemeName])) {
+            $column = $columnMap[$schemeName];
+
+            $actualTotal = (float) $this->contributions()
+                ->whereHas('scheme', fn($q) => $q->where('name', $schemeName))
+                ->where('status', 'success')
+                ->sum('amount');
+
+            $this->forceFill([$column => $actualTotal])->save();
+        }
+    }
 }

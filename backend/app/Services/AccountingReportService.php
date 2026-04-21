@@ -222,6 +222,7 @@ class AccountingReportService
             ->first();
 
         $post('Member Savings Payable', 0, (float) $memberStats->total_savings);
+        $post('Member Special Savings Payable', 0, (float) $memberStats->total_special_savings);
         $post('Member Shares Payable', 0, (float) $memberStats->total_shares);
 
         $otherFundsTotal = (float) $memberStats->total_building +
@@ -238,7 +239,6 @@ class AccountingReportService
                           (float) $memberStats->total_emergency +
                           (float) $memberStats->total_entrance +
                           (float) $memberStats->total_h_savings +
-                          (float) $memberStats->total_special_savings +
                           (float) $memberStats->total_investment +
                           (float) $memberStats->total_group_savings;
 
@@ -1216,6 +1216,7 @@ class AccountingReportService
         $report = [
             'branches' => [],
             'grand_total_savings' => 0,
+            'grand_total_special_savings' => 0,
             'grand_total_shares' => 0,
             'grand_total_gold_weight' => 0,
             'grand_total_gold_value' => 0,
@@ -1229,6 +1230,7 @@ class AccountingReportService
                 'branch_name' => $branch->name,
                 'members' => [],
                 'total_savings' => 0,
+                'total_special_savings' => 0,
                 'total_shares' => 0,
                 'total_gold_weight' => 0,
                 'total_gold_value' => 0,
@@ -1250,11 +1252,11 @@ class AccountingReportService
                               (float)$user->emergency_balance +
                               (float)$user->entrance_balance +
                               (float)$user->h_savings_balance +
-                              (float)$user->special_savings_balance +
                               (float)$user->investment_balance +
                               (float)$user->group_savings_balance;
 
                 $hasBalance = (float)$user->ordinary_savings > 0 ||
+                              (float)$user->special_savings_balance > 0 ||
                               (float)$user->shares_capital > 0 ||
                               (float)$user->gold_balance > 0 ||
                               $otherTotal > 0;
@@ -1265,13 +1267,15 @@ class AccountingReportService
                         'member_name' => $user->full_name,
                         'membership_number' => $user->membership_number,
                         'savings' => (float)$user->ordinary_savings,
+                        'special_savings' => (float)$user->special_savings_balance,
                         'shares' => (float)$user->shares_capital,
                         'gold_weight' => (float)$user->gold_balance,
                         'gold_value' => $goldValue,
                         'other_funds' => $otherTotal,
-                        'total_wealth' => (float)$user->ordinary_savings + (float)$user->shares_capital + $goldValue + $otherTotal,
+                        'total_wealth' => (float)$user->ordinary_savings + (float)$user->special_savings_balance + (float)$user->shares_capital + $goldValue + $otherTotal,
                     ];
                     $branchData['total_savings'] += (float)$user->ordinary_savings;
+                    $branchData['total_special_savings'] += (float)$user->special_savings_balance;
                     $branchData['total_shares'] += (float)$user->shares_capital;
                     $branchData['total_gold_weight'] += (float)$user->gold_balance;
                     $branchData['total_gold_value'] += $goldValue;
@@ -1285,6 +1289,7 @@ class AccountingReportService
 
                 $report['branches'][] = $branchData;
                 $report['grand_total_savings'] += $branchData['total_savings'];
+                $report['grand_total_special_savings'] += $branchData['total_special_savings'];
                 $report['grand_total_shares'] += $branchData['total_shares'];
                 $report['grand_total_gold_weight'] += $branchData['total_gold_weight'];
                 $report['grand_total_gold_value'] += $branchData['total_gold_value'];

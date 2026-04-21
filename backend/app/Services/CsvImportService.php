@@ -19,9 +19,12 @@ class CsvImportService
         [$summary, $errors] = $this->parseCsvAndUpsert($path, function(array $row) {
             $name = $row['name'] ?? null;
             $email = $row['email'] ?? null;
-            $membership = $row['membership_number'] ?? ($row['membership'] ?? null);
+            $membership = $row['membership_number'] ?? ($row['membership_no'] ?? ($row['membership'] ?? null));
             $branchId = $this->toInt($row['branch_id'] ?? null);
             $balance = $this->toFloat($row['balance'] ?? null);
+            $ordinarySavings = $this->toFloat($row['ordinary_savings'] ?? null);
+            $specialSavings = $this->toFloat($row['special_savings_balance'] ?? null);
+            $sharesCapital = $this->toFloat($row['shares_capital'] ?? null);
             $isDefaulter = $this->toBool($row['is_defaulter'] ?? null);
 
             if (!$name || (!$email && !$membership)) {
@@ -78,6 +81,9 @@ class CsvImportService
             if ($branchId) $data['branch_id'] = $branchId;
             if ($membership) $data['membership_number'] = $membership;
             if (!is_null($balance)) $data['balance'] = $balance;
+            if (!is_null($ordinarySavings)) $data['ordinary_savings'] = $ordinarySavings;
+            if (!is_null($specialSavings)) $data['special_savings_balance'] = $specialSavings;
+            if (!is_null($sharesCapital)) $data['shares_capital'] = $sharesCapital;
             if (!is_null($isDefaulter)) $data['is_defaulter'] = $isDefaulter;
 
             if ($user) {

@@ -16,6 +16,9 @@ class MemberBalanceImportTemplate implements FromCollection, WithHeadings
                 'email' => 'john.doe@example.com',
                 'branch_id' => '1',
                 'balance' => '5000.00',
+                'ordinary_savings' => '10000.00',
+                'special_savings_balance' => '2000.00',
+                'shares_capital' => '5000.00',
                 'is_defaulter' => 'no',
             ],
         ]);
@@ -27,7 +30,10 @@ class MemberBalanceImportTemplate implements FromCollection, WithHeadings
             'membership_number', // required if no email
             'email',             // optional if membership_number is provided
             'branch_id',         // optional
-            'balance',           // required to update
+            'balance',           // wallet balance
+            'ordinary_savings',
+            'special_savings_balance',
+            'shares_capital',
             'is_defaulter',      // optional: yes/no
         ];
     }
