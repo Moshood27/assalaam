@@ -20,6 +20,14 @@ trait HandlesExcelDates
             return $fallback;
         }
 
+        // Clean up strings
+        if (is_string($value)) {
+            $value = trim($value);
+            if (empty($value) || strtolower($value) === 'null') {
+                return $fallback;
+            }
+        }
+
         // If it's a numeric value, it might be an Excel serial date or YYYYMMDD
         if (is_numeric($value)) {
             $numValue = (int)$value;
@@ -34,9 +42,10 @@ trait HandlesExcelDates
             }
 
             try {
-                // Excel dates are usually < 100,000 (45058 is 2023)
-                // Unix timestamps for current years are > 1,000,000,000
-                if ($numValue < 2000000) {
+                // Excel dates are usually < 100,000 (45058 is 2023-05-12)
+                // Unix timestamps for current years (2020+) are > 1,500,000,000
+                // This range covers all reasonable Excel dates and avoids confusion with small timestamps
+                if ($numValue > 0 && $numValue < 2000000) {
                     return Carbon::instance(Date::excelToDateTimeObject($value));
                 }
             } catch (\Exception $e) {

@@ -19,6 +19,11 @@ class TransactionsImport implements ToModel, WithHeadingRow, WithValidation, Wit
 
     protected static $sweptUsers = [];
 
+    public function __construct()
+    {
+        self::$sweptUsers = [];
+    }
+
     public function chunkSize(): int
     {
         return 100;
@@ -79,7 +84,7 @@ class TransactionsImport implements ToModel, WithHeadingRow, WithValidation, Wit
             'membership_no' => 'required|exists:users,membership_number',
             'amount' => 'required|numeric',
             'type' => 'required|in:credit,debit,CREDIT,DEBIT',
-            'date' => 'nullable|date',
+            'date' => 'nullable',
         ];
     }
 }
