@@ -15,6 +15,7 @@ use App\Models\QardHasan;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
+use App\Support\DurationHelper;
 use App\Models\WalletTransaction;
 use App\Notifications\LoanAgreementRejectedNotification;
 use App\Notifications\LoanAgreementVerifiedNotification;
@@ -896,8 +897,8 @@ class QardHasanResource extends Resource
                             ->color(fn ($state) => $state > 0 ? 'danger' : null),
                         TextEntry::make('overdue_days')
                             ->label('Days Overdue')
-                            ->getStateUsing(fn (QardHasan $record) => $record->getOverdueDays())
-                            ->color(fn ($state) => $state > 0 ? 'danger' : null),
+                            ->getStateUsing(fn (QardHasan $record) => DurationHelper::format($record->getOverdueDays()))
+                            ->color(fn ($record) => $record->getOverdueDays() > 0 ? 'danger' : null),
                     ])->columns(2),
                 InfoSection::make('Multi-Sig Approvals')
                     ->schema([

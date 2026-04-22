@@ -95,7 +95,7 @@ class LoanMonitoring extends Page
                 $overdue += (float) $loan->getOverdueAmount();
                 $loans++;
 
-                if ($loan->defaulted_at) {
+                if ($loan->defaulted_at && $loan->defaulted_at->year > 1970) {
                     if (!$earliestDefault || $loan->defaulted_at->lt($earliestDefault)) {
                         $earliestDefault = $loan->defaulted_at;
                     }

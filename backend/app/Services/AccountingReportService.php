@@ -11,6 +11,7 @@ use App\Models\ExpenseEntry;
 use App\Models\StoreOrder;
 use App\Models\ProjectProfit;
 use App\Models\User;
+use App\Support\DurationHelper;
 use App\Models\JuniorAccount;
 use App\Models\TakafulPoolEntry;
 use Carbon\Carbon;
@@ -752,7 +753,7 @@ class AccountingReportService
                 'principal' => (float)$l->principal_amount,
                 'repaid' => (float)$repaid,
                 'balance' => $balance,
-                'days_since_last_payment' => $daysSinceLastPayment,
+                'days_since_last_payment' => DurationHelper::format($daysSinceLastPayment),
                 'status' => $daysSinceLastPayment > 30 ? 'Overdue' : 'Active',
             ];
         }
@@ -789,7 +790,7 @@ class AccountingReportService
                 'principal' => (float)$order->total_amount,
                 'repaid' => $totalPaid,
                 'balance' => $balance,
-                'days_since_last_payment' => $daysSinceLastPayment,
+                'days_since_last_payment' => DurationHelper::format($daysSinceLastPayment),
                 'status' => $daysSinceLastPayment > 30 ? 'Overdue' : 'Active',
             ];
         }
@@ -1019,7 +1020,8 @@ class AccountingReportService
             $periodOfDefault = 'None';
             if ($defaultStartDate) {
                 $days = (int) abs($toDate->diffInDays($defaultStartDate));
-                $periodOfDefault = $defaultStartDate->format('d/m/Y') . " ({$days} days)";
+                $formattedDuration = DurationHelper::format($days);
+                $periodOfDefault = $defaultStartDate->format('d/m/Y') . " ({$formattedDuration})";
             }
 
             $savingsBalance = (float)$user->contributions->sum('amount');
@@ -1118,7 +1120,7 @@ class AccountingReportService
                             'paid' => (float)$loan->paid_amount,
                             'outstanding' => $outstanding,
                             'overdue' => $overdue,
-                            'status' => $loan->defaulted_at ? 'DEFAULTED' : $loan->status,
+                            'status' => ($loan->defaulted_at && $loan->defaulted_at->year > 1970) ? 'DEFAULTED' : $loan->status,
                             'last_payment_date' => $lastPayment ? $lastPayment->paid_at : null,
                         ];
                         $branchData['total_principal'] += (float)$loan->principal_amount;

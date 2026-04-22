@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ZakatResource\Pages;
 use App\Models\Scheme;
 use App\Models\User;
+use App\Support\DurationHelper;
 use App\Services\GoldSilverPriceService;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -147,8 +148,9 @@ class ZakatResource extends Resource
                         TextEntry::make('hawl_progress')
                             ->label('Hawl Progress (Days)')
                             ->getStateUsing(function (User $record) {
-                                if (!$record->zakat_nisab_crossed_at) return 'Not started';
-                                return (int) abs(now()->diffInDays($record->zakat_nisab_crossed_at)) . ' days';
+                                if (!$record->zakat_nisab_crossed_at || $record->zakat_nisab_crossed_at->year <= 1970) return 'Not started';
+                                $days = (int) abs(now()->diffInDays($record->zakat_nisab_crossed_at));
+                                return DurationHelper::format($days);
                             }),
                         TextEntry::make('zakat_last_paid_at')
                             ->label('Last Zakat Paid')
@@ -189,11 +191,14 @@ class ZakatResource extends Resource
                             ->label('Status')
                             ->getStateUsing(function (User $record) use ($nisabValue, $goldPrice) {
                                 $lunarDays = (int) config('zakat.lunar_days', 354);
-                                $days = $record->zakat_nisab_crossed_at ? (int) abs(now()->diffInDays($record->zakat_nisab_crossed_at)) : 0;
+                                $days = ($record->zakat_nisab_crossed_at && $record->zakat_nisab_crossed_at->year > 1970) ? (int) abs(now()->diffInDays($record->zakat_nisab_crossed_at)) : 0;
                                 $base = $record->zakatBaseWealth($goldPrice);
 
                                 if ($base < $nisabValue) return 'Below Nisab';
-                                if ($days < $lunarDays) return "Hawl in progress ($days/$lunarDays days)";
+                                if ($days < $lunarDays) {
+                                    $formattedDays = DurationHelper::format($days);
+                                    return "Hawl in progress ($formattedDays/$lunarDays days)";
+                                }
                                 return 'ZAKAT DUE';
                             })
                             ->color(function ($state) {

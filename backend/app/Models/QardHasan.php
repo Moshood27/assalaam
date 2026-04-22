@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\DurationHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -284,7 +285,7 @@ class QardHasan extends Model
         if ($this->status !== 'active' && $this->status !== 'defaulted') return 0.0;
 
         // If the loan is marked as defaulted, the full remaining balance is considered overdue (acceleration)
-        if ($this->defaulted_at && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+        if ($this->defaulted_at && $this->defaulted_at->year > 1970 && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
             return (float) $this->remaining_principal;
         }
 
@@ -306,7 +307,7 @@ class QardHasan extends Model
         $asAt = $asAt ?: now();
 
         // If explicitly marked as defaulted, calculate from defaulted_at
-        if ($this->defaulted_at && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+        if ($this->defaulted_at && $this->defaulted_at->year > 1970 && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
             return (int) abs($asAt->diffInDays($this->defaulted_at));
         }
 
@@ -382,7 +383,7 @@ class QardHasan extends Model
     public function getDefaultStartDate(?Carbon $asAt = null): ?Carbon
     {
         $asAt = $asAt ?: now();
-        if ($this->defaulted_at && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+        if ($this->defaulted_at && $this->defaulted_at->year > 1970 && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
             return $this->defaulted_at;
         }
 
@@ -413,7 +414,8 @@ class QardHasan extends Model
         if (!$startDate) return 'None';
 
         $days = (int) abs(now()->diffInDays($startDate));
-        return $startDate->format('d/m/Y') . " ({$days} days)";
+        $formattedDuration = DurationHelper::format($days);
+        return $startDate->format('d/m/Y') . " ({$formattedDuration})";
     }
     public function transactionApprovals(): MorphMany
     {
