@@ -114,6 +114,18 @@ class QardHasan extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (QardHasan $loan) {
+            if ($loan->defaulted_at && $loan->defaulted_at->year > 1970 && $loan->defaulted_at->lte(now())) {
+                if (in_array($loan->status, ['active', 'pending'])) {
+                    $loan->status = 'defaulted';
+                }
+            } elseif ($loan->status === 'defaulted') {
+                if (!$loan->defaulted_at || $loan->defaulted_at->gt(now())) {
+                    $loan->status = 'active';
+                }
+            }
+        });
+
         static::updated(function (QardHasan $loan) {
             if ($loan->wasChanged(['defaulted_at', 'status'])) {
                 $loan->syncUserDefaulterStatus();

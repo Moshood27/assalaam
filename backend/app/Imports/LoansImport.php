@@ -88,7 +88,7 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             'total_installments' => $totalInstallments,
             'per_installment' => $perInstallment,
             'interval' => strtolower($row['interval'] ?? 'monthly'),
-            'status' => ($defaultedAt && $defaultedAt->year > 1970) ? 'defaulted' : 'active',
+            'status' => ($defaultedAt && $defaultedAt->year > 1970 && $defaultedAt->lte(now())) ? 'defaulted' : 'active',
             'approved_at' => $this->migrationDate,
             'received_at' => $receivedAt,
             'defaulted_at' => $defaultedAt,
