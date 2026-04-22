@@ -89,7 +89,7 @@
                 </a>
             </div>
 
-            <form wire:submit.Iprevent="importLoans">
+            <form wire:submit.prevent="importLoans">
                 <div class="mb-4">
                     <input type="file" wire:model="loansFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-gray-700 dark:file:text-gray-300">
                 </div>
@@ -160,7 +160,7 @@
                         <ul>
                             <li><strong>Members:</strong> <code>name, surname, other_names, membership_no, phone, secondary_phone, email, gender, native_place, dob, marital_status, occupation, address, residential_address, permanent_address, branch, bvn, nature_of_business, business_address, has_other_cooperatives, other_cooperative_details, nok_name, nok_phone, nok_relationship, nok_address, guarantor_name, guarantor_phone, guarantor_occupation, guarantor_address, religious_society_name, imam_name, imam_phone, mosque_address, spouse_father_name, spouse_father_phone, spouse_father_address, spouse_father_business_address, admission_form_number, admission_date, admission_officer_name, approval_status, date_joined</code></li>
                             <li><strong>Balances:</strong> <code>membership_no, savings_balance, shares_balance, takaful_balance, development_fund_balance, outstanding_fines, wallet_balance, building_balance, agm_balance, loan_repayment_balance, fine_balance, welfare_balance, lateness_balance, stationery_balance, loan_form_balance, others_balance, id_card_balance, emergency_balance, entrance_balance, h_savings_balance, special_savings_balance, investment_balance, digital_gold_balance, group_savings_balance</code></li>
-                            <li><strong>Loans:</strong> <code>membership_no, original_loan_amount, total_repaid_to_date, remaining_principal, next_installment_amount, interval, total_installments</code></li>
+                            <li><strong>Loans:</strong> <code>membership_no, original_loan_amount, total_repaid_to_date, remaining_principal, next_installment_amount, interval, total_installments, received_at, defaulted_at</code></li>
                             <li><strong>Passbook:</strong> <code>membership_no, scheme_name, year, january, february, march, april, may, june, july, august, september, october, november, december</code></li>
                             <li><strong>Transactions:</strong> <code>membership_no, amount, type, reference, source, date, description</code></li>
                         </ul>

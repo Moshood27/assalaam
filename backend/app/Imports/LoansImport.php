@@ -77,6 +77,9 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             $totalInstallments = $installmentsRepaid + $installmentsLeft;
         }
 
+        $receivedAt = $this->parseExcelDate($row['received_at'], $this->migrationDate);
+        $defaultedAt = $this->parseExcelDate($row['defaulted_at']);
+
         return new QardHasan([
             'user_id' => $user->id,
             'qard_id_string' => 'MIG-' . Str::upper(Str::random(8)),
@@ -85,10 +88,10 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
             'total_installments' => $totalInstallments,
             'per_installment' => $perInstallment,
             'interval' => strtolower($row['interval'] ?? 'monthly'),
-            'status' => 'active',
+            'status' => ($defaultedAt && $defaultedAt->year > 1970) ? 'defaulted' : 'active',
             'approved_at' => $this->migrationDate,
-            'received_at' => $this->parseExcelDate($row['received_at'], $this->migrationDate),
-            'defaulted_at' => $this->parseExcelDate($row['defaulted_at']),
+            'received_at' => $receivedAt,
+            'defaulted_at' => $defaultedAt,
             'created_at' => $this->migrationDate,
         ]);
     }
