@@ -96,7 +96,7 @@ class QardHasanBranchReport extends Page
                         number_format($loan['paid'], 2, '.', ''),
                         number_format($loan['overdue'], 2, '.', ''),
                         number_format($loan['outstanding'], 2, '.', ''),
-                        $loan['last_payment_date'] ?? 'N/A',
+                        $loan['last_payment_date'] instanceof \Carbon\Carbon ? $loan['last_payment_date']->format('d-m-Y') : ($loan['last_payment_date'] ?? 'N/A'),
                         $loan['status'],
                     ]);
                 }

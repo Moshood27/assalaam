@@ -1021,7 +1021,7 @@ class AccountingReportService
             if ($defaultStartDate) {
                 $days = (int) abs($toDate->diffInDays($defaultStartDate));
                 $formattedDuration = DurationHelper::format($days);
-                $periodOfDefault = $defaultStartDate->format('d/m/Y') . " ({$formattedDuration})";
+                $periodOfDefault = $defaultStartDate->format('d-m-Y') . " ({$formattedDuration})";
             }
 
             $savingsBalance = (float)$user->contributions->sum('amount');

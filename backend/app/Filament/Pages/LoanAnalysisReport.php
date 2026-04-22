@@ -91,7 +91,7 @@ class LoanAnalysisReport extends Page
                 fputcsv($out, [
                     $row['sn'],
                     $row['member_name'] . ' (' . $row['branch_name'] . ')',
-                    $row['date_granted'] instanceof \Carbon\Carbon ? $row['date_granted']->toDateString() : $row['date_granted'],
+                    $row['date_granted'] instanceof \Carbon\Carbon ? $row['date_granted']->format('d-m-Y') : $row['date_granted'],
                     number_format($row['loan_granted'], 2, '.', ''),
                     number_format($row['amount_repaid'], 2, '.', ''),
                     number_format($row['expected_amount_to_pay'], 2, '.', ''),

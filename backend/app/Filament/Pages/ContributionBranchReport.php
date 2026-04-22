@@ -82,7 +82,7 @@ class ContributionBranchReport extends Page
                         $member['member_name'],
                         $member['membership_number'],
                         number_format($member['total_contributed'], 2, '.', ''),
-                        $member['last_contribution_date'] ? $member['last_contribution_date'] : 'N/A',
+                        $member['last_contribution_date'] instanceof \Carbon\Carbon ? $member['last_contribution_date']->format('d-m-Y') : ($member['last_contribution_date'] ?? 'N/A'),
                     ]);
                 }
                 // Branch total

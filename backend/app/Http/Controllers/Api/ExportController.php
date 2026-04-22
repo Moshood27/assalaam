@@ -124,7 +124,7 @@ class ExportController extends Controller
                 fputcsv($file, ['Date', 'Scheme', 'Reference', 'Amount']);
                 foreach ($contributions as $c) {
                     fputcsv($file, [
-                        $c->created_at->format('Y-m-d H:i'),
+                        $c->created_at->format('d-m-Y H:i'),
                         optional($c->scheme)->name ?? '-',
                         $c->reference,
                         number_format((float)$c->amount, 2, '.', ''),
@@ -220,7 +220,7 @@ class ExportController extends Controller
                 }
 
                 fputcsv($file, [
-                    $tx->created_at->format('Y-m-d H:i'),
+                    $tx->created_at->format('d-m-Y H:i'),
                     $desc,
                     $tx->reference,
                     $isCredit ? number_format($amt, 2, '.', '') : '',

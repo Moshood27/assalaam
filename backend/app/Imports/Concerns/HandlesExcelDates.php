@@ -29,12 +29,21 @@ trait HandlesExcelDates
 
             // Explicitly handle DD/MM/YYYY or DD-MM-YYYY formats which are common
             // but can be misparsed by Carbon::parse as MM/DD/YYYY if slashes are used.
-            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $value, $matches)) {
+            // Support 2 to 4 digit years to handle cases like DD-MM-YY or DD-MM-YYYY (or typo DD-MM-YYY)
+            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/', $value, $matches)) {
                 $day = (int)$matches[1];
                 $month = (int)$matches[2];
                 $year = (int)$matches[3];
 
-                // If it looks like DD/MM/YYYY (where day > 12), or just assume it is DD/MM/YYYY
+                // Standardize 2-digit years (assume 20xx for 00-49, 19xx for 50-99)
+                if ($year < 100) {
+                    $year += ($year < 50) ? 2000 : 1900;
+                } elseif ($year < 1000) {
+                    // Handle 3-digit year typo if it ever happens (e.g. 023 -> 2023)
+                    $year += 2000;
+                }
+
+                // If it looks like DD/MM/YYYY
                 // Since this is likely for a Nigerian/African context, DD/MM/YYYY is standard.
                 try {
                     return Carbon::create($year, $month, $day, 0, 0, 0);

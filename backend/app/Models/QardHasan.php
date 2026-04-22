@@ -425,7 +425,7 @@ class QardHasan extends Model
 
         $days = (int) abs(now()->diffInDays($startDate));
         $formattedDuration = DurationHelper::format($days);
-        return $startDate->format('d/m/Y') . " ({$formattedDuration})";
+        return $startDate->format('d-m-Y') . " ({$formattedDuration})";
     }
     public function transactionApprovals(): MorphMany
     {
