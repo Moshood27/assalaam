@@ -286,9 +286,12 @@ class QardHasan extends Model
 
         // If the loan is marked as defaulted, the full remaining balance is considered overdue (acceleration)
         if ($this->defaulted_at && $this->defaulted_at->year > 1970) {
-            if ($this->status === 'defaulted' || $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+            if ($this->defaulted_at->lessThanOrEqualTo($asAt)) {
                 return (float) $this->remaining_principal;
             }
+
+            // If the defaulted date is in the future, the amount defaulted should be 0.00
+            return 0.0;
         }
 
         $expectedPaid = $this->getExpectedAmountToDate($asAt);
@@ -310,7 +313,7 @@ class QardHasan extends Model
 
         // If explicitly marked as defaulted, calculate from defaulted_at
         if ($this->defaulted_at && $this->defaulted_at->year > 1970) {
-            if ($this->status === 'defaulted' || $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+            if ($this->defaulted_at->lessThanOrEqualTo($asAt)) {
                 return (int) abs($asAt->diffInDays($this->defaulted_at));
             }
         }
