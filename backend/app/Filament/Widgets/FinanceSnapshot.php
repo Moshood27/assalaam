@@ -29,7 +29,7 @@ class FinanceSnapshot extends BaseWidget
             ->sum('amount');
 
         $activePortfolio = QardHasan::query()
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'defaulted'])
             ->get()
             ->sum(function ($q) {
                 return (float) $q->principal_amount - (float) $q->paid_amount;
@@ -42,7 +42,10 @@ class FinanceSnapshot extends BaseWidget
         $pendingWithdrawals = WithdrawalRequest::where('status', 'pending')->count();
         $pendingAmount = (float) WithdrawalRequest::where('status', 'pending')->sum('amount');
 
-        $overdueCount = QardHasan::where('status', 'overdue')->count();
+        $overdueCount = QardHasan::whereIn('status', ['active', 'defaulted'])
+            ->get()
+            ->filter(fn($q) => $q->getOverdueDays() > 0)
+            ->count();
 
         $totalGold = (float) User::sum('gold_balance');
         $goldPrice = (new GoldSilverPriceService())->getGoldPrice()['sell'] ?? 0;

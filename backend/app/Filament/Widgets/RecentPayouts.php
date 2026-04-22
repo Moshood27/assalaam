@@ -20,7 +20,7 @@ class RecentPayouts extends BaseWidget
         return $table
             ->query(
                 QardHasan::query()
-                    ->where('status', 'active')
+                    ->whereIn('status', ['active', 'defaulted'])
                     ->latest('updated_at')
             )
             ->columns([
@@ -39,9 +39,11 @@ class RecentPayouts extends BaseWidget
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->colors([
-                        'success' => ['active'],
-                    ]),
+                    ->color(fn ($state) => match ($state) {
+                        'active' => 'success',
+                        'defaulted' => 'danger',
+                        default => 'gray',
+                    }),
             ])
             ->paginated([10]);
     }

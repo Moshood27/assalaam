@@ -152,6 +152,8 @@ class QardHasanResource extends Resource
                         'active' => 'Active',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
+                        'defaulted' => 'Defaulted',
+                        'rejected' => 'Rejected',
                     ])
                     ->default('pending')
                     ->required(),
@@ -220,11 +222,11 @@ class QardHasanResource extends Resource
                 TextColumn::make('defaulted_at')->label('Defaulted At')->dateTime()->sortable()->toggleable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn ($record, $state) => $record->defaulted_at ? 'DEFAULTED' : strtoupper($state))
-                    ->color(fn ($record, $state) => $record->defaulted_at ? 'danger' : match ($state) {
+                    ->formatStateUsing(fn ($record, $state) => ($record->defaulted_at || $state === 'defaulted') ? 'DEFAULTED' : strtoupper($state))
+                    ->color(fn ($record, $state) => ($record->defaulted_at || $state === 'defaulted') ? 'danger' : match ($state) {
                         'pending' => 'warning',
                         'active', 'completed' => 'success',
-                        'cancelled' => 'danger',
+                        'cancelled', 'rejected' => 'danger',
                         default => 'gray',
                     }),
                 TextColumn::make('overdue_amount')
@@ -262,6 +264,8 @@ class QardHasanResource extends Resource
                         'active' => 'Active',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
+                        'defaulted' => 'Defaulted',
+                        'rejected' => 'Rejected',
                     ]),
                 Tables\Filters\TernaryFilter::make('is_defaulted')
                     ->label('Default Status')
@@ -380,7 +384,7 @@ class QardHasanResource extends Resource
                     ->action(function (QardHasan $record, array $data) {
                         $reason = trim((string) ($data['reason'] ?? ''));
                         $record->update([
-                            'status' => 'cancelled',
+                            'status' => 'rejected',
                             'rejection_reason' => $reason,
                         ]);
 
@@ -881,11 +885,11 @@ class QardHasanResource extends Resource
                         TextEntry::make('principal_amount')->money('ngn'),
                         TextEntry::make('status')
                             ->badge()
-                            ->formatStateUsing(fn ($record, $state) => $record->defaulted_at ? 'DEFAULTED' : strtoupper($state))
-                            ->color(fn ($record, $state) => $record->defaulted_at ? 'danger' : match ($state) {
+                            ->formatStateUsing(fn ($record, $state) => ($record->defaulted_at || $state === 'defaulted') ? 'DEFAULTED' : strtoupper($state))
+                            ->color(fn ($record, $state) => ($record->defaulted_at || $state === 'defaulted') ? 'danger' : match ($state) {
                                 'pending' => 'warning',
                                 'active', 'completed' => 'success',
-                                'cancelled' => 'danger',
+                                'cancelled', 'rejected' => 'danger',
                                 default => 'gray',
                             }),
                         TextEntry::make('received_at')->label('Date Received')->dateTime(),

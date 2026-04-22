@@ -101,7 +101,7 @@ class DashboardController extends Controller
         $outstandingLoans = 0;
         if (Schema::hasTable('qard_hasans')) {
             $outstandingLoans = (float) $user->qardHasans()
-                ->where('status', 'active')
+                ->whereIn('status', ['active', 'defaulted'])
                 ->sum(DB::raw('principal_amount - paid_amount'));
         }
 

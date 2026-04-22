@@ -74,7 +74,7 @@ class AccountingReportService
         }
 
         // Loans disbursed (treat created active/completed as disbursed)
-        $loanQuery = QardHasan::query()->whereIn('status', ['active', 'completed']);
+        $loanQuery = QardHasan::query()->whereIn('status', ['active', 'completed', 'defaulted']);
         if ($fromDate) {
             $loanQuery->where('created_at', '>=', $fromDate);
         }
@@ -363,7 +363,7 @@ class AccountingReportService
         if ($storeProfit > 0) $operatingInflows[] = ['name' => 'Cash from Store Sales (Profit)', 'amount' => (float)$storeProfit];
 
         $adminFees = 0.0;
-        foreach (QardHasan::whereIn('status', ['active', 'completed'])->whereBetween('created_at', [$fromDate, $toDate])->get() as $l) {
+        foreach (QardHasan::whereIn('status', ['active', 'completed', 'defaulted'])->whereBetween('created_at', [$fromDate, $toDate])->get() as $l) {
             $adminFees += (float) ($l->admin_fee_flat ?? 0) + ((float) $l->principal_amount) * (((float) $l->admin_fee_pct ?? 0) / 100.0);
         }
         if ($adminFees > 0) $operatingInflows[] = ['name' => 'Loan Administrative Fees', 'amount' => $adminFees];
@@ -374,7 +374,7 @@ class AccountingReportService
 
         // 2. Investing Activities
         // Outflows: Loans Disbursed
-        $loansDisbursed = QardHasan::whereIn('status', ['active', 'completed'])->whereBetween('created_at', [$fromDate, $toDate])->sum('principal_amount');
+        $loansDisbursed = QardHasan::whereIn('status', ['active', 'completed', 'defaulted'])->whereBetween('created_at', [$fromDate, $toDate])->sum('principal_amount');
         if ($loansDisbursed > 0) $investingActivities[] = ['name' => 'Qard Hasan Loans Disbursed', 'amount' => -(float)$loansDisbursed];
 
         // Inflows: Loan Repayments
@@ -730,7 +730,7 @@ class AccountingReportService
         $agingData = [];
 
         // 1. Qard Hasan Loans
-        $loans = QardHasan::where('status', 'active')->with('user')->get();
+        $loans = QardHasan::whereIn('status', ['active', 'defaulted'])->with('user')->get();
         foreach ($loans as $l) {
             $lastRepayment = QardHasanRepayment::where('qard_hasan_id', $l->id)
                 ->whereIn('status', ['success', 'paid', 'completed'])
@@ -1068,7 +1068,7 @@ class AccountingReportService
 
         $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
             ->with(['users.qardHasans' => function ($query) use ($fromDate, $toDate, $onlyDefaulted) {
-                $query->where('status', 'active');
+                $query->whereIn('status', ['active', 'defaulted']);
 
                 if ($onlyDefaulted) {
                     $query->whereNotNull('defaulted_at');

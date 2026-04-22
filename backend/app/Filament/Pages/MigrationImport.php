@@ -144,9 +144,9 @@ class MigrationImport extends Page implements HasForms
         $totalWallet = User::sum('balance');
         $totalGold = User::sum('gold_balance');
 
-        $loanCount = QardHasan::where('status', 'active')->count();
-        $totalLoans = QardHasan::where('status', 'active')->sum('principal_amount');
-        $paidLoans = QardHasan::where('status', 'active')->sum('paid_amount');
+        $loanCount = QardHasan::whereIn('status', ['active', 'defaulted'])->count();
+        $totalLoans = QardHasan::whereIn('status', ['active', 'defaulted'])->sum('principal_amount');
+        $paidLoans = QardHasan::whereIn('status', ['active', 'defaulted'])->sum('paid_amount');
         $remainingLoans = $totalLoans - $paidLoans;
 
         // Sum other funds directly from User columns for accuracy
@@ -354,8 +354,8 @@ class MigrationImport extends Page implements HasForms
         // Add Takaful migration contributions
         $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-%TAKF-%')->sum('amount');
 
-        $totalLoans = QardHasan::where('status', 'active')->sum('principal_amount');
-        $paidLoans = QardHasan::where('status', 'active')->sum('paid_amount');
+        $totalLoans = QardHasan::whereIn('status', ['active', 'defaulted'])->sum('principal_amount');
+        $paidLoans = QardHasan::whereIn('status', ['active', 'defaulted'])->sum('paid_amount');
         $remainingLoans = $totalLoans - $paidLoans;
 
         $totalLiabilities = $totalWallet + $totalSavings + $totalShares + $otherFunds + $takafulFunds;

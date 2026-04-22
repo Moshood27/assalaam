@@ -21,7 +21,7 @@ class SendDefaultLoanReminders extends Command
         $countFlagged = 0;
 
         // 1. Identify and flag NEW defaulters
-        $activeLoans = \App\Models\QardHasan::where('status', 'active')
+        $activeLoans = \App\Models\QardHasan::whereIn('status', ['active', 'defaulted'])
             ->whereNull('defaulted_at')
             ->get();
 
@@ -38,7 +38,7 @@ class SendDefaultLoanReminders extends Command
         }
 
         // 2. Clear default flag if loan is NO LONGER overdue
-        $defaultedLoans = \App\Models\QardHasan::where('status', 'active')
+        $defaultedLoans = \App\Models\QardHasan::whereIn('status', ['active', 'defaulted'])
             ->whereNotNull('defaulted_at')
             ->get();
         foreach ($defaultedLoans as $loan) {
@@ -55,7 +55,7 @@ class SendDefaultLoanReminders extends Command
             ->where('is_defaulter', true)
             ->whereNotNull('email')
             ->with(['qardHasans' => function ($q) {
-                $q->whereIn('status', ['active', 'pending']);
+                $q->whereIn('status', ['active', 'pending', 'defaulted']);
             }])
             ->get();
 

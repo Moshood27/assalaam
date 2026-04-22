@@ -101,7 +101,7 @@ class AdminReportsController extends Controller
 
         $loans = QardHasan::query()
             ->with(['user.branch'])
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'defaulted'])
             ->get();
 
         $rows = [];

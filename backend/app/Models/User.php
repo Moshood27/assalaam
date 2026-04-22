@@ -553,7 +553,7 @@ class User extends Authenticatable implements FilamentUser
     public function hasActiveLoan(): bool
     {
         return $this->qardHasans()
-            ->whereIn('status', ['active', 'pending'])
+            ->whereIn('status', ['active', 'pending', 'defaulted'])
             ->exists();
     }
 

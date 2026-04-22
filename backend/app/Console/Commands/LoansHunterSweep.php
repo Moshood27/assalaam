@@ -25,7 +25,7 @@ class LoansHunterSweep extends Command
                 $q->select('id')
                   ->from((new QardHasan)->getTable())
                   ->whereColumn('qard_hasans.user_id', 'users.id')
-                  ->where('qard_hasans.status', 'active');
+                  ->whereIn('qard_hasans.status', ['active', 'defaulted']);
             });
 
         $query->chunkById(500, function ($users) use (&$countUsers, $dry) {

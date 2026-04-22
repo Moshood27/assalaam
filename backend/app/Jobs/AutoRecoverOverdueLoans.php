@@ -49,7 +49,7 @@ class AutoRecoverOverdueLoans implements ShouldQueue
 
             // Process each active loan in order of soonest next due
             $loans = QardHasan::where('user_id', $user->id)
-                ->where('status', 'active')
+                ->whereIn('status', ['active', 'defaulted'])
                 ->get();
 
             if ($loans->isEmpty()) return;
