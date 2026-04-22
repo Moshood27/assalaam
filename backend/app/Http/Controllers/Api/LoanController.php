@@ -74,6 +74,13 @@ class LoanController extends Controller
         }
         $eligWithScore = (float) ($adj['eligibility_adjusted'] ?? 0);
         $hasCompleted = !$adj['is_first_loan'];
+
+        if ($user->is_defaulter) {
+            $canRequest = false;
+            $eligWithScore = 0;
+            $adj['eligibility_adjusted'] = 0;
+        }
+
         if ($hasCompleted && $eligWithScore > 0 && $boostPct > 0) {
             $eligWithScore = round($eligWithScore * (1 + ($boostPct / 100.0)), 2);
         } else {
@@ -83,12 +90,15 @@ class LoanController extends Controller
 
         $resp = array_merge($adj, [
             'can_request' => $canRequest,
-            'reason' => $months < 6 ? 'Member must be in the system for at least 6 months before requesting a loan.' : null,
+            'reason' => $user->is_defaulter
+                ? 'You cannot apply for a new loan until you clear your outstanding defaulted loan.'
+                : ($months < 6 ? 'Member must be in the system for at least 6 months before requesting a loan.' : null),
             'coop_score' => $score,
             'instant_approval' => $instant,
             'required_guarantors' => $instant ? 0 : ($low ? 3 : 2),
             'limit_boost_pct' => $boostPct,
             'eligibility_with_score' => $eligWithScore,
+            'is_defaulted' => (bool) $user->is_defaulter,
         ]);
         return response()->json($resp);
     }
@@ -172,10 +182,13 @@ class LoanController extends Controller
 
         // Block if user already has an incomplete loan
         $hasOpenLoan = QardHasan::where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'active'])
+            ->whereIn('status', ['pending', 'active', 'defaulted'])
             ->exists();
         if ($hasOpenLoan) {
-            return response()->json(['message' => 'You must complete your existing loan before taking a new one.'], 422);
+            $msg = $user->is_defaulter
+                ? 'You cannot apply for a new loan until you clear your outstanding defaulted loan.'
+                : 'You must complete your existing loan before taking a new one.';
+            return response()->json(['message' => $msg], 422);
         }
 
         // Validate guarantors based on Attaqwa Score policy

@@ -98,8 +98,14 @@
         </div>
         
         <div class="flex items-end gap-1 mb-8">
-          <span class="text-3xl font-black text-slate-900">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loan_limit) }}</span>
-          <span class="text-[10px] text-slate-400 font-bold uppercase mb-2 ml-1 tracking-wider">Max Limit</span>
+          <template v-if="kpis.is_defaulted">
+            <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
+            <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Outstanding Balance</span>
+          </template>
+          <template v-else>
+            <span class="text-3xl font-black text-slate-900">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loan_limit) }}</span>
+            <span class="text-[10px] text-slate-400 font-bold uppercase mb-2 ml-1 tracking-wider">Max Limit</span>
+          </template>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -113,7 +119,13 @@
           </div>
         </div>
         
-        <div class="mt-6 flex items-center gap-3 bg-blue-50/50 p-4 rounded-3xl border border-blue-100/50">
+        <div v-if="kpis.is_defaulted" class="mt-6 flex items-center gap-3 bg-rose-50 p-4 rounded-3xl border border-rose-100">
+          <div class="text-lg">🛑</div>
+          <p class="text-[10px] text-rose-700 leading-tight font-medium">
+            Your account is currently <span class="font-bold">in default</span> due to an unpaid loan. You must clear your outstanding balance before you can access further credit.
+          </p>
+        </div>
+        <div v-else class="mt-6 flex items-center gap-3 bg-blue-50/50 p-4 rounded-3xl border border-blue-100/50">
           <div class="text-lg">ℹ️</div>
           <p class="text-[10px] text-blue-700 leading-tight font-medium">
             Your loan limit is determined by your <span class="font-bold">Member Savings</span> and <span class="font-bold">Shares balance</span>, adjusted by your <span class="font-bold">Attaqwa Score</span>.
@@ -364,7 +376,7 @@ const kpis = computed(() => {
   const outstandingLoans = txs.filter(t => (t.type === 'loan' || String(t.scheme?.name || '').toLowerCase().includes('loan')))
     .reduce((sum, t) => sum + Number(t.balance || 0), 0)
   const utilSpent = utils.reduce((sum, u) => sum + Number(u.amount || 0), 0)
-  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent, attaqwa_score: d.attaqwa_score || 0 }
+  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent, attaqwa_score: d.attaqwa_score || 0, is_defaulted: false, loan_limit: 0, savings_balance: 0, shares_balance: 0 }
 })
 
 const chart = computed(() => {

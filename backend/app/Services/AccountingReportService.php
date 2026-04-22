@@ -1071,7 +1071,8 @@ class AccountingReportService
                 $query->whereIn('status', ['active', 'defaulted']);
 
                 if ($onlyDefaulted) {
-                    $query->whereNotNull('defaulted_at');
+                    $query->whereNotNull('defaulted_at')
+                        ->where('defaulted_at', '<=', now());
                 }
 
                 if ($fromDate) {

@@ -144,9 +144,12 @@ class DashboardController extends Controller
         }
 
         $eligibility = $user->adjustedLoanEligibility();
+        $isDefaulter = (bool) $user->is_defaulter;
+
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
+            'is_defaulted' => $isDefaulter,
             'wallet_balance' => (float) $user->balance,
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,
             'has_pin' => !empty($user->transaction_pin_hash),
@@ -160,7 +163,7 @@ class DashboardController extends Controller
             'has_ongoing_meeting' => (bool) $ongoingMeeting,
             'savings_balance' => (float) ($eligibility['savings'] ?? 0),
             'shares_balance' => (float) ($eligibility['shares'] ?? 0),
-            'loan_limit' => (float) ($eligibility['eligibility_adjusted'] ?? 0),
+            'loan_limit' => $isDefaulter ? 0.0 : (float) ($eligibility['eligibility_adjusted'] ?? 0),
         ];
 
         return response()->json([

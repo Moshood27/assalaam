@@ -236,6 +236,7 @@ class QardHasan extends Model
 
         $hasDefaultedLoan = QardHasan::where('user_id', $user->id)
             ->whereNotNull('defaulted_at')
+            ->where('defaulted_at', '<=', now())
             ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
             ->exists();
 
@@ -391,7 +392,7 @@ class QardHasan extends Model
     {
         $asAt = $asAt ?: now();
         if ($this->defaulted_at && $this->defaulted_at->year > 1970) {
-            if ($this->status === 'defaulted' || $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+            if ($this->defaulted_at->lessThanOrEqualTo($asAt)) {
                 return $this->defaulted_at;
             }
         }

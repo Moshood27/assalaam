@@ -40,6 +40,7 @@ class SendDefaultLoanReminders extends Command
         // 2. Clear default flag if loan is NO LONGER overdue
         $defaultedLoans = \App\Models\QardHasan::whereIn('status', ['active', 'defaulted'])
             ->whereNotNull('defaulted_at')
+            ->where('defaulted_at', '<=', now())
             ->get();
         foreach ($defaultedLoans as $loan) {
             if ($loan->getOverdueAmount() <= 0) {

@@ -273,8 +273,9 @@ class QardHasanResource extends Resource
                     ->trueLabel('Defaulted Only')
                     ->falseLabel('Non-Defaulted')
                     ->queries(
-                        true: fn (Builder $query) => $query->whereNotNull('defaulted_at'),
-                        false: fn (Builder $query) => $query->whereNull('defaulted_at'),
+                        true: fn (Builder $query) => $query->whereNotNull('defaulted_at')
+                            ->where('defaulted_at', '<=', now()),
+                        false: fn (Builder $query) => $query->where(fn ($q) => $q->whereNull('defaulted_at')->orWhere('defaulted_at', '>', now())),
                     ),
             ])
             ->headerActions([
