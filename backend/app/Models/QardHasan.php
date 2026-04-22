@@ -285,8 +285,10 @@ class QardHasan extends Model
         if ($this->status !== 'active' && $this->status !== 'defaulted') return 0.0;
 
         // If the loan is marked as defaulted, the full remaining balance is considered overdue (acceleration)
-        if ($this->defaulted_at && $this->defaulted_at->year > 1970 && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
-            return (float) $this->remaining_principal;
+        if ($this->defaulted_at && $this->defaulted_at->year > 1970) {
+            if ($this->status === 'defaulted' || $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+                return (float) $this->remaining_principal;
+            }
         }
 
         $expectedPaid = $this->getExpectedAmountToDate($asAt);
@@ -307,8 +309,10 @@ class QardHasan extends Model
         $asAt = $asAt ?: now();
 
         // If explicitly marked as defaulted, calculate from defaulted_at
-        if ($this->defaulted_at && $this->defaulted_at->year > 1970 && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
-            return (int) abs($asAt->diffInDays($this->defaulted_at));
+        if ($this->defaulted_at && $this->defaulted_at->year > 1970) {
+            if ($this->status === 'defaulted' || $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+                return (int) abs($asAt->diffInDays($this->defaulted_at));
+            }
         }
 
         if ($this->getOverdueAmount($asAt) <= 0) return 0;
@@ -383,8 +387,10 @@ class QardHasan extends Model
     public function getDefaultStartDate(?Carbon $asAt = null): ?Carbon
     {
         $asAt = $asAt ?: now();
-        if ($this->defaulted_at && $this->defaulted_at->year > 1970 && $this->defaulted_at->lessThanOrEqualTo($asAt)) {
-            return $this->defaulted_at;
+        if ($this->defaulted_at && $this->defaulted_at->year > 1970) {
+            if ($this->status === 'defaulted' || $this->defaulted_at->lessThanOrEqualTo($asAt)) {
+                return $this->defaulted_at;
+            }
         }
 
         if ($this->getOverdueAmount($asAt) <= 0) return null;
