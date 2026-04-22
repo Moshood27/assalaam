@@ -1121,7 +1121,7 @@ class AccountingReportService
                             'paid' => (float)$loan->paid_amount,
                             'outstanding' => $outstanding,
                             'overdue' => $overdue,
-                            'status' => ($loan->defaulted_at && $loan->defaulted_at->year > 1970) ? 'DEFAULTED' : $loan->status,
+                            'status' => ($loan->defaulted_at && $loan->defaulted_at->year > 1970 && $loan->defaulted_at->lte(now())) ? 'DEFAULTED' : $loan->status,
                             'last_payment_date' => $lastPayment ? $lastPayment->paid_at : null,
                         ];
                         $branchData['total_principal'] += (float)$loan->principal_amount;
