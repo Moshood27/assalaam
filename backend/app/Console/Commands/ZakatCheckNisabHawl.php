@@ -62,11 +62,11 @@ class ZakatCheckNisabHawl extends Command
                         Log::info("User {$user->id} crossed Zakat Nisab threshold.");
                     } else {
                         // Check if Hawl is completed
-                        $days = now()->diffInDays($user->zakat_nisab_crossed_at);
+                        $days = (int) now()->diffInDays($user->zakat_nisab_crossed_at);
                         if ($days >= $lunarDays) {
                             // Check if already paid or notified for this cycle
                             // We allow paying once every lunar year.
-                            $canNotify = !$user->zakat_last_paid_at || now()->diffInDays($user->zakat_last_paid_at) >= $lunarDays;
+                            $canNotify = !$user->zakat_last_paid_at || (int) now()->diffInDays($user->zakat_last_paid_at) >= $lunarDays;
 
                             if ($canNotify) {
                                 $this->notifyZakatDue($user, $totalAssets, $nisabValue, $rate);

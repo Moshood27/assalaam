@@ -291,7 +291,7 @@ EOD;
 
         $installments = 12;
         if ($dateOfLoan && $expiryDate) {
-            $installments = $dateOfLoan->diffInMonths($expiryDate);
+            $installments = (int) $dateOfLoan->diffInMonths($expiryDate);
             if ($installments <= 0) $installments = 12;
         }
 

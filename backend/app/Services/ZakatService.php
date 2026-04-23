@@ -69,7 +69,7 @@ class ZakatService
 
         if ($crossedOn) {
             $eligibleOn = $crossedOn->copy()->addDays($lunarDays);
-            $daysSinceCrossed = now()->diffInDays($crossedOn);
+            $daysSinceCrossed = (int) now()->diffInDays($crossedOn);
             $eligible = now()->greaterThanOrEqualTo($eligibleOn) && $base >= $nisab;
         }
 

@@ -74,9 +74,8 @@
                                 <td class="px-2 py-3 text-center">
                                     <span @class([
                                         'px-1.5 py-0.5 rounded text-[10px] font-bold',
-                                        //'bg-red-100 text-red-700' => $row['period_of_default'] !== 'None',
-                                       // 'bg-gray-100 text-gray-600' => $row['period_of_default'] === 'None',
-                                        'bg-gray-100 text-gray-600' => $row['period_of_default']
+                                        'bg-red-100 text-red-700' => $row['period_of_default'] !== 'None',
+                                        'bg-gray-100 text-gray-600' => $row['period_of_default'] === 'None',
                                     ])>
                                         {{ $row['period_of_default'] }}
                                     </span>

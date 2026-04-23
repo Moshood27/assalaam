@@ -121,11 +121,11 @@ class AdminReportsController extends Controller
             $interval = strtolower((string) $loan->interval);
 
             $expectedIntervals = match ($interval) {
-                'daily' => $start->diffInDays($now),
-                'weekly' => intdiv($start->diffInDays($now), 7),
-                'quarterly' => intdiv($start->diffInMonths($now), 3),
-                'yearly' => $start->diffInYears($now),
-                default => $start->diffInMonths($now), // monthly
+                'daily' => (int) $start->diffInDays($now),
+                'weekly' => intdiv((int) $start->diffInDays($now), 7),
+                'quarterly' => intdiv((int) $start->diffInMonths($now), 3),
+                'yearly' => (int) $start->diffInYears($now),
+                default => (int) $start->diffInMonths($now), // monthly
             };
 
             $expectedInstallments = min((int) $loan->total_installments, max(0, (int) $expectedIntervals));
@@ -166,7 +166,7 @@ class AdminReportsController extends Controller
                 'arrears_installments' => $arrearsInstallments,
                 'arrears_amount' => $arrearsAmount,
                 'last_due_date' => $lastDue->toDateString(),
-                'days_overdue' => $lastDue->isPast() ? $lastDue->diffInDays($now) : 0,
+                'days_overdue' => $lastDue->isPast() ? (int) $lastDue->diffInDays($now) : 0,
             ];
         }
 

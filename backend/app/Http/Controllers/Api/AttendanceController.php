@@ -143,10 +143,10 @@ class AttendanceController extends Controller
             (float) $request->lng
         );
 
-        $radius = (int) ($meeting->radius_meters ?: config('cooperative.attendance.radius_meters', 50));
+        $radius = (int) ($meeting->radius_meters ?: config('cooperative.attendance.radius_meters', 100));
         if ($distance > $radius) {
             return response()->json([
-                'message' => 'You are too far from the venue. You must be within ' . $radius . ' meters.',
+                'message' => 'You are too far from the venue. You must be within ' . $radius . ' meters. Current distance: ' . round($distance, 2) . 'm.',
                 'distance' => round($distance, 2) . 'm'
             ], 400);
         }

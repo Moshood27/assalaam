@@ -61,6 +61,10 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => [
+                'add_extra_option' => '--ssl-mode=DISABLED --column-statistics=0',
+                'use_single_transaction' => true,
+            ],
         ],
 
         'mariadb' => [
@@ -81,6 +85,10 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => [
+                'add_extra_option' => '--skip-ssl',
+                'use_single_transaction' => true,
+            ],
         ],
 
         'pgsql' => [

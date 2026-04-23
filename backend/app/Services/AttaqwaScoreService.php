@@ -319,11 +319,11 @@ class AttaqwaScoreService
             $elapsed = 0;
             $interval = strtolower((string) $l->interval);
             if ($interval === 'daily') {
-                $elapsed = $created->diffInDays(now());
+                $elapsed = (int) $created->diffInDays(now());
             } elseif ($interval === 'weekly') {
-                $elapsed = $created->diffInWeeks(now());
+                $elapsed = (int) $created->diffInWeeks(now());
             } else { // monthly default
-                $elapsed = $created->diffInMonths(now());
+                $elapsed = (int) $created->diffInMonths(now());
             }
             $elapsed = min(max($elapsed, 0), (int) $l->total_installments);
             $expected = max((float) $l->per_installment * $elapsed, 0.0);

@@ -491,7 +491,7 @@ class User extends Authenticatable implements FilamentUser
             return 0;
         }
 
-        return Carbon::parse($this->created_at)->diffInMonths(now());
+        return (int) Carbon::parse($this->created_at)->diffInMonths(now());
     }
 
     /**
