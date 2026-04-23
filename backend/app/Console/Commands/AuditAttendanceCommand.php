@@ -18,8 +18,24 @@ class AuditAttendanceCommand extends Command
 
     public function handle(AttendanceService $attendanceService)
     {
-        // Audit meetings that are completed but not yet audited
-        $meetings = Meeting::where('status', 'completed')->get();
+        $timezone = config('cooperative.timezone', 'Africa/Lagos');
+        $now = now($timezone);
+        $todayStr = $now->toDateString();
+        $nowStr = $now->toTimeString();
+
+        // Audit meetings that are completed OR ongoing but time has passed
+        $meetings = Meeting::where('status', 'completed')
+            ->orWhere(function ($query) use ($todayStr, $nowStr) {
+                $query->where('status', 'ongoing')
+                    ->where(function ($q) use ($todayStr, $nowStr) {
+                        $q->where('date', '<', $todayStr)
+                            ->orWhere(function ($qq) use ($todayStr, $nowStr) {
+                                $qq->where('date', $todayStr)
+                                    ->where('end_time', '<=', $nowStr);
+                            });
+                    });
+            })
+            ->get();
 
         if ($meetings->isEmpty()) {
             $this->info("No meetings to audit.");
@@ -28,8 +44,9 @@ class AuditAttendanceCommand extends Command
 
         foreach ($meetings as $meeting) {
             // Use atomic update to prevent concurrent auditing if multiple instances are running
+            // We include both 'completed' and 'ongoing' as valid statuses to claim
             $claimed = Meeting::where('id', $meeting->id)
-                ->where('status', 'completed')
+                ->whereIn('status', ['completed', 'ongoing'])
                 ->update(['status' => 'audited']); // We mark as audited immediately to claim it
 
             if (!$claimed) {

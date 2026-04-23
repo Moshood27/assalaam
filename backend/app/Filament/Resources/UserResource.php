@@ -201,7 +201,15 @@ class UserResource extends Resource
                                         Forms\Components\TextInput::make('balance')
                                             ->numeric()
                                             ->prefix('₦')
-                                            ->default(0),
+                                            ->default(0)
+                                            ->readOnly(),
+                                        Forms\Components\TextInput::make('outstanding_fines')
+                                            ->label('Outstanding Fines')
+                                            ->numeric()
+                                            ->prefix('₦')
+                                            ->default(0)
+                                            ->readOnly()
+                                            ->helperText('Total pending lateness and absence fines'),
                                         Forms\Components\DatePicker::make('created_at')
                                             ->label('Date Joined')
                                             ->displayFormat('Y-m-d')
@@ -426,6 +434,11 @@ class UserResource extends Resource
                     ->getStateUsing(fn (User $record) => $record->bvn_verified_at !== null)
                     ->sortable(),
                 TextColumn::make('balance')->money('ngn', true)->sortable(),
+                TextColumn::make('outstanding_fines')
+                    ->label('Fines')
+                    ->money('ngn', true)
+                    ->sortable()
+                    ->color('danger'),
                 TextColumn::make('gold_balance')
                     ->label('Gold Balance')
                     ->suffix(' g')
@@ -1008,6 +1021,36 @@ class UserResource extends Resource
 
                         Notification::make()
                             ->title('KYC Verified')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
+                Action::make('chargeFine')
+                    ->label('Charge Manual Fine')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Fine Amount')
+                            ->numeric()
+                            ->prefix('₦')
+                            ->required(),
+                        Forms\Components\TextInput::make('note')
+                            ->label('Reason')
+                            ->required()
+                            ->placeholder('e.g. Conduct unbecoming'),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        $record->increment('outstanding_fines', (float) $data['amount']);
+
+                        ShariahAudit::log(auth()->user(), 'manual_fine_charged', [
+                            'user_id' => $record->id,
+                            'amount' => (float) $data['amount'],
+                            'reason' => $data['note'],
+                        ]);
+
+                        Notification::make()
+                            ->title('Fine charged successfully')
                             ->success()
                             ->send();
                     })

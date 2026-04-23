@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MeetingResource\RelationManagers;
 
+use App\Models\AttendanceRecord;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -134,7 +135,25 @@ class AttendanceRecordsRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->after(function ($record) {
+                    ->after(function (AttendanceRecord $record, array $data, AttendanceRecord $oldRecord) {
+                        // Handle Absense Fine status change
+                        $oldStatus = $oldRecord->status;
+                        $newStatus = $record->status;
+                        $fineAmount = (float)($record->meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
+
+                        if ($oldStatus === 'fine_pending' && ($newStatus === 'fine_paid' || $newStatus === 'present')) {
+                            $record->user->decrement('outstanding_fines', $fineAmount);
+                        } elseif (($oldStatus === 'absent' || is_null($oldStatus)) && $newStatus === 'fine_pending') {
+                            $record->user->increment('outstanding_fines', $fineAmount);
+                        }
+
+                        // Handle Lateness Fine change
+                        if ($oldRecord->lateness_fine_paid === false && $record->lateness_fine_paid === true) {
+                            $record->user->decrement('outstanding_fines', (float) $record->lateness_fine_amount);
+                        } elseif ($oldRecord->lateness_fine_paid === true && $record->lateness_fine_paid === false) {
+                            $record->user->increment('outstanding_fines', (float) $record->lateness_fine_amount);
+                        }
+
                         if ($record->status === 'present' && $record->attended_at) {
                             $meeting = $this->getOwnerRecord();
                             $attendanceService = app(\App\Services\AttendanceService::class);

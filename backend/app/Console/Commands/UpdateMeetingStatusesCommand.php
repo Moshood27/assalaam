@@ -19,7 +19,30 @@ class UpdateMeetingStatusesCommand extends Command
 
         $this->info("Current time ({$timezone}): {$todayStr} {$nowStr}");
 
-        // Mark as ongoing if current time is within window
+        // 1. Mark as completed if end_time has passed
+        // This is done first to ensure that meetings that have ended are processed
+        // even if the ongoing notification below takes a long time.
+        $completedMeetings = Meeting::whereIn('status', ['scheduled', 'ongoing'])
+            ->where(function ($query) use ($todayStr, $nowStr) {
+                $query->where('date', '<', $todayStr)
+                    ->orWhere(function ($q) use ($todayStr, $nowStr) {
+                        $q->where('date', $todayStr)
+                            ->where('end_time', '<=', $nowStr);
+                    });
+            })
+            ->get();
+
+        foreach ($completedMeetings as $meeting) {
+            $meeting->update(['status' => 'completed']);
+            $this->info("Marked meeting '{$meeting->name}' as completed.");
+        }
+
+        if ($completedMeetings->isNotEmpty()) {
+            // Immediately audit completed meetings to charge fines
+            $this->call('app:audit-attendance');
+        }
+
+        // 2. Mark as ongoing if current time is within window
         $meetingsToOngoing = Meeting::where('status', 'scheduled')
             ->where('date', '<=', $todayStr)
             ->where('start_time', '<=', $nowStr)
@@ -30,6 +53,8 @@ class UpdateMeetingStatusesCommand extends Command
             $meeting->update(['status' => 'ongoing']);
 
             // Notify members that it's time for the meeting
+            // Note: This could be slow if there are many members.
+            // Ideally this should be queued, but for now we just make sure it's after completions.
             $meeting->notifyMembers(
                 "⏰ Meeting Time: {$meeting->name}",
                 "The meeting is starting now. Please join or mark your attendance.",
@@ -37,25 +62,6 @@ class UpdateMeetingStatusesCommand extends Command
             );
 
             $this->info("Marked meeting '{$meeting->name}' as ongoing and notified members.");
-        }
-
-        $ongoingCount = $meetingsToOngoing->count();
-
-        // Mark as completed if end_time has passed
-        $completedCount = Meeting::whereIn('status', ['scheduled', 'ongoing'])
-            ->where(function ($query) use ($todayStr, $nowStr) {
-                $query->where('date', '<', $todayStr)
-                    ->orWhere(function ($q) use ($todayStr, $nowStr) {
-                        $q->where('date', $todayStr)
-                            ->where('end_time', '<=', $nowStr);
-                    });
-            })
-            ->update(['status' => 'completed']);
-
-        if ($completedCount > 0) {
-            $this->info("Marked {$completedCount} meetings as completed.");
-            // Immediately audit completed meetings to charge fines
-            $this->call('app:audit-attendance');
         }
     }
 }

@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Artisan;
 
 class MeetingResource extends Resource
 {
@@ -170,7 +171,10 @@ class MeetingResource extends Resource
                     ->icon('heroicon-o-document-check')
                     ->color('info')
                     ->requiresConfirmation()
-                    ->visible(fn (Meeting $record): bool => $record->status === 'completed')
+                    ->visible(fn (Meeting $record): bool =>
+                        $record->status === 'completed' ||
+                        ($record->status === 'ongoing' && \Carbon\Carbon::parse($record->date->format('Y-m-d') . ' ' . $record->end_time)->isPast())
+                    )
                     ->action(function () {
                         Artisan::call('app:audit-attendance');
                         Notification::make()
