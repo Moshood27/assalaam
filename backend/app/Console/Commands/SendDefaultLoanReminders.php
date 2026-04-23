@@ -23,6 +23,7 @@ class SendDefaultLoanReminders extends Command
         // 1. Identify and flag NEW defaulters
         $activeLoans = \App\Models\QardHasan::whereIn('status', ['active', 'defaulted'])
             ->whereNull('defaulted_at')
+            ->whereColumn('paid_amount', '<', 'principal_amount')
             ->get();
 
         foreach ($activeLoans as $loan) {

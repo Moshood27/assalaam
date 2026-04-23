@@ -35,10 +35,12 @@ class LoanMonitoring extends Page
         // Members currently on loan (active or pending)
         $members = User::query()
             ->with(['qardHasans' => function ($q) {
-                $q->whereIn('status', ['active', 'pending']);
+                $q->whereIn('status', ['active', 'pending'])
+                  ->whereColumn('paid_amount', '<', 'principal_amount');
             }])
             ->whereHas('qardHasans', function ($q) {
-                $q->whereIn('status', ['active', 'pending']);
+                $q->whereIn('status', ['active', 'pending'])
+                  ->whereColumn('paid_amount', '<', 'principal_amount');
             })
             ->get();
 
@@ -78,7 +80,8 @@ class LoanMonitoring extends Page
         $defs = User::query()
             ->where('is_defaulter', true)
             ->with(['qardHasans' => function ($q) {
-                $q->whereIn('status', ['active', 'pending']);
+                $q->whereIn('status', ['active', 'pending', 'defaulted'])
+                  ->whereColumn('paid_amount', '<', 'principal_amount');
             }])
             ->get();
 
@@ -117,7 +120,8 @@ class LoanMonitoring extends Page
     public function sendReminder(int $userId): void
     {
         $user = User::with(['qardHasans' => function ($q) {
-            $q->whereIn('status', ['active', 'pending']);
+            $q->whereIn('status', ['active', 'pending', 'defaulted'])
+              ->whereColumn('paid_amount', '<', 'principal_amount');
         }])->find($userId);
         if (! $user) {
             Notification::make()->danger()->title('User not found')->send();

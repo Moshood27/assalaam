@@ -115,7 +115,14 @@ class QardHasan extends Model
     protected static function booted(): void
     {
         static::saving(function (QardHasan $loan) {
-            if ($loan->defaulted_at && $loan->defaulted_at->year > 1970 && $loan->defaulted_at->lte(now())) {
+            // Auto-complete if fully paid
+            if ($loan->paid_amount >= $loan->principal_amount && $loan->principal_amount > 0) {
+                if (in_array($loan->status, ['active', 'pending', 'defaulted'])) {
+                    $loan->status = 'completed';
+                }
+            }
+
+            if ($loan->status !== 'completed' && $loan->defaulted_at && $loan->defaulted_at->year > 1970 && $loan->defaulted_at->lte(now())) {
                 if (in_array($loan->status, ['active', 'pending'])) {
                     $loan->status = 'defaulted';
                 }
@@ -127,7 +134,7 @@ class QardHasan extends Model
         });
 
         static::updated(function (QardHasan $loan) {
-            if ($loan->wasChanged(['defaulted_at', 'status'])) {
+            if ($loan->wasChanged(['defaulted_at', 'status', 'paid_amount'])) {
                 $loan->syncUserDefaulterStatus();
             }
         });
@@ -250,6 +257,7 @@ class QardHasan extends Model
             ->whereNotNull('defaulted_at')
             ->where('defaulted_at', '<=', now())
             ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
+            ->whereColumn('paid_amount', '<', 'principal_amount')
             ->exists();
 
         if ($user->is_defaulter !== $hasDefaultedLoan) {

@@ -181,10 +181,7 @@ class LoanController extends Controller
         $interval = strtolower($data['interval'] ?? 'monthly');
 
         // Block if user already has an incomplete loan
-        $hasOpenLoan = QardHasan::where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'active', 'defaulted'])
-            ->exists();
-        if ($hasOpenLoan) {
+        if ($user->hasActiveLoan()) {
             $msg = $user->is_defaulter
                 ? 'You cannot apply for a new loan until you clear your outstanding defaulted loan.'
                 : 'You must complete your existing loan before taking a new one.';

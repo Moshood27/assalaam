@@ -32,8 +32,7 @@ class CreateQardHasan extends CreateRecord
             }
 
             // Prevent multiple open loans
-            $hasOpen = QardHasan::where('user_id', $user->id)->whereIn('status', ['pending', 'active'])->exists();
-            if ($hasOpen) {
+            if ($user->hasActiveLoan()) {
                 Notification::make()->title('Eligibility Error')->body('Member has an existing loan that is not yet completed.')->danger()->send();
                 throw ValidationException::withMessages([
                     'user_id' => 'Member has an existing loan that is not yet completed.'

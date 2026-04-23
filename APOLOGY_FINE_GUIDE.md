@@ -50,6 +50,8 @@ Admins can manually manage member fines from the Filament Admin Panel (`UserReso
 - **Record Fine Payment**: If a member pays their fine in cash or via external transfer, an admin can record this payment. This creates a successful contribution record and automatically reduces the member's `outstanding_fines`.
 - **Waive All Fines**: In special cases (e.g., system errors or approved waivers), admins can clear all outstanding fines for a member with a single click. This sets the `outstanding_fines` balance to ₦0 and marks associated attendance records as paid/settled.
 - **Bulk Waivers**: Admins can select multiple members in the "Members" list and use the "Waive Fines" bulk action to clear debts for all selected users.
+- **Fine Management Hub**: A dedicated resource (`Fine Management`) allows admins to view and filter all pending fines across the system. 
+    - **Wipe All Fines**: A global action to clear ALL outstanding fines from ALL members in the entire system. This is useful for resetting the system at the start of a new session or after a system-wide adjustment.
 
 ---
 

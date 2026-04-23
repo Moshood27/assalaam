@@ -231,6 +231,27 @@ class FineResource extends Resource
                                 ->send();
                         }),
                 ]),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('wipeAll')
+                    ->label('Wipe All Fines')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Wipe ALL Fines from the System')
+                    ->modalDescription('This will permanently clear ALL outstanding fines for ALL members and mark ALL pending attendance records as paid. This action cannot be undone.')
+                    ->action(function () {
+                        app(AttendanceService::class)->wipeAllSystemFines();
+
+                        ShariahAuditLog::log(auth()->user(), 'system_fine_wipe', [
+                            'note' => 'Admin initiated a full system fine wipe',
+                        ]);
+
+                        Notification::make()
+                            ->title('All system fines have been wiped')
+                            ->success()
+                            ->send();
+                    }),
             ]);
     }
 

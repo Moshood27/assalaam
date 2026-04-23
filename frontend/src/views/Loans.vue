@@ -337,7 +337,7 @@ const createMsg = ref('')
 const createErr = ref('')
 
 const hasAnyLoan = computed(() => (loans.value || []).length > 0)
-const hasOpenLoan = computed(() => (loans.value || []).some(l => (l?.status === 'pending' || l?.status === 'active') && !l?.is_completed))
+const hasOpenLoan = computed(() => (loans.value || []).some(l => ['pending', 'active', 'defaulted'].includes(l?.status) && !l?.is_completed))
 const hasCompletedLoan = computed(() => (loans.value || []).some(l => l?.is_completed || l?.status === 'completed'))
 // Creation is allowed only if no open loan and backend policy allows request (6-month rule and first-loan cap)
 const canCreateLoanVisible = computed(() => !hasOpenLoan.value && !!eligibility.value?.can_request)

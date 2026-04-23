@@ -234,12 +234,37 @@ class AttendanceService
             AttendanceRecord::where('user_id', $user->id)
                 ->where('status', 'fine_pending')
                 ->update([
-                    'status' => 'fine_paid', // Or we could add 'fine_waived'
+                    'status' => 'fine_paid', // Mark as paid to remove from pending
                     'fine_paid_at' => now(),
                 ]);
 
             AttendanceRecord::where('user_id', $user->id)
                 ->where('lateness_fine_paid', false)
+                ->update([
+                    'lateness_fine_paid' => true,
+                ]);
+        });
+    }
+
+    /**
+     * Wipe ALL outstanding fines from the entire system.
+     */
+    public function wipeAllSystemFines(): void
+    {
+        DB::transaction(function () {
+            // Reset all user outstanding fines
+            User::query()->update(['outstanding_fines' => 0]);
+
+            // Mark all pending absence fines as paid/waived
+            AttendanceRecord::where('status', 'fine_pending')
+                ->update([
+                    'status' => 'fine_paid',
+                    'fine_paid_at' => now(),
+                ]);
+
+            // Mark all lateness fines as paid
+            AttendanceRecord::where('lateness_fine_paid', false)
+                ->where('lateness_fine_amount', '>', 0)
                 ->update([
                     'lateness_fine_paid' => true,
                 ]);
