@@ -37,16 +37,15 @@
         </div>
 
         @push('styles')
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <style>
-            .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
-            .leaflet-popup-content { margin: 12px !important; width: auto !important; }
-            .leaflet-container { font-family: inherit; }
+            .gm-style-iw { border-radius: 12px; padding: 0 !important; }
+            .gm-style-iw-d { overflow: hidden !important; padding: 12px !important; }
+            #map { font-family: inherit; }
         </style>
         @endpush
 
         @push('scripts')
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}"></script>
         <script>
             document.addEventListener('livewire:initialized', function () {
                 const branches = @json($branches);
@@ -70,13 +69,15 @@
                 document.getElementById('agg-savings').textContent = `₦ ${fmt(totalSavings)}`;
                 document.getElementById('agg-default').textContent = `${(avgDefault || 0).toFixed(2)}%`;
 
-                const map = L.map('map').setView([validBranches[0].latitude, validBranches[0].longitude], 6);
+                const map = new google.maps.Map(mapContainer, {
+                    center: { lat: parseFloat(validBranches[0].latitude), lng: parseFloat(validBranches[0].longitude) },
+                    zoom: 6,
+                    mapTypeControl: true,
+                    streetViewControl: false,
+                });
 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap'
-                }).addTo(map);
-
-                const markers = [];
+                const bounds = new google.maps.LatLngBounds();
+                const infoWindow = new google.maps.InfoWindow();
 
                 validBranches.forEach(branch => {
                     const color = branch.default_rate > 20 ? '#ef4444' : (branch.default_rate > 10 ? '#f97316' : '#22c55e');
@@ -84,18 +85,26 @@
                     const scaled = 5 + ((Number(branch.savings_rate) || 0) / maxSavings) * 25;
                     const radius = Math.min(28, Math.max(8, scaled));
 
-                    const marker = L.circleMarker([branch.latitude, branch.longitude], {
-                        radius: radius,
-                        fillColor: color,
-                        color: "#000",
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.7
-                    }).addTo(map);
+                    const position = { lat: parseFloat(branch.latitude), lng: parseFloat(branch.longitude) };
+
+                    // Use a Marker with a custom SVG icon instead of Circle to match the "pixel-based" radius of Leaflet's circleMarker
+                    const marker = new google.maps.Marker({
+                        position: position,
+                        map: map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            fillColor: color,
+                            fillOpacity: 0.7,
+                            scale: radius,
+                            strokeColor: '#000',
+                            strokeWeight: 1,
+                        },
+                        title: branch.name
+                    });
 
                     const savingsFmt = (() => { try { return Number(branch.savings_rate || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch { return branch.savings_rate; } })();
 
-                    // Safe popup content creation using DOM elements to prevent XSS
+                    // Safe popup content
                     const popupContent = document.createElement('div');
                     popupContent.className = 'text-sm';
                     popupContent.style.minWidth = '200px';
@@ -107,21 +116,23 @@
 
                     const p1 = document.createElement('p');
                     p1.className = 'mb-1';
-                    p1.innerHTML = `<strong>Total Savings:</strong> ₦${savingsFmt}`; // savingsFmt is numeric/formatted, safe
+                    p1.innerHTML = `<strong>Total Savings:</strong> ₦${savingsFmt}`;
                     popupContent.appendChild(p1);
 
                     const p2 = document.createElement('p');
                     p2.innerHTML = `<strong>Default Rate:</strong> <span style="color: ${color}; font-weight: bold;">${(Number(branch.default_rate) || 0).toFixed(2)}%</span>`;
                     popupContent.appendChild(p2);
 
-                    marker.bindPopup(popupContent);
-                    marker.bindTooltip(`${branch.name}: ₦${savingsFmt}`, { direction: 'top' });
+                    marker.addListener('click', () => {
+                        infoWindow.setContent(popupContent);
+                        infoWindow.open(map, marker);
+                    });
 
-                    markers.push([branch.latitude, branch.longitude]);
+                    bounds.extend(position);
                 });
 
-                if (markers.length > 0) {
-                    map.fitBounds(L.latLngBounds(markers), { padding: [50, 50] });
+                if (validBranches.length > 0) {
+                    map.fitBounds(bounds);
                 }
             });
         </script>

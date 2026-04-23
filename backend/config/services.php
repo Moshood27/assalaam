@@ -113,6 +113,10 @@ return [
         ],
     ],
 
+    'google' => [
+        'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
     'goals' => [
         'commission_rate' => (float) env('GOALS_COMMISSION_RATE', 0.05),
     ],

@@ -6,30 +6,20 @@
         marker: null,
         searchQuery: '',
         isSearching: false,
+        apiKey: '{{ config('services.google.maps_api_key') }}',
         init() {
-            if (typeof L === 'undefined') {
-                if (!document.getElementById('leaflet-css')) {
-                    const link = document.createElement('link');
-                    link.id = 'leaflet-css';
-                    link.rel = 'stylesheet';
-                    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                    document.head.appendChild(link);
-                }
+            if (!this.apiKey) {
+                console.error('Google Maps API Key is missing. Please set GOOGLE_MAPS_API_KEY in your .env file.');
+                return;
+            }
 
-                if (!document.getElementById('leaflet-js')) {
+            if (typeof google === 'undefined') {
+                if (!document.getElementById('google-maps-js')) {
                     const script = document.createElement('script');
-                    script.id = 'leaflet-js';
-                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                    script.id = 'google-maps-js';
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${this.apiKey}&libraries=places`;
                     script.onload = () => this.initMap();
                     document.head.appendChild(script);
-                } else {
-                    // Script is loading, check periodically
-                    const interval = setInterval(() => {
-                        if (typeof L !== 'undefined') {
-                            clearInterval(interval);
-                            this.initMap();
-                        }
-                    }, 100);
                 }
             } else {
                 this.initMap();
@@ -38,73 +28,92 @@
         initMap() {
             if (this.map) return;
 
-            this.map = L.map($refs.map).setView([this.lat || 9.0820, this.lng || 8.6753], this.lat ? 15 : 6);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(this.map);
+            const center = { lat: parseFloat(this.lat) || 9.0820, lng: parseFloat(this.lng) || 8.6753 };
+            this.map = new google.maps.Map($refs.map, {
+                center: center,
+                zoom: this.lat ? 15 : 6,
+                mapTypeControl: true,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
 
             if (this.lat && this.lng) {
-                this.marker = L.marker([this.lat, this.lng]).addTo(this.map);
+                this.marker = new google.maps.Marker({
+                    position: center,
+                    map: this.map,
+                    draggable: true
+                });
             }
 
-            this.map.on('click', (e) => {
-                this.lat = e.latlng.lat;
-                this.lng = e.latlng.lng;
-                this.searchQuery = ''; // Clear search when manually picking
-                if (this.marker) {
-                    this.marker.setLatLng(e.latlng);
-                } else {
-                    this.marker = L.marker(e.latlng).addTo(this.map);
-                }
+            this.map.addListener('click', (e) => {
+                this.updateLocation(e.latLng.lat(), e.latLng.lng());
             });
+
+            if (this.marker) {
+                this.marker.addListener('dragend', (e) => {
+                    this.updateLocation(e.latLng.lat(), e.latLng.lng());
+                });
+            }
+
+            // Initialize Autocomplete
+            const input = $refs.searchInput;
+            const autocomplete = new google.maps.places.Autocomplete(input, {
+                componentRestrictions: { country: 'NG' },
+                fields: ['geometry', 'name', 'formatted_address']
+            });
+
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry || !place.geometry.location) {
+                    return;
+                }
+
+                this.updateLocation(place.geometry.location.lat(), place.geometry.location.lng());
+                this.map.setCenter(place.geometry.location);
+                this.map.setZoom(17);
+                this.searchQuery = place.formatted_address || place.name;
+            });
+        },
+        updateLocation(lat, lng) {
+            this.lat = lat;
+            this.lng = lng;
+
+            if (this.marker) {
+                this.marker.setPosition({ lat, lng });
+            } else {
+                this.marker = new google.maps.Marker({
+                    position: { lat, lng },
+                    map: this.map,
+                    draggable: true
+                });
+                this.marker.addListener('dragend', (e) => {
+                    this.updateLocation(e.latLng.lat(), e.latLng.lng());
+                });
+            }
         },
         updateFromInputs() {
             if (this.map && this.lat && this.lng) {
-                const latlng = [parseFloat(this.lat), parseFloat(this.lng)];
+                const latlng = { lat: parseFloat(this.lat), lng: parseFloat(this.lng) };
                 if (this.marker) {
-                    this.marker.setLatLng(latlng);
+                    this.marker.setPosition(latlng);
                 } else {
-                    this.marker = L.marker(latlng).addTo(this.map);
+                    this.marker = new google.maps.Marker({
+                        position: latlng,
+                        map: this.map,
+                        draggable: true
+                    });
                 }
                 this.map.panTo(latlng);
-            }
-        },
-        async searchLocation() {
-            if (!this.searchQuery) return;
-            this.isSearching = true;
-            try {
-                // Using Nominatim with country preference for Nigeria (NG)
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}&countrycodes=ng&limit=1`;
-                const response = await fetch(url, {
-                    headers: {
-                        'User-Agent': 'Attaqwa-Cooperative-Admin-Map-Picker'
-                    }
-                });
-                const data = await response.json();
-                if (data && data.length > 0) {
-                    const result = data[0];
-                    this.lat = parseFloat(result.lat);
-                    this.lng = parseFloat(result.lon);
-                    this.updateFromInputs();
-                    this.map.setView([this.lat, this.lng], 15);
-                    this.searchQuery = result.display_name;
-                } else {
-                    alert('Location not found for: ' + this.searchQuery + '. Please try a more specific search (e.g. Street, Town).');
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                alert('An error occurred while searching. Please check your internet connection.');
-            } finally {
-                this.isSearching = false;
             }
         },
         getCurrentLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
-                    this.lat = pos.coords.latitude;
-                    this.lng = pos.coords.longitude;
-                    this.updateFromInputs();
-                    this.map.setView([this.lat, this.lng], 15);
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    this.updateLocation(lat, lng);
+                    this.map.setCenter({ lat, lng });
+                    this.map.setZoom(15);
                 }, (err) => {
                     console.error('Geolocation error:', err);
                     alert('Unable to retrieve your location: ' + (err.message || 'Permission denied'));
@@ -121,21 +130,13 @@
         <div class="flex-1">
             <input
                 type="text"
+                x-ref="searchInput"
                 x-model="searchQuery"
-                @keydown.enter.prevent="searchLocation()"
+                @keydown.enter.prevent
                 placeholder="Search for street address..."
                 class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 rounded-md dark:bg-white/5 dark:text-white dark:ring-white/10"
             >
         </div>
-        <button
-            type="button"
-            @click="searchLocation()"
-            class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 dark:bg-white/5 dark:text-white dark:ring-white/10"
-            :disabled="isSearching"
-        >
-            <span x-show="!isSearching">Search</span>
-            <span x-show="isSearching">...</span>
-        </button>
         <button
             type="button"
             class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-white/5 dark:text-white dark:ring-white/10"

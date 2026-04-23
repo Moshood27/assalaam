@@ -38,7 +38,7 @@ The visual centerpiece is the **Branch Analytics Map**, accessible via the Filam
 **Technical Details**:
 *   **Page**: `App\Filament\Pages\BranchPerformanceMap`
 *   **View**: `resources/views/filament/pages/branch-performance-map.blade.php`
-*   **Library**: [Leaflet.js](https://leafletjs.com/) with OpenStreetMap tiles.
+*   **Library**: [Google Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/overview).
 
 ## Branch Performance Report (API)
 For integration with external reporting tools or custom dashboards, a JSON API endpoint is available.

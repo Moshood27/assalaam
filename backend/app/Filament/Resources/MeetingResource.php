@@ -90,7 +90,7 @@ class MeetingResource extends Resource
                             ->step('0.00000001'),
                         Forms\Components\TextInput::make('radius_meters')
                             ->numeric()
-                            ->default(config('cooperative.attendance.radius_meters', 50)),
+                            ->default(config('cooperative.attendance.radius_meters', 100)),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Fines & Fees')
