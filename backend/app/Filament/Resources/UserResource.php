@@ -10,9 +10,11 @@ use App\Jobs\SendBulkCommunication;
 use App\Models\Branch;
 use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
+use App\Models\Contribution;
 use App\Models\MemberApplication;
 use App\Mail\NewMemberWelcome;
 use App\Mail\MemberApplicationRejected;
+use App\Services\AttendanceService;
 use App\Services\PushService;
 use App\Services\SmsService;
 use App\Services\TakafulService;
@@ -1010,6 +1012,66 @@ class UserResource extends Resource
                             ->send();
                     })
                     ->requiresConfirmation(),
+                Action::make('payFines')
+                    ->label('Record Fine Payment')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn (User $record) => (float)$record->outstanding_fines > 0)
+                    ->form([
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Amount Paid')
+                            ->numeric()
+                            ->prefix('₦')
+                            ->default(fn (User $record) => (float)$record->outstanding_fines)
+                            ->required(),
+                        Forms\Components\TextInput::make('note')
+                            ->label('Note')
+                            ->placeholder('e.g. Paid in cash at the office'),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        DB::transaction(function () use ($record, $data) {
+                            $amount = (float) $data['amount'];
+
+                            Contribution::create([
+                                'user_id' => $record->id,
+                                'amount' => $amount,
+                                'category' => 'fine',
+                                'status' => 'success',
+                                'reference' => 'MANUAL_FINE_' . Str::random(8),
+                            ]);
+
+                            ShariahAudit::log(auth()->user(), 'manual_fine_payment_recorded', [
+                                'user_id' => $record->id,
+                                'amount' => $amount,
+                                'note' => $data['note'] ?? '',
+                            ]);
+                        });
+
+                        Notification::make()
+                            ->title('Fine payment recorded')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
+                Action::make('waiveFines')
+                    ->label('Waive All Fines')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(fn (User $record) => (float)$record->outstanding_fines > 0)
+                    ->action(function (User $record) {
+                        app(AttendanceService::class)->waiveAllFines($record);
+
+                        ShariahAudit::log(auth()->user(), 'manual_fine_waiver', [
+                            'user_id' => $record->id,
+                            'waived_amount' => (float) $record->getOriginal('outstanding_fines'),
+                        ]);
+
+                        Notification::make()
+                            ->title('Fines waived successfully')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -1020,6 +1082,31 @@ class UserResource extends Resource
                             $sortedRecords = $records->sortBy('name', SORT_NATURAL);
                             echo Pdf::loadView('pdfs.bulk_membership_applications', ['users' => $sortedRecords])->setPaper('a4')->output();
                         }, "bulk-enrolment-forms.pdf")),
+                    Tables\Actions\BulkAction::make('waiveFinesBulk')
+                        ->label('Waive Fines')
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $service = app(AttendanceService::class);
+                            $count = 0;
+                            foreach ($records as $record) {
+                                if ((float)$record->outstanding_fines > 0) {
+                                    $service->waiveAllFines($record);
+
+                                    ShariahAudit::log(auth()->user(), 'bulk_fine_waiver', [
+                                        'user_id' => $record->id,
+                                        'waived_amount' => (float) $record->getOriginal('outstanding_fines'),
+                                    ]);
+                                    $count++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title("Fines waived for {$count} members")
+                                ->success()
+                                ->send();
+                        }),
                     Tables\Actions\DeleteBulkAction::make()
                         ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 ]),

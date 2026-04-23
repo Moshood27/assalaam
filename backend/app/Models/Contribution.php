@@ -61,6 +61,9 @@ class Contribution extends Model
                     $user = $model->user;
                     $user->decrement('outstanding_fines', min($user->outstanding_fines, $model->amount));
 
+                    // Settle attendance records
+                    app(\App\Services\AttendanceService::class)->settleOutstandingFines($user, (float) $model->amount);
+
                     \App\Models\CharityEntry::create([
                         'user_id' => $user->id,
                         'source' => 'Manual Fine Payment',
@@ -115,6 +118,9 @@ class Contribution extends Model
                         try {
                             $user = $model->user;
                             $user->decrement('outstanding_fines', min($user->outstanding_fines, $model->amount));
+
+                            // Settle attendance records
+                            app(\App\Services\AttendanceService::class)->settleOutstandingFines($user, (float) $model->amount);
 
                             \App\Models\CharityEntry::create([
                                 'user_id' => $user->id,

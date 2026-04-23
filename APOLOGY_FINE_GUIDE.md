@@ -45,6 +45,12 @@ Members can use the **"Make Payment"** screen in the mobile app:
 - Check the **"Lateness/Apology Fine"** box.
 - *Note: In the current version, this records the payment as a contribution. We are improving this to directly settle outstanding fines.*
 
+### D. Admin Manual Actions
+Admins can manually manage member fines from the Filament Admin Panel (`UserResource`):
+- **Record Fine Payment**: If a member pays their fine in cash or via external transfer, an admin can record this payment. This creates a successful contribution record and automatically reduces the member's `outstanding_fines`.
+- **Waive All Fines**: In special cases (e.g., system errors or approved waivers), admins can clear all outstanding fines for a member with a single click. This sets the `outstanding_fines` balance to ₦0 and marks associated attendance records as paid/settled.
+- **Bulk Waivers**: Admins can select multiple members in the "Members" list and use the "Waive Fines" bulk action to clear debts for all selected users.
+
 ---
 
 ## 3. Better Improvements

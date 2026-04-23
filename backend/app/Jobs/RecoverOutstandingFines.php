@@ -65,45 +65,7 @@ class RecoverOutstandingFines implements ShouldQueue
             ]);
 
             // Try to mark pending records as paid (Absence Fines)
-            $pendingRecords = AttendanceRecord::where('user_id', $lockedUser->id)
-                ->where('status', 'fine_pending')
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            $remainingToMark = $deduction;
-            foreach ($pendingRecords as $record) {
-                $fineAmount = (float)($record->meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
-                if ($remainingToMark >= $fineAmount) {
-                    $record->update([
-                        'status' => 'fine_paid',
-                        'fine_paid_at' => now()
-                    ]);
-                    $remainingToMark -= $fineAmount;
-                } else {
-                    break;
-                }
-            }
-
-            // Try to mark lateness fines as paid
-            if ($remainingToMark > 0) {
-                $lateRecords = AttendanceRecord::where('user_id', $lockedUser->id)
-                    ->where('lateness_fine_paid', false)
-                    ->where('lateness_fine_amount', '>', 0)
-                    ->orderBy('created_at', 'asc')
-                    ->get();
-
-                foreach ($lateRecords as $record) {
-                    $lateFineAmount = (float) $record->lateness_fine_amount;
-                    if ($remainingToMark >= $lateFineAmount) {
-                        $record->update([
-                            'lateness_fine_paid' => true,
-                        ]);
-                        $remainingToMark -= $lateFineAmount;
-                    } else {
-                        break;
-                    }
-                }
-            }
+            app(\App\Services\AttendanceService::class)->settleOutstandingFines($lockedUser, $deduction);
         });
     }
 }

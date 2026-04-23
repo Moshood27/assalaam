@@ -169,4 +169,80 @@ class AttendanceService
             }
         });
     }
+
+    /**
+     * Settle outstanding fines by marking attendance records as paid.
+     */
+    public function settleOutstandingFines(User $user, float $amount): void
+    {
+        if ($amount <= 0) return;
+
+        DB::transaction(function () use ($user, $amount) {
+            // Try to mark pending records as paid (Absence Fines)
+            $pendingRecords = AttendanceRecord::where('user_id', $user->id)
+                ->where('status', 'fine_pending')
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $remainingToMark = $amount;
+            foreach ($pendingRecords as $record) {
+                $fineAmount = (float)($record->meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
+                if ($remainingToMark >= $fineAmount) {
+                    $record->update([
+                        'status' => 'fine_paid',
+                        'fine_paid_at' => now()
+                    ]);
+                    $remainingToMark -= $fineAmount;
+                } else {
+                    break;
+                }
+            }
+
+            // Try to mark lateness fines as paid
+            if ($remainingToMark > 0) {
+                $lateRecords = AttendanceRecord::where('user_id', $user->id)
+                    ->where('lateness_fine_paid', false)
+                    ->where('lateness_fine_amount', '>', 0)
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                foreach ($lateRecords as $record) {
+                    $lateFineAmount = (float) $record->lateness_fine_amount;
+                    if ($remainingToMark >= $lateFineAmount) {
+                        $record->update([
+                            'lateness_fine_paid' => true,
+                        ]);
+                        $remainingToMark -= $lateFineAmount;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Waive all outstanding fines for a user.
+     */
+    public function waiveAllFines(User $user): void
+    {
+        DB::transaction(function () use ($user) {
+            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
+
+            $lockedUser->update(['outstanding_fines' => 0]);
+
+            AttendanceRecord::where('user_id', $user->id)
+                ->where('status', 'fine_pending')
+                ->update([
+                    'status' => 'fine_paid', // Or we could add 'fine_waived'
+                    'fine_paid_at' => now(),
+                ]);
+
+            AttendanceRecord::where('user_id', $user->id)
+                ->where('lateness_fine_paid', false)
+                ->update([
+                    'lateness_fine_paid' => true,
+                ]);
+        });
+    }
 }
