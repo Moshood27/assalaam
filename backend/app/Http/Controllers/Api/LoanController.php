@@ -75,6 +75,11 @@ class LoanController extends Controller
         $eligWithScore = (float) ($adj['eligibility_adjusted'] ?? 0);
         $hasCompleted = !$adj['is_first_loan'];
 
+        // Self-heal stale defaulter flag if balance is 0
+        if ($user->is_defaulter) {
+            $user->syncLoanDefaulterStatus();
+        }
+
         if ($user->is_defaulter) {
             $canRequest = false;
             $eligWithScore = 0;

@@ -154,7 +154,7 @@
             </div>
             <div class="flex items-center gap-2">
               <a :href="getScheduleDownloadUrl(loan)" target="_blank" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs">Download Schedule</a>
-              <span :class="loan.status === 'active' ? 'badge-success' : 'badge-muted'" class="badge">{{ loan.is_completed ? 'completed' : loan.status }}</span>
+              <span :class="loan.is_completed || loan.status === 'active' ? 'badge-success' : (['pending', 'defaulted'].includes(loan.status) ? 'badge-warning' : 'badge-muted')" class="badge">{{ loan.is_completed ? 'completed' : loan.status }}</span>
             </div>
           </div>
 
@@ -181,7 +181,7 @@
             </div>
             <div>
               <p class="text-[10px] text-slate-400 font-bold uppercase text-right">Remaining Principal</p>
-              <p class="font-black text-rose-600 text-lg text-right">₦ {{ n(loan.remaining_principal ?? (loan.principal_amount - loan.paid_amount)) }}</p>
+              <p class="font-black text-lg text-right" :class="loan.is_completed ? 'text-emerald-600' : 'text-rose-600'">₦ {{ n(loan.remaining_principal ?? (loan.principal_amount - loan.paid_amount)) }}</p>
             </div>
             <div class="col-span-2">
               <div class="h-2 bg-slate-200 rounded overflow-hidden">
@@ -246,7 +246,7 @@
             </div>
           </div>
 
-          <div class="p-4 pt-0 space-y-3">
+          <div class="p-4 pt-0 space-y-3" v-if="!loan.is_completed">
             <div class="flex items-center justify-between">
               <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full">
                 <input type="number" min="0.01" step="0.01" class="input w-full sm:flex-1" :disabled="loan.is_completed || paying[loan.id]" v-model.number="payAmount[loan.id]" placeholder="Enter amount to repay" />

@@ -101,7 +101,8 @@ class DashboardController extends Controller
         $outstandingLoans = 0;
         if (Schema::hasTable('qard_hasans')) {
             $outstandingLoans = (float) $user->qardHasans()
-                ->whereIn('status', ['active', 'defaulted'])
+                ->whereIn('status', ['active', 'pending', 'defaulted'])
+                ->whereColumn('paid_amount', '<', 'principal_amount')
                 ->sum(DB::raw('principal_amount - paid_amount'));
         }
 
@@ -144,6 +145,12 @@ class DashboardController extends Controller
         }
 
         $eligibility = $user->adjustedLoanEligibility();
+
+        // Self-heal stale defaulter flag if balance is 0
+        if ($user->is_defaulter) {
+            $user->syncLoanDefaulterStatus();
+        }
+
         $isDefaulter = (bool) $user->is_defaulter;
 
         $kpis = [

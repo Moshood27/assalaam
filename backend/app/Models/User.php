@@ -560,6 +560,24 @@ class User extends Authenticatable implements FilamentUser
             ->exists();
     }
 
+    /**
+     * Sync the user's is_defaulter status based on all their loans.
+     */
+    public function syncLoanDefaulterStatus(): void
+    {
+        $hasDefaultedLoan = $this->qardHasans()
+            ->whereNotNull('defaulted_at')
+            ->where('defaulted_at', '<=', now())
+            ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
+            ->whereColumn('paid_amount', '<', 'principal_amount')
+            ->exists();
+
+        if ($this->is_defaulter !== $hasDefaultedLoan) {
+            $this->is_defaulter = $hasDefaultedLoan;
+            $this->save();
+        }
+    }
+
     public function activities(): MorphMany
     {
         return $this->morphMany(Activity::class, 'subject');

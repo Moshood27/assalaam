@@ -250,19 +250,8 @@ class QardHasan extends Model
      */
     public function syncUserDefaulterStatus(): void
     {
-        $user = $this->user;
-        if (!$user) return;
-
-        $hasDefaultedLoan = QardHasan::where('user_id', $user->id)
-            ->whereNotNull('defaulted_at')
-            ->where('defaulted_at', '<=', now())
-            ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
-            ->whereColumn('paid_amount', '<', 'principal_amount')
-            ->exists();
-
-        if ($user->is_defaulter !== $hasDefaultedLoan) {
-            $user->is_defaulter = $hasDefaultedLoan;
-            $user->save();
+        if ($this->user) {
+            $this->user->syncLoanDefaulterStatus();
         }
     }
 
