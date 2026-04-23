@@ -7,7 +7,8 @@ This document explains how the attendance and apology (lateness) fine system wor
 The system automatically identifies and charges two types of fines related to meeting attendance:
 
 ### A. Apology (Lateness) Fine
-- **Trigger**: When a member marks attendance after the meeting's scheduled start time.
+- **Trigger**: When a member marks attendance after the meeting's scheduled start time plus any **Grace Period** set by the admin.
+- **Grace Period**: Admins can set a grace period (e.g., 15 minutes) for each meeting. If the meeting starts at 10:00 AM and the grace period is 15 minutes, the lateness fine is only triggered after 10:15 AM.
 - **Amount**: Determined by the `apology_fine_amount` set on the specific `Meeting` record. If not set, it defaults to the system-wide `COOP_APOLOGY_FINE` (usually ₦100).
 - **Process**:
     - If the member has sufficient wallet balance, the fine is deducted immediately.

@@ -57,6 +57,11 @@ class MeetingResource extends Resource
                                 }
                             })
                             ->helperText('Use this to automatically set end time based on duration'),
+                        Forms\Components\TextInput::make('grace_period_minutes')
+                            ->label('Lateness Grace Period (Minutes)')
+                            ->numeric()
+                            ->default(config('cooperative.attendance.grace_period_minutes', 0))
+                            ->helperText('Minutes after start time before lateness fine is triggered'),
                         Forms\Components\TimePicker::make('end_time')
                             ->required(),
                         Forms\Components\TextInput::make('pin')

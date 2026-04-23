@@ -21,7 +21,10 @@ class AttendanceService
         $timezone = config('cooperative.timezone', 'Africa/Lagos');
         $startTime = Carbon::parse($meeting->date->format('Y-m-d') . ' ' . $meeting->start_time, $timezone);
 
-        return $attendedAt->isAfter($startTime);
+        $gracePeriod = $meeting->grace_period_minutes ?? (int) config('cooperative.attendance.grace_period_minutes', 0);
+        $latenessStartTime = $startTime->copy()->addMinutes($gracePeriod);
+
+        return $attendedAt->isAfter($latenessStartTime);
     }
 
     /**
