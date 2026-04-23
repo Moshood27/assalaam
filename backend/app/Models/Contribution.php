@@ -36,6 +36,7 @@ class Contribution extends Model
         'units',
         'reference',
         'status',
+        'category',
     ];
 
     protected static function booted(): void
@@ -49,10 +50,27 @@ class Contribution extends Model
         static::created(function (self $model) {
             // Sync user scheme balance if successful
             try {
-                if ($model->status === 'success' && $model->scheme) {
+                if ($model->status === 'success' && $model->scheme && $model->category !== 'fine') {
                     $model->user->syncSchemeBalance($model->scheme->name);
                 }
             } catch (\Throwable $e) {}
+
+            // Special handling for Fine category
+            if ($model->status === 'success' && $model->category === 'fine') {
+                try {
+                    $user = $model->user;
+                    $user->decrement('outstanding_fines', min($user->outstanding_fines, $model->amount));
+
+                    \App\Models\CharityEntry::create([
+                        'user_id' => $user->id,
+                        'source' => 'Manual Fine Payment',
+                        'amount' => $model->amount,
+                        'note' => "Manual payment of fine (Reference: {$model->reference})",
+                        'status' => 'processed',
+                        'processed_at' => now(),
+                    ]);
+                } catch (\Throwable $e) {}
+            }
 
             // If created already successful and linked to a project (e.g., wallet allocation), create investment
             try {
@@ -85,12 +103,29 @@ class Contribution extends Model
             // When a contribution tied to a project is marked successful, create a ProjectInvestment once
             try {
                 if ($model->status === 'success' && ($model->wasChanged('status') || $model->wasChanged('amount'))) {
-                    // Sync user scheme balance
+                    // Sync user scheme balance if not a fine
                     try {
-                        if ($model->scheme) {
+                        if ($model->scheme && $model->category !== 'fine') {
                             $model->user->syncSchemeBalance($model->scheme->name);
                         }
                     } catch (\Throwable $e) {}
+
+                    // Special handling for Fine category when marked as success (e.g. from webhook)
+                    if ($model->category === 'fine') {
+                        try {
+                            $user = $model->user;
+                            $user->decrement('outstanding_fines', min($user->outstanding_fines, $model->amount));
+
+                            \App\Models\CharityEntry::create([
+                                'user_id' => $user->id,
+                                'source' => 'Manual Fine Payment',
+                                'amount' => $model->amount,
+                                'note' => "Manual payment of fine (Reference: {$model->reference})",
+                                'status' => 'processed',
+                                'processed_at' => now(),
+                            ]);
+                        } catch (\Throwable $e) {}
+                    }
 
                     // Update Attaqwa Score
                     try {

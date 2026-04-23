@@ -270,6 +270,7 @@ class WalletController extends Controller
             'items.*.savings_group_id' => 'nullable|integer|exists:savings_groups,id',
             'items.*.units' => 'nullable|integer|min:1',
             'items.*.amount' => 'required|numeric|min:1',
+            'items.*.category' => 'nullable|string',
             'pin' => ['required','regex:/^\d{4}$/'],
         ]);
 
@@ -289,6 +290,7 @@ class WalletController extends Controller
                     'scheme_id' => (int)$i['scheme_id'],
                     'amount' => (float)($i['amount'] ?? 0),
                     'units' => !empty($i['units']) ? (int)$i['units'] : null,
+                    'category' => $i['category'] ?? 'deposit',
                 ];
                 if (!empty($i['project_id'])) {
                     $row['project_id'] = (int) $i['project_id'];
@@ -362,6 +364,7 @@ class WalletController extends Controller
                     'amount' => $item['amount'],
                     'reference' => $reference,
                     'status' => 'success',
+                    'category' => $item['category'] ?? 'deposit',
                 ];
                 if (!empty($item['project_id'])) {
                     $row['project_id'] = (int) $item['project_id'];

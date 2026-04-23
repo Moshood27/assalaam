@@ -27,6 +27,7 @@ class PaymentController extends Controller
             'items.*.savings_group_id' => 'nullable|integer|exists:savings_groups,id',
             'items.*.units' => 'nullable|integer|min:1',
             'items.*.amount' => 'required|numeric|min:1',
+            'items.*.category' => 'nullable|string',
             'callback_url' => 'nullable|url',
         ]);
 
@@ -100,6 +101,7 @@ class PaymentController extends Controller
                 'scheme_id' => (int) $scheme->id,
                 'amount' => $amount,
                 'units' => $units > 0 ? $units : null,
+                'category' => $item['category'] ?? 'deposit',
             ];
             if (!empty($projectId)) {
                 $row['project_id'] = (int) $projectId;
@@ -129,6 +131,7 @@ class PaymentController extends Controller
                 'amount' => $item['amount'],
                 'reference' => $reference,
                 'status' => 'pending',
+                'category' => $item['category'] ?? 'deposit',
             ];
             if (!empty($item['project_id'])) {
                 $payloadData['project_id'] = (int) $item['project_id'];
