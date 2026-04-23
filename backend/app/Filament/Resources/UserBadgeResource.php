@@ -53,8 +53,9 @@ class UserBadgeResource extends Resource
                 return $query->orderByRaw('LENGTH(name) ASC')->orderBy('name', 'asc');
             })
             ->columns([
-                TextColumn::make('user.full_name')
+                TextColumn::make('user.surname')
                     ->label('Member')
+                    ->formatStateUsing(fn ($record) => $record->user?->full_name ?? '-')
                     ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 TextColumn::make('name')

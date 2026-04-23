@@ -51,8 +51,9 @@ class AttendanceRecordsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\TextColumn::make('user.full_name')
+                Tables\Columns\TextColumn::make('user.surname')
                     ->label('Member Name')
+                    ->formatStateUsing(fn ($record) => $record->user?->full_name ?? '-')
                     ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.membership_number')

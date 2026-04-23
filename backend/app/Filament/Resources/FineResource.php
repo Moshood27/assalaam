@@ -42,7 +42,8 @@ class FineResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'full_name')
+                    ->relationship('user', 'name')
+                    ->getOptionLabelFromRecordUsing(fn (User $record) => $record->full_name)
                     ->disabled(),
                 Forms\Components\Select::make('meeting_id')
                     ->relationship('meeting', 'name')
@@ -66,9 +67,10 @@ class FineResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.full_name')
+                Tables\Columns\TextColumn::make('user.surname')
                     ->label('Member')
-                    ->searchable()
+                    ->formatStateUsing(fn ($record) => $record->user?->full_name ?? '-')
+                    ->searchable(['name', 'surname', 'other_names'])
                     ->sortable(),
                 Tables\Columns\TextColumn::make('meeting.name')
                     ->label('Meeting')

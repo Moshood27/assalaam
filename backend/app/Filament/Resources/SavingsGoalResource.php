@@ -80,8 +80,9 @@ class SavingsGoalResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('user.full_name')
+                TextColumn::make('user.surname')
                     ->label('Member')
+                    ->formatStateUsing(fn ($record) => $record->user?->full_name ?? '-')
                     ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 TextColumn::make('title')->wrap()->limit(40)->searchable(),

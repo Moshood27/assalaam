@@ -36,8 +36,9 @@ class TakafulContributionResource extends Resource
                     ->label('Date')
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
-                TextColumn::make('user.full_name')
+                TextColumn::make('user.surname')
                     ->label('Member')
+                    ->formatStateUsing(fn ($record) => $record->user?->full_name ?? '-')
                     ->searchable(['surname', 'name', 'other_names'])
                     ->sortable(),
                 TextColumn::make('user.membership_number')
