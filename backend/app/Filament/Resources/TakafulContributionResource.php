@@ -94,7 +94,7 @@ class TakafulContributionResource extends Resource
                     ->form([
                         Forms\Components\Select::make('user_id')
                             ->label('Member')
-                            ->relationship('user', 'surname')
+                            ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                             ->searchable(['surname', 'name', 'other_names']),
                     ])
@@ -118,7 +118,7 @@ class TakafulContributionResource extends Resource
                             ->prefix('₦'),
                         Forms\Components\Select::make('user_id')
                             ->label('Only Member (optional)')
-                            ->relationship('user', 'surname')
+                            ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                             ->searchable(['surname', 'name', 'other_names']),
                         Forms\Components\Toggle::make('dry_run')

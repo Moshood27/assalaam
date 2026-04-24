@@ -94,7 +94,7 @@ class TakafulPoolEntryResource extends Resource
                     ->form([
                         Forms\Components\Select::make('user_id')
                             ->label('Member')
-                            ->relationship('user', 'surname')
+                            ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                             ->searchable(['surname', 'name', 'other_names']),
                     ])
@@ -126,7 +126,7 @@ class TakafulPoolEntryResource extends Resource
                             ->maxLength(255),
                         Forms\Components\Select::make('user_id')
                             ->label('Related Member (optional)')
-                            ->relationship('user', 'surname')
+                            ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                             ->searchable(['surname', 'name', 'other_names']),
                     ])

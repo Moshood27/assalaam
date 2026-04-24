@@ -28,7 +28,7 @@ class ShariahAuditLogResource extends Resource
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->label('Member/User')
-                    ->relationship('user', 'surname')
+                    ->relationship('user', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                     ->searchable(['surname', 'name', 'other_names'])
                     ->disabled(),

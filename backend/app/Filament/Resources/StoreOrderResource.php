@@ -35,7 +35,7 @@ class StoreOrderResource extends Resource
                             ->dehydrated(false),
                         Forms\Components\Select::make('user_id')
                             ->label('Member')
-                            ->relationship('user', 'surname')
+                            ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                             ->searchable(['surname', 'name', 'other_names'])
                             ->preload()
