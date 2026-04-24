@@ -216,7 +216,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import {ref, onMounted, onUnmounted, computed} from 'vue'
 import { Geolocation } from '@capacitor/geolocation'
 import { Device } from '@capacitor/device'
 import AppHeader from '../components/AppHeader.vue'

@@ -18,7 +18,12 @@ class MeetingApologyController extends Controller
         $request->validate([
             'reason' => 'required|string|max:1000',
             'excuse_type' => 'required|string|in:medical,travel,official,other',
-            'proof' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'proof' => [
+                $request->excuse_type === 'medical' || $request->excuse_type === 'travel' ? 'required' : 'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:5120',
+            ],
         ]);
 
         $timezone = config('cooperative.timezone', 'Africa/Lagos');
