@@ -32,6 +32,7 @@ class ContributionResource extends Resource
                     ->relationship('user', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                     ->searchable(['surname', 'name', 'other_names'])
+                    ->preload()
                     ->required(),
 
                 // For create: allow multiple schemes with amounts

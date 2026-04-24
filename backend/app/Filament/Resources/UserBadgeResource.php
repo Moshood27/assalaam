@@ -30,6 +30,7 @@ class UserBadgeResource extends Resource
                     ->relationship('user', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                     ->searchable(['surname', 'name', 'other_names'])
+                    ->preload()
                     ->required(),
                 Forms\Components\TextInput::make('badge_type')
                     ->required()

@@ -16,9 +16,6 @@ class SupportChatController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if ((bool)($user->is_admin ?? false)) {
-            return response()->json(['message' => 'Admins should view per member.'], 403);
-        }
 
         $perPage = max(10, min(100, (int) $request->integer('per_page', 50)));
         $messages = SupportMessage::query()
@@ -41,9 +38,6 @@ class SupportChatController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        if ((bool)($user->is_admin ?? false)) {
-            return response()->json(['message' => 'Admins must use admin endpoints.'], 403);
-        }
 
         $data = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
@@ -88,9 +82,6 @@ class SupportChatController extends Controller
     public function markRead(Request $request)
     {
         $user = $request->user();
-        if ((bool)($user->is_admin ?? false)) {
-            return response()->json(['message' => 'Admins not applicable.'], 403);
-        }
 
         $count = SupportMessage::where('user_id', $user->id)
             ->where('sender_type', 'admin')

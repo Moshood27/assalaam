@@ -51,7 +51,10 @@ class ProjectInvestmentResource extends Resource
                     ->relationship('project', 'name'),
                 Tables\Filters\SelectFilter::make('user_id')
                     ->label('Member')
-                    ->relationship('user', 'name'),
+                    ->relationship('user', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->preload(),
             ])
             ->actions([])
             ->bulkActions([]);

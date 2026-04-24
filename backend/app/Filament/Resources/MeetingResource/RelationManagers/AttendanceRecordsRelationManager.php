@@ -21,8 +21,10 @@ class AttendanceRecordsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
+                    ->label('Member')
                     ->relationship('user', 'name')
-                    ->searchable()
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('status')

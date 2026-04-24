@@ -34,6 +34,7 @@ class UtilityTransactionResource extends Resource
                             ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                             ->searchable(['surname', 'name', 'other_names'])
+                            ->preload()
                             ->required(),
                         Forms\Components\Select::make('type')
                             ->options([

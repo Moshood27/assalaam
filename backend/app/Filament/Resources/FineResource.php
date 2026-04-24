@@ -105,6 +105,12 @@ class FineResource extends Resource
                     ->relationship('meeting', 'name'),
                 Tables\Filters\SelectFilter::make('branch')
                     ->relationship('user.branch', 'name'),
+                Tables\Filters\SelectFilter::make('user_id')
+                    ->label('Member')
+                    ->relationship('user', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\Action::make('markAsPaid')
