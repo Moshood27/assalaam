@@ -47,6 +47,26 @@ class AttendanceRecordsRelationManager extends RelationManager
                 Forms\Components\TextInput::make('lateness_fine_amount')
                     ->numeric()
                     ->prefix('₦'),
+                Forms\Components\Section::make('Excuse Details')
+                    ->schema([
+                        Forms\Components\Select::make('excuse_type')
+                            ->options([
+                                'medical' => 'Medical',
+                                'travel' => 'Travel',
+                                'official' => 'Official',
+                                'other' => 'Other',
+                            ]),
+                        Forms\Components\Textarea::make('excuse_reason')
+                            ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('excuse_proof_path')
+                            ->label('Excuse Proof')
+                            ->disk('public')
+                            ->directory('excuse_proofs')
+                            ->downloadable()
+                            ->openable(),
+                        Forms\Components\DateTimePicker::make('excused_at')
+                            ->readOnly(),
+                    ])->columns(2),
             ]);
     }
 
@@ -74,6 +94,10 @@ class AttendanceRecordsRelationManager extends RelationManager
                         'excused' => 'success',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('excuse_type')
+                    ->label('Type')
+                    ->badge()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('excuse_reason')
                     ->label('Excuse')
                     ->limit(20)

@@ -320,6 +320,33 @@ class UserResource extends Resource
                                         Forms\Components\FileUpload::make('spouse_father_consent_signature_path')->label('Consent Signature')->image()->disk('public_root')->directory('upload'),
                                     ])->columns(2),
 
+                                Forms\Components\Section::make('Pregnancy Grace (Admin Verified)')
+                                    ->schema([
+                                        Forms\Components\Select::make('pregnancy_request_status')
+                                            ->options([
+                                                'pending' => 'Pending Request',
+                                                'approved' => 'Approved',
+                                                'rejected' => 'Rejected',
+                                            ])
+                                            ->label('Request Status'),
+                                        Forms\Components\DateTimePicker::make('pregnancy_grace_until')
+                                            ->label('Grace Period Ends At')
+                                            ->helperText('Approved members are exempt from attendance fines until this date.'),
+                                        Forms\Components\FileUpload::make('pregnancy_proof_path')
+                                            ->label('Medical Proof / Scan')
+                                            ->disk('public')
+                                            ->directory('pregnancy_proofs')
+                                            ->downloadable()
+                                            ->openable()
+                                            ->columnSpanFull(),
+                                        Forms\Components\Toggle::make('is_pregnant')
+                                            ->label('Currently Pregnant (Legacy Toggle)')
+                                            ->helperText('Manual override; ideally use the date above.'),
+                                        Forms\Components\DatePicker::make('baby_birth_date')
+                                            ->label('Baby Birth Date')
+                                            ->helperText('Grace applies for 3 months from this date.'),
+                                    ])->columns(2),
+
                                 Forms\Components\Section::make('Official Use Only')
                                     ->schema([
                                         Forms\Components\TextInput::make('admission_form_number'),
@@ -516,6 +543,13 @@ class UserResource extends Resource
                         'rejected' => 'Rejected',
                     ])
                     ->label('Approval Status'),
+                Tables\Filters\SelectFilter::make('pregnancy_request_status')
+                    ->options([
+                        'pending' => 'Pending Request',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ])
+                    ->label('Pregnancy Request Status'),
                 Tables\Filters\TernaryFilter::make('deceased')
                     ->label('Deceased Status')
                     ->placeholder('All Users')
@@ -906,6 +940,54 @@ class UserResource extends Resource
 
                         Notification::make()
                             ->title('Member Rejected')
+                            ->danger()
+                            ->send();
+                    }),
+                Action::make('approvePregnancyGrace')
+                    ->label('Approve Pregnancy Grace')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (User $record) => $record->pregnancy_request_status === 'pending')
+                    ->requiresConfirmation()
+                    ->action(function (User $record) {
+                        $record->pregnancy_request_status = 'approved';
+                        $record->pregnancy_grace_until = now()->addMonths(3);
+                        $record->save();
+
+                        $record->notifyMember(
+                            "Pregnancy Grace Approved",
+                            "Assalāmu ‘alaykum, your pregnancy grace application has been approved. You are exempt from attendance fines until " . $record->pregnancy_grace_until->toDateString() . ".",
+                            ['type' => 'pregnancy_grace_approved']
+                        );
+
+                        Notification::make()
+                            ->title('Pregnancy Grace Approved')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('rejectPregnancyGrace')
+                    ->label('Reject Pregnancy Grace')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (User $record) => $record->pregnancy_request_status === 'pending')
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Reason')
+                            ->required()
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function (User $record, array $data) {
+                        $record->pregnancy_request_status = 'rejected';
+                        $record->save();
+
+                        $record->notifyMember(
+                            "Pregnancy Grace Application Rejected",
+                            "Your pregnancy grace application was not approved. Reason: " . $data['reason'],
+                            ['type' => 'pregnancy_grace_rejected']
+                        );
+
+                        Notification::make()
+                            ->title('Pregnancy Grace Rejected')
                             ->danger()
                             ->send();
                     }),

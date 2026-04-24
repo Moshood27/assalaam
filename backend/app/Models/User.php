@@ -102,6 +102,9 @@ class User extends Authenticatable implements FilamentUser
         'wellness_check_notified_at',
         'zakat_nisab_crossed_at',
         'zakat_last_paid_at',
+        'pregnancy_request_status',
+        'pregnancy_grace_until',
+        'pregnancy_proof_path',
         'is_pregnant',
         'baby_birth_date',
         // Membership Enrolment Form Fields
@@ -217,6 +220,7 @@ class User extends Authenticatable implements FilamentUser
             'wellness_check_notified_at' => 'datetime',
             'zakat_nisab_crossed_at' => 'datetime',
             'zakat_last_paid_at' => 'datetime',
+            'pregnancy_grace_until' => 'datetime',
             'is_pregnant' => 'boolean',
             'baby_birth_date' => 'date',
             'dob' => 'date',
@@ -730,10 +734,14 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Check if the user is currently in the pregnancy/postpartum grace period.
-     * (Grace period of 3 months after baby birth).
+     * (Grace period of 3 months after baby birth or explicit grace until date).
      */
     public function isInPregnancyGracePeriod(): bool
     {
+        if ($this->pregnancy_grace_until && now()->isBefore($this->pregnancy_grace_until)) {
+            return true;
+        }
+
         if ($this->is_pregnant) {
             return true;
         }

@@ -17,6 +17,8 @@ class MeetingApologyController extends Controller
     {
         $request->validate([
             'reason' => 'required|string|max:1000',
+            'excuse_type' => 'required|string|in:medical,travel,official,other',
+            'proof' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $timezone = config('cooperative.timezone', 'Africa/Lagos');
@@ -42,11 +44,18 @@ class MeetingApologyController extends Controller
             }
         }
 
+        $proofPath = null;
+        if ($request->hasFile('proof')) {
+            $proofPath = $request->file('proof')->store('excuse_proofs', 'public');
+        }
+
         $record = AttendanceRecord::updateOrCreate(
             ['user_id' => $user->id, 'meeting_id' => $meeting->id],
             [
                 'status' => 'pending_excuse',
                 'excuse_reason' => $request->reason,
+                'excuse_type' => $request->excuse_type,
+                'excuse_proof_path' => $proofPath,
                 'excused_at' => now(),
             ]
         );

@@ -108,22 +108,43 @@
             </div>
           </div>
 
-          <!-- Apology Form -->
-          <div v-if="(meeting.status === 'scheduled' || meeting.status === 'ongoing') && !inGracePeriod" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <!-- Apology Form -->
+        <div v-if="canSubmitApology && !inGracePeriod && (!record || record.status === 'absent')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
              <div class="flex items-center gap-2 mb-4">
                <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">📝</div>
                <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Submit Apology</h3>
             </div>
             <p class="text-[11px] text-slate-500 mb-4">If you cannot attend or will be late, provide a reason here before the meeting starts to avoid fines.</p>
             
-            <textarea v-model="reason" placeholder="Enter reason for lateness or absence..." 
-                      class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-medium focus:ring-1 focus:ring-blue-500 min-h-[100px] mb-4"></textarea>
-            
-            <button @click="submitApology" :disabled="submittingApology || !reason" 
-                    class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] disabled:opacity-50 active:scale-95 transition-all">
-              <span v-if="submittingApology" class="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
-              <span v-else>Submit Apology</span>
-            </button>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Excuse Type</label>
+                <select v-model="excuse_type" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-blue-500 transition-all">
+                   <option value="medical">Medical</option>
+                   <option value="travel">Official Travel</option>
+                   <option value="official">Official Duty</option>
+                   <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Reason</label>
+                <textarea v-model="reason" placeholder="Explain your reason..." 
+                          class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-medium focus:ring-1 focus:ring-blue-500 min-h-[80px]"></textarea>
+              </div>
+
+              <div v-if="excuse_type === 'medical' || excuse_type === 'travel'">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Attach Proof (Required for {{ excuse_type }})</label>
+                <input type="file" @change="e => excuse_proof = e.target.files[0]" accept="image/*,application/pdf"
+                       class="w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-blue-500" />
+              </div>
+
+              <button @click="submitApology" :disabled="submittingApology || !reason || ((excuse_type === 'medical' || excuse_type === 'travel') && !excuse_proof)" 
+                      class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] disabled:opacity-50 active:scale-95 transition-all">
+                <span v-if="submittingApology" class="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
+                <span v-else>Submit Apology</span>
+              </button>
+            </div>
           </div>
 
           <!-- Grace Period Info -->
@@ -215,6 +236,8 @@ const history = ref([])
 const loadingHistory = ref(false)
 const pin = ref('')
 const reason = ref('')
+const excuse_type = ref('other')
+const excuse_proof = ref(null)
 const location = ref(null)
 const locating = ref(false)
 const submitting = ref(false)
@@ -222,6 +245,16 @@ const submittingApology = ref(false)
 const timeRemaining = ref('')
 const countdownInterval = ref(null)
 const refreshingStatus = ref(false)
+
+const canSubmitApology = computed(() => {
+  if (!meeting.value) return false
+  if (meeting.value.status !== 'scheduled' && meeting.value.status !== 'ongoing') return false
+  
+  // Strict block: Only allow if now is before meeting start_time
+  const now = new Date()
+  const start = new Date(meeting.value.start_at)
+  return now < start
+})
 
 const formatMoney = (val) => Number(val ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -354,14 +387,22 @@ const submitApology = async () => {
   if (!reason.value) return
   
   submittingApology.value = true
+  const formData = new FormData()
+  formData.append('reason', reason.value)
+  formData.append('excuse_type', excuse_type.value)
+  if (excuse_proof.value) {
+    formData.append('proof', excuse_proof.value)
+  }
+
   try {
-    const res = await axios.post(`/api/meetings/${meeting.value.id}/apology`, {
-      reason: reason.value
+    const res = await axios.post(`/api/meetings/${meeting.value.id}/apology`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
     
     modal.alert(res.data.message || "Apology submitted successfully!")
     record.value = res.data.record
     reason.value = ''
+    excuse_proof.value = null
     fetchHistory()
   } catch (err) {
     modal.alert(err.response?.data?.message || "Failed to submit apology")

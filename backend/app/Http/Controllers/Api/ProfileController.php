@@ -194,6 +194,9 @@ class ProfileController extends Controller
             'marital_status' => $user->marital_status,
             'is_pregnant' => (bool) $user->is_pregnant,
             'baby_birth_date' => $user->baby_birth_date ? $user->baby_birth_date->toDateString() : null,
+            'pregnancy_request_status' => $user->pregnancy_request_status,
+            'pregnancy_grace_until' => $user->pregnancy_grace_until ? $user->pregnancy_grace_until->toDateTimeString() : null,
+            'pregnancy_proof_url' => $user->pregnancy_proof_path ? Storage::disk('public')->url($user->pregnancy_proof_path) : null,
             'is_in_pregnancy_grace' => $user->isInPregnancyGracePeriod(),
             'occupation' => $user->occupation,
             'secondary_phone' => $user->secondary_phone,
@@ -568,21 +571,34 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update member's pregnancy status.
+     * Apply for pregnancy grace.
      */
-    public function updatePregnancyStatus(Request $request)
+    public function applyForPregnancyGrace(Request $request)
     {
+        $user = $request->user();
+
+        if (strtolower($user->gender ?? '') !== 'female') {
+            return response()->json(['message' => 'Only female members can apply for pregnancy grace.'], 403);
+        }
+
         $request->validate([
-            'is_pregnant' => 'required|boolean',
+            'proof' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'baby_birth_date' => 'nullable|date|before_or_equal:today',
         ]);
 
-        $request->user()->update([
-            'is_pregnant' => $request->is_pregnant,
-            'baby_birth_date' => $request->baby_birth_date,
-        ]);
+        if ($request->hasFile('proof')) {
+            $path = $request->file('proof')->store('pregnancy_proofs', 'public');
+            $user->pregnancy_proof_path = $path;
+        }
 
-        return response()->json(['message' => 'Pregnancy status updated successfully']);
+        $user->pregnancy_request_status = 'pending';
+        $user->baby_birth_date = $request->baby_birth_date;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Your application for pregnancy grace has been submitted and is pending review.',
+            'status' => 'pending'
+        ]);
     }
 
     /**

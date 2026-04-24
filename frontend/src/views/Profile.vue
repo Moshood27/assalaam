@@ -61,19 +61,23 @@
           </div>
 
           <!-- Pregnancy/Postpartum Status (Women Only) -->
-          <div v-if="profile.gender === 'female' || !profile.gender" class="p-3.5 rounded-2xl bg-white border border-pink-100 shadow-sm shadow-pink-50 relative overflow-hidden group">
+          <div v-if="profile.gender === 'female'" class="p-3.5 rounded-2xl bg-white border border-pink-100 shadow-sm shadow-pink-50 relative overflow-hidden group">
             <div class="absolute -right-2 -top-2 w-10 h-10 bg-pink-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700" />
             <div class="relative z-10">
               <div class="flex items-center justify-between mb-3">
                 <p class="text-[9px] font-black text-pink-600 uppercase tracking-widest leading-none">Pregnancy / Postpartum Grace</p>
-                <span v-if="profile.is_in_pregnancy_grace" class="px-2 py-0.5 bg-pink-500 text-white text-[8px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-pink-200 animate-pulse">Grace Active</span>
+                <span v-if="profile.is_in_pregnancy_grace" class="px-2 py-0.5 bg-pink-500 text-white text-[8px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-pink-200">Grace Active</span>
+                <span v-else-if="profile.pregnancy_request_status === 'pending'" class="px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-amber-200">Pending Review</span>
               </div>
               
               <div class="flex items-center justify-between gap-4">
                  <div class="flex-1">
-                   <p class="text-[11px] text-slate-500 font-medium leading-tight">Pregnant women and mothers with babies under 3 months are exempt from meeting fines.</p>
+                   <p v-if="profile.is_in_pregnancy_grace" class="text-[11px] text-slate-700 font-bold leading-tight">
+                     You are exempt from meeting fines until {{ new Date(profile.pregnancy_grace_until).toLocaleDateString() }}.
+                   </p>
+                   <p v-else class="text-[11px] text-slate-500 font-medium leading-tight">Pregnant women and mothers with babies under 3 months are exempt from meeting fines. (Admin verified)</p>
                  </div>
-                 <button @click="showPregnancyModal = true" class="px-4 py-2 bg-pink-50 text-pink-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-pink-100 transition-colors">Manage</button>
+                 <button v-if="!profile.is_in_pregnancy_grace && profile.pregnancy_request_status !== 'pending'" @click="showPregnancyModal = true" class="px-4 py-2 bg-pink-50 text-pink-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-pink-100 transition-colors">Apply</button>
               </div>
             </div>
           </div>
@@ -482,36 +486,38 @@
 
     <AppBottomNav />
     
-    <!-- Pregnancy Status Modal -->
+    <!-- Pregnancy Grace Modal -->
     <div v-if="showPregnancyModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
         <div class="flex items-center gap-3 mb-6">
            <div class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm">🤰</div>
            <div>
-             <h3 class="text-xl font-black text-slate-800 tracking-tight">Status Update</h3>
+             <h3 class="text-xl font-black text-slate-800 tracking-tight">Apply for Grace</h3>
              <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Pregnancy & Postpartum</p>
            </div>
         </div>
         
         <div class="space-y-6">
-          <label class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer active:scale-95 transition-all">
-            <input type="checkbox" v-model="pregnancyForm.is_pregnant" class="w-6 h-6 rounded-lg border-2 border-slate-200 text-pink-600 focus:ring-pink-500 transition-all" />
-            <span class="text-sm font-bold text-slate-700">I am currently pregnant</span>
-          </label>
+          <p class="text-xs text-slate-500 leading-relaxed">Please provide a medical document or scan to verify your pregnancy or recent delivery. Approved grace lasts for 3 months.</p>
 
           <div class="space-y-2">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Baby's Birth Date (if born)</label>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Medical Document (PDF/Image)</label>
+            <input type="file" @change="e => pregnancyForm.proof = e.target.files[0]" accept="image/*,application/pdf"
+                   class="w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-pink-500 transition-all" />
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Baby's Birth Date (if applicable)</label>
             <input type="date" v-model="pregnancyForm.baby_birth_date" 
                    class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-pink-500 transition-all" />
-            <p class="text-[10px] text-slate-400 leading-tight">Grace period applies for 3 months after this date.</p>
           </div>
 
           <div class="flex gap-3">
             <button @click="showPregnancyModal = false" class="flex-1 py-4 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
-            <button @click="updatePregnancy" :disabled="pregnancyBusy" 
+            <button @click="applyPregnancyGrace" :disabled="pregnancyBusy || !pregnancyForm.proof" 
                     class="flex-[2] bg-pink-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-pink-100 flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] active:scale-95 transition-all disabled:opacity-50">
               <span v-if="pregnancyBusy" class="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
-              <span v-else>Update Status</span>
+              <span v-else>Submit Application</span>
             </button>
           </div>
         </div>
@@ -617,39 +623,27 @@ const pinErrors = ref({})
 // Pregnancy status state
 const showPregnancyModal = ref(false)
 const pregnancyBusy = ref(false)
-const pregnancyForm = ref({ is_pregnant: false, baby_birth_date: '' })
+const pregnancyForm = ref({ proof: null, baby_birth_date: '' })
 
-watch(profile, (newVal) => {
-  if (newVal) {
-    pregnancyForm.value.is_pregnant = !!newVal.is_pregnant
-    pregnancyForm.value.baby_birth_date = newVal.baby_birth_date || ''
-  }
-}, { immediate: true })
-
-// PIN reset (forgot) state
-const resetBusy = ref(false)
-const resetSentTo = ref('')
-const resetMessage = ref('')
-const resetError = ref(false)
-const resetForm = ref({ code: '', new_pin: '', confirm_pin: '' })
-
-// Notification preferences state
-const notifPrefs = ref({ notify_email: true, notify_sms: true, notify_push: true })
-const notifBusy = ref(false)
-
-const updatePregnancy = async () => {
+const applyPregnancyGrace = async () => {
+  if (!pregnancyForm.value.proof) return
   pregnancyBusy.value = true
+  const formData = new FormData()
+  formData.append('proof', pregnancyForm.value.proof)
+  if (pregnancyForm.value.baby_birth_date) {
+    formData.append('baby_birth_date', pregnancyForm.value.baby_birth_date)
+  }
+
   try {
-    await axios.post('/api/profile/pregnancy-status', pregnancyForm.value)
-    profile.value.is_pregnant = pregnancyForm.value.is_pregnant
-    profile.value.baby_birth_date = pregnancyForm.value.baby_birth_date
-    // Re-fetch profile or calculate grace locally
+    await axios.post('/api/profile/apply-pregnancy-grace', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
     const { data } = await axios.get('/api/profile')
     profile.value = data
     showPregnancyModal.value = false
-    alert('Pregnancy status updated successfully.')
+    alert('Application submitted successfully and is pending review.')
   } catch (err) {
-    alert(err?.response?.data?.message || 'Failed to update pregnancy status.')
+    alert(err?.response?.data?.message || 'Failed to submit application.')
   } finally {
     pregnancyBusy.value = false
   }

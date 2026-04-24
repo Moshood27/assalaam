@@ -22,6 +22,8 @@ class AttendanceRecord extends Model
         'lateness_fine_paid',
         'lateness_fine_amount',
         'excuse_reason',
+        'excuse_type',
+        'excuse_proof_path',
         'excused_at',
     ];
 
@@ -32,6 +34,8 @@ class AttendanceRecord extends Model
         'lng' => 'decimal:8',
         'lateness_fine_paid' => 'boolean',
         'lateness_fine_amount' => 'decimal:2',
+        'excuse_type' => 'string',
+        'excuse_proof_path' => 'string',
         'excused_at' => 'datetime',
     ];
 
