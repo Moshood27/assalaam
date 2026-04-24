@@ -2,6 +2,13 @@
   <div class="min-h-screen pb-28 overflow-x-hidden bg-slate-50">
     <AppHeader :user="dashboardData" :showSettings="true" />
 
+    <!-- Global System Announcement -->
+    <div v-if="appStatusStore.systemAnnouncement" 
+         class="bg-emerald-600 text-white px-4 py-3 text-center text-xs font-bold flex items-center justify-center gap-3 shadow-md animate-in fade-in slide-in-from-top duration-500">
+      <span class="i-mdi-bullhorn-variant text-lg shrink-0"></span>
+      <p class="leading-tight">{{ appStatusStore.systemAnnouncement }}</p>
+    </div>
+
     <div class="p-4">
       <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
@@ -339,6 +346,7 @@
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import { ref, onMounted, computed } from 'vue'
+import { useAppStatusStore } from '../stores/appStatus'
 import axios from '../http'
 import getImageUrl from '../utils/image'
 import { useModal } from '../composables/useModal'
@@ -352,6 +360,7 @@ import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 
 const modal = useModal()
 const { notice, showNotice, closeNotice } = useNotice()
+const appStatusStore = useAppStatusStore()
 
 const currency = '₦'
 const dashboardData = ref({})

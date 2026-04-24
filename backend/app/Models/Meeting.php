@@ -42,6 +42,47 @@ class Meeting extends Model
         'reminder_sent_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::created(function ($meeting) {
+            if ($meeting->status === 'scheduled') {
+                $meeting->notifyMembers(
+                    "📅 New Meeting Scheduled: {$meeting->name}",
+                    "A new meeting has been scheduled for " . $meeting->date->format('M d, Y') . " at " . $meeting->start_time . ".",
+                    ['type' => 'meeting_scheduled']
+                );
+            } elseif ($meeting->status === 'ongoing') {
+                $meeting->notifyMembers(
+                    "⏰ Meeting Time: {$meeting->name}",
+                    "The meeting is starting now. Please join or mark your attendance.",
+                    ['type' => 'meeting_ongoing']
+                );
+            }
+        });
+
+        static::updated(function ($meeting) {
+            // Handle manual status changes that might not be caught by commands
+            if ($meeting->isDirty('status')) {
+                $oldStatus = $meeting->getOriginal('status');
+                $newStatus = $meeting->status;
+
+                if ($oldStatus !== 'ongoing' && $newStatus === 'ongoing') {
+                    $meeting->notifyMembers(
+                        "⏰ Meeting Time: {$meeting->name}",
+                        "The meeting is starting now. Please join or mark your attendance.",
+                        ['type' => 'meeting_ongoing']
+                    );
+                } elseif ($oldStatus !== 'audited' && $newStatus === 'audited') {
+                    $meeting->notifyMembers(
+                        "✅ Meeting Audited: {$meeting->name}",
+                        "The attendance for '{$meeting->name}' has been audited. You can check your status in the app.",
+                        ['type' => 'meeting_audited']
+                    );
+                }
+            }
+        });
+    }
+
     public function getStartAtAttribute()
     {
         $timezone = config('cooperative.timezone', 'Africa/Lagos');

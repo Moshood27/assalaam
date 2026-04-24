@@ -44,10 +44,19 @@ class AuditAttendanceCommand extends Command
 
         foreach ($meetings as $meeting) {
             // Use atomic update to prevent concurrent auditing if multiple instances are running
-            // We include both 'completed' and 'ongoing' as valid statuses to claim
-            $claimed = Meeting::where('id', $meeting->id)
-                ->whereIn('status', ['completed', 'ongoing'])
-                ->update(['status' => 'audited']); // We mark as audited immediately to claim it
+            // We use a transaction with lockForUpdate to trigger Eloquent events (for notifications)
+            $claimed = DB::transaction(function () use ($meeting) {
+                $m = Meeting::where('id', $meeting->id)
+                    ->whereIn('status', ['completed', 'ongoing'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($m) {
+                    $m->update(['status' => 'audited']);
+                    return true;
+                }
+                return false;
+            });
 
             if (!$claimed) {
                 continue;

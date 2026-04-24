@@ -174,6 +174,7 @@ import { ref, onMounted } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http.js'
+import {useRoute} from "vue-router";
 
 const route = useRoute()
 const project = ref(null)

@@ -1,1 +1,0 @@
-import{c as e}from"./index-BBsEzTxJ.js";export{e as SplashScreen};

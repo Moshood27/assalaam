@@ -52,16 +52,7 @@ class UpdateMeetingStatusesCommand extends Command
         foreach ($meetingsToOngoing as $meeting) {
             $meeting->update(['status' => 'ongoing']);
 
-            // Notify members that it's time for the meeting
-            // Note: This could be slow if there are many members.
-            // Ideally this should be queued, but for now we just make sure it's after completions.
-            $meeting->notifyMembers(
-                "⏰ Meeting Time: {$meeting->name}",
-                "The meeting is starting now. Please join or mark your attendance.",
-                ['type' => 'meeting_ongoing']
-            );
-
-            $this->info("Marked meeting '{$meeting->name}' as ongoing and notified members.");
+            $this->info("Marked meeting '{$meeting->name}' as ongoing.");
         }
     }
 }

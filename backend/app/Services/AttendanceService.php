@@ -84,6 +84,20 @@ class AttendanceService
                 $lockedUser->increment('outstanding_fines', $amount);
             }
 
+            // Notify user about lateness fine
+            $lockedUser->notifyMember(
+                "⚠️ Lateness Fine: {$meeting->name}",
+                $isPaid
+                    ? "A lateness fine of " . number_format($amount, 2) . " has been deducted from your balance for meeting: {$meeting->name}."
+                    : "A lateness fine of " . number_format($amount, 2) . " has been added to your outstanding fines for meeting: {$meeting->name}. Please settle it as soon as possible.",
+                [
+                    'type' => 'lateness_fine',
+                    'meeting_id' => (string) $meeting->id,
+                    'amount' => (string) $amount,
+                    'is_paid' => $isPaid ? 'true' : 'false'
+                ]
+            );
+
             // Update or create record with lateness info
             if ($record) {
                 $record->update([
@@ -153,6 +167,21 @@ class AttendanceService
                 // Not enough balance, add to outstanding fines
                 $lockedUser->increment('outstanding_fines', $amount);
             }
+
+            // Notify user about absence fine
+            $isPaid = ($status === 'fine_paid');
+            $lockedUser->notifyMember(
+                "⚠️ Absence Fine: {$meeting->name}",
+                $isPaid
+                    ? "An absence fine of " . number_format($amount, 2) . " has been deducted from your balance for meeting: {$meeting->name}."
+                    : "An absence fine of " . number_format($amount, 2) . " has been added to your outstanding fines for meeting: {$meeting->name}. Please settle it as soon as possible.",
+                [
+                    'type' => 'absence_fine',
+                    'meeting_id' => (string) $meeting->id,
+                    'amount' => (string) $amount,
+                    'is_paid' => $isPaid ? 'true' : 'false'
+                ]
+            );
 
             if ($record) {
                 $record->update([
