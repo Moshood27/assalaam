@@ -105,7 +105,9 @@ class AttendanceExcuseResource extends Resource
                     ->color('danger')
                     ->visible(fn ($record) => $record->status === 'pending_excuse')
                     ->form([
-                        Forms\Components\Textarea::make('reason')->required(),
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Rejection Reason')
+                            ->required(),
                     ])
                     ->requiresConfirmation()
                     ->action(function ($record, array $data) {
@@ -121,6 +123,20 @@ class AttendanceExcuseResource extends Resource
                     }),
                 Tables\Actions\ViewAction::make()
                     ->form([
+                        Forms\Components\TextInput::make('user.full_name')
+                            ->label('Member')
+                            ->disabled()
+                            ->formatStateUsing(fn ($record) => $record->user?->full_name),
+                        Forms\Components\TextInput::make('meeting.name')
+                            ->label('Meeting')
+                            ->disabled(),
+                        Forms\Components\TextInput::make('excuse_type')
+                            ->label('Excuse Type')
+                            ->disabled(),
+                        Forms\Components\Textarea::make('excuse_reason')
+                            ->label('Reason')
+                            ->disabled()
+                            ->rows(4),
                         Forms\Components\FileUpload::make('excuse_proof_path')
                             ->label('Proof Attachment')
                             ->disk('public')

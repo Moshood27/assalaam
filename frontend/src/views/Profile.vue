@@ -625,6 +625,17 @@ const showPregnancyModal = ref(false)
 const pregnancyBusy = ref(false)
 const pregnancyForm = ref({ proof: null, baby_birth_date: '' })
 
+// Notification Preferences state
+const notifPrefs = ref({ notify_email: false, notify_sms: false, notify_push: false })
+const notifBusy = ref(false)
+
+// PIN Reset state
+const resetForm = ref({ code: '', new_pin: '', confirm_pin: '' })
+const resetBusy = ref(false)
+const resetError = ref(false)
+const resetMessage = ref('')
+const resetSentTo = ref('')
+
 const applyPregnancyGrace = async () => {
   if (!pregnancyForm.value.proof) return
   pregnancyBusy.value = true
