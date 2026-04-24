@@ -9,7 +9,7 @@
           <button v-else-if="user" @click="router.push('/profile')" class="flex items-center gap-3 min-w-0 group" aria-label="View profile">
             <div class="w-10 h-10 rounded-full overflow-hidden bg-emerald-50 flex items-center justify-center text-emerald-700 font-bold text-xl shrink-0 shadow-sm group-active:scale-95 transition-transform border border-emerald-600/20">
               <img v-if="user && user.passport_url" :src="getImageUrl(user.passport_url)" alt="Profile" class="w-10 h-10 object-cover" />
-              <img v-else :src="brand.logo" alt="Logo" class="w-6 h-6 object-contain opacity-80" />
+              <span v-else class="i-mdi-account text-2xl text-emerald-600/50"></span>
             </div>
             <div class="text-left min-w-0">
               <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none mb-1 opacity-80">Welcome back,</p>
@@ -20,7 +20,6 @@
       </div>
 
       <div class="absolute left-1/2 -translate-x-1/2 pointer-events-none text-center px-4 w-1/2 flex items-center justify-center gap-2">
-        <img :src="brand.logo" class="h-6 sm:h-7 w-auto object-contain" :alt="brand.name" />
         <h1 v-if="title" class="text-sm sm:text-base font-bold text-slate-800 truncate">{{ title }}</h1>
         <slot name="center"></slot>
       </div>
@@ -40,7 +39,6 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import getImageUrl from '../utils/image'
-import brand from '../brand'
 
 const router = useRouter()
 
