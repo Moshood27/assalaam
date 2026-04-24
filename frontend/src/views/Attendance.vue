@@ -49,10 +49,24 @@
         </div>
 
         <!-- Excused -->
-        <div v-else-if="record && record.status === 'excused'" class="bg-blue-600 p-8 rounded-[2.5rem] text-center shadow-xl shadow-blue-100 text-white">
-          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">🙏</div>
-          <h3 class="text-xl font-black uppercase tracking-tight">Apology Submitted</h3>
-          <p class="text-blue-50 text-xs mt-2 font-medium">Your apology for this meeting was submitted on {{ formatTime(record.excused_at) }}. You will not be charged.</p>
+        <div v-else-if="record && (record.status === 'excused' || record.status === 'pending_excuse')" :class="[
+          'p-8 rounded-[2.5rem] text-center shadow-xl text-white',
+          record.status === 'excused' ? 'bg-blue-600 shadow-blue-100' : 'bg-slate-600 shadow-slate-100'
+        ]">
+          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">
+            {{ record.status === 'excused' ? '🙏' : '⏳' }}
+          </div>
+          <h3 class="text-xl font-black uppercase tracking-tight">
+            {{ record.status === 'excused' ? 'Apology Approved' : 'Apology Pending' }}
+          </h3>
+          <p class="text-white/80 text-xs mt-2 font-medium">
+            <template v-if="record.status === 'excused'">
+              Your apology for this meeting was approved on {{ formatTime(record.excused_at) }}. You will not be charged.
+            </template>
+            <template v-else>
+              Your apology has been submitted and is awaiting admin approval. You will not be charged automatically for now.
+            </template>
+          </p>
         </div>
 
 
@@ -95,7 +109,7 @@
           </div>
 
           <!-- Apology Form -->
-          <div v-if="meeting.status === 'scheduled' || meeting.status === 'ongoing'" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+          <div v-if="(meeting.status === 'scheduled' || meeting.status === 'ongoing') && !inGracePeriod" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
              <div class="flex items-center gap-2 mb-4">
                <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">📝</div>
                <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Submit Apology</h3>
@@ -110,6 +124,15 @@
               <span v-if="submittingApology" class="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
               <span v-else>Submit Apology</span>
             </button>
+          </div>
+
+          <!-- Grace Period Info -->
+          <div v-if="inGracePeriod && !record" class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 flex items-start gap-4">
+            <div class="text-2xl">🍼</div>
+            <div>
+              <h4 class="text-xs font-black text-emerald-800 uppercase tracking-tight">Automatic Grace Period</h4>
+              <p class="text-[10px] text-emerald-600 font-medium mt-1">You are currently in the 3-month pregnancy/postpartum grace period. You will not be charged for absence or lateness in this meeting.</p>
+            </div>
           </div>
         </div>
 
@@ -131,9 +154,12 @@
                  'w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm',
                  item.status === 'present' ? 'bg-emerald-50 text-emerald-600' : 
                  item.status === 'fine_paid' ? 'bg-orange-50 text-orange-600' :
+                 item.status === 'excused' ? 'bg-blue-50 text-blue-600' :
+                 item.status === 'pending_excuse' ? 'bg-slate-50 text-slate-600' :
                  item.status === 'fine_pending' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-400'
                ]">
-                 {{ item.status === 'present' ? '✅' : item.status === 'fine_paid' ? '💰' : '❌' }}
+                 {{ item.status === 'present' ? '✅' : item.status === 'fine_paid' ? '💰' : 
+                    item.status === 'excused' ? '🙏' : item.status === 'pending_excuse' ? '⏳' : '❌' }}
                </div>
                
                <div class="flex-1 min-w-0">
@@ -149,7 +175,9 @@
                   <p :class="[
                     'text-[10px] font-black uppercase tracking-tight',
                     item.status === 'present' ? 'text-emerald-600' : 
-                    item.status === 'fine_paid' ? 'text-orange-600' : 'text-red-600'
+                    item.status === 'fine_paid' ? 'text-orange-600' : 
+                    item.status === 'excused' ? 'text-blue-600' :
+                    item.status === 'pending_excuse' ? 'text-slate-600' : 'text-red-600'
                   ]">
                     {{ item.status.replace('_', ' ') }}
                   </p>
@@ -182,6 +210,7 @@ const modal = useModal()
 const loading = ref(true)
 const meeting = ref(null)
 const record = ref(null)
+const inGracePeriod = ref(false)
 const history = ref([])
 const loadingHistory = ref(false)
 const pin = ref('')
@@ -240,6 +269,7 @@ const fetchCurrentMeeting = async () => {
     const res = await axios.get('/api/attendance/current')
     meeting.value = res.data.meeting
     record.value = res.data.attendance_record
+    inGracePeriod.value = res.data.in_grace_period
     
     // Auto-request location if meeting is ongoing and attendance not marked
     if (meeting.value && meeting.value.status === 'ongoing' && (!record.value || record.value.status !== 'present')) {

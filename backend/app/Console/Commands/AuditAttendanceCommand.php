@@ -83,9 +83,9 @@ class AuditAttendanceCommand extends Command
                     ->where('user_id', $user->id)
                     ->first();
 
-                // If record exists and is 'excused', skip fine
-                if ($record && $record->status === 'excused') {
-                    $this->line("Skipping User (Excused): {$user->full_name} (ID: {$user->id})");
+                // If record exists and is 'excused' or 'pending_excuse', skip fine
+                if ($record && in_array($record->status, ['excused', 'pending_excuse'])) {
+                    $this->line("Skipping User (Excused/Pending): {$user->full_name} (ID: {$user->id})");
                     continue;
                 }
 

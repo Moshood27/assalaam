@@ -69,6 +69,7 @@ class AttendanceController extends Controller
         return response()->json([
             'meeting' => $meeting,
             'attendance_record' => $record,
+            'in_grace_period' => $user->isInPregnancyGracePeriod(),
         ]);
     }
 
@@ -153,6 +154,13 @@ class AttendanceController extends Controller
 
         $user = $request->user();
 
+        // Check for existing record to see if they were already excused or pending
+        $existingRecord = AttendanceRecord::where('user_id', $user->id)
+            ->where('meeting_id', $meeting->id)
+            ->first();
+
+        $isExempt = $user->isInPregnancyGracePeriod() || ($existingRecord && in_array($existingRecord->status, ['excused', 'pending_excuse']));
+
         // One Person, One Vote: Check if this phone has already been used by someone else for THIS meeting
         $alreadyUsed = AttendanceRecord::where('meeting_id', $meeting->id)
             ->where('device_uuid', $request->device_uuid)
@@ -178,8 +186,8 @@ class AttendanceController extends Controller
 
         $message = 'Attendance marked successfully';
         if ($this->attendanceService->isLate($meeting, $record->attended_at)) {
-            // Check if user is exempt from fines (pregnancy grace or excused)
-            if ($user->isInPregnancyGracePeriod() || $record->status === 'excused') {
+            // Check if user is exempt from fines (pregnancy grace or excused/pending)
+            if ($isExempt) {
                 $message .= '. You were late, but no fine was charged due to your status.';
             } else {
                 $this->attendanceService->chargeLatenessFine($user, $meeting);

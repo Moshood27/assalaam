@@ -45,14 +45,14 @@ class MeetingApologyController extends Controller
         $record = AttendanceRecord::updateOrCreate(
             ['user_id' => $user->id, 'meeting_id' => $meeting->id],
             [
-                'status' => 'excused',
+                'status' => 'pending_excuse',
                 'excuse_reason' => $request->reason,
                 'excused_at' => now(),
             ]
         );
 
         return response()->json([
-            'message' => 'Your apology has been submitted and you will not be charged for absence or lateness in this meeting.',
+            'message' => 'Your apology has been submitted and is pending admin approval.',
             'record' => $record
         ]);
     }

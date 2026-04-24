@@ -41,6 +41,15 @@ class AttendanceService
             return;
         }
 
+        // Skip if user is in pregnancy grace period or has an approved/pending excuse
+        if ($user->isInPregnancyGracePeriod()) {
+            return;
+        }
+
+        if ($record && in_array($record->status, ['excused', 'pending_excuse'])) {
+            return;
+        }
+
         $amount = !is_null($amount) ? $amount : (float) ($meeting->apology_fine_amount ?? config('cooperative.attendance.apology_fine', 100.00));
         if ($amount <= 0) return;
 
@@ -122,6 +131,15 @@ class AttendanceService
      */
     public function chargeAbsenceFine(User $user, Meeting $meeting, AttendanceRecord $record = null): void
     {
+        // Skip if user is in pregnancy grace period or has an approved/pending excuse
+        if ($user->isInPregnancyGracePeriod()) {
+            return;
+        }
+
+        if ($record && in_array($record->status, ['excused', 'pending_excuse'])) {
+            return;
+        }
+
         $amount = (float) ($meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
         if ($amount <= 0) return;
 

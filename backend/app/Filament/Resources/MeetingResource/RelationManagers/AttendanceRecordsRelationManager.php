@@ -33,6 +33,8 @@ class AttendanceRecordsRelationManager extends RelationManager
                         'absent' => 'Absent',
                         'fine_paid' => 'Fine Paid',
                         'fine_pending' => 'Fine Pending',
+                        'pending_excuse' => 'Pending Excuse',
+                        'excused' => 'Excused',
                     ])
                     ->required(),
                 Forms\Components\DateTimePicker::make('attended_at'),
@@ -68,8 +70,14 @@ class AttendanceRecordsRelationManager extends RelationManager
                         'absent' => 'danger',
                         'fine_paid' => 'warning',
                         'fine_pending' => 'danger',
+                        'pending_excuse' => 'warning',
+                        'excused' => 'success',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('excuse_reason')
+                    ->label('Excuse')
+                    ->limit(20)
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('attended_at')
                     ->dateTime()
                     ->sortable(),
@@ -94,6 +102,8 @@ class AttendanceRecordsRelationManager extends RelationManager
                         'absent' => 'Absent',
                         'fine_paid' => 'Fine Paid',
                         'fine_pending' => 'Fine Pending',
+                        'pending_excuse' => 'Pending Excuse',
+                        'excused' => 'Excused',
                     ]),
             ])
             ->headerActions([
@@ -137,17 +147,79 @@ class AttendanceRecordsRelationManager extends RelationManager
                     })
             ])
             ->actions([
+                Tables\Actions\Action::make('approveExcuse')
+                    ->label('Approve Excuse')
+                    ->icon('heroicon-m-check-badge')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->status === 'pending_excuse')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update([
+                            'status' => 'excused',
+                            'excused_at' => now(),
+                        ]);
+
+                        $record->user->notifyMember(
+                            "🙏 Excuse Approved",
+                            "Your excuse for meeting '{$record->meeting->name}' has been approved. You will not be charged any fine.",
+                            [
+                                'type' => 'excuse_approved',
+                                'meeting_id' => (string) $record->meeting_id,
+                            ]
+                        );
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Excuse approved for ' . $record->user->full_name)
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('rejectExcuse')
+                    ->label('Reject Excuse')
+                    ->icon('heroicon-m-x-circle')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->status === 'pending_excuse')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update([
+                            'status' => 'absent',
+                        ]);
+
+                        $record->user->notifyMember(
+                            "❌ Excuse Rejected",
+                            "Your excuse for meeting '{$record->meeting->name}' was not approved. You may be charged an absence fine if the meeting is audited.",
+                            [
+                                'type' => 'excuse_rejected',
+                                'meeting_id' => (string) $record->meeting_id,
+                            ]
+                        );
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Excuse rejected for ' . $record->user->full_name)
+                            ->danger()
+                            ->send();
+
+                        // Note: Fines will be charged next time audit runs,
+                        // or admin can manually trigger audit.
+                    }),
                 Tables\Actions\EditAction::make()
                     ->after(function (AttendanceRecord $record, array $data, AttendanceRecord $oldRecord) {
-                        // Handle Absense Fine status change
+                        // Handle Absence Fine status change
                         $oldStatus = $oldRecord->status;
                         $newStatus = $record->status;
                         $fineAmount = (float)($record->meeting->fine_amount ?? config('cooperative.attendance.default_fine', 500));
 
-                        if ($oldStatus === 'fine_pending' && ($newStatus === 'fine_paid' || $newStatus === 'present')) {
+                        if ($oldStatus === 'fine_pending' && in_array($newStatus, ['fine_paid', 'present', 'excused'])) {
                             $record->user->decrement('outstanding_fines', $fineAmount);
-                        } elseif (($oldStatus === 'absent' || is_null($oldStatus)) && $newStatus === 'fine_pending') {
+                        } elseif (in_array($oldStatus, ['absent', null]) && $newStatus === 'fine_pending') {
                             $record->user->increment('outstanding_fines', $fineAmount);
+                        }
+
+                        // If manually excused, also handle lateness fine waiving if it was pending
+                        if ($newStatus === 'excused' && $oldStatus !== 'excused') {
+                            if ($record->lateness_fine_paid === false && (float)$record->lateness_fine_amount > 0) {
+                                $record->user->decrement('outstanding_fines', (float)$record->lateness_fine_amount);
+                                $record->update(['lateness_fine_paid' => true]);
+                            }
                         }
 
                         // Handle Lateness Fine change
