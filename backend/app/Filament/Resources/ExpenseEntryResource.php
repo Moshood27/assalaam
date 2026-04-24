@@ -101,8 +101,8 @@ class ExpenseEntryResource extends Resource
                             }),
                         Forms\Components\Select::make('member_id')
                             ->label('Member')
-                            ->relationship('member', 'surname', fn (Builder $query) => $query->selectRaw("id, CONCAT(surname, ' ', name, ' (', membership_number, ')') as full_name"))
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->surname} {$record->name} ({$record->membership_number})")
+                            ->relationship('member', 'name')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name . " ({$record->membership_number})")
                             ->searchable(['surname', 'name', 'membership_number'])
                             ->preload()
                             ->live()

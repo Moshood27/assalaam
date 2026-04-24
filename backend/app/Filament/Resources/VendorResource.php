@@ -35,7 +35,7 @@ class VendorResource extends Resource
                             ->maxLength(255),
                         Forms\Components\Select::make('owner_user_id')
                             ->label('Owner')
-                            ->relationship('owner', 'surname')
+                            ->relationship('owner', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                             ->searchable(['surname', 'name', 'other_names'])
                             ->preload()
