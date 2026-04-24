@@ -26,9 +26,12 @@ class ProjectProposalResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
+                    ->label('Proposer')
                     ->relationship('user', 'name')
-                    ->required()
-                    ->searchable(),
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->preload()
+                    ->required(),
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),

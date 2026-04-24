@@ -102,6 +102,8 @@ class User extends Authenticatable implements FilamentUser
         'wellness_check_notified_at',
         'zakat_nisab_crossed_at',
         'zakat_last_paid_at',
+        'is_pregnant',
+        'baby_birth_date',
         // Membership Enrolment Form Fields
         'surname',
         'other_names',
@@ -215,6 +217,8 @@ class User extends Authenticatable implements FilamentUser
             'wellness_check_notified_at' => 'datetime',
             'zakat_nisab_crossed_at' => 'datetime',
             'zakat_last_paid_at' => 'datetime',
+            'is_pregnant' => 'boolean',
+            'baby_birth_date' => 'date',
             'dob' => 'date',
             'admission_date' => 'date',
             'has_other_cooperatives' => 'boolean',
@@ -722,5 +726,23 @@ class User extends Authenticatable implements FilamentUser
 
             $this->forceFill([$column => $actualTotal])->save();
         }
+    }
+
+    /**
+     * Check if the user is currently in the pregnancy/postpartum grace period.
+     * (Grace period of 3 months after baby birth).
+     */
+    public function isInPregnancyGracePeriod(): bool
+    {
+        if ($this->is_pregnant) {
+            return true;
+        }
+
+        if ($this->baby_birth_date) {
+            $threeMonthsAfterBirth = $this->baby_birth_date->copy()->addMonths(3);
+            return now()->isBefore($threeMonthsAfterBirth);
+        }
+
+        return false;
     }
 }

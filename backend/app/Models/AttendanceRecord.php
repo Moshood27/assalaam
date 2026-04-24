@@ -21,6 +21,8 @@ class AttendanceRecord extends Model
         'fine_paid_at',
         'lateness_fine_paid',
         'lateness_fine_amount',
+        'excuse_reason',
+        'excused_at',
     ];
 
     protected $casts = [
@@ -30,6 +32,7 @@ class AttendanceRecord extends Model
         'lng' => 'decimal:8',
         'lateness_fine_paid' => 'boolean',
         'lateness_fine_amount' => 'decimal:2',
+        'excused_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

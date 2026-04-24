@@ -196,6 +196,9 @@ class ProfileController extends Controller
             'native_place' => $user->native_place,
             'dob' => $user->dob ? $user->dob->toDateString() : null,
             'marital_status' => $user->marital_status,
+            'is_pregnant' => (bool) $user->is_pregnant,
+            'baby_birth_date' => $user->baby_birth_date ? $user->baby_birth_date->toDateString() : null,
+            'is_in_pregnancy_grace' => $user->isInPregnancyGracePeriod(),
             'occupation' => $user->occupation,
             'secondary_phone' => $user->secondary_phone,
             'residential_address' => $user->residential_address,
@@ -590,6 +593,24 @@ class ProfileController extends Controller
             'message' => 'Administrative charge preference updated successfully.',
             'admin_charge_auto_deduct' => (bool) $user->admin_charge_auto_deduct,
         ]);
+    }
+
+    /**
+     * Update member's pregnancy status.
+     */
+    public function updatePregnancyStatus(Request $request)
+    {
+        $request->validate([
+            'is_pregnant' => 'required|boolean',
+            'baby_birth_date' => 'nullable|date|before_or_equal:today',
+        ]);
+
+        $request->user()->update([
+            'is_pregnant' => $request->is_pregnant,
+            'baby_birth_date' => $request->baby_birth_date,
+        ]);
+
+        return response()->json(['message' => 'Pregnancy status updated successfully']);
     }
 
     /**

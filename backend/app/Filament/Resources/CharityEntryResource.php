@@ -41,9 +41,10 @@ class CharityEntryResource extends Resource
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->relationship('user', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
-                    ->searchable(['surname', 'name', 'other_names'])
-                    ->placeholder('General / Anonymous if null'),
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                            ->searchable(['surname', 'name', 'other_names'])
+                            ->preload()
+                            ->placeholder('General / Anonymous if null'),
                 Forms\Components\TextInput::make('source')
                     ->required()
                     ->placeholder('e.g. Loan Penalties, Non-Shariah Profit, Direct Donation'),
@@ -128,10 +129,11 @@ class CharityEntryResource extends Resource
                             ->label('Recipient Member (Optional)')
                             ->relationship('user', 'name', function (Builder $query) {
                                 return $query->orderByRaw("EXISTS (SELECT 1 FROM user_badges WHERE user_badges.user_id = users.id AND badge_type = 'zakat_needy') DESC")
-                                             ->orderBy('name');
+                                             ->orderBy('surname');
                             })
-                            ->getOptionLabelFromRecordUsing(fn (User $record) => $record->name . ($record->badges()->where('badge_type', 'zakat_needy')->exists() ? ' ⭐ (Zakat Eligible)' : ''))
-                            ->searchable()
+                            ->getOptionLabelFromRecordUsing(fn (User $record) => $record->full_name . ($record->badges()->where('badge_type', 'zakat_needy')->exists() ? ' ⭐ (Zakat Eligible)' : ''))
+                            ->searchable(['surname', 'name', 'other_names'])
+                            ->preload()
                             ->helperText('Select the member receiving this disbursement. Starred members are verified Zakat eligible.'),
                         Select::make('source')
                             ->options([

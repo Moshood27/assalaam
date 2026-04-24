@@ -48,6 +48,13 @@
           <p class="text-emerald-50 text-xs mt-2 font-medium">You successfully marked your attendance at {{ formatTime(record.attended_at) }}.</p>
         </div>
 
+        <!-- Excused -->
+        <div v-else-if="record && record.status === 'excused'" class="bg-blue-600 p-8 rounded-[2.5rem] text-center shadow-xl shadow-blue-100 text-white">
+          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">🙏</div>
+          <h3 class="text-xl font-black uppercase tracking-tight">Apology Submitted</h3>
+          <p class="text-blue-50 text-xs mt-2 font-medium">Your apology for this meeting was submitted on {{ formatTime(record.excused_at) }}. You will not be charged.</p>
+        </div>
+
 
         <!-- Mark Attendance Form -->
         <div v-else class="space-y-4">
@@ -85,6 +92,24 @@
                 <span v-else>📍 Mark Attendance</span>
               </button>
             </div>
+          </div>
+
+          <!-- Apology Form -->
+          <div v-if="meeting.status === 'scheduled' || meeting.status === 'ongoing'" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+             <div class="flex items-center gap-2 mb-4">
+               <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">📝</div>
+               <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Submit Apology</h3>
+            </div>
+            <p class="text-[11px] text-slate-500 mb-4">If you cannot attend or will be late, provide a reason here before the meeting starts to avoid fines.</p>
+            
+            <textarea v-model="reason" placeholder="Enter reason for lateness or absence..." 
+                      class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-medium focus:ring-1 focus:ring-blue-500 min-h-[100px] mb-4"></textarea>
+            
+            <button @click="submitApology" :disabled="submittingApology || !reason" 
+                    class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] disabled:opacity-50 active:scale-95 transition-all">
+              <span v-if="submittingApology" class="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
+              <span v-else>Submit Apology</span>
+            </button>
           </div>
         </div>
 
@@ -160,9 +185,11 @@ const record = ref(null)
 const history = ref([])
 const loadingHistory = ref(false)
 const pin = ref('')
+const reason = ref('')
 const location = ref(null)
 const locating = ref(false)
 const submitting = ref(false)
+const submittingApology = ref(false)
 const timeRemaining = ref('')
 const countdownInterval = ref(null)
 const refreshingStatus = ref(false)
@@ -290,6 +317,26 @@ const submitAttendance = async () => {
     modal.alert(err.response?.data?.message || "Failed to mark attendance")
   } finally {
     submitting.value = false
+  }
+}
+
+const submitApology = async () => {
+  if (!reason.value) return
+  
+  submittingApology.value = true
+  try {
+    const res = await axios.post(`/api/meetings/${meeting.value.id}/apology`, {
+      reason: reason.value
+    })
+    
+    modal.alert(res.data.message || "Apology submitted successfully!")
+    record.value = res.data.record
+    reason.value = ''
+    fetchHistory()
+  } catch (err) {
+    modal.alert(err.response?.data?.message || "Failed to submit apology")
+  } finally {
+    submittingApology.value = false
   }
 }
 

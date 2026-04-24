@@ -73,9 +73,21 @@ class AuditAttendanceCommand extends Command
             $users = $query->get();
 
             foreach ($users as $user) {
+                // Skip pregnant women and women with babies under 3 months
+                if ($user->isInPregnancyGracePeriod()) {
+                    $this->line("Skipping User (Pregnancy/Postpartum Grace): {$user->full_name} (ID: {$user->id})");
+                    continue;
+                }
+
                 $record = AttendanceRecord::where('meeting_id', $meeting->id)
                     ->where('user_id', $user->id)
                     ->first();
+
+                // If record exists and is 'excused', skip fine
+                if ($record && $record->status === 'excused') {
+                    $this->line("Skipping User (Excused): {$user->full_name} (ID: {$user->id})");
+                    continue;
+                }
 
                 // If no record, or status is still 'absent', charge fine
                 // Possible statuses are 'present', 'fine_paid', 'fine_pending', or 'absent'

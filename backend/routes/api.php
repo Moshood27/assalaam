@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\ScoreController;
 use App\Http\Controllers\Api\GoldController;
 use App\Http\Controllers\Api\SavingsGroupController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\MeetingApologyController;
 
 Route::get('/health', function () {
     return response()
@@ -131,6 +132,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::post('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences']);
     Route::post('/profile/admin-charge-preference', [ProfileController::class, 'updateAdminChargePreference']);
+    Route::post('/profile/pregnancy-status', [ProfileController::class, 'updatePregnancyStatus']);
     Route::post('/profile/verify-migration', [ProfileController::class, 'verifyMigration']);
     Route::post('/profile/report-migration-error', [ProfileController::class, 'reportMigrationError']);
     // Banks directory (dynamic list from provider)
@@ -204,6 +206,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/attendance/current', [AttendanceController::class, 'current']);
     Route::get('/attendance/history', [AttendanceController::class, 'history']);
     Route::post('/meetings/{meeting}/mark-attendance', [AttendanceController::class, 'markAttendance']);
+    Route::post('/meetings/{meeting}/apology', [MeetingApologyController::class, 'store']);
 
     // VTU (Airtime, Data, Electricity, Cable TV)
     Route::get('/vtu/transactions', [\App\Http\Controllers\Api\UtilityController::class, 'transactions']);

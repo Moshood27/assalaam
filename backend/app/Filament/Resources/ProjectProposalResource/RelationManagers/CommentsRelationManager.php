@@ -23,6 +23,7 @@ class CommentsRelationManager extends RelationManager
                     ->relationship('user', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                     ->searchable(['surname', 'name', 'other_names'])
+                    ->preload()
                     ->required(),
                 Forms\Components\Textarea::make('comment')
                     ->required()

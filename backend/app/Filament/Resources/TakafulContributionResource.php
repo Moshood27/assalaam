@@ -96,7 +96,8 @@ class TakafulContributionResource extends Resource
                             ->label('Member')
                             ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
-                            ->searchable(['surname', 'name', 'other_names']),
+                            ->searchable(['surname', 'name', 'other_names'])
+                            ->preload(),
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['user_id'])) {
@@ -120,7 +121,8 @@ class TakafulContributionResource extends Resource
                             ->label('Only Member (optional)')
                             ->relationship('user', 'name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
-                            ->searchable(['surname', 'name', 'other_names']),
+                            ->searchable(['surname', 'name', 'other_names'])
+                            ->preload(),
                         Forms\Components\Toggle::make('dry_run')
                             ->label('Dry-run (no writes)')
                             ->default(false),
