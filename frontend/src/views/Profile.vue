@@ -73,7 +73,7 @@
               <div class="flex items-center justify-between gap-4">
                  <div class="flex-1">
                    <p v-if="profile.is_in_pregnancy_grace" class="text-[11px] text-slate-700 font-bold leading-tight">
-                     You are exempt from meeting fines until {{ new Date(profile.pregnancy_grace_until).toLocaleDateString() }}.
+                     You are exempt from meeting fines<span v-if="profile.pregnancy_grace_until"> until {{ new Date(profile.pregnancy_grace_until).toLocaleDateString() }}</span>.
                    </p>
                    <p v-else class="text-[11px] text-slate-500 font-medium leading-tight">Pregnant women and mothers with babies under 3 months are exempt from meeting fines. (Admin verified)</p>
                  </div>
