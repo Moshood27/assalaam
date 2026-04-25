@@ -27,8 +27,17 @@ class AttendanceExcuseResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereNotNull('excuse_reason')
-            ->whereIn('status', ['pending_excuse', 'excused']);
+            ->whereNotNull('excuse_reason');
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status', 'pending_excuse')->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
     }
 
     public static function table(Table $table): Table
@@ -69,10 +78,12 @@ class AttendanceExcuseResource extends Resource
                     ->options([
                         'pending_excuse' => 'Pending',
                         'excused' => 'Approved',
+                        'absent' => 'Rejected',
                     ]),
                 Tables\Filters\SelectFilter::make('excuse_type')
                     ->options([
                         'medical' => 'Medical',
+                        'pregnancy' => 'Pregnancy',
                         'travel' => 'Travel',
                         'official' => 'Official',
                         'other' => 'Other',

@@ -27,8 +27,17 @@ class PregnancyGraceResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereNotNull('pregnancy_request_status')
-            ->whereIn('pregnancy_request_status', ['pending', 'approved']);
+            ->whereNotNull('pregnancy_request_status');
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('pregnancy_request_status', 'pending')->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
     }
 
     public static function table(Table $table): Table
@@ -38,7 +47,12 @@ class PregnancyGraceResource extends Resource
                 Tables\Columns\TextColumn::make('full_name')
                     ->label('Member')
                     ->searchable(['surname', 'name', 'other_names'])
-                    ->sortable(),
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query
+                            ->orderBy("surname", $direction)
+                            ->orderBy("name", $direction)
+                            ->orderBy("other_names", $direction);
+                    }),
                 Tables\Columns\TextColumn::make('pregnancy_request_status')
                     ->label('Status')
                     ->badge()
@@ -67,6 +81,7 @@ class PregnancyGraceResource extends Resource
                     ->options([
                         'pending' => 'Pending',
                         'approved' => 'Approved',
+                        'rejected' => 'Rejected',
                     ]),
             ])
             ->actions([

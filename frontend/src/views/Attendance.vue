@@ -121,6 +121,7 @@
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Excuse Type</label>
                 <select v-model="excuse_type" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-blue-500 transition-all">
                    <option value="medical">Medical</option>
+                   <option value="pregnancy">Pregnancy</option>
                    <option value="travel">Official Travel</option>
                    <option value="official">Official Duty</option>
                    <option value="other">Other</option>
@@ -133,13 +134,13 @@
                           class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-medium focus:ring-1 focus:ring-blue-500 min-h-[80px]"></textarea>
               </div>
 
-              <div v-if="excuse_type === 'medical' || excuse_type === 'travel'">
+              <div v-if="excuse_type === 'medical' || excuse_type === 'pregnancy' || excuse_type === 'travel'">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Attach Proof (Required for {{ excuse_type }})</label>
                 <input type="file" @change="e => excuse_proof = e.target.files[0]" accept="image/*,application/pdf"
                        class="w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-blue-500" />
               </div>
 
-              <button @click="submitApology" :disabled="submittingApology || !reason || ((excuse_type === 'medical' || excuse_type === 'travel') && !excuse_proof)" 
+              <button @click="submitApology" :disabled="submittingApology || !reason || ((excuse_type === 'medical' || excuse_type === 'pregnancy' || excuse_type === 'travel') && !excuse_proof)" 
                       class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] disabled:opacity-50 active:scale-95 transition-all">
                 <span v-if="submittingApology" class="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></span>
                 <span v-else>Submit Apology</span>
