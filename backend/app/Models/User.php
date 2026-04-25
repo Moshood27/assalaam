@@ -748,6 +748,11 @@ class User extends Authenticatable implements FilamentUser
      */
     public function isInPregnancyGracePeriod(): bool
     {
+        // Only active if approved by admin
+        if ($this->pregnancy_request_status !== 'approved') {
+            return false;
+        }
+
         if ($this->pregnancy_grace_until && now()->isBefore($this->pregnancy_grace_until)) {
             return true;
         }
