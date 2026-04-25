@@ -121,6 +121,7 @@ class AttendanceExcuseResource extends Resource
 
                         Notification::make()->title('Excuse rejected.')->danger()->send();
                     }),
+                Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ViewAction::make()
                     ->form([
                         Forms\Components\TextInput::make('user.full_name')
@@ -146,7 +147,9 @@ class AttendanceExcuseResource extends Resource
                     ]),
             ])
             ->bulkActions([
-                //
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

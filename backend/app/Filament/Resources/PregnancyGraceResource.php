@@ -112,6 +112,23 @@ class PregnancyGraceResource extends Resource
 
                         Notification::make()->title('Application rejected.')->danger()->send();
                     }),
+                Tables\Actions\Action::make('delete')
+                    ->label('Delete')
+                    ->icon('heroicon-m-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Delete Pregnancy Grace Request?')
+                    ->modalDescription('This will remove the pregnancy grace status and reset relevant fields for this member. The member record itself will NOT be deleted.')
+                    ->action(function ($record) {
+                        $record->update([
+                            'pregnancy_request_status' => null,
+                            'pregnancy_grace_until' => null,
+                            'pregnancy_proof_path' => null,
+                            'baby_birth_date' => null,
+                            'is_pregnant' => false,
+                        ]);
+                        Notification::make()->title('Pregnancy grace request deleted.')->success()->send();
+                    }),
                 Tables\Actions\ViewAction::make()
                     ->form([
                         Forms\Components\TextInput::make('full_name')
@@ -129,7 +146,25 @@ class PregnancyGraceResource extends Resource
                     ]),
             ])
             ->bulkActions([
-                //
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('deleteGrace')
+                        ->label('Delete Selected')
+                        ->icon('heroicon-m-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete Selected Pregnancy Grace Requests?')
+                        ->modalDescription('This will remove the pregnancy grace status from the selected members. The member records themselves will NOT be deleted.')
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $records->each(fn ($record) => $record->update([
+                                'pregnancy_request_status' => null,
+                                'pregnancy_grace_until' => null,
+                                'pregnancy_proof_path' => null,
+                                'baby_birth_date' => null,
+                                'is_pregnant' => false,
+                            ]));
+                            Notification::make()->title('Selected pregnancy grace requests deleted.')->success()->send();
+                        }),
+                ]),
             ]);
     }
 
