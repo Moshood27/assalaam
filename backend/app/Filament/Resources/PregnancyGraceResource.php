@@ -27,7 +27,12 @@ class PregnancyGraceResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereNotNull('pregnancy_request_status');
+            ->where(function ($query) {
+                $query->whereNotNull('pregnancy_request_status')
+                    ->orWhere('is_pregnant', true)
+                    ->orWhereNotNull('baby_birth_date')
+                    ->orWhereNotNull('pregnancy_grace_until');
+            });
     }
 
     public static function getNavigationBadge(): ?string
@@ -56,12 +61,13 @@ class PregnancyGraceResource extends Resource
                 Tables\Columns\TextColumn::make('pregnancy_request_status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn (?string $state): string => match ($state) {
                         'pending' => 'warning',
                         'approved' => 'success',
                         'rejected' => 'danger',
                         default => 'gray',
-                    }),
+                    })
+                    ->formatStateUsing(fn (?string $state): string => $state ? ucfirst($state) : 'Active (Manual)'),
                 Tables\Columns\TextColumn::make('baby_birth_date')
                     ->label('Birth Date')
                     ->date()

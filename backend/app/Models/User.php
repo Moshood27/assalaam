@@ -233,6 +233,16 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    protected static function booted()
+    {
+        static::saving(function ($user) {
+            // Auto-approve if legacy fields are set manually but status is missing
+            if (($user->is_pregnant || $user->baby_birth_date || $user->pregnancy_grace_until) && is_null($user->pregnancy_request_status)) {
+                $user->pregnancy_request_status = 'approved';
+            }
+        });
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim("{$this->surname} {$this->name} {$this->other_names}");
