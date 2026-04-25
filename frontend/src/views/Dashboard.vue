@@ -488,6 +488,7 @@ const load = async () => {
   const token = localStorage.getItem('token')
   const { data } = await axios.get('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } })
   dashboardData.value = data
+  localStorage.setItem('is_admin', data.is_admin ? 'true' : 'false')
   
   // Check Migration status
   checkMigration()
@@ -510,6 +511,7 @@ const logout = async () => {
     await axios.post('/api/logout')
   } catch (_) {}
   localStorage.removeItem('token')
+  localStorage.removeItem('is_admin')
   const base = import.meta?.env?.BASE_URL || '/'
   const basePath = (base && base.endsWith('/')) ? base : `${base}/`
   window.location.assign(`${basePath}login`)

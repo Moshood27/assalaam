@@ -237,8 +237,9 @@ onMounted(async () => {
   }, 2500)
 })
 
-const afterLogin = async (token) => {
+const afterLogin = async (token, isAdmin = false) => {
   localStorage.setItem('token', token)
+  localStorage.setItem('is_admin', isAdmin ? 'true' : 'false')
 
   // If we have a pending push token captured earlier, flush it now that we're authenticated
   try {
@@ -286,7 +287,7 @@ const handleLogin = async () => {
       localStorage.setItem('remember_me_choice', 'false')
     }
 
-    afterLogin(data.token)
+    afterLogin(data.token, data.user?.is_admin)
   } catch (e) {
     error.value = e?.response?.data?.message || 'Login Failed'
   } finally {

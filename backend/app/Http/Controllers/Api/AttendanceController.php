@@ -110,8 +110,12 @@ class AttendanceController extends Controller
             ->update(['status' => 'completed']);
 
         if ($completedCount > 0) {
-            // Immediately audit completed meetings to charge fines
-            Artisan::call('app:audit-attendance');
+            // Auditing can be heavy, so we don't call it synchronously here.
+            // It is already handled by the scheduled UpdateMeetingStatusesCommand (every minute)
+           // Artisan::call('app:audit-attendance');
+
+
+            // or AuditAttendanceCommand (hourly).
         }
     }
 

@@ -182,6 +182,7 @@ router.beforeEach(async (to) => {
 
   const token = localStorage.getItem('token')
   const adminToken = localStorage.getItem('admin_token')
+  const isAdmin = localStorage.getItem('is_admin') === 'true'
 
   // 0. Onboarding gate for first-time users (skip for admin and explicit skips)
   try {
@@ -198,7 +199,7 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && !token) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  if (to.meta.requiresAdmin && !adminToken) {
+  if (to.meta.requiresAdmin && !adminToken && !isAdmin) {
     return { name: 'admin.login', query: { redirect: to.fullPath } }
   }
   if (to.meta.guest && token) {

@@ -9,12 +9,12 @@ axios.defaults.baseURL = origin
 const base = import.meta?.env?.BASE_URL || '/'
 
 // Apply a reasonable default timeout; can be overridden via VITE_HTTP_TIMEOUT (ms)
-const timeout = Number(import.meta?.env?.VITE_HTTP_TIMEOUT || 15000)
-axios.defaults.timeout = isNaN(timeout) ? 15000 : timeout
+const timeout = Number(import.meta?.env?.VITE_HTTP_TIMEOUT || 30000)
+axios.defaults.timeout = isNaN(timeout) ? 30000 : timeout
 
 // Attach token automatically if present
 axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
   if (token) {
     config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
@@ -37,6 +37,7 @@ axios.interceptors.response.use(
       const hadAdmin = !!localStorage.getItem('admin_token')
       localStorage.removeItem('token')
       localStorage.removeItem('admin_token')
+      localStorage.removeItem('is_admin')
 
       // Try to redirect to the appropriate login screen
       try {
