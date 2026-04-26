@@ -14,17 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class AdminReportsController extends Controller
 {
-    public function __construct()
-    {
-        // Ensure only admins can access
-        $this->middleware(function ($request, $next) {
-            $user = $request->user();
-            if (! $user || ! (bool) $user->is_admin) {
-                return response()->json(['message' => 'Admins only'], 403);
-            }
-            return $next($request);
-        });
-    }
 
     // 1) Branch Performance Report
     public function branchPerformance(Request $request)

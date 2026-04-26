@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Alias custom middleware
         $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'inactivity' => \App\Http\Middleware\InactivityTimeout::class,
             'track_activity' => \App\Http\Middleware\TrackUserActivity::class,
         ]);

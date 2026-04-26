@@ -141,6 +141,12 @@ class FineResource extends Resource
                             ]);
                         });
 
+                        $record->user?->notifyMember(
+                            'Fine Paid',
+                            'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been marked as paid.',
+                            ['type' => 'fine_paid']
+                        );
+
                         Notification::make()
                             ->title('Fine marked as paid')
                             ->success()
@@ -174,6 +180,12 @@ class FineResource extends Resource
                             ]);
                         });
 
+                        $record->user?->notifyMember(
+                            'Fine Waived',
+                            'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been waived.',
+                            ['type' => 'fine_waived']
+                        );
+
                         Notification::make()
                             ->title('Fine waived successfully')
                             ->success()
@@ -201,6 +213,12 @@ class FineResource extends Resource
                                     ]);
 
                                     $record->user->decrement('outstanding_fines', $total);
+
+                                    $record->user?->notifyMember(
+                                        'Fine Paid',
+                                        'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been marked as paid.',
+                                        ['type' => 'fine_paid']
+                                    );
                                 }
                             });
 
@@ -228,6 +246,12 @@ class FineResource extends Resource
                                     ]);
 
                                     $record->user->decrement('outstanding_fines', $total);
+
+                                    $record->user?->notifyMember(
+                                        'Fine Waived',
+                                        'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been waived.',
+                                        ['type' => 'fine_waived']
+                                    );
                                 }
                             });
 

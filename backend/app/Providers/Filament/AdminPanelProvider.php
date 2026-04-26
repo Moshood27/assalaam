@@ -146,6 +146,7 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook('panels::head.end', fn () => view('filament.print-styles'))
             ->renderHook('panels::body.start', fn () => view('filament.print-header'))
             ->renderHook('panels::body.end', fn () => view('filament.inactivity-handler'))
+            ->renderHook('panels::body.end', fn () => \Livewire\Livewire::mount('admin-notification-listener'))
             ->middleware([
                 IpWhitelistMiddleware::class,
                 EncryptCookies::class,

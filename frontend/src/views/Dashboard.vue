@@ -268,6 +268,28 @@
     </div>
 
     <div class="px-4 mt-8">
+      <!-- Live Activity Feed -->
+      <div v-if="liveActions.length" class="mb-6 animate-in fade-in slide-in-from-bottom duration-500">
+        <h3 class="font-bold text-slate-800 text-lg mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          Live Activity
+        </h3>
+        <div class="space-y-3">
+          <div v-for="action in liveActions" :key="action.id" 
+               class="bg-white p-4 rounded-2xl flex items-center justify-between gap-3 border-2 border-emerald-100 shadow-sm animate-bounce-in">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-lg shrink-0">
+                🔔
+              </div>
+              <div>
+                <p class="font-bold text-slate-800 text-sm">{{ action.message }}</p>
+                <p class="text-[10px] text-emerald-600 font-mono uppercase tracking-widest font-black">{{ action.time }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="flex justify-between items-center mb-4">
         <h3 class="font-bold text-slate-800 text-lg">Recent Transactions</h3>
         <button class="text-emerald-700 text-sm font-bold" @click="$router.push('/passbook')">Passbook</button>
@@ -346,6 +368,7 @@
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import { ref, onMounted, computed } from 'vue'
+import { getEcho } from '../realtime/echo'
 import { useAppStatusStore } from '../stores/appStatus'
 import axios from '../http'
 import getImageUrl from '../utils/image'
@@ -364,6 +387,7 @@ const appStatusStore = useAppStatusStore()
 
 const currency = '₦'
 const dashboardData = ref({})
+const liveActions = ref([])
 const { hideBalances, toggleBalances } = useBalanceVisibility()
 
 const formatMoney = (val) => Number(val ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
@@ -611,6 +635,55 @@ onMounted(async () => {
   try {
     await load()
   } catch (_) {}
+
+  // Real-time listener for balance updates and notifications
+  try {
+    const echo = getEcho()
+    const userId = dashboardData.value.id
+    if (userId) {
+      echo.private(`user.${userId}`)
+        .listen('UserAccountUpdated', (e) => {
+          console.log('Real-time update received:', e)
+          
+          // 1. Update balances smoothly
+          if (e.balances) {
+            dashboardData.value.balance = e.balances.wallet
+            if (dashboardData.value.kpis) {
+              dashboardData.value.kpis.savings_balance = e.balances.savings
+              dashboardData.value.kpis.gold_balance = e.balances.gold
+              dashboardData.value.kpis.special_savings_balance = e.balances.special_savings
+              dashboardData.value.kpis.shares_capital = e.balances.shares
+              dashboardData.value.kpis.takaful_balance = e.balances.takaful
+              dashboardData.value.kpis.outstanding_fines = e.balances.outstanding_fines
+            }
+          }
+
+          // 2. Show a real-time notification
+          if (e.message) {
+            showNotice('Real-time Update', e.message, 'success')
+            
+            // 3. Add to live actions feed
+            liveActions.value.unshift({
+              id: Date.now(),
+              message: e.message,
+              time: new Date(e.time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            })
+            // Keep only last 3 to avoid clutter
+            if (liveActions.value.length > 3) liveActions.value.pop()
+
+            // 4. Play a subtle sound (Optional)
+            try { 
+              const audio = new Audio('/sounds/notification.mp3')
+              audio.volume = 0.5
+              audio.play().catch(() => {}) // Handle browsers blocking autoplay
+            } catch (_) {}
+          }
+        })
+    }
+  } catch (err) {
+    console.error('Failed to initialize real-time listener:', err)
+  }
+
   // Ensure DOM is fully painted and elements are visible before starting tour
   setTimeout(() => {
     try { startDashboardTour() } catch (_) {}

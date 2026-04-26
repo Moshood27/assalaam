@@ -152,18 +152,21 @@ class WebhookController extends Controller
                         }
                     });
 
-                    // Notify user
+                    // Notify user via unified method (triggers real-time update)
                     try {
                         $user = User::find($sadaqahContrib->user_id);
                         if ($user) {
                             $project = SadaqahProject::find($sadaqahContrib->sadaqah_project_id);
-                            $user->notify(new \App\Notifications\PaymentNotification(
-                                title: 'Sadaqah Contribution Successful',
-                                message: "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
-                                amount: (float) $sadaqahContrib->amount,
-                                reference: $sadaqahContrib->reference,
-                                source: 'sadaqah_contribution'
-                            ));
+                            $user->notifyMember(
+                                'Sadaqah Contribution Successful',
+                                "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
+                                [
+                                    'type' => 'sadaqah_contribution',
+                                    'amount' => (float) $sadaqahContrib->amount,
+                                    'reference' => $sadaqahContrib->reference,
+                                    'route' => '/sadaqah',
+                                ]
+                            );
                         }
                     } catch (\Throwable $e) {
                         Log::warning('Failed to send Sadaqah webhook notification (Paystack)', ['error' => $e->getMessage()]);
@@ -230,26 +233,27 @@ class WebhookController extends Controller
                         ]);
                     }
 
-                    // Best-effort SMS + Push notification to member
+                    // Unified real-time/push/email/sms notification
                     try {
                         $loan = QardHasan::with('user')->find($loanRep->qard_hasan_id);
                         if ($loan && $loan->user) {
                             $remaining = max(0, (float) $loan->principal_amount - (float) $loan->paid_amount);
-                            $sms = app(\App\Services\SmsService::class);
-                            $push = app(\App\Services\PushService::class);
-                            $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'. Ref: '.($loanRep->reference);
-                            $sms->send($loan->user->phone ?? null, $msg);
-                            $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
-                            $push->send($token, 'Repayment Received', $msg, [
-                                'type' => 'loan_repayment',
-                                'loan_id' => $loan->id,
-                                'qard_id_string' => $loan->qard_id_string,
-                                'amount' => (float) $loanRep->amount,
-                                'reference' => (string) $loanRep->reference,
-                            ]);
+                            $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'.';
+                            $loan->user->notifyMember(
+                                'Repayment Received',
+                                $msg,
+                                [
+                                    'type' => 'loan_repayment',
+                                    'loan_id' => $loan->id,
+                                    'qard_id_string' => $loan->qard_id_string,
+                                    'remaining_balance' => $remaining,
+                                    'reference' => (string) $loanRep->reference,
+                                    'route' => '/loan/' . $loan->id,
+                                ]
+                            );
                         }
                     } catch (\Throwable $e) {
-                        // ignore notification errors
+                        Log::warning('Failed to send loan repayment notification (paystack path)', ['error' => $e->getMessage()]);
                     }
 
                     return response()->json(['status' => 'success']);
@@ -382,65 +386,17 @@ class WebhookController extends Controller
                     'channel' => $vdChannel,
                 ]);
 
-                // Notify user (non-blocking) + best-effort Push
-                try {
-                    $topupUser->notify(new PaymentNotification(
-                        title: 'Wallet Top-up Successful',
-                        message: "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
-                        amount: $netAmount,
-                        reference: $reference,
-                        source: 'wallet_topup'
-                    ));
-
-                    // Email receipt (best-effort)
-                    try {
-                        if (!empty($topupUser->email)) {
-                            Mail::to($topupUser->email)->send(new PaymentStatusMail(
-                                status: 'success',
-                                title: 'Wallet Top-up Successful',
-                                message: "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
-                                amount: $netAmount,
-                                reference: $reference,
-                                channel: $vdChannel,
-                                route: '/wallet',
-                                meta: [
-                                    'provider' => 'paystack',
-                                    'maintenance_charge' => $maintenanceCharge,
-                                    'gross_amount' => $amountNgn
-                                ]
-                            ));
-                        }
-                    } catch (\Throwable $e) {}
-
-                    // Fire push notification to device
-                    $push = app(\App\Services\PushService::class);
-                    $fresh = $topupUser->fresh();
-                    $newBal = (float) ($fresh->balance ?? 0);
-                    $token = $fresh->fcm_token ?: ($fresh->device_token ?? null);
-                    $push->send($token, 'Wallet Top-up Successful', "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " (Maintenance: ₦" . number_format($maintenanceCharge, 2) . ").", [
+                // Notify user via unified method (triggers real-time, push, mail, sms as per prefs)
+                $topupUser->notifyMember(
+                    'Wallet Top-up Successful',
+                    "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+                    [
                         'type' => 'wallet_topup',
                         'amount' => (float) $netAmount,
                         'reference' => (string) $reference,
                         'route' => '/wallet',
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::warning('Failed to send wallet top-up notification', [
-                        'reference' => $reference,
-                        'user_id' => $topupUser->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-
-                // Best-effort SMS notification
-                try {
-                    $fresh = $topupUser->fresh();
-                    $newBal = (float) ($fresh->balance ?? 0);
-                    $sms = app(\App\Services\SmsService::class);
-                    $msg = 'Wallet top-up: ₦'.number_format($amountNgn, 2).". New bal: ₦".number_format($newBal, 2).'. Ref: '.$reference;
-                    $sms->send($fresh->phone ?? null, $msg);
-                } catch (\Throwable $e) {
-                    // ignore SMS errors
-                }
+                    ]
+                );
 
                 return response()->json(['status' => 'success']);
             }
@@ -520,49 +476,20 @@ class WebhookController extends Controller
                 }
             }
 
-            // Notify user (non-blocking) + best-effort Push
-            try {
-                if ($user) {
-                    $user->notify(new PaymentNotification(
-                        title: 'Payment Successful',
-                        message: 'Your payment has been received and allocated to your schemes.',
-                        amount: $expectedTotal,
-                        reference: $reference,
-                        source: 'scheme_payment'
-                    ));
-
-                    // Email receipt (best-effort)
-                    try {
-                        if (!empty($user->email)) {
-                            Mail::to($user->email)->send(new PaymentStatusMail(
-                                status: 'success',
-                                title: 'Payment Successful',
-                                message: 'Your payment has been received and allocated to your schemes.',
-                                amount: $expectedTotal,
-                                reference: $reference,
-                                channel: $vd['channel'] ?? null,
-                                route: '/passbook',
-                                meta: ['provider' => 'paystack']
-                            ));
-                        }
-                    } catch (\Throwable $e) {}
-
-                    // Fire push notification to device
-                    $push = app(\App\Services\PushService::class);
-                    $token = $user->fcm_token ?: ($user->device_token ?? null);
-                    $push->send($token, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
+            // Notify user via unified method (triggers real-time update)
+            // Note: Individual contributions also trigger their own notifications via model observers.
+            // This global notification covers the total payment.
+            if ($user) {
+                $user->notifyMember(
+                    'Payment Successful',
+                    'Your payment of ₦' . number_format($expectedTotal, 2) . ' has been received and allocated to your schemes.',
+                    [
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
                         'reference' => (string) $reference,
                         'route' => '/passbook',
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Failed to send scheme payment notification', [
-                    'reference' => $reference,
-                    'user_id' => optional($user)->id,
-                    'error' => $e->getMessage(),
-                ]);
+                    ]
+                );
             }
 
             // Do not credit wallet here. Contributions were paid directly to schemes via this reference.
@@ -794,26 +721,27 @@ class WebhookController extends Controller
                 ]);
             }
 
-            // Best-effort SMS + Push notification to member
+            // Unified real-time/push/email/sms notification
             try {
                 $loan = QardHasan::with('user')->find($loanRep->qard_hasan_id);
                 if ($loan && $loan->user) {
                     $remaining = max(0, (float) $loan->principal_amount - (float) $loan->paid_amount);
-                    $sms = app(\App\Services\SmsService::class);
-                    $push = app(\App\Services\PushService::class);
-                    $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'. Ref: '.($loanRep->reference);
-                    $sms->send($loan->user->phone ?? null, $msg);
-                    $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
-                    $push->send($token, 'Repayment Received', $msg, [
-                        'type' => 'loan_repayment',
-                        'loan_id' => $loan->id,
-                        'qard_id_string' => $loan->qard_id_string,
-                        'amount' => (float) $loanRep->amount,
-                        'reference' => (string) $loanRep->reference,
-                    ]);
+                    $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'.';
+                    $loan->user->notifyMember(
+                        'Repayment Received',
+                        $msg,
+                        [
+                            'type' => 'loan_repayment',
+                            'loan_id' => $loan->id,
+                            'qard_id_string' => $loan->qard_id_string,
+                            'remaining_balance' => $remaining,
+                            'reference' => (string) $loanRep->reference,
+                            'route' => '/loan/' . $loan->id,
+                        ]
+                    );
                 }
             } catch (\Throwable $e) {
-                // ignore notification errors
+                Log::warning('Failed to send loan repayment notification (flutterwave path)', ['error' => $e->getMessage()]);
             }
 
             return response()->json(['status' => 'success']);
@@ -877,49 +805,18 @@ class WebhookController extends Controller
                 }
             }
 
-            // Notify user (non-blocking) + best-effort Push
-            try {
-                if ($user) {
-                    $user->notify(new PaymentNotification(
-                        title: 'Payment Successful',
-                        message: 'Your payment has been received and allocated to your schemes.',
-                        amount: $expectedTotal,
-                        reference: $reference,
-                        source: 'scheme_payment'
-                    ));
-
-                    // Email receipt (best-effort)
-                    try {
-                        if (!empty($user->email)) {
-                            Mail::to($user->email)->send(new PaymentStatusMail(
-                                status: 'success',
-                                title: 'Payment Successful',
-                                message: 'Your payment has been received and allocated to your schemes.',
-                                amount: $expectedTotal,
-                                reference: $reference,
-                                channel: $vd['payment_type'] ?? null,
-                                route: '/passbook',
-                                meta: ['provider' => 'flutterwave']
-                            ));
-                        }
-                    } catch (\Throwable $e) {}
-
-                    // Fire push notification to device
-                    $push = app(\App\Services\PushService::class);
-                    $token = $user->fcm_token ?: ($user->device_token ?? null);
-                    $push->send($token, 'Payment Successful', 'Your payment has been received and allocated to your schemes.', [
+            // Unified notification (triggers real-time, push, mail, etc)
+            if ($user) {
+                $user->notifyMember(
+                    'Payment Successful',
+                    'Your payment of ₦' . number_format($expectedTotal, 2) . ' has been received and allocated to your schemes.',
+                    [
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
                         'reference' => (string) $reference,
                         'route' => '/passbook',
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Failed to send scheme payment notification (flutterwave)', [
-                    'reference' => $reference,
-                    'user_id' => optional($user)->id,
-                    'error' => $e->getMessage(),
-                ]);
+                    ]
+                );
             }
 
             Log::info('Flutterwave payment processed for schemes', ['reference' => $reference, 'user_id' => optional($user)->id]);
@@ -955,17 +852,21 @@ class WebhookController extends Controller
             });
 
             // Notify user
+            // Notify user via unified method (triggers real-time update)
             try {
                 $user = User::find($sadaqahContrib->user_id);
                 if ($user) {
                     $project = SadaqahProject::find($sadaqahContrib->sadaqah_project_id);
-                    $user->notify(new \App\Notifications\PaymentNotification(
-                        title: 'Sadaqah Contribution Successful',
-                        message: "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
-                        amount: (float) $sadaqahContrib->amount,
-                        reference: $sadaqahContrib->reference,
-                        source: 'sadaqah_contribution'
-                    ));
+                    $user->notifyMember(
+                        'Sadaqah Contribution Successful',
+                        "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
+                        [
+                            'type' => 'sadaqah_contribution',
+                            'amount' => (float) $sadaqahContrib->amount,
+                            'reference' => $sadaqahContrib->reference,
+                            'route' => '/sadaqah',
+                        ]
+                    );
                 }
             } catch (\Throwable $e) {
                 Log::warning('Failed to send Sadaqah webhook notification (Flutterwave)', ['error' => $e->getMessage()]);
@@ -1029,33 +930,17 @@ class WebhookController extends Controller
             'user_id' => $topupUser->id,
         ]);
 
-        // Notify user (non-blocking)
-        try {
-            $topupUser->notify(new PaymentNotification(
-                title: 'Wallet Top-up Successful',
-                message: "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
-                amount: $netAmount,
-                reference: $reference,
-                source: 'wallet_topup'
-            ));
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send wallet top-up notification (flutterwave)', [
-                'reference' => $reference,
-                'user_id' => $topupUser->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        // Best-effort SMS notification
-        try {
-            $fresh = $topupUser->fresh();
-            $newBal = (float) ($fresh->balance ?? 0);
-            $sms = app(\App\Services\SmsService::class);
-            $msg = 'Wallet top-up: ₦'.number_format($netAmount, 2)." (Maintenance: ₦".number_format($maintenanceCharge, 2)."). New bal: ₦".number_format($newBal, 2).'. Ref: '.$reference;
-            $sms->send($fresh->phone ?? null, $msg);
-        } catch (\Throwable $e) {
-            // ignore SMS errors
-        }
+        // Notify user via unified method (triggers real-time, push, mail, sms as per prefs)
+        $topupUser->notifyMember(
+            'Wallet Top-up Successful',
+            "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+            [
+                'type' => 'wallet_topup',
+                'amount' => (float) $netAmount,
+                'reference' => (string) $reference,
+                'route' => '/wallet',
+            ]
+        );
 
         return response()->json(['status' => 'success']);
     }

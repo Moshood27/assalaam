@@ -13,16 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class AdminVendorController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            $user = $request->user();
-            if (!$user || !(bool) $user->is_admin) {
-                return response()->json(['message' => 'Admins only'], 403);
-            }
-            return $next($request);
-        });
-    }
 
     public function index(Request $request)
     {

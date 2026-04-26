@@ -9,17 +9,6 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminProductController extends Controller
 {
-    public function __construct()
-    {
-        // Ensure only admins can access these endpoints
-        $this->middleware(function ($request, $next) {
-            $user = $request->user();
-            if (!$user || !(bool) $user->is_admin) {
-                return response()->json(['message' => 'Admins only'], 403);
-            }
-            return $next($request);
-        });
-    }
 
     /**
      * List products for admin management (basic fields only)

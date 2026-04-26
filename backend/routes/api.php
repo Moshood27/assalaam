@@ -76,7 +76,7 @@ Route::prefix('admin')->group(function () {
 });
 
 // Admin: profile & push token endpoints (protected)
-Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'inactivity', 'admin'])->prefix('admin')->group(function () {
     // Admin profile (separated from member profile)
     Route::get('/profile', [AdminProfileController::class, 'show']);
     Route::post('/profile/email', [AdminProfileController::class, 'updateEmail']);
@@ -375,7 +375,7 @@ Route::prefix('qard-hasan')->group(function () {
 
 
 // Admin reports endpoints
-Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/reports')->group(function () {
+Route::middleware(['auth:sanctum', 'inactivity', 'admin'])->prefix('admin/reports')->group(function () {
     Route::get('/branch-performance', [AdminReportsController::class, 'branchPerformance']);
     Route::get('/scheme-popularity', [AdminReportsController::class, 'schemePopularity']);
     Route::get('/delinquency', [AdminReportsController::class, 'delinquency']);
@@ -387,7 +387,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/reports')->grou
 });
 
 // Admin import endpoints
-Route::middleware('auth:sanctum')->prefix('admin/import')->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin/import')->group(function () {
     Route::post('/members', [ImportController::class, 'importMembers']);
     Route::post('/schemes', [ImportController::class, 'importSchemes']);
     Route::post('/loans', [ImportController::class, 'importLoans']);
@@ -395,12 +395,12 @@ Route::middleware('auth:sanctum')->prefix('admin/import')->group(function () {
 
 
 // Admin VTU endpoints
-Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/vtu')->group(function () {
+Route::middleware(['auth:sanctum', 'inactivity', 'admin'])->prefix('admin/vtu')->group(function () {
     Route::get('/transactions', [AdminUtilityController::class, 'transactions']);
 });
 
 // Admin products management (images & approval)
-Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/vendors')->group(function () {
+Route::middleware(['auth:sanctum', 'inactivity', 'admin'])->prefix('admin/vendors')->group(function () {
     Route::get('/', [AdminVendorController::class, 'index']);
     Route::post('/{id}/approve', [AdminVendorController::class, 'approve']);
     Route::post('/{id}/reject', [AdminVendorController::class, 'reject']);
@@ -410,7 +410,7 @@ Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/vendors')->grou
     Route::post('/settlements/{id}/reject', [AdminVendorController::class, 'rejectSettlement']);
 });
 
-Route::middleware(['auth:sanctum', 'inactivity'])->prefix('admin/products')->group(function () {
+Route::middleware(['auth:sanctum', 'inactivity', 'admin'])->prefix('admin/products')->group(function () {
     Route::get('/', [AdminProductController::class, 'index']);
     Route::post('/{id}/image', [AdminProductController::class, 'uploadImage']);
     Route::delete('/{id}/image', [AdminProductController::class, 'deleteImage']);

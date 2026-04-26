@@ -138,10 +138,19 @@ class Contribution extends Model
                         app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
                     } catch (\Throwable $e) {}
 
-                    // Notify admins about successful contribution
+                    // Notify admins and user about successful contribution
                     try {
                         $user = $model->user;
                         $schemeName = $model->scheme?->name ?? 'Contribution';
+
+                        // Notify user (triggers real-time update)
+                        $user->notifyMember(
+                            "Contribution Successful",
+                            "Your payment of ₦" . number_format($model->amount, 2) . " for {$schemeName} was successful.",
+                            ['type' => 'contribution_success', 'contribution_id' => $model->id]
+                        );
+
+                        // Notify admins
                         User::where('is_admin', true)->each(function ($admin) use ($user, $model, $schemeName) {
                             $admin->notifyMember(
                                 "Payment Received: {$schemeName}",

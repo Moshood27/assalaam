@@ -269,6 +269,9 @@ class User extends Authenticatable implements FilamentUser
     public function notifyMember(string $title, string $message, array $data = [], ?array $channels = null): void
     {
         try {
+            // Trigger real-time dashboard update (message + payload)
+            event(new \App\Events\UserAccountUpdated($this, $message, $data));
+
             $resolved = $channels ?: array_values(array_filter([
                 ($this->notify_email ? 'mail' : null),
                 ($this->notify_sms ? 'sms' : null),
