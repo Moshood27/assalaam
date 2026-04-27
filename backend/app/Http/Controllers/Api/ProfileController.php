@@ -195,11 +195,11 @@ class ProfileController extends Controller
             'native_place' => $user->native_place,
             'dob' => $user->dob ? $user->dob->toDateString() : null,
             'marital_status' => $user->marital_status,
-            'is_pregnant' => (bool) $user->is_pregnant,
+            'is_nursing_mother' => (bool) $user->is_nursing_mother,
             'baby_birth_date' => $user->baby_birth_date ? $user->baby_birth_date->toDateString() : null,
-            'pregnancy_request_status' => $user->pregnancy_request_status,
-            'pregnancy_grace_until' => $user->pregnancy_grace_until ? $user->pregnancy_grace_until->toDateTimeString() : null,
-            'pregnancy_proof_url' => $user->pregnancy_proof_path ? Storage::disk('public')->url($user->pregnancy_proof_path) : null,
+            'nursing_mother_status' => $user->nursing_mother_status,
+            'nursing_mother_grace_until' => $user->nursing_mother_grace_until ? $user->nursing_mother_grace_until->toDateTimeString() : null,
+            'nursing_mother_proof_url' => $user->nursing_mother_proof_path ? Storage::disk('public')->url($user->nursing_mother_proof_path) : null,
             'is_in_nursing_mother_grace' => $user->isInNursingMotherGracePeriod(),
             'occupation' => $user->occupation,
             'secondary_phone' => $user->secondary_phone,
@@ -591,10 +591,10 @@ class ProfileController extends Controller
 
         if ($request->hasFile('proof')) {
             $path = $request->file('proof')->store('nursing_mother_proofs', 'public');
-            $user->pregnancy_proof_path = $path;
+            $user->nursing_mother_proof_path = $path;
         }
 
-        $user->pregnancy_request_status = 'pending';
+        $user->nursing_mother_status = 'pending';
         $user->baby_birth_date = $request->baby_birth_date;
         $user->save();
 

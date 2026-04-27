@@ -106,17 +106,17 @@
               <div class="flex items-center justify-between mb-3">
                 <p class="text-[9px] font-black text-pink-600 uppercase tracking-widest leading-none">Nursing Mother Grace</p>
                 <span v-if="profile.is_in_nursing_mother_grace" class="px-2 py-0.5 bg-pink-500 text-white text-[8px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-pink-200">Grace Active</span>
-                <span v-else-if="profile.pregnancy_request_status === 'pending'" class="px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-amber-200">Pending Review</span>
+                <span v-else-if="profile.nursing_mother_status === 'pending'" class="px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-amber-200">Pending Review</span>
               </div>
               
               <div class="flex items-center justify-between gap-4">
                  <div class="flex-1">
                    <p v-if="profile.is_in_nursing_mother_grace" class="text-[11px] text-slate-700 font-bold leading-tight">
-                     You are exempt from meeting fines<span v-if="profile.pregnancy_grace_until"> until {{ new Date(profile.pregnancy_grace_until).toLocaleDateString() }}</span>.
+                     You are exempt from meeting fines<span v-if="profile.nursing_mother_grace_until"> until {{ new Date(profile.nursing_mother_grace_until).toLocaleDateString() }}</span>.
                    </p>
                    <p v-else class="text-[11px] text-slate-500 font-medium leading-tight">Pregnant women and nursing mothers are exempt from meeting fines. (Admin verified)</p>
                  </div>
-                 <button v-if="!profile.is_in_nursing_mother_grace && profile.pregnancy_request_status !== 'pending'" @click="showNursingMotherModal = true" class="px-4 py-2 bg-pink-50 text-pink-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-pink-100 transition-colors">Apply</button>
+                 <button v-if="!profile.is_in_nursing_mother_grace && profile.nursing_mother_status !== 'pending'" @click="showNursingMotherModal = true" class="px-4 py-2 bg-pink-50 text-pink-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-pink-100 transition-colors">Apply</button>
               </div>
             </div>
           </div>

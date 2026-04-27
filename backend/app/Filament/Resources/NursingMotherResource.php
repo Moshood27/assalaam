@@ -29,16 +29,16 @@ class NursingMotherResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where(function ($query) {
-                $query->whereNotNull('pregnancy_request_status')
-                    ->orWhere('is_pregnant', true)
+                $query->whereNotNull('nursing_mother_status')
+                    ->orWhere('is_nursing_mother', true)
                     ->orWhereNotNull('baby_birth_date')
-                    ->orWhereNotNull('pregnancy_grace_until');
+                    ->orWhereNotNull('nursing_mother_grace_until');
             });
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('pregnancy_request_status', 'pending')->count() ?: null;
+        return static::getModel()::where('nursing_mother_status', 'pending')->count() ?: null;
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -59,7 +59,7 @@ class NursingMotherResource extends Resource
                             ->orderBy("name", $direction)
                             ->orderBy("other_names", $direction);
                     }),
-                Tables\Columns\TextColumn::make('pregnancy_request_status')
+                Tables\Columns\TextColumn::make('nursing_mother_status')
                     ->label('Status')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
@@ -73,7 +73,7 @@ class NursingMotherResource extends Resource
                     ->label('Birth Date')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('pregnancy_grace_until')
+                Tables\Columns\TextColumn::make('nursing_mother_grace_until')
                     ->label('Grace Until')
                     ->dateTime()
                     ->sortable(),
@@ -83,7 +83,7 @@ class NursingMotherResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('pregnancy_request_status')
+                Tables\Filters\SelectFilter::make('nursing_mother_status')
                     ->label('Request Status')
                     ->options([
                         'pending' => 'Pending',
@@ -96,18 +96,18 @@ class NursingMotherResource extends Resource
                     ->label('Approve')
                     ->icon('heroicon-m-check-badge')
                     ->color('success')
-                    ->visible(fn ($record) => $record->pregnancy_request_status === 'pending')
+                    ->visible(fn ($record) => $record->nursing_mother_status === 'pending')
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $months = (int) Setting::get('nursing_mother_grace_period_months', 3);
                         $record->update([
-                            'pregnancy_request_status' => 'approved',
-                            'pregnancy_grace_until' => now()->addMonths($months),
+                            'nursing_mother_status' => 'approved',
+                            'nursing_mother_grace_until' => now()->addMonths($months),
                         ]);
 
                         $record->notifyMember(
                             "🤱 Nursing Mother Grace Approved",
-                            "Your nursing mother grace application has been approved. You are exempt from attendance fines until " . $record->pregnancy_grace_until->toDateString() . ".",
+                            "Your nursing mother grace application has been approved. You are exempt from attendance fines until " . $record->nursing_mother_grace_until->toDateString() . ".",
                             ['type' => 'nursing_mother_grace_approved']
                         );
 
@@ -117,7 +117,7 @@ class NursingMotherResource extends Resource
                     ->label('Reject')
                     ->icon('heroicon-m-x-circle')
                     ->color('danger')
-                    ->visible(fn ($record) => $record->pregnancy_request_status === 'pending')
+                    ->visible(fn ($record) => $record->nursing_mother_status === 'pending')
                     ->form([
                         Forms\Components\Textarea::make('reason')
                             ->label('Rejection Reason')
@@ -125,7 +125,7 @@ class NursingMotherResource extends Resource
                     ])
                     ->requiresConfirmation()
                     ->action(function ($record, array $data) {
-                        $record->update(['pregnancy_request_status' => 'rejected']);
+                        $record->update(['nursing_mother_status' => 'rejected']);
 
                         $record->notifyMember(
                             "❌ Nursing Mother Grace Rejected",
@@ -144,11 +144,11 @@ class NursingMotherResource extends Resource
                     ->modalDescription('This will remove the nursing mother grace status and reset relevant fields for this member. The member record itself will NOT be deleted.')
                     ->action(function ($record) {
                         $record->update([
-                            'pregnancy_request_status' => null,
-                            'pregnancy_grace_until' => null,
-                            'pregnancy_proof_path' => null,
+                            'nursing_mother_status' => null,
+                            'nursing_mother_grace_until' => null,
+                            'nursing_mother_proof_path' => null,
                             'baby_birth_date' => null,
-                            'is_pregnant' => false,
+                            'is_nursing_mother' => false,
                         ]);
                         Notification::make()->title('Nursing mother grace request deleted.')->success()->send();
                     }),
@@ -160,7 +160,7 @@ class NursingMotherResource extends Resource
                             ->disabled(),
                         Forms\Components\DatePicker::make('baby_birth_date')
                             ->disabled(),
-                        Forms\Components\FileUpload::make('pregnancy_proof_path')
+                        Forms\Components\FileUpload::make('nursing_mother_proof_path')
                             ->label('Medical Proof')
                             ->disk('public')
                             ->directory('nursing_mother_proofs')
@@ -179,11 +179,11 @@ class NursingMotherResource extends Resource
                         ->modalDescription('This will remove the nursing mother grace status from the selected members. The member records themselves will NOT be deleted.')
                         ->action(function (\Illuminate\Support\Collection $records) {
                             $records->each(fn ($record) => $record->update([
-                                'pregnancy_request_status' => null,
-                                'pregnancy_grace_until' => null,
-                                'pregnancy_proof_path' => null,
+                                'nursing_mother_status' => null,
+                                'nursing_mother_grace_until' => null,
+                                'nursing_mother_proof_path' => null,
                                 'baby_birth_date' => null,
-                                'is_pregnant' => false,
+                                'is_nursing_mother' => false,
                             ]));
                             Notification::make()->title('Selected nursing mother grace requests deleted.')->success()->send();
                         }),

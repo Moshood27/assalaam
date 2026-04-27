@@ -102,10 +102,10 @@ class User extends Authenticatable implements FilamentUser
         'wellness_check_notified_at',
         'zakat_nisab_crossed_at',
         'zakat_last_paid_at',
-        'pregnancy_request_status', // Nursing Mother Status
-        'pregnancy_grace_until',
-        'pregnancy_proof_path',
-        'is_pregnant',
+        'nursing_mother_status',
+        'nursing_mother_grace_until',
+        'nursing_mother_proof_path',
+        'is_nursing_mother',
         'baby_birth_date',
         // Membership Enrolment Form Fields
         'surname',
@@ -220,8 +220,8 @@ class User extends Authenticatable implements FilamentUser
             'wellness_check_notified_at' => 'datetime',
             'zakat_nisab_crossed_at' => 'datetime',
             'zakat_last_paid_at' => 'datetime',
-            'pregnancy_grace_until' => 'datetime',
-            'is_pregnant' => 'boolean',
+            'nursing_mother_grace_until' => 'datetime',
+            'is_nursing_mother' => 'boolean',
             'baby_birth_date' => 'date',
             'dob' => 'date',
             'admission_date' => 'date',
@@ -237,8 +237,8 @@ class User extends Authenticatable implements FilamentUser
     {
         static::saving(function ($user) {
             // Auto-approve if legacy fields are set manually but status is missing (Nursing Mother Grace)
-            if (($user->is_pregnant || $user->baby_birth_date || $user->pregnancy_grace_until) && is_null($user->pregnancy_request_status)) {
-                $user->pregnancy_request_status = 'approved';
+            if (($user->is_nursing_mother || $user->baby_birth_date || $user->nursing_mother_grace_until) && is_null($user->nursing_mother_status)) {
+                $user->nursing_mother_status = 'approved';
             }
         });
     }
@@ -757,15 +757,15 @@ class User extends Authenticatable implements FilamentUser
     public function isInNursingMotherGracePeriod(): bool
     {
         // Only active if approved by admin
-        if ($this->pregnancy_request_status !== 'approved') {
+        if ($this->nursing_mother_status !== 'approved') {
             return false;
         }
 
-        if ($this->pregnancy_grace_until && now()->isBefore($this->pregnancy_grace_until)) {
+        if ($this->nursing_mother_grace_until && now()->isBefore($this->nursing_mother_grace_until)) {
             return true;
         }
 
-        if ($this->is_pregnant) {
+        if ($this->is_nursing_mother) {
             return true;
         }
 

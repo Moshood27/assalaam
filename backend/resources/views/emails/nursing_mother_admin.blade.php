@@ -48,7 +48,7 @@
                 </tr>
                 <tr>
                     <td class="label">Status</td>
-                    <td class="value"><span class="badge">{{ ucfirst((string) $member->pregnancy_request_status) }}</span></td>
+                    <td class="value"><span class="badge">{{ ucfirst((string) $member->nursing_mother_status) }}</span></td>
                 </tr>
             </table>
 

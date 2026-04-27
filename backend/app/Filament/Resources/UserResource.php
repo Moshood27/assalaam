@@ -322,24 +322,24 @@ class UserResource extends Resource
 
                                 Forms\Components\Section::make('Nursing Mother Grace (Admin Verified)')
                                     ->schema([
-                                        Forms\Components\Select::make('pregnancy_request_status')
+                                        Forms\Components\Select::make('nursing_mother_status')
                                             ->options([
                                                 'pending' => 'Pending Request',
                                                 'approved' => 'Approved',
                                                 'rejected' => 'Rejected',
                                             ])
                                             ->label('Request Status'),
-                                        Forms\Components\DateTimePicker::make('pregnancy_grace_until')
+                                        Forms\Components\DateTimePicker::make('nursing_mother_grace_until')
                                             ->label('Grace Period Ends At')
                                             ->helperText('Approved members are exempt from attendance fines until this date.'),
-                                        Forms\Components\FileUpload::make('pregnancy_proof_path')
+                                        Forms\Components\FileUpload::make('nursing_mother_proof_path')
                                             ->label('Medical Proof / Scan')
                                             ->disk('public')
                                             ->directory('nursing_mother_proofs')
                                             ->downloadable()
                                             ->openable()
                                             ->columnSpanFull(),
-                                        Forms\Components\Toggle::make('is_pregnant')
+                                        Forms\Components\Toggle::make('is_nursing_mother')
                                             ->label('Currently Pregnant/Nursing (Legacy Toggle)')
                                             ->helperText('Manual override; ideally use the date above.'),
                                         Forms\Components\DatePicker::make('baby_birth_date')
@@ -543,7 +543,7 @@ class UserResource extends Resource
                         'rejected' => 'Rejected',
                     ])
                     ->label('Approval Status'),
-                Tables\Filters\SelectFilter::make('pregnancy_request_status')
+                Tables\Filters\SelectFilter::make('nursing_mother_status')
                     ->options([
                         'pending' => 'Pending Request',
                         'approved' => 'Approved',
@@ -947,17 +947,17 @@ class UserResource extends Resource
                     ->label('Approve Nursing Mother Grace')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn (User $record) => $record->pregnancy_request_status === 'pending')
+                    ->visible(fn (User $record) => $record->nursing_mother_status === 'pending')
                     ->requiresConfirmation()
                     ->action(function (User $record) {
                         $months = (int) \App\Models\Setting::get('nursing_mother_grace_period_months', 3);
-                        $record->pregnancy_request_status = 'approved';
-                        $record->pregnancy_grace_until = now()->addMonths($months);
+                        $record->nursing_mother_status = 'approved';
+                        $record->nursing_mother_grace_until = now()->addMonths($months);
                         $record->save();
 
                         $record->notifyMember(
                             "Nursing Mother Grace Approved",
-                            "Assalāmu ‘alaykum, your nursing mother grace application has been approved. You are exempt from attendance fines until " . $record->pregnancy_grace_until->toDateString() . ".",
+                            "Assalāmu ‘alaykum, your nursing mother grace application has been approved. You are exempt from attendance fines until " . $record->nursing_mother_grace_until->toDateString() . ".",
                             ['type' => 'nursing_mother_grace_approved']
                         );
 
@@ -970,7 +970,7 @@ class UserResource extends Resource
                     ->label('Reject Nursing Mother Grace')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn (User $record) => $record->pregnancy_request_status === 'pending')
+                    ->visible(fn (User $record) => $record->nursing_mother_status === 'pending')
                     ->form([
                         Forms\Components\Textarea::make('reason')
                             ->label('Reason')
@@ -978,7 +978,7 @@ class UserResource extends Resource
                     ])
                     ->requiresConfirmation()
                     ->action(function (User $record, array $data) {
-                        $record->pregnancy_request_status = 'rejected';
+                        $record->nursing_mother_status = 'rejected';
                         $record->save();
 
                         $record->notifyMember(
