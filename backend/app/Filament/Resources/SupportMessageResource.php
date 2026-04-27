@@ -63,6 +63,16 @@ class SupportMessageResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('chat')
+                    ->label('Chat')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('primary')
+                    ->modalContent(fn (SupportMessage $record) => view('filament.resources.user-resource.relation-managers.support-messages', [
+                        'user' => $record->user,
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
+                    ->modalWidth('4xl'),
                 Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([

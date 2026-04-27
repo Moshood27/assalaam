@@ -412,6 +412,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(AttendanceRecord::class);
     }
 
+    public function supportMessages()
+    {
+        return $this->hasMany(SupportMessage::class);
+    }
+
     public function createdSavingsGroups()
     {
         return $this->hasMany(SavingsGroup::class, 'creator_id');

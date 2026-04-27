@@ -1274,6 +1274,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
+            RelationManagers\SupportMessagesRelationManager::class,
             RelationManagers\QardHasansRelationManager::class,
             RelationManagers\QardHasanRepaymentsRelationManager::class,
             RelationManagers\ContributionsRelationManager::class,
