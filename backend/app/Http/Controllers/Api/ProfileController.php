@@ -10,6 +10,9 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PregnancyGraceAdminNotification;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -595,6 +598,30 @@ class ProfileController extends Controller
         $user->baby_birth_date = $request->baby_birth_date;
         $user->save();
 
+        // Notify admins
+        try {
+            $adminEmails = User::query()
+                ->where('is_admin', true)
+                ->whereNotNull('email')
+                ->pluck('email')
+                ->all();
+
+            if (!empty($adminEmails)) {
+                Mail::to($adminEmails)->send(new PregnancyGraceAdminNotification($user));
+            }
+
+            // Also send internal notification to all admins
+            User::where('is_admin', true)->each(function ($admin) use ($user) {
+                $admin->notifyMember(
+                    "Pregnancy Grace Request",
+                    "New pregnancy grace request from {$user->full_name}.",
+                    ['type' => 'pregnancy_grace_request', 'user_id' => $user->id]
+                );
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to notify admins of pregnancy grace request: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Your application for pregnancy grace has been submitted and is pending review.',
             'status' => 'pending'
@@ -658,7 +685,7 @@ class ProfileController extends Controller
         $user->save();
 
         // Notify admins
-        \App\Models\User::where('is_admin', true)->each(function ($admin) use ($user, $msgBody) {
+        User::where('is_admin', true)->each(function ($admin) use ($user, $msgBody) {
             $admin->notifyMember(
                 "Migration Discrepancy",
                 "New report from {$user->name} regarding their opening balance.",

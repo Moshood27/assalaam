@@ -10,7 +10,7 @@
       <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
         <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
 
-        <div class="flex items-center gap-4 mb-6 relative z-10">
+        <div class="flex items-center gap-4 relative z-10">
           <div class="relative">
             <div class="w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-bold overflow-hidden bg-emerald-700 text-white shadow-lg shadow-emerald-700/20">
               <img v-if="profile.passport_url" :src="getImageUrl(profile.passport_url)" alt="Profile photo" class="w-full h-full object-cover" />
@@ -30,6 +30,45 @@
             <p class="text-xs text-slate-500 font-medium">Joined {{ profile.date_joined || 'Recently' }}</p>
           </div>
         </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="flex p-1.5 bg-slate-200/50 rounded-[1.5rem] gap-1 shadow-inner">
+        <button 
+          v-for="tab in ['account', 'finance', 'security']" 
+          :key="tab"
+          @click="activeTab = tab; searchQuery = ''"
+          :class="activeTab === tab ? 'bg-white text-emerald-700 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/30'"
+          class="flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ease-out"
+        >
+          {{ tab }}
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <input v-model="searchQuery" type="text" placeholder="Search profile settings..."
+               class="w-full bg-white pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm" />
+      </div>
+
+      <!-- No Results State -->
+      <div v-if="visibleSections.length === 0" class="bg-white p-12 rounded-[2rem] border border-slate-100 text-center space-y-4">
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-2xl">🔍</div>
+        <div>
+          <h3 class="font-bold text-slate-800">No results found</h3>
+          <p class="text-xs text-slate-500 mt-1">We couldn't find any settings matching "{{ searchQuery }}"</p>
+        </div>
+        <button @click="searchQuery = ''" class="text-emerald-700 text-xs font-bold uppercase tracking-wider">Clear Search</button>
+      </div>
+
+      <div v-if="isSectionVisible('details')" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+        <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-4">Personal Details</p>
 
         <div class="space-y-3 relative z-10">
           <div v-for="item in [
@@ -85,7 +124,7 @@
       </div>
 
       <!-- Attaqwa Score & Badges -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 overflow-hidden relative">
+      <div v-if="isSectionVisible('score')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 overflow-hidden relative">
         <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full -mr-16 -mt-16 opacity-40" />
         <div class="relative z-10">
           <div class="flex items-center justify-between mb-4">
@@ -143,7 +182,8 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <!-- Verification -->
+      <div v-if="isSectionVisible('verification')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Verification</p>
         <div class="grid grid-cols-2 gap-3">
           <div class="bg-slate-50 p-3 rounded-xl">
@@ -177,7 +217,7 @@
       </div>
 
       <!-- Membership Documents & Details -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <div v-if="isSectionVisible('membership_data')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Membership Data</p>
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-2xl">📑</div>
@@ -190,7 +230,7 @@
       </div>
 
       <!-- Vendor Portal -->
-      <div v-if="profile.vendor" class="bg-white rounded-3xl shadow-sm border border-emerald-100 p-5 overflow-hidden relative group">
+      <div v-if="isSectionVisible('vendor') && profile.vendor" class="bg-white rounded-3xl shadow-sm border border-emerald-100 p-5 overflow-hidden relative group">
         <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
         <div class="relative z-10">
           <div class="flex items-center justify-between mb-2">
@@ -213,7 +253,7 @@
           </button>
         </div>
       </div>
-      <div v-else class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <div v-else-if="isSectionVisible('vendor')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Local Business</p>
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl">🏪</div>
@@ -226,7 +266,7 @@
       </div>
 
       <!-- Islamic Finance Features -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <div v-if="isSectionVisible('islamic_finance')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Islamic Finance</p>
         <div class="space-y-4">
           <button @click="$router.push('/wasiyyah')" class="w-full flex items-center gap-4 text-left group">
@@ -254,7 +294,7 @@
       </div>
 
       <!-- Bank Settings -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <div v-if="isSectionVisible('bank')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Bank Settings</p>
         <div v-if="profile.bank_details?.has_verified" class="space-y-2">
           <div class="grid sm:grid-cols-2 gap-3">
@@ -336,7 +376,7 @@
       </div>
 
       <!-- Notification Preferences -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <div v-if="isSectionVisible('notifications')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Notification Preferences</p>
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -373,8 +413,8 @@
         <p v-if="notifBusy" class="text-[10px] text-emerald-700 mt-3 font-bold">Saving preferences...</p>
       </div>
 
-      <!-- Change Email -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <!-- Update Email -->
+      <div v-if="isSectionVisible('email_update')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Update Email</p>
         <div class="space-y-3">
           <div>
@@ -393,8 +433,8 @@
         </div>
       </div>
 
-      <!-- Change Password -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <!-- Update Password -->
+      <div v-if="isSectionVisible('password_update')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Update Password</p>
         <div class="space-y-3">
           <div>
@@ -419,7 +459,7 @@
       </div>
 
       <!-- Transaction PIN -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+      <div v-if="isSectionVisible('pin')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Transaction PIN</p>
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
@@ -535,6 +575,35 @@ import axios from '../http'
 import getImageUrl from '../utils/image'
 
 const router = useRouter()
+
+const activeTab = ref('account')
+const searchQuery = ref('')
+
+const sectionDefinitions = [
+  { id: 'details', tab: 'account', keywords: ['details', 'email', 'phone', 'address', 'branch', 'membership', 'name', 'profile'] },
+  { id: 'score', tab: 'account', keywords: ['score', 'badges', 'trust', 'attaqwa', 'rating', 'tips'] },
+  { id: 'verification', tab: 'account', keywords: ['verification', 'bvn', 'kyc', 'identity'] },
+  { id: 'membership_data', tab: 'account', keywords: ['membership data', 'enrolment', 'documents', 'details'] },
+  { id: 'vendor', tab: 'finance', keywords: ['vendor', 'business', 'shop', 'dashboard', 'portal'] },
+  { id: 'islamic_finance', tab: 'finance', keywords: ['islamic', 'wasiyyah', 'junior', 'cooperative', 'next of kin', 'beneficiary'] },
+  { id: 'bank', tab: 'finance', keywords: ['bank', 'account', 'transfer', 'details', 'paystack', 'flutterwave'] },
+  { id: 'notifications', tab: 'security', keywords: ['notifications', 'email alerts', 'sms', 'push', 'prefs'] },
+  { id: 'email_update', tab: 'security', keywords: ['email', 'update email', 'change email'] },
+  { id: 'password_update', tab: 'security', keywords: ['password', 'update password', 'change password'] },
+  { id: 'pin', tab: 'security', keywords: ['pin', 'transaction pin', 'reset pin', 'forgot pin'] },
+]
+
+const visibleSections = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  return sectionDefinitions.filter(s => {
+    if (q) {
+      return s.keywords.some(k => k.toLowerCase().includes(q)) || s.id.toLowerCase().includes(q)
+    }
+    return s.tab === activeTab.value
+  })
+})
+
+const isSectionVisible = (id) => visibleSections.value.some(s => s.id === id)
 
 const profile = ref({})
 const bvnAssigned = ref(false)

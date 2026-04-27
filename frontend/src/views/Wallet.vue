@@ -26,23 +26,37 @@
         </div>
         <div class="mt-6 flex gap-2 flex-wrap relative z-10">
           <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all border border-white/10">Allocate Funds</button>
-          <button @click="showFund = !showFund" class="bg-white text-emerald-900 px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-transform active:scale-95">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
+          <button @click="showFund = !showFund; activeTab = 'overview'" class="bg-white text-emerald-900 px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-transform active:scale-95">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
-        <button @click="showTransfer = !showTransfer" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <button @click="showTransfer = !showTransfer; activeTab = 'overview'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
           <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">💸</div>
           <span class="text-xs font-bold text-slate-700">{{ showTransfer ? 'Hide' : 'Transfer' }}</span>
         </button>
-        <button @click="showWithdraw = !showWithdraw" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <button @click="showWithdraw = !showWithdraw; activeTab = 'overview'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
           <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-xl">🏦</div>
           <span class="text-xs font-bold text-slate-700">{{ showWithdraw ? 'Hide' : 'Withdraw' }}</span>
         </button>
       </div>
 
-      <!-- Merchant Pay (QR) quick access -->
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden relative">
+      <!-- Tabs Navigation -->
+      <div class="flex p-1.5 bg-slate-200/50 rounded-[1.5rem] gap-1 shadow-inner">
+        <button 
+          v-for="tab in ['overview', 'transactions', 'requests']" 
+          :key="tab"
+          @click="activeTab = tab; searchQuery = ''"
+          :class="activeTab === tab ? 'bg-white text-emerald-700 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/30'"
+          class="flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ease-out"
+        >
+          {{ tab }}
+        </button>
+      </div>
+
+      <div v-if="activeTab === 'overview'" class="space-y-6">
+        <!-- Merchant Pay (QR) quick access -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden relative">
         <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-full -mr-12 -mt-12 opacity-50" />
         <div class="relative z-10">
           <div class="flex justify-between items-center">
@@ -296,15 +310,29 @@
         </div>
         <p class="text-[10px] text-slate-400 mt-4 leading-relaxed italic">Restricted funds (e.g. loan disbursements) can be spent on utilities/store but cannot be withdrawn to bank unless unlocked.</p>
       </div>
+    </div> <!-- End Overview Tab -->
+
+    <!-- Requests Tab -->
+    <div v-if="activeTab === 'requests'" class="space-y-6">
+      <!-- Search Bar -->
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <input v-model="searchQuery" type="text" placeholder="Search requests..."
+               class="w-full bg-white pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm" />
+      </div>
 
       <!-- Your Withdrawal Requests -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-5 gap-2 flex-wrap">
           <h3 class="font-bold text-slate-800">Withdrawal Requests</h3>
-          <button @click="loadMoreWithdrawals" class="text-emerald-700 text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors">Load more</button>
+          <button v-if="withdrawalsPage < withdrawalsLastPage" @click="loadMoreWithdrawals" class="text-emerald-700 text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors">Load more</button>
         </div>
-        <div v-if="withdrawals.length" class="space-y-4">
-          <div v-for="wr in withdrawals" :key="wr.id" class="group border border-slate-100 rounded-2xl p-4 active:bg-slate-50 transition-colors">
+        <div v-if="filteredWithdrawals.length" class="space-y-4">
+          <div v-for="wr in filteredWithdrawals" :key="wr.id" class="group border border-slate-100 rounded-2xl p-4 active:bg-slate-50 transition-colors">
             <div class="flex items-center justify-between gap-3 mb-2">
               <div class="min-w-0">
                 <p class="text-base font-black text-slate-800">₦ {{ formatMoney(wr.amount) }}</p>
@@ -324,8 +352,22 @@
           </div>
         </div>
         <div v-else class="text-center py-6">
-          <p class="text-xs text-slate-400">No withdrawal requests found.</p>
+          <p class="text-xs text-slate-400">{{ searchQuery ? 'No matching requests found.' : 'No withdrawal requests found.' }}</p>
         </div>
+      </div>
+    </div> <!-- End Requests Tab -->
+
+    <!-- Transactions Tab -->
+    <div v-if="activeTab === 'transactions'" class="space-y-6">
+      <!-- Search Bar -->
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <input v-model="searchQuery" type="text" placeholder="Search transactions..."
+               class="w-full bg-white pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm" />
       </div>
 
       <!-- Recent Wallet Transactions -->
@@ -334,8 +376,8 @@
           <h3 class="font-bold text-slate-800">Transaction History</h3>
           <button @click="loadMore" class="text-emerald-700 text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors">View All</button>
         </div>
-        <div v-if="transactions.length" class="space-y-4">
-          <div v-for="tx in transactions" :key="tx.id" class="flex items-center justify-between gap-3 group">
+        <div v-if="filteredTransactions.length" class="space-y-4">
+          <div v-for="tx in filteredTransactions" :key="tx.id" class="flex items-center justify-between gap-3 group">
             <div class="flex items-center gap-3 min-w-0">
               <div :class="tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'"
                    class="w-11 h-11 rounded-2xl flex items-center justify-center text-lg shrink-0 transition-transform group-active:scale-90">
@@ -371,9 +413,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <p class="text-xs text-slate-400 font-medium">No transactions recorded yet.</p>
+          <p class="text-xs text-slate-400 font-medium">{{ searchQuery ? 'No matching transactions found.' : 'No transactions recorded yet.' }}</p>
         </div>
       </div>
+    </div> <!-- End Transactions Tab -->
 
       <!-- Reusable Notice Modal -->
       <CustomNotice
@@ -428,8 +471,22 @@ const { notice, showNotice, closeNotice } = useNotice()
 // Balance visibility
 const { hideBalances } = useBalanceVisibility()
 
+const activeTab = ref('overview')
+const searchQuery = ref('')
+
 const wallet = ref({ balance: 0, virtual_account: {}, admin_charge_balance: 0 })
 const transactions = ref([])
+const filteredTransactions = computed(() => {
+  if (!searchQuery.value) return transactions.value
+  const q = searchQuery.value.toLowerCase()
+  return transactions.value.filter(tx => 
+    tx.reference.toLowerCase().includes(q) || 
+    tx.type.toLowerCase().includes(q) ||
+    String(tx.amount).includes(q) ||
+    titleFor(tx).toLowerCase().includes(q) ||
+    (tx.meta?.remark || '').toLowerCase().includes(q)
+  )
+})
 const page = ref(1)
 const perPage = 10
 
@@ -459,6 +516,17 @@ const payAdminCharge = async () => {
 
 // Withdrawal requests listing
 const withdrawals = ref([])
+const filteredWithdrawals = computed(() => {
+  if (!searchQuery.value) return withdrawals.value
+  const q = searchQuery.value.toLowerCase()
+  return withdrawals.value.filter(wr => 
+    wr.reference.toLowerCase().includes(q) || 
+    wr.status.toLowerCase().includes(q) ||
+    String(wr.amount).includes(q) ||
+    (wr.bank_name || '').toLowerCase().includes(q) ||
+    (wr.account_number || '').toLowerCase().includes(q)
+  )
+})
 const withdrawalsPage = ref(1)
 const withdrawalsPerPage = 10
 const withdrawalsLastPage = ref(1)
@@ -472,7 +540,7 @@ const calculatedCharge = computed(() => {
   return Math.min(charge, max_amount)
 })
 const assigning = ref(false)
-const showFund = ref(true)
+const showFund = ref(false)
 const showTransfer = ref(false)
 const showWithdraw = ref(false)
 

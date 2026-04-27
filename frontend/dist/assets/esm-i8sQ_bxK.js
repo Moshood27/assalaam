@@ -1,1 +1,0 @@
-import{u as e}from"./index-BGIag-2W.js";export{e as SplashScreen};
