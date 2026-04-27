@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\VendorResource\Pages;
+use App\Filament\Resources\VendorResource\RelationManagers;
 use App\Models\Vendor;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -161,6 +162,13 @@ class VendorResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\OwnerChatRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
