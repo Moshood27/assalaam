@@ -407,7 +407,7 @@
 <script setup>
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import axios from '../http.js'
 import { useRouter } from 'vue-router'
 import { openBlob } from '../utils/download'
@@ -415,6 +415,7 @@ import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
+import { getEcho } from '../realtime/echo'
 
 const router = useRouter()
 const baseRaw = import.meta?.env?.BASE_URL || '/'
@@ -805,6 +806,34 @@ watch([toType, toValue, branchId], () => {
 onMounted(async () => {
   await loadWallet()
   await resetWithdrawals()
+
+  // Real-time listener
+  try {
+    const echo = getEcho()
+    const token = localStorage.getItem('token')
+    if (token) {
+      const { data: userData } = await axios.get('/api/profile', { headers: { Authorization: `Bearer ${token}` } })
+      const userId = userData.id
+
+      if (userId) {
+        echo.private(`user.${userId}`)
+          .listen('UserAccountUpdated', (e) => {
+            console.log('Real-time update received in Wallet:', e)
+            loadWallet()
+            resetWithdrawals()
+            if (e.message) {
+              showNotice('Update', e.message, 'success')
+            }
+          })
+      }
+    }
+  } catch (err) {
+    console.error('Failed to initialize real-time listener in Wallet:', err)
+  }
+})
+
+onUnmounted(() => {
+  // Echo cleanup if needed
 })
 
 const cancelWithdrawal = async (wr) => {

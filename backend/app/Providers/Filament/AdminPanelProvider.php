@@ -144,6 +144,7 @@ class AdminPanelProvider extends PanelProvider
                     ->enableBrowserSessions(),
             ])
             ->renderHook('panels::head.end', fn () => view('filament.print-styles'))
+            ->renderHook('panels::head.end', fn (): string => \Illuminate\Support\Facades\Blade::render('@vite([\'resources/js/app.js\'])'))
             ->renderHook('panels::body.start', fn () => view('filament.print-header'))
             ->renderHook('panels::body.end', fn () => view('filament.inactivity-handler'))
             ->renderHook('panels::body.end', fn () => \Livewire\Livewire::mount('admin-notification-listener'))

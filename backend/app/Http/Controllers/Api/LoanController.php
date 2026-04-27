@@ -302,31 +302,22 @@ class LoanController extends Controller
                 // ignore email errors
             }
 
-            // Best-effort: Push notification to admins (Filament) about disbursement
+            // Best-effort: Notification to admins (Filament) about disbursement
             try {
-                $admins = User::query()
-                    ->where('is_admin', true)
-                    ->get(['id', 'name', 'device_token', 'fcm_token']);
-                if ($admins->isNotEmpty()) {
-                    $push = app(\App\Services\PushService::class);
-                    $title = 'Loan Disbursed';
+                $admins = User::query()->where('is_admin', true)->get();
+                foreach ($admins as $a) {
                     $memberName = $q->user?->full_name ?: 'Member';
                     $body = 'Loan ' . $q->qard_id_string . ' disbursed: ₦' . number_format($credit, 2) . ' to ' . $memberName;
-                    foreach ($admins as $a) {
-                        $token = $a->fcm_token ?: $a->device_token;
-                        if (!empty($token)) {
-                            $push->send($token, $title, $body, [
-                                'type' => 'loan_disbursed_admin',
-                                'loan_id' => $q->id,
-                                'qard_id_string' => $q->qard_id_string,
-                                'member_id' => $q->user?->id,
-                                'credited_amount' => (float) $credit,
-                            ]);
-                        }
-                    }
+                    $a->notifyMember('Loan Disbursed', $body, [
+                        'type' => 'loan_disbursed_admin',
+                        'loan_id' => $q->id,
+                        'qard_id_string' => $q->qard_id_string,
+                        'member_id' => $q->user?->id,
+                        'credited_amount' => (float) $credit,
+                    ]);
                 }
             } catch (\Throwable $e) {
-                // ignore admin push errors
+                Log::error('Failed to notify admins of loan disbursement: ' . $e->getMessage());
             }
 
             // Notify member via preferences (SMS, Push, Email, Database)

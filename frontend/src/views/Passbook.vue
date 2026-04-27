@@ -97,8 +97,9 @@
 <script setup>
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import axios from '../http.js'
+import { getEcho } from '../realtime/echo'
 
 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const years = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1]
@@ -154,7 +155,34 @@ const getDownloadUrl = (format) => {
   const endpoint = format === 'csv' ? 'download-passbook-csv' : 'download-passbook'
   return `${baseUrl}/api/${endpoint}?year=${selectedYear.value}&token=${encodeURIComponent(token)}`
 }
-onMounted(fetchPassbook)
+onMounted(async () => {
+  await fetchPassbook()
+
+  // Real-time listener
+  try {
+    const echo = getEcho()
+    const token = localStorage.getItem('token')
+    if (token) {
+      // Get profile to know user ID
+      const { data: userData } = await axios.get('/api/profile', { headers: { Authorization: `Bearer ${token}` } })
+      const userId = userData.id
+
+      if (userId) {
+        echo.private(`user.${userId}`)
+          .listen('UserAccountUpdated', (e) => {
+            console.log('Real-time update received in Passbook:', e)
+            fetchPassbook() // Just refresh everything to be sure
+          })
+      }
+    }
+  } catch (err) {
+    console.error('Failed to initialize real-time listener in Passbook:', err)
+  }
+})
+
+onUnmounted(() => {
+  // Echo cleanup if needed
+})
 </script>
 
 <style scoped>

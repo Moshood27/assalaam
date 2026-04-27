@@ -97,14 +97,12 @@ class GuarantorController extends Controller
         $pendingCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'pending')->count() ?? 0);
         $allAccepted = method_exists($loan, 'allGuarantorsAccepted') ? $loan->allGuarantorsAccepted() : ($pendingCount === 0 && $declinedCount === 0 && $acceptedCount > 0);
 
-        // Notify borrower via push (best-effort)
+        // Notify borrower via real-time and push
         try {
             if ($loan->user) {
-                $push = app(\App\Services\PushService::class);
                 $title = 'Guarantor Accepted';
                 $body = ($user->full_name ?: 'A guarantor').' accepted your loan request '.$loan->qard_id_string.'.';
-                $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
-                $push->send($token, $title, $body, [
+                $loan->user->notifyMember($title, $body, [
                     'type' => 'guarantor_decision',
                     'status' => 'accepted',
                     'loan_id' => $loan->id,
@@ -118,7 +116,7 @@ class GuarantorController extends Controller
 
                 // If all guarantors have accepted, send a follow-up notification to borrower
                 if ($allAccepted) {
-                    $push->send($token, 'All Guarantors Accepted', 'All selected guarantors have approved your loan '.$loan->qard_id_string.'. Awaiting admin disbursement.', [
+                    $loan->user->notifyMember('All Guarantors Accepted', 'All selected guarantors have approved your loan '.$loan->qard_id_string.'. Awaiting admin disbursement.', [
                         'type' => 'guarantors_complete',
                         'loan_id' => $loan->id,
                         'qard_id_string' => $loan->qard_id_string,
@@ -127,7 +125,7 @@ class GuarantorController extends Controller
                 }
             }
         } catch (\Throwable $e) {
-            // ignore
+            Log::error('Failed to notify borrower of guarantor acceptance: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -174,14 +172,12 @@ class GuarantorController extends Controller
         $pendingCount = (int) ($loan->guarantors?->filter(fn($g) => ($g->pivot?->status) === 'pending')->count() ?? 0);
         $allAccepted = method_exists($loan, 'allGuarantorsAccepted') ? $loan->allGuarantorsAccepted() : ($pendingCount === 0 && $declinedCount === 0 && $acceptedCount > 0);
 
-        // Notify borrower via push (best-effort)
+        // Notify borrower via real-time and push
         try {
             if ($loan->user) {
-                $push = app(\App\Services\PushService::class);
                 $title = 'Guarantor Declined';
                 $body = ($user->full_name ?: 'A guarantor').' declined your loan request '.$loan->qard_id_string.'.';
-                $token = $loan->user->fcm_token ?: ($loan->user->device_token ?? null);
-                $push->send($token, $title, $body, [
+                $loan->user->notifyMember($title, $body, [
                     'type' => 'guarantor_decision',
                     'status' => 'declined',
                     'loan_id' => $loan->id,
@@ -194,7 +190,7 @@ class GuarantorController extends Controller
                 ]);
             }
         } catch (\Throwable $e) {
-            // ignore
+            Log::error('Failed to notify borrower of guarantor decline: ' . $e->getMessage());
         }
 
         return response()->json([
@@ -233,9 +229,7 @@ class GuarantorController extends Controller
                         'last_nudged_at' => now(),
                     ]);
 
-                $push = app(\App\Services\PushService::class);
-                $token = $g->fcm_token ?: ($g->device_token ?? null);
-                $push->send($token, 'Guarantor Reminder', sprintf('Please review and respond to loan %s for %s.', $loan->qard_id_string, $loan->user?->full_name ?? 'member'), [
+                $g->notifyMember('Guarantor Reminder', sprintf('Please review and respond to loan %s for %s.', $loan->qard_id_string, $loan->user?->full_name ?? 'member'), [
                     'type' => 'guarantor_reminder_manual',
                     'loan_id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,
@@ -243,7 +237,7 @@ class GuarantorController extends Controller
 
                 $nudgedIds[] = $g->id;
             } catch (\Throwable $e) {
-                // ignore push failures to avoid blocking
+                Log::error('Failed to nudge guarantor: ' . $e->getMessage());
             }
         }
 
@@ -285,20 +279,18 @@ class GuarantorController extends Controller
             ->whereNull('escalated_at')
             ->update(['escalated_at' => now()]);
 
-        // Notify admins (best-effort)
+        // Notify admins via global activity feed (by notifying them as members)
         try {
             $admins = \App\Models\User::query()->where('is_admin', true)->get();
-            $push = app(\App\Services\PushService::class);
             foreach ($admins as $a) {
-                $token = $a->fcm_token ?: ($a->device_token ?? null);
-                $push->send($token, 'Guarantor Escalation', sprintf('Loan %s for %s requires attention. Pending guarantors: %d', $loan->qard_id_string, $loan->user?->full_name ?? 'member', $pending->count()), [
+                $a->notifyMember('Guarantor Escalation', sprintf('Loan %s for %s requires attention. Pending guarantors: %d', $loan->qard_id_string, $loan->user?->full_name ?? 'member', $pending->count()), [
                     'type' => 'guarantor_escalation',
                     'loan_id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,
                 ]);
             }
         } catch (\Throwable $e) {
-            // ignore
+            Log::error('Failed to notify admins of escalation: ' . $e->getMessage());
         }
 
         // Audit

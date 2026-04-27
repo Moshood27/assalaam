@@ -225,6 +225,7 @@ import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
 import { useRouter } from 'vue-router'
 import { useModal } from '../composables/useModal'
+import { getEcho } from '../realtime/echo'
 
 const router = useRouter()
 const modal = useModal()
@@ -412,7 +413,29 @@ const submitApology = async () => {
   }
 }
 
-onMounted(fetchCurrentMeeting)
+onMounted(async () => {
+  await fetchCurrentMeeting()
+
+  // Real-time listener
+  try {
+    const echo = getEcho()
+    const token = localStorage.getItem('token')
+    if (token) {
+      const { data: userData } = await axios.get('/api/profile', { headers: { Authorization: `Bearer ${token}` } })
+      const userId = userData.id
+
+      if (userId) {
+        echo.private(`user.${userId}`)
+          .listen('UserAccountUpdated', (e) => {
+            console.log('Real-time update received in Attendance:', e)
+            fetchCurrentMeeting()
+          })
+      }
+    }
+  } catch (err) {
+    console.error('Failed to initialize real-time listener in Attendance:', err)
+  }
+})
 onUnmounted(() => {
   if (countdownInterval.value) clearInterval(countdownInterval.value)
 })

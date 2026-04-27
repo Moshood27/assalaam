@@ -76,14 +76,12 @@ class WebhookController extends Controller
                             meta: ['provider' => 'paystack']
                         ));
                     }
-                    $push = app(\App\Services\PushService::class);
-                    $token = $user->fcm_token ?: ($user->device_token ?? null);
-                    $push->send($token, 'Payment Failed', 'Your payment attempt was not successful. ' . $reason, [
+                    $user->notifyMember('Payment Failed', 'Your payment attempt was not successful. ' . $reason, [
                         'type' => 'payment_failed',
                         'amount' => $amountNgn,
                         'reference' => (string) ($reference ?? ''),
                         'route' => $reference && \App\Models\Contribution::where('reference', $reference)->exists() ? '/pay' : '/wallet',
-                    ]);
+                    ], ['push', 'database']);
                 } catch (\Throwable $e) {
                     Log::warning('Failed to send Paystack failure notification', ['reference' => $reference, 'error' => $e->getMessage()]);
                 }
@@ -644,14 +642,12 @@ class WebhookController extends Controller
                                 meta: ['provider' => 'flutterwave']
                             ));
                         }
-                        $push = app(\App\Services\PushService::class);
-                        $token = $user->fcm_token ?: ($user->device_token ?? null);
-                        $push->send($token, 'Payment Failed', 'Your payment attempt was not successful. ' . ($reason ?? ''), [
+                        $user->notifyMember('Payment Failed', 'Your payment attempt was not successful. ' . ($reason ?? ''), [
                             'type' => 'payment_failed',
                             'amount' => (float) ($vd['charged_amount'] ?? $vd['amount'] ?? 0),
                             'reference' => (string) $reference,
                             'route' => $contrib ? '/pay' : '/wallet',
-                        ]);
+                        ], ['push', 'database']);
                     }
                 } catch (\Throwable $e) {
                     Log::warning('Failed to send Flutterwave failure notification', ['reference' => $reference, 'error' => $e->getMessage()]);

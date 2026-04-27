@@ -309,7 +309,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
@@ -317,6 +317,7 @@ import getImageUrl from '../utils/image'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
+import { getEcho } from '../realtime/echo'
 
 // Policy defaults for admin fees (can be overridden via environment variables)
 const DEFAULT_ADMIN_FEE_FLAT = Number(import.meta.env.VITE_DEFAULT_ADMIN_FEE_FLAT ?? 0)
@@ -677,5 +678,73 @@ const declineGuarantor = async (req) => {
   }
 }
 
-onMounted(async () => { await load(); await fetchEligibility(); await fetchGuarantorRequests(); })
+onMounted(async () => { 
+  await load(); 
+  await fetchEligibility(); 
+  await fetchGuarantorRequests(); 
+
+  // Real-time listener for loan status updates
+  try {
+    const echo = getEcho()
+    const token = localStorage.getItem('token')
+    if (token) {
+      // We need user ID to listen on private channel. 
+      // We can get it from the loans list or a separate call, 
+      // but usually it's stored in a user store or we can just try to fetch it if not available.
+      // For now, let's assume we can get it from the first loan if exists, or just do a quick profile fetch if needed.
+      // Better yet, if we don't have it, we can't listen.
+      
+      // Let's check if we have it in some local storage or if we can get it from loans
+      let userId = null
+      if (loans.value && loans.value.length > 0) {
+        userId = loans.value[0].user_id
+      }
+      
+      if (!userId) {
+         // try to get from user store if available, or just fetch profile
+         try {
+           const { data: userData } = await axios.get('/api/profile', { headers: { Authorization: `Bearer ${token}` } })
+           userId = userData.id
+         } catch(_) {}
+      }
+
+      if (userId) {
+        echo.private(`user.${userId}`)
+          .listen('UserAccountUpdated', (e) => {
+            console.log('Real-time update received in Loans:', e)
+            
+            // If the message or action indicates a loan-related change, refresh
+            const isLoanAction = e.action && (
+              e.action.type === 'loan_approved' || 
+              e.action.type === 'loan_disbursed' || 
+              e.action.type === 'loan_repayment' ||
+              e.action.type === 'guarantor_request'
+            )
+            
+            // To be safe and ensure everything is fresh, just refresh
+            load()
+            fetchEligibility()
+            fetchGuarantorRequests()
+
+            if (e.message) {
+               showNotice('Update', e.message, 'success')
+            }
+          })
+      }
+    }
+  } catch (err) {
+    console.error('Failed to initialize real-time listener in Loans:', err)
+  }
+})
+
+onUnmounted(() => {
+  try {
+    const echo = getEcho()
+    const token = localStorage.getItem('token')
+    // We don't necessarily need to leave the channel if other components use it,
+    // but we should stop listening to this specific event if we want to be clean.
+    // However, Laravel Echo's .listen() doesn't easily un-listen without leaving the channel.
+    // Usually, we just leave it be or leave channel if it's page-specific.
+  } catch(_) {}
+})
 </script>

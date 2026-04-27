@@ -325,7 +325,7 @@
             </div>
 
             <div class="footer">
-                Printed on {{ now()->format('d/m/Y H:i') }} - Member {{ $loop->iteration }} of {{ $users->count() }}
+                Printed on {{ now()->format('d/m/Y H:i') }} - Member {{ $loop->iteration }} of {{ count($users) }}
             </div>
         </div>
     @endforeach
