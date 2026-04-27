@@ -1,13 +1,13 @@
 <script>
     (function() {
         let timeout;
-        const idleTime = 15 * 60 * 1000; // 15 minutes
+        const idleTime = 5 * 60 * 1000; // 5 minutes
 
         function resetTimer() {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 // When the timer hits, reload the page.
-                // If the session has expired on the server (which should happen at 15m),
+                // If the session has expired on the server (which should happen at 5m),
                 // the user will be redirected to the login page.
                 window.location.reload();
             }, idleTime + 1000); // 1s buffer
