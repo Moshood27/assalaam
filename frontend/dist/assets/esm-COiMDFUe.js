@@ -1,0 +1,1 @@
+import{u as e}from"./index-BiZi4k4v.js";export{e as SplashScreen};

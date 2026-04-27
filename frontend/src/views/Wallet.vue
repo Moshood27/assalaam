@@ -25,84 +25,134 @@
           <span class="font-bold">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.available_for_withdrawal || 0) }}</span>
         </div>
         <div class="mt-6 flex gap-2 flex-wrap relative z-10">
-          <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all border border-white/10">Allocate Funds</button>
-          <button @click="showFund = !showFund; activeTab = 'overview'" class="bg-white text-emerald-900 px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-transform active:scale-95">{{ showFund ? 'Hide' : 'Fund Wallet' }}</button>
+          <button @click="activeTab = 'fund'" class="bg-white/20 hover:bg-white/30 px-4 py-2.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all border border-white/10">Allocate Funds</button>
+          <button @click="activeTab = 'fund'" class="bg-white text-emerald-900 px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-transform active:scale-95">Fund Wallet</button>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
-        <button @click="showTransfer = !showTransfer; activeTab = 'overview'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <button @click="activeTab = 'transfer'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
           <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">💸</div>
-          <span class="text-xs font-bold text-slate-700">{{ showTransfer ? 'Hide' : 'Transfer' }}</span>
+          <span class="text-xs font-bold text-slate-700">Transfer</span>
         </button>
-        <button @click="showWithdraw = !showWithdraw; activeTab = 'overview'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <button @click="activeTab = 'withdraw'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
           <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-xl">🏦</div>
-          <span class="text-xs font-bold text-slate-700">{{ showWithdraw ? 'Hide' : 'Withdraw' }}</span>
+          <span class="text-xs font-bold text-slate-700">Withdraw</span>
         </button>
       </div>
 
       <!-- Tabs Navigation -->
-      <div class="flex p-1.5 bg-slate-200/50 rounded-[1.5rem] gap-1 shadow-inner">
+      <div class="flex p-1.5 bg-slate-200/50 rounded-[1.5rem] gap-1 shadow-inner overflow-x-auto no-scrollbar">
         <button 
-          v-for="tab in ['overview', 'transactions', 'requests']" 
+          v-for="tab in ['overview', 'fund', 'transfer', 'withdraw', 'merchant', 'transactions', 'requests']" 
           :key="tab"
           @click="activeTab = tab; searchQuery = ''"
           :class="activeTab === tab ? 'bg-white text-emerald-700 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/30'"
-          class="flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ease-out"
+          class="flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ease-out whitespace-nowrap"
         >
           {{ tab }}
         </button>
       </div>
 
-      <div v-if="activeTab === 'overview'" class="space-y-6">
-        <!-- Merchant Pay (QR) quick access -->
-        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden relative">
-        <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-full -mr-12 -mt-12 opacity-50" />
-        <div class="relative z-10">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold text-slate-800">Merchant Pay (QR)</h3>
-            <div class="flex gap-2">
-              <button @click="$router.push('/merchant/receive')" class="bg-emerald-700 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase">Receive</button>
-              <button @click="$router.push('/merchant/pay')" class="bg-white text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-[10px] font-black uppercase">Pay</button>
+      <div v-if="activeTab === 'merchant'" class="space-y-6">
+        <!-- Merchant Pay (QR) Tab Content -->
+        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 text-center relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50" />
+          <div class="relative z-10 space-y-6">
+            <div class="w-20 h-20 bg-emerald-100 rounded-[2.5rem] flex items-center justify-center mx-auto text-4xl shadow-inner">
+              📱
             </div>
-          </div>
-          <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">Let local shops accept Attaqwa Pay. Generate a QR to receive or scan a merchant's QR to pay.</p>
-        </div>
-      </div>
-
-      <!-- Virtual Account Info -->
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-slate-800">Bank Transfer Account</h3>
-          <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (!!bvn && !bvnValid)"
-                  class="text-[10px] font-black uppercase bg-emerald-700 text-white px-3 py-2 rounded-xl disabled:opacity-50">
-            {{ assigning ? 'Creating…' : 'Generate' }}
-          </button>
-        </div>
-        <div v-if="wallet.virtual_account?.account_number" class="space-y-4">
-          <div class="bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Bank Name</span>
-              <span class="font-bold text-slate-800 text-sm">{{ wallet.virtual_account.bank_name }}</span>
+            <div>
+              <h3 class="text-xl font-black text-slate-800">Merchant Pay (QR)</h3>
+              <p class="text-sm text-slate-500 mt-2 leading-relaxed px-4">Scan to pay at any Attaqwa Merchant or generate your own QR to receive payments instantly.</p>
             </div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Name</span>
-              <span class="font-bold text-slate-800 text-sm">{{ wallet.virtual_account.account_name }}</span>
-            </div>
-            <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
-              <div>
-                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
-                <p class="font-black text-emerald-700 text-xl tracking-wider">{{ wallet.virtual_account.account_number }}</p>
-              </div>
-              <button @click="copy(wallet.virtual_account.account_number)" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg hover:bg-emerald-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
+            <div class="grid grid-cols-2 gap-4">
+              <button @click="$router.push('/merchant/pay')" class="bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 active:scale-95 transition-all flex flex-col items-center gap-2">
+                <span class="text-xl">🔍</span>
+                <span class="text-xs uppercase tracking-widest">Scan & Pay</span>
+              </button>
+              <button @click="$router.push('/merchant/receive')" class="bg-white text-emerald-700 border-2 border-emerald-100 p-4 rounded-2xl font-bold active:scale-95 transition-all flex flex-col items-center gap-2">
+                <span class="text-xl">📥</span>
+                <span class="text-xs uppercase tracking-widest">Receive</span>
               </button>
             </div>
           </div>
-          <p class="text-[11px] text-slate-500 text-center px-4">Transfer funds to this account to top up your wallet instantly.</p>
-          <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+        </div>
+        
+        <div class="bg-emerald-900 p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden">
+           <div class="absolute left-0 bottom-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12" />
+           <h4 class="font-bold text-emerald-200 text-[10px] uppercase tracking-widest mb-2">How it works</h4>
+           <ul class="space-y-3">
+             <li class="flex gap-3 text-xs">
+               <span class="font-black text-emerald-400">01.</span>
+               <span class="opacity-90">Open "Scan & Pay" to scan a merchant's Attaqwa QR code.</span>
+             </li>
+             <li class="flex gap-3 text-xs">
+               <span class="font-black text-emerald-400">02.</span>
+               <span class="opacity-90">Confirm the amount and merchant details.</span>
+             </li>
+             <li class="flex gap-3 text-xs">
+               <span class="font-black text-emerald-400">03.</span>
+               <span class="opacity-90">Funds are transferred instantly from your wallet.</span>
+             </li>
+           </ul>
+        </div>
+      </div>
+
+      <div v-if="activeTab === 'overview'" class="space-y-6">
+        <!-- Virtual Account Info -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800">Bank Transfer Account</h3>
+            <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (!!bvn && !bvnValid)"
+                    class="text-[10px] font-black uppercase bg-emerald-700 text-white px-3 py-2 rounded-xl disabled:opacity-50">
+              {{ assigning ? 'Creating…' : 'Generate' }}
+            </button>
+          </div>
+          
+          <div v-if="wallet.virtual_account?.account_number" class="space-y-4">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Bank Name</span>
+                <span class="font-bold text-slate-800 text-sm">{{ wallet.virtual_account.bank_name }}</span>
+              </div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Name</span>
+                <span class="font-bold text-slate-800 text-sm">{{ wallet.virtual_account.account_name }}</span>
+              </div>
+              <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                <div>
+                  <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
+                  <p class="font-black text-emerald-700 text-xl tracking-wider">{{ wallet.virtual_account.account_number }}</p>
+                </div>
+                <button @click="copy(wallet.virtual_account.account_number)" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg hover:bg-emerald-100 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 text-center px-4">Transfer funds to this account to top up your wallet instantly.</p>
+            <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+          </div>
+
+          <div v-else class="space-y-3">
+            <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
+            <div class="space-y-2">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">BVN (optional)</label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
+                  </svg>
+                </div>
+                <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
+                       class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+              </div>
+              <p v-if="bvn && !bvnValid" class="text-rose-600 text-[10px] font-bold">Please enter a valid 11-digit BVN.</p>
+              <p class="text-[10px] text-slate-400 leading-tight">Providing your BVN helps us verify your dedicated account faster.</p>
+            </div>
+          </div>
         </div>
 
         <!-- Administrative Charges Section -->
@@ -121,196 +171,184 @@
           </div>
           <p class="text-[11px] text-rose-600 mt-3 leading-relaxed opacity-80 italic">A monthly administrative charge of ₦300 applies. You can enable auto-deduction in settings.</p>
         </div>
-        <div v-else class="space-y-3">
-          <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
-          <div class="space-y-2">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">BVN (optional)</label>
-            <div class="relative group">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
-                </svg>
-              </div>
-              <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
-                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
-            </div>
-            <p v-if="bvn && !bvnValid" class="text-rose-600 text-[10px] font-bold">Please enter a valid 11-digit BVN.</p>
-            <p class="text-[10px] text-slate-400 leading-tight">Providing your BVN helps us verify your dedicated account faster.</p>
-          </div>
-        </div>
       </div>
 
-      <!-- Card Top-up Form -->
-      <div v-if="showFund" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
-        <h3 class="font-bold text-slate-800 mb-4">Fund Wallet (Card)</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount to Fund</label>
-            <div class="relative group">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400 font-bold">₦</div>
-              <input v-model.number="topupAmount" type="number" min="1" placeholder="0.00"
-                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
-            </div>
-
-            <!-- Maintenance Charge Display -->
-            <div v-if="topupAmount > 0 && wallet?.maintenance_charge_config" class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-              <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                <span class="text-slate-500">System Maintenance Charge</span>
-                <span class="text-rose-600">₦ {{ formatMoney(calculatedCharge) }}</span>
+      <div v-if="activeTab === 'fund'" class="space-y-6">
+        <!-- Card Top-up Form -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
+          <h3 class="font-bold text-slate-800 mb-4">Fund Wallet (Card)</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount to Fund</label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400 font-bold">₦</div>
+                <input v-model.number="topupAmount" type="number" min="1" placeholder="0.00"
+                       class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
               </div>
-              <div class="flex justify-between text-xs font-black uppercase tracking-wider pt-2 border-t border-slate-200">
-                <span class="text-slate-800">Net Credit to Wallet</span>
-                <span class="text-emerald-700 font-black">₦ {{ formatMoney(Math.max(0, topupAmount - calculatedCharge)) }}</span>
+
+              <!-- Maintenance Charge Display -->
+              <div v-if="topupAmount > 0 && wallet?.maintenance_charge_config" class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                  <span class="text-slate-500">System Maintenance Charge</span>
+                  <span class="text-rose-600">₦ {{ formatMoney(calculatedCharge) }}</span>
+                </div>
+                <div class="flex justify-between text-xs font-black uppercase tracking-wider pt-2 border-t border-slate-200">
+                  <span class="text-slate-800">Net Credit to Wallet</span>
+                  <span class="text-emerald-700 font-black">₦ {{ formatMoney(Math.max(0, topupAmount - calculatedCharge)) }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <button @click="initTopup" :disabled="loading || !topupAmount"
-                  class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
-            {{ loading ? 'Processing…' : 'Proceed to Payment' }}
-          </button>
-        </div>
-        <p class="mt-3 text-[10px] text-slate-500 text-center">Powered by Paystack. Securely top up using your debit card.</p>
-      </div>
-
-      <!-- P2P Transfer Form -->
-      <div v-if="showTransfer" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
-        <h3 class="font-bold text-slate-800 mb-4">Transfer to Member</h3>
-        <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-            <button v-for="type in ['phone', 'membership']" :key="type"
-                    @click="toType = type"
-                    :class="toType === type ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-slate-50 text-slate-600 border-slate-100'"
-                    class="p-3 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all">
-              {{ type === 'phone' ? 'Phone' : 'Member ID' }}
+            <button @click="initTopup" :disabled="loading || !topupAmount"
+                    class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
+              {{ loading ? 'Processing…' : 'Proceed to Payment' }}
             </button>
           </div>
+          <p class="mt-3 text-[10px] text-slate-500 text-center">Powered by Paystack. Securely top up using your debit card.</p>
+        </div>
+      </div>
 
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-              {{ toType === 'phone' ? 'Phone Number' : 'Membership ID' }}
-            </label>
-            <div class="flex gap-2">
-              <input v-model="toValue" type="text"
-                     class="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
-                     :placeholder="toType === 'phone' ? 'e.g. 0803...' : 'e.g. MEM123'" />
-              <button @click="checkRecipient" type="button" class="shrink-0 bg-emerald-50 text-emerald-700 px-5 rounded-2xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-colors">
-                Verify
+      <div v-if="activeTab === 'transfer'" class="space-y-6">
+        <!-- P2P Transfer Form -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
+          <h3 class="font-bold text-slate-800 mb-4">Transfer to Member</h3>
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <button v-for="type in ['phone', 'membership']" :key="type"
+                      @click="toType = type"
+                      :class="toType === type ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-slate-50 text-slate-600 border-slate-100'"
+                      class="p-3 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all">
+                {{ type === 'phone' ? 'Phone' : 'Member ID' }}
               </button>
             </div>
-          </div>
 
-          <div v-if="toType === 'membership'" class="space-y-4">
             <div>
-              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Branch ID (Optional)</label>
-              <input v-model.number="branchId" type="number" min="1"
-                     class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
-                     placeholder="ID if known" />
-            </div>
-
-            <!-- Recipient preview / disambiguation -->
-            <div v-if="recipient" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold">
-                {{ recipient.name[0] }}
-              </div>
-              <div class="min-w-0">
-                <p class="text-[10px] font-black text-emerald-800 uppercase tracking-widest leading-none mb-1">Recipient Found</p>
-                <p class="text-sm font-bold text-slate-800 truncate">{{ recipient.name }}</p>
-                <p class="text-[10px] text-emerald-600 font-medium">{{ recipient.membership_number }} • {{ recipient.branch_name }}</p>
-              </div>
-            </div>
-
-            <div v-else-if="recipientError" class="p-4 rounded-2xl bg-amber-50 border border-amber-100 space-y-3">
-              <p class="text-xs font-bold text-amber-800">{{ recipientError }}</p>
-              <div v-if="branchesOptions.length" class="flex flex-wrap gap-2">
-                <button v-for="b in branchesOptions" :key="b.id" type="button" @click="chooseBranch(b)"
-                        class="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-amber-700 text-[10px] font-bold uppercase hover:bg-amber-100 transition-colors">
-                  {{ b.name }}
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                {{ toType === 'phone' ? 'Phone Number' : 'Membership ID' }}
+              </label>
+              <div class="flex gap-2">
+                <input v-model="toValue" type="text"
+                       class="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                       :placeholder="toType === 'phone' ? 'e.g. 0803...' : 'e.g. MEM123'" />
+                <button @click="checkRecipient" type="button" class="shrink-0 bg-emerald-50 text-emerald-700 px-5 rounded-2xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-colors">
+                  Verify
                 </button>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
-            <div class="relative group">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
-              <input v-model.number="transferAmount" type="number" min="1" placeholder="0.00"
-                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all" />
+            <div v-if="toType === 'membership'" class="space-y-4">
+              <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Branch ID (Optional)</label>
+                <input v-model.number="branchId" type="number" min="1"
+                       class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                       placeholder="ID if known" />
+              </div>
+
+              <!-- Recipient preview / disambiguation -->
+              <div v-if="recipient" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold">
+                  {{ recipient.name[0] }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[10px] font-black text-emerald-800 uppercase tracking-widest leading-none mb-1">Recipient Found</p>
+                  <p class="text-sm font-bold text-slate-800 truncate">{{ recipient.name }}</p>
+                  <p class="text-[10px] text-emerald-600 font-medium">{{ recipient.membership_number }} • {{ recipient.branch_name }}</p>
+                </div>
+              </div>
+
+              <div v-else-if="recipientError" class="p-4 rounded-2xl bg-amber-50 border border-amber-100 space-y-3">
+                <p class="text-xs font-bold text-amber-800">{{ recipientError }}</p>
+                <div v-if="branchesOptions.length" class="flex flex-wrap gap-2">
+                  <button v-for="b in branchesOptions" :key="b.id" type="button" @click="chooseBranch(b)"
+                          class="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-amber-700 text-[10px] font-bold uppercase hover:bg-amber-100 transition-colors">
+                    {{ b.name }}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note (Optional)</label>
-            <input v-model="note" type="text" maxlength="120"
-                   class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
-                   placeholder="Purpose of transfer" />
-          </div>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
+                <input v-model.number="transferAmount" type="number" min="1" placeholder="0.00"
+                       class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all" />
+              </div>
+            </div>
 
-          <button @click="startTransfer" :disabled="loading || !canSend"
-                  class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
-            {{ loading ? 'Transferring…' : 'Send Funds' }}
-          </button>
-          <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN or Biometrics required.</p>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note (Optional)</label>
+              <input v-model="note" type="text" maxlength="120"
+                     class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                     placeholder="Purpose of transfer" />
+            </div>
+
+            <button @click="startTransfer" :disabled="loading || !canSend"
+                    class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
+              {{ loading ? 'Transferring…' : 'Send Funds' }}
+            </button>
+            <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN or Biometrics required.</p>
+          </div>
         </div>
       </div>
 
-      <!-- Withdraw to Bank Form -->
-      <div v-if="showWithdraw" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
-        <h3 class="font-bold text-slate-800 mb-2">Withdraw to Bank</h3>
-        <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">Withdrawals are sent to your verified bank account in Profile settings.</p>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
-            <div class="relative group">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
-              <input v-model.number="withdrawAmount" type="number" min="1" :max="Number(wallet?.available_for_withdrawal || 0)"
-                     class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
-                     placeholder="0.00" />
+      <div v-if="activeTab === 'withdraw'" class="space-y-6">
+        <!-- Withdraw to Bank Form -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
+          <h3 class="font-bold text-slate-800 mb-2">Withdraw to Bank</h3>
+          <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">Withdrawals are sent to your verified bank account in Profile settings.</p>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
+                <input v-model.number="withdrawAmount" type="number" min="1" :max="Number(wallet?.available_for_withdrawal || 0)"
+                       class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                       placeholder="0.00" />
+              </div>
+              <div class="mt-2 flex justify-between items-center px-1">
+                <span class="text-[10px] text-slate-400 font-bold uppercase">Available</span>
+                <span class="text-[10px] text-emerald-700 font-black">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.available_for_withdrawal || 0) }}</span>
+              </div>
             </div>
-            <div class="mt-2 flex justify-between items-center px-1">
-              <span class="text-[10px] text-slate-400 font-bold uppercase">Available</span>
-              <span class="text-[10px] text-emerald-700 font-black">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.available_for_withdrawal || 0) }}</span>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note (Optional)</label>
+              <input v-model="withdrawNote" type="text" maxlength="200"
+                     class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
+                     placeholder="Purpose of withdrawal" />
             </div>
+            <button @click="startWithdraw" :disabled="loading || !canWithdraw"
+                    class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
+              {{ loading ? 'Submitting…' : 'Request Cashout' }}
+            </button>
+            <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN required.</p>
           </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note (Optional)</label>
-            <input v-model="withdrawNote" type="text" maxlength="200"
-                   class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-emerald-500 transition-all"
-                   placeholder="Purpose of withdrawal" />
-          </div>
-          <button @click="startWithdraw" :disabled="loading || !canWithdraw"
-                  class="w-full bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
-            {{ loading ? 'Submitting…' : 'Request Cashout' }}
-          </button>
-          <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN required.</p>
         </div>
-      </div>
 
-      <!-- Withdrawal Breakdown -->
-      <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden">
-        <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 opacity-50" />
-        <h3 class="font-bold text-slate-800 mb-4 relative z-10">Withdrawal Breakdown</h3>
-        <div class="space-y-3 relative z-10">
-          <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-            <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Withdrawable)</span>
-            <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_withdrawable || 0) }}</span>
+        <!-- Withdrawal Breakdown -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 opacity-50" />
+          <h3 class="font-bold text-slate-800 mb-4 relative z-10">Withdrawal Breakdown</h3>
+          <div class="space-y-3 relative z-10">
+            <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Withdrawable)</span>
+              <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_withdrawable || 0) }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Restricted)</span>
+              <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_restricted || 0) }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
+              <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Total Debits</span>
+              <span class="font-bold text-rose-600 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.total_debits || 0) }}</span>
+            </div>
+            <div class="flex justify-between items-center p-4 rounded-xl bg-emerald-50 border border-emerald-100 mt-2">
+              <span class="text-emerald-800 text-[10px] font-black uppercase tracking-wider">Net Withdrawable</span>
+              <span class="font-black text-emerald-700 text-lg">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.remaining_withdrawable || 0) }}</span>
+            </div>
           </div>
-          <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-            <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Restricted)</span>
-            <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_restricted || 0) }}</span>
-          </div>
-          <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
-            <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Total Debits</span>
-            <span class="font-bold text-rose-600 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.total_debits || 0) }}</span>
-          </div>
-          <div class="flex justify-between items-center p-4 rounded-xl bg-emerald-50 border border-emerald-100 mt-2">
-            <span class="text-emerald-800 text-[10px] font-black uppercase tracking-wider">Net Withdrawable</span>
-            <span class="font-black text-emerald-700 text-lg">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.remaining_withdrawable || 0) }}</span>
-          </div>
+          <p class="text-[10px] text-slate-400 mt-4 leading-relaxed italic">Restricted funds (e.g. loan disbursements) can be spent on utilities/store but cannot be withdrawn to bank unless unlocked.</p>
         </div>
-        <p class="text-[10px] text-slate-400 mt-4 leading-relaxed italic">Restricted funds (e.g. loan disbursements) can be spent on utilities/store but cannot be withdrawn to bank unless unlocked.</p>
-      </div>
-    </div> <!-- End Overview Tab -->
+      </div> <!-- End Withdraw Tab -->
 
     <!-- Requests Tab -->
     <div v-if="activeTab === 'requests'" class="space-y-6">
@@ -540,9 +578,6 @@ const calculatedCharge = computed(() => {
   return Math.min(charge, max_amount)
 })
 const assigning = ref(false)
-const showFund = ref(false)
-const showTransfer = ref(false)
-const showWithdraw = ref(false)
 
 // Withdraw to bank form state
 const withdrawAmount = ref('')
@@ -589,6 +624,12 @@ const canWithdraw = computed(() => {
   const available = Number(wallet.value?.available_for_withdrawal || 0)
   return amt > 0 && amt <= available
 })
+
+const chooseBranch = (branch) => {
+  branchId.value = branch.id
+  checkRecipient()
+}
+
 const statusClass = (status) => {
   if (status === 'paid') return 'bg-emerald-100 text-emerald-700'
   if (status === 'declined') return 'bg-rose-100 text-rose-700'
