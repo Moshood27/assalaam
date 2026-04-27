@@ -320,7 +320,7 @@ class UserResource extends Resource
                                         Forms\Components\FileUpload::make('spouse_father_consent_signature_path')->label('Consent Signature')->image()->disk('public_root')->directory('upload'),
                                     ])->columns(2),
 
-                                Forms\Components\Section::make('Pregnancy Grace (Admin Verified)')
+                                Forms\Components\Section::make('Nursing Mother Grace (Admin Verified)')
                                     ->schema([
                                         Forms\Components\Select::make('pregnancy_request_status')
                                             ->options([
@@ -335,16 +335,16 @@ class UserResource extends Resource
                                         Forms\Components\FileUpload::make('pregnancy_proof_path')
                                             ->label('Medical Proof / Scan')
                                             ->disk('public')
-                                            ->directory('pregnancy_proofs')
+                                            ->directory('nursing_mother_proofs')
                                             ->downloadable()
                                             ->openable()
                                             ->columnSpanFull(),
                                         Forms\Components\Toggle::make('is_pregnant')
-                                            ->label('Currently Pregnant (Legacy Toggle)')
+                                            ->label('Currently Pregnant/Nursing (Legacy Toggle)')
                                             ->helperText('Manual override; ideally use the date above.'),
                                         Forms\Components\DatePicker::make('baby_birth_date')
                                             ->label('Baby Birth Date')
-                                            ->helperText('Grace applies for 3 months from this date.'),
+                                            ->helperText('Grace applies for ' . \App\Models\Setting::get('nursing_mother_grace_period_months', 3) . ' months from this date.'),
                                     ])->columns(2),
 
                                 Forms\Components\Section::make('Official Use Only')
@@ -549,7 +549,7 @@ class UserResource extends Resource
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
                     ])
-                    ->label('Pregnancy Request Status'),
+                    ->label('Nursing Mother Request Status'),
                 Tables\Filters\TernaryFilter::make('deceased')
                     ->label('Deceased Status')
                     ->placeholder('All Users')
@@ -943,30 +943,31 @@ class UserResource extends Resource
                             ->danger()
                             ->send();
                     }),
-                Action::make('approvePregnancyGrace')
-                    ->label('Approve Pregnancy Grace')
+                Action::make('approveNursingMotherGrace')
+                    ->label('Approve Nursing Mother Grace')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (User $record) => $record->pregnancy_request_status === 'pending')
                     ->requiresConfirmation()
                     ->action(function (User $record) {
+                        $months = (int) \App\Models\Setting::get('nursing_mother_grace_period_months', 3);
                         $record->pregnancy_request_status = 'approved';
-                        $record->pregnancy_grace_until = now()->addMonths(3);
+                        $record->pregnancy_grace_until = now()->addMonths($months);
                         $record->save();
 
                         $record->notifyMember(
-                            "Pregnancy Grace Approved",
-                            "Assalāmu ‘alaykum, your pregnancy grace application has been approved. You are exempt from attendance fines until " . $record->pregnancy_grace_until->toDateString() . ".",
-                            ['type' => 'pregnancy_grace_approved']
+                            "Nursing Mother Grace Approved",
+                            "Assalāmu ‘alaykum, your nursing mother grace application has been approved. You are exempt from attendance fines until " . $record->pregnancy_grace_until->toDateString() . ".",
+                            ['type' => 'nursing_mother_grace_approved']
                         );
 
                         Notification::make()
-                            ->title('Pregnancy Grace Approved')
+                            ->title('Nursing Mother Grace Approved')
                             ->success()
                             ->send();
                     }),
-                Action::make('rejectPregnancyGrace')
-                    ->label('Reject Pregnancy Grace')
+                Action::make('rejectNursingMotherGrace')
+                    ->label('Reject Nursing Mother Grace')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn (User $record) => $record->pregnancy_request_status === 'pending')
@@ -981,13 +982,13 @@ class UserResource extends Resource
                         $record->save();
 
                         $record->notifyMember(
-                            "Pregnancy Grace Application Rejected",
-                            "Your pregnancy grace application was not approved. Reason: " . $data['reason'],
-                            ['type' => 'pregnancy_grace_rejected']
+                            "Nursing Mother Grace Application Rejected",
+                            "Your nursing mother grace application was not approved. Reason: " . $data['reason'],
+                            ['type' => 'nursing_mother_grace_rejected']
                         );
 
                         Notification::make()
-                            ->title('Pregnancy Grace Rejected')
+                            ->title('Nursing Mother Grace Rejected')
                             ->danger()
                             ->send();
                     }),

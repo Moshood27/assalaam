@@ -33,6 +33,7 @@ class AppStatusSettings extends Page
             'system_announcement' => Setting::get('system_announcement', config('cooperative.system_announcement')),
             'play_store_url' => Setting::get('play_store_url', config('cooperative.play_store_url')),
             'loan_credit_score_enabled' => (bool) Setting::get('loan_credit_score_enabled', true),
+            'nursing_mother_grace_period_months' => (int) Setting::get('nursing_mother_grace_period_months', 3),
             'wallet_maintenance_charge_percentage' => Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage')),
             'wallet_maintenance_charge_max' => Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount')),
         ]);
@@ -85,6 +86,16 @@ class AppStatusSettings extends Page
                             ->label('Enable Credit Score for Loans')
                             ->helperText('If disabled, the Coop credit score will not be used to determine loan eligibility boost or guarantor requirements.')
                             ->default(true),
+                    ]),
+                Section::make('Grace Period Settings')
+                    ->description('Manage grace periods for members.')
+                    ->schema([
+                        TextInput::make('nursing_mother_grace_period_months')
+                            ->label('Nursing Mother Grace Period (Months)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1)
+                            ->helperText('The number of months a nursing mother is exempt from attendance fines after childbirth or approval.'),
                     ]),
                 Section::make('Wallet Settings')
                     ->description('Manage wallet maintenance and transaction charges.')

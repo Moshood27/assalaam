@@ -102,7 +102,7 @@ class User extends Authenticatable implements FilamentUser
         'wellness_check_notified_at',
         'zakat_nisab_crossed_at',
         'zakat_last_paid_at',
-        'pregnancy_request_status',
+        'pregnancy_request_status', // Nursing Mother Status
         'pregnancy_grace_until',
         'pregnancy_proof_path',
         'is_pregnant',
@@ -236,7 +236,7 @@ class User extends Authenticatable implements FilamentUser
     protected static function booted()
     {
         static::saving(function ($user) {
-            // Auto-approve if legacy fields are set manually but status is missing
+            // Auto-approve if legacy fields are set manually but status is missing (Nursing Mother Grace)
             if (($user->is_pregnant || $user->baby_birth_date || $user->pregnancy_grace_until) && is_null($user->pregnancy_request_status)) {
                 $user->pregnancy_request_status = 'approved';
             }
@@ -751,10 +751,10 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Check if the user is currently in the pregnancy/postpartum grace period.
-     * (Grace period of 3 months after baby birth or explicit grace until date).
+     * Check if the user is currently in the nursing mother grace period.
+     * (Grace period of X months after baby birth or explicit grace until date).
      */
-    public function isInPregnancyGracePeriod(): bool
+    public function isInNursingMotherGracePeriod(): bool
     {
         // Only active if approved by admin
         if ($this->pregnancy_request_status !== 'approved') {
@@ -770,8 +770,9 @@ class User extends Authenticatable implements FilamentUser
         }
 
         if ($this->baby_birth_date) {
-            $threeMonthsAfterBirth = $this->baby_birth_date->copy()->addMonths(3);
-            return now()->isBefore($threeMonthsAfterBirth);
+            $months = (int) \App\Models\Setting::get('nursing_mother_grace_period_months', 3);
+            $graceAfterBirth = $this->baby_birth_date->copy()->addMonths($months);
+            return now()->isBefore($graceAfterBirth);
         }
 
         return false;

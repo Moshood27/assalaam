@@ -83,7 +83,7 @@ class AttendanceExcuseResource extends Resource
                 Tables\Filters\SelectFilter::make('excuse_type')
                     ->options([
                         'medical' => 'Medical',
-                        'pregnancy' => 'Pregnancy',
+                        'nursing_mother' => 'Nursing Mother',
                         'travel' => 'Travel',
                         'official' => 'Official',
                         'other' => 'Other',

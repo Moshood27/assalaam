@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\PregnancyGraceAdminNotification;
+use App\Mail\NursingMotherAdminNotification;
 use App\Models\User;
 
 class ProfileController extends Controller
@@ -200,7 +200,7 @@ class ProfileController extends Controller
             'pregnancy_request_status' => $user->pregnancy_request_status,
             'pregnancy_grace_until' => $user->pregnancy_grace_until ? $user->pregnancy_grace_until->toDateTimeString() : null,
             'pregnancy_proof_url' => $user->pregnancy_proof_path ? Storage::disk('public')->url($user->pregnancy_proof_path) : null,
-            'is_in_pregnancy_grace' => $user->isInPregnancyGracePeriod(),
+            'is_in_nursing_mother_grace' => $user->isInNursingMotherGracePeriod(),
             'occupation' => $user->occupation,
             'secondary_phone' => $user->secondary_phone,
             'residential_address' => $user->residential_address,
@@ -574,14 +574,14 @@ class ProfileController extends Controller
     }
 
     /**
-     * Apply for pregnancy grace.
+     * Apply for nursing mother grace.
      */
-    public function applyForPregnancyGrace(Request $request)
+    public function applyForNursingMotherGrace(Request $request)
     {
         $user = $request->user();
 
         if (strtolower($user->gender ?? '') !== 'female') {
-            return response()->json(['message' => 'Only female members can apply for pregnancy grace.'], 403);
+            return response()->json(['message' => 'Only female members can apply for nursing mother grace.'], 403);
         }
 
         $request->validate([
@@ -590,7 +590,7 @@ class ProfileController extends Controller
         ]);
 
         if ($request->hasFile('proof')) {
-            $path = $request->file('proof')->store('pregnancy_proofs', 'public');
+            $path = $request->file('proof')->store('nursing_mother_proofs', 'public');
             $user->pregnancy_proof_path = $path;
         }
 
@@ -607,23 +607,23 @@ class ProfileController extends Controller
                 ->all();
 
             if (!empty($adminEmails)) {
-                Mail::to($adminEmails)->send(new PregnancyGraceAdminNotification($user));
+                Mail::to($adminEmails)->send(new NursingMotherAdminNotification($user));
             }
 
             // Also send internal notification to all admins
             User::where('is_admin', true)->each(function ($admin) use ($user) {
                 $admin->notifyMember(
-                    "Pregnancy Grace Request",
-                    "New pregnancy grace request from {$user->full_name}.",
-                    ['type' => 'pregnancy_grace_request', 'user_id' => $user->id]
+                    "Nursing Mother Grace Request",
+                    "New nursing mother grace request from {$user->full_name}.",
+                    ['type' => 'nursing_mother_grace_request', 'user_id' => $user->id]
                 );
             });
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to notify admins of pregnancy grace request: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Failed to notify admins of nursing mother grace request: ' . $e->getMessage());
         }
 
         return response()->json([
-            'message' => 'Your application for pregnancy grace has been submitted and is pending review.',
+            'message' => 'Your application for nursing mother grace has been submitted and is pending review.',
             'status' => 'pending'
         ]);
     }

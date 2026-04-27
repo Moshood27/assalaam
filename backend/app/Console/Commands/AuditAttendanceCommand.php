@@ -74,8 +74,8 @@ class AuditAttendanceCommand extends Command
 
             foreach ($users as $user) {
                 // Skip pregnant women and women with babies under 3 months
-                if ($user->isInPregnancyGracePeriod()) {
-                    $this->line("Skipping User (Pregnancy/Postpartum Grace): {$user->full_name} (ID: {$user->id})");
+                if ($user->isInNursingMotherGracePeriod()) {
+                    $this->line("Skipping User (Nursing Mother Grace): {$user->full_name} (ID: {$user->id})");
                     continue;
                 }
 

@@ -41,8 +41,8 @@ class AttendanceService
             return;
         }
 
-        // Skip if user is in pregnancy grace period or has an approved/pending excuse
-        if ($user->isInPregnancyGracePeriod()) {
+        // Skip if user is in nursing mother grace period or has an approved/pending excuse
+        if ($user->isInNursingMotherGracePeriod()) {
             return;
         }
 
@@ -131,8 +131,8 @@ class AttendanceService
      */
     public function chargeAbsenceFine(User $user, Meeting $meeting, AttendanceRecord $record = null): void
     {
-        // Skip if user is in pregnancy grace period or has an approved/pending excuse
-        if ($user->isInPregnancyGracePeriod()) {
+        // Skip if user is in nursing mother grace period or has an approved/pending excuse
+        if ($user->isInNursingMotherGracePeriod()) {
             return;
         }
 

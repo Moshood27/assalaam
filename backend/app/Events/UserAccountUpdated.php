@@ -36,8 +36,16 @@ class UserAccountUpdated implements ShouldBroadcast
         ];
     }
 
+    public function broadcastAs()
+    {
+        return 'UserAccountUpdated';
+    }
+
     public function broadcastWith(): array
     {
+        $eligibility = $this->user->adjustedLoanEligibility();
+        $isDefaulter = (bool) $this->user->is_defaulter;
+
         return [
             'balances' => [
                 'wallet' => (float) $this->user->balance,
@@ -47,6 +55,8 @@ class UserAccountUpdated implements ShouldBroadcast
                 'shares' => (float) $this->user->shares_capital,
                 'takaful' => (float) ($this->user->takaful_balance ?? 0),
                 'outstanding_fines' => (float) $this->user->outstanding_fines,
+                'loan_limit' => $isDefaulter ? 0.0 : (float) ($eligibility['eligibility_adjusted'] ?? 0),
+                'attaqwa_score' => (int) $this->user->attaqwa_score,
             ],
             'message' => $this->message,
             'action' => $this->action,

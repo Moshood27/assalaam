@@ -17,9 +17,9 @@ class MeetingApologyController extends Controller
     {
         $request->validate([
             'reason' => 'required|string|max:1000',
-            'excuse_type' => 'required|string|in:medical,pregnancy,travel,official,other',
+            'excuse_type' => 'required|string|in:medical,nursing_mother,travel,official,other',
             'proof' => [
-                $request->excuse_type === 'medical' || $request->excuse_type === 'pregnancy' || $request->excuse_type === 'travel' ? 'required' : 'nullable',
+                $request->excuse_type === 'medical' || $request->excuse_type === 'nursing_mother' || $request->excuse_type === 'travel' ? 'required' : 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
                 'max:5120',

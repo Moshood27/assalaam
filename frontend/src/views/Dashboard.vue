@@ -782,9 +782,11 @@ onMounted(async () => {
               dashboardData.value.kpis.savings_balance = e.balances.savings
               dashboardData.value.kpis.gold_balance = e.balances.gold
               dashboardData.value.kpis.special_savings_balance = e.balances.special_savings
-              dashboardData.value.kpis.shares_capital = e.balances.shares
+              dashboardData.value.kpis.shares_balance = e.balances.shares
               dashboardData.value.kpis.takaful_balance = e.balances.takaful
               dashboardData.value.kpis.outstanding_fines = e.balances.outstanding_fines
+              dashboardData.value.kpis.loan_limit = e.balances.loan_limit
+              dashboardData.value.kpis.attaqwa_score = e.balances.attaqwa_score
             }
           }
 

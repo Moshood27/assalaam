@@ -69,7 +69,7 @@ class AttendanceController extends Controller
         return response()->json([
             'meeting' => $meeting,
             'attendance_record' => $record,
-            'in_grace_period' => $user->isInPregnancyGracePeriod(),
+            'in_grace_period' => $user->isInNursingMotherGracePeriod(),
         ]);
     }
 
@@ -163,7 +163,7 @@ class AttendanceController extends Controller
             ->where('meeting_id', $meeting->id)
             ->first();
 
-        $isExempt = $user->isInPregnancyGracePeriod() || ($existingRecord && in_array($existingRecord->status, ['excused', 'pending_excuse']));
+        $isExempt = $user->isInNursingMotherGracePeriod() || ($existingRecord && in_array($existingRecord->status, ['excused', 'pending_excuse']));
 
         // One Person, One Vote: Check if this phone has already been used by someone else for THIS meeting
         $alreadyUsed = AttendanceRecord::where('meeting_id', $meeting->id)

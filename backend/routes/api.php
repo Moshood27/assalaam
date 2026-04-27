@@ -132,7 +132,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::post('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences']);
     Route::post('/profile/admin-charge-preference', [ProfileController::class, 'updateAdminChargePreference']);
-    Route::post('/profile/apply-pregnancy-grace', [ProfileController::class, 'applyForPregnancyGrace']);
+    Route::post('/profile/apply-nursing-mother-grace', [ProfileController::class, 'applyForNursingMotherGrace']);
     Route::post('/profile/verify-migration', [ProfileController::class, 'verifyMigration']);
     Route::post('/profile/report-migration-error', [ProfileController::class, 'reportMigrationError']);
     // Banks directory (dynamic list from provider)

@@ -174,6 +174,7 @@ class DashboardController extends Controller
         ];
 
         return response()->json([
+            'id' => $user->id,
             'full_name' => $user->full_name,
             'email' => $user->email,
             'membership_id' => $user->membership_number,
