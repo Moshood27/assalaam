@@ -42,6 +42,7 @@ class SupportChat extends Component
         // We just need to refresh the component to show it.
         // We also mark it as read if the admin is currently viewing this chat.
         $this->markAsRead();
+        $this->dispatch('message-sent');
     }
 
     public function sendMessage()

@@ -21,6 +21,7 @@ Feature guides
 - QARD_HASAN.md – Benevolent loan logic, flows, and automated recovery hunters.
 - KYC_SYSTEM.md – KYC/Identity verification via BVN and face matching (Dojah/Mock).
 - USER_NOTIFICATIONS.md – In‑app notifications and push integration.
+- ADMIN_CHAT_GUIDE.md – Real-time admin-member support chat guide.
 - PUSH_NOTIFICATIONS.md – Mobile push notifications and FCM.
 - AGM_VOTING.md – AGM sessions, candidates, voting and results.
 - BRANCH_PERFORMANCE_ANALYTICS.md – Branch network visual map and key performance indicators (savings, delinquency).

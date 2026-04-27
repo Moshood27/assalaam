@@ -8,7 +8,7 @@
         </span>
     </div>
 
-    <div id="chat-window" class="flex-1 overflow-y-auto p-4 space-y-4" x-data="{ scroll: () => { $el.scrollTop = $el.scrollHeight } }" x-init="scroll(); $watch('messages', () => scroll())" @message-sent.window="scroll()">
+    <div id="chat-window" class="flex-1 overflow-y-auto p-4 space-y-4" x-data="{ scroll: () => { $nextTick(() => { $el.scrollTop = $el.scrollHeight }) } }" x-init="scroll()" @message-sent.window="scroll()">
         @forelse ($messages as $message)
             <div class="flex {{ $message->sender_type === 'admin' ? 'justify-end' : 'justify-start' }}">
                 <div class="max-w-[80%] rounded-lg p-3 {{ $message->sender_type === 'admin' ? 'bg-primary-600 text-white rounded-tr-none' : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-none' }}">
