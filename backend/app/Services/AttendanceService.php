@@ -73,8 +73,9 @@ class AttendanceService
                 ]);
             }
 
-            // 2. Increment outstanding fines (accumulation)
-            $lockedUser->increment('outstanding_fines', $amount);
+            // 2. Accumulate to outstanding fines
+            $lockedUser->outstanding_fines = (float)$lockedUser->outstanding_fines + $amount;
+            $lockedUser->save();
 
             // 3. Attempt to collect fines from balance
             $this->collectOutstandingFines($lockedUser);
@@ -130,8 +131,9 @@ class AttendanceService
                 ]);
             }
 
-            // 2. Increment outstanding fines (accumulation)
-            $lockedUser->increment('outstanding_fines', $amount);
+            // 2. Accumulate to outstanding fines
+            $lockedUser->outstanding_fines = (float)$lockedUser->outstanding_fines + $amount;
+            $lockedUser->save();
 
             // 3. Attempt to collect fines from balance
             $this->collectOutstandingFines($lockedUser);
@@ -161,9 +163,7 @@ class AttendanceService
      */
     public function collectOutstandingFines(User $user): float
     {
-        $user->refresh();
-
-        if ($user->outstanding_fines <= 0 || $user->balance <= 0) {
+        if ((float)$user->outstanding_fines <= 0 || (float)$user->balance <= 0) {
             return 0;
         }
 
@@ -216,7 +216,8 @@ class AttendanceService
 
         DB::transaction(function () use ($user, $amount) {
             // Try to mark pending records as paid (Absence Fines)
-            $pendingRecords = AttendanceRecord::where('user_id', $user->id)
+            $pendingRecords = AttendanceRecord::with('meeting')
+                ->where('user_id', $user->id)
                 ->where('status', 'fine_pending')
                 ->orderBy('created_at', 'asc')
                 ->get();
