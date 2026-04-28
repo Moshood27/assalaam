@@ -126,12 +126,12 @@ class LoanPenaltyResource extends Resource
                 Tables\Actions\Action::make('export_pdf_all')
                     ->label('Export to PDF')
                     ->icon('heroicon-o-document-arrow-down')
-                    ->action(function (Table $table) {
-                        $query = $table->getFilteredQuery();
+                    ->action(function (\Filament\Resources\Pages\ListRecords $livewire) {
+                        $query = $livewire->getFilteredTableQuery();
                         $penalties = $query->with(['user.branch'])->get();
 
                         // Try to identify if a single branch is filtered
-                        $branchId = $table->getFilter('branch')?->getState()['value'] ?? null;
+                        $branchId = data_get($livewire->tableFilters, 'branch.value');
                         $branch = $branchId ? Branch::find($branchId) : null;
 
                         $pdf = Pdf::loadView('reports.loan-penalties-pdf', [
