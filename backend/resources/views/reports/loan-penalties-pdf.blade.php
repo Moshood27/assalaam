@@ -37,7 +37,7 @@
         <tbody>
             @foreach($penalties as $penalty)
                 <tr>
-                    <td>{{ $penalty->user->name }}</td>
+                    <td>{{ $penalty->user->full_name }}</td>
                     <td>{{ $penalty->user->membership_number }}</td>
                     <td>{{ $penalty->user->branch?->name ?? 'N/A' }}</td>
                     <td>{{ $penalty->default_started_at?->format('d/m/Y') ?? 'N/A' }}</td>

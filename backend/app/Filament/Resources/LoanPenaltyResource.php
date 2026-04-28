@@ -30,10 +30,12 @@ class LoanPenaltyResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
+                    ->relationship('user', 'surname')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable(['surname', 'name', 'other_names', 'membership_number'])
                     ->required(),
                 Forms\Components\Select::make('qard_hasan_id')
-                    ->relationship('qardHasan', 'id')
+                    ->relationship('qardHasan', 'qard_id_string')
                     ->required(),
                 Forms\Components\TextInput::make('months_defaulted')
                     ->numeric()
@@ -48,10 +50,16 @@ class LoanPenaltyResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label('Member')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(['surname', 'name', 'other_names'])
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        return $query->leftJoin('users', 'loan_penalties.user_id', '=', 'users.id')
+                            ->orderBy('users.surname', $direction)
+                            ->orderBy('users.name', $direction)
+                            ->orderBy('users.other_names', $direction)
+                            ->select('loan_penalties.*');
+                    }),
                 Tables\Columns\TextColumn::make('user.membership_number')
                     ->label('Membership #')
                     ->searchable()

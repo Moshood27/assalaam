@@ -152,7 +152,7 @@ class LoanMonitoring extends Page
             return;
         }
 
-        Mail::to($user->email)->send(new DefaultLoanReminder($user, $loansData, $totalOutstanding));
+        Mail::to($user->email)->queue(new DefaultLoanReminder($user, $loansData, $totalOutstanding));
 
         // Best-effort push notification to the member
         try {
