@@ -55,10 +55,25 @@ Admins can access the **Loan Penalties** resource in the Filament dashboard.
 - `penalty_until`: Timestamp when the member can apply for a loan again.
 - `months_defaulted`: (Legacy/Summary) Decimal representation of months.
 
-## 6) Technical Notes
+## 6) Retroactive Sync & Maintenance
+A dedicated Artisan command is available to ensure all records (including migrated data) are correctly tracked:
+
+```bash
+php artisan loans:sync-penalties
+```
+
+This command performs the following:
+1.  **Missing Records**: Identifies defaulted loans that don't have a `LoanPenalty` entry and creates them.
+2.  **Stray Penalties**: Finds open penalty records for loans that are no longer defaulted and completes them.
+3.  **Self-Healing**: This logic is also integrated into the `loans:send-default-reminders` command, allowing the system to automatically repair any missing penalty data during its regular schedule.
+
+## 7) Technical Notes
 - **User Sync**: The `User` model has a `loan_penalty_until` column which is automatically kept in sync by `LoanPenalty` model observers (booted hook). This ensures high performance during API checks.
 - **Precise Timing**: Carbon's precision is used for all calculations to ensure "exact months, days, and time" as requested.
-- **Commands**: The system relies on the `SendDefaultLoanReminders` command to identify defaults and the `LoansHunterSweep` to process overdue payments.
+- **Commands**:
+    - `SendDefaultLoanReminders`: Flags defaults and triggers penalty sync.
+    - `SyncLoanPenalties`: Dedicated tool for retroactive fixes and migrated data support.
+    - `LoansHunterSweep`: Processes overdue payments.
 
 ---
 *Last updated: April 2026*

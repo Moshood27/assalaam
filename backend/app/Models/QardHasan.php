@@ -497,36 +497,28 @@ class QardHasan extends Model
 
     public function completePenaltyRecord(): void
     {
-        $defaultedAt = $this->getOriginal('defaulted_at');
-        if (!$defaultedAt) {
-            return;
-        }
-
         $penalty = LoanPenalty::where('qard_hasan_id', $this->id)
             ->whereNull('default_cleared_at')
             ->latest()
             ->first();
 
+        if (!$penalty) {
+            return;
+        }
+
+        $defaultedAt = $this->getOriginal('defaulted_at') ?: $penalty->default_started_at;
+        if (!$defaultedAt) {
+            return;
+        }
+
         $now = now();
         $monthsDefaulted = (int) $defaultedAt->diffInMonths($now);
         $penaltyUntil = $now->copy()->add($defaultedAt->diff($now));
 
-        if ($penalty) {
-            $penalty->update([
-                'months_defaulted' => $monthsDefaulted,
-                'default_cleared_at' => $now,
-                'penalty_until' => $penaltyUntil,
-            ]);
-        } else {
-            // Fallback: create if missing for some reason
-            LoanPenalty::create([
-                'user_id' => $this->user_id,
-                'qard_hasan_id' => $this->id,
-                'months_defaulted' => $monthsDefaulted,
-                'default_started_at' => $defaultedAt,
-                'default_cleared_at' => $now,
-                'penalty_until' => $penaltyUntil,
-            ]);
-        }
+        $penalty->update([
+            'months_defaulted' => $monthsDefaulted,
+            'default_cleared_at' => $now,
+            'penalty_until' => $penaltyUntil,
+        ]);
     }
 }
