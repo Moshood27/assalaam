@@ -11,7 +11,10 @@
               <div class="card" v-if="canCreateLoanVisible">
                 <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                   <h3 class="section-title">Qard Hasan Eligibility</h3>
-                  <button class="text-xs font-bold text-slate-500 hover:text-slate-700" @click="fetchEligibility">Refresh</button>
+                  <div class="flex gap-3">
+                    <router-link to="/loans/analysis" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">View Analysis</router-link>
+                    <button class="text-xs font-bold text-slate-500 hover:text-slate-700" @click="fetchEligibility">Refresh</button>
+                  </div>
                 </div>
                 <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                   <div>
@@ -104,7 +107,10 @@
 
               <!-- Notice when creation is not available -->
               <div class="card p-5" v-else>
-                <h3 class="section-title mb-2">Loan Creation Unavailable</h3>
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="section-title">Loan Creation Unavailable</h3>
+                  <router-link to="/loans/analysis" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">View Analysis</router-link>
+                </div>
                 <p class="text-sm text-slate-600" v-if="hasOpenLoan">You must complete your current loan before creating a new one.</p>
                 <p class="text-sm text-slate-600" v-else>{{ eligibility.reason || 'You are currently not eligible to create a loan. Ensure you have at least 6 months of membership and sufficient contributions.' }}</p>
               </div>

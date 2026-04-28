@@ -829,4 +829,50 @@ class LoanController extends Controller
             'signed_agreement' => $path,
         ]);
     }
+
+    public function analysis(Request $request)
+    {
+        $user = $request->user();
+        $loans = QardHasan::where('user_id', $user->id)->get();
+
+        $totalBorrowed = (float) $loans->sum('principal_amount');
+        $totalPaid = (float) $loans->sum('paid_amount');
+        $outstanding = $totalBorrowed - $totalPaid;
+        $loanCount = $loans->count();
+        $activeLoansCount = $loans->whereIn('status', ['active', 'defaulted'])->count();
+
+        // Repayment history over last 6 months
+        $sixMonthsAgo = now()->subMonths(6)->startOfMonth();
+        $repayments = QardHasanRepayment::whereIn('qard_hasan_id', $loans->pluck('id'))
+            ->where('status', 'success')
+            ->where('paid_at', '>=', $sixMonthsAgo)
+            ->orderBy('paid_at')
+            ->get();
+
+        $repaymentTrend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $key = $month->format('M Y');
+            $amount = $repayments->filter(function ($r) use ($month) {
+                return $r->paid_at && $r->paid_at->format('Y-m') === $month->format('Y-m');
+            })->sum('amount');
+            $repaymentTrend[$key] = (float) $amount;
+        }
+
+        // Status distribution
+        $statusDist = $loans->groupBy('status')->map->count();
+
+        return response()->json([
+            'summary' => [
+                'total_borrowed' => $totalBorrowed,
+                'total_paid' => $totalPaid,
+                'outstanding' => $outstanding,
+                'loan_count' => $loanCount,
+                'active_loans_count' => $activeLoansCount,
+            ],
+            'repayment_trend' => $repaymentTrend,
+            'status_distribution' => $statusDist,
+            'recent_loans' => $loans->sortByDesc('created_at')->take(5)->values(),
+        ]);
+    }
 }

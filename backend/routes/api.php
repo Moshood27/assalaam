@@ -257,6 +257,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Loans (authenticated)
     Route::get('/loans', [LoanController::class, 'index']);
     Route::get('/loans/eligibility', [LoanController::class, 'eligibility']);
+    Route::get('/loans/analysis', [LoanController::class, 'analysis']);
     Route::get('/coop-score', [ScoreController::class, 'show']);
     Route::post('/loans', [LoanController::class, 'store']);
     Route::post('/loans/{id}/repay', [LoanController::class, 'repay']);

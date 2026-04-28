@@ -9,6 +9,7 @@ const MakePayment = () => import('../views/MakePayment.vue')
 const Wallet = () => import('../views/Wallet.vue')
 const Passbook = () => import('../views/Passbook.vue')
 const Loans = () => import('../views/Loans.vue')
+const LoanAnalysis = () => import('../views/LoanAnalysis.vue')
 const Settings = () => import('../views/Settings.vue')
 const Profile = () => import('../views/Profile.vue')
 const MembershipDetails = () => import('../views/MembershipDetails.vue')
@@ -121,6 +122,7 @@ const routes = [
   { path: '/sharia-board/history', name: 'sharia.board.history', component: TahkimHistory, meta: { requiresAuth: true } },
   // Placeholder: use existing Qard Hasan prototype under /loans for now
   { path: '/loans', name: 'loans', component: Loans, meta: { requiresAuth: true } },
+  { path: '/loans/analysis', name: 'loans.analysis', component: LoanAnalysis, meta: { requiresAuth: true } },
   { path: '/qard', name: 'qard', component: QardHasan },
 
   // Public info pages
