@@ -573,6 +573,29 @@ class ExportController extends Controller
             return response()->json(['message' => 'Unable to generate Attestation PDF.'], 422);
         }
     }
+
+    public function downloadLoanAnalysis(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        try {
+            /** @var AccountingReportService $svc */
+            $svc = app(AccountingReportService::class);
+            $data = $svc->buildMemberLoanAnalysisReport($user);
+            $data['user'] = $user;
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])->loadView('pdfs.loan_analysis', $data);
+            $filename = $this->sanitizeFilename('Loan_Analysis_' . $user->membership_number . '.pdf');
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Log::error('downloadLoanAnalysis error', ['exception' => $e->getMessage(), 'user_id' => $user->id]);
+            return response()->json(['message' => 'Unable to generate Loan Analysis PDF at the moment.'], 422);
+        }
+    }
+
     private function sanitizeFilename(string $filename): string
     {
         return str_replace(['/', '\\'], '_', $filename);

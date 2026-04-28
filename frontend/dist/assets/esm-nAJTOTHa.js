@@ -1,1 +1,0 @@
-import{u as e}from"./index-BeVAKJsJ.js";export{e as SplashScreen};

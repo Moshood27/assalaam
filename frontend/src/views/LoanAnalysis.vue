@@ -1,6 +1,13 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-32">
-    <AppHeader title="Loan Analysis" :showBack="true" />
+    <AppHeader title="Loan Analysis" :showBack="true">
+      <template #right>
+        <a :href="downloadUrl" target="_blank" class="p-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1">
+          <span>Report</span>
+          <span class="text-[10px]">📥</span>
+        </a>
+      </template>
+    </AppHeader>
 
     <div class="container-app py-4 space-y-6">
       <div v-if="loading" class="text-center text-slate-500 py-10">Loading analysis…</div>
@@ -99,6 +106,12 @@ const analysis = ref({
 })
 
 const n = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const downloadUrl = computed(() => {
+  const token = localStorage.getItem('token')
+  const baseUrl = axios.defaults.baseURL || ''
+  return `${baseUrl}/api/download-loan-analysis?token=${encodeURIComponent(token)}`
+})
 
 const progressPct = computed(() => {
   if (!analysis.value.summary.total_borrowed) return 0

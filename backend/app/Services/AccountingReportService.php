@@ -967,6 +967,17 @@ class AccountingReportService
     public function buildLoanAnalysisReport(?int $branchId = null, ?string $dateStr = null, ?string $search = null): array
     {
         $toDate = $dateStr ? Carbon::parse($dateStr)->endOfMonth() : Carbon::now()->endOfMonth();
+        return $this->generateLoanAnalysisData($toDate, $branchId, $search);
+    }
+
+    public function buildMemberLoanAnalysisReport(\App\Models\User $user, ?string $dateStr = null): array
+    {
+        $toDate = $dateStr ? Carbon::parse($dateStr)->endOfMonth() : Carbon::now()->endOfMonth();
+        return $this->generateLoanAnalysisData($toDate, null, null, $user->id);
+    }
+
+    protected function generateLoanAnalysisData(Carbon $toDate, ?int $branchId = null, ?string $search = null, ?int $userId = null): array
+    {
         $monthStr = $toDate->format('F');
         $yearStr = $toDate->format('Y');
 
@@ -981,6 +992,9 @@ class AccountingReportService
             ->where('created_at', '<=', $toDate)
             ->when($branchId, function($q) use ($branchId) {
                 $q->whereHas('user', fn($u) => $u->where('branch_id', $branchId));
+            })
+            ->when($userId, function($q) use ($userId) {
+                $q->where('user_id', $userId);
             })
             ->when($search, function($q) use ($search) {
                 $q->whereHas('user', function($u) use ($search) {
