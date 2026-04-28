@@ -73,6 +73,7 @@ class User extends Authenticatable implements FilamentUser
         'created_at',
         'is_admin',
         'is_defaulter',
+        'loan_penalty_until',
         'paystack_customer_code',
         'paystack_authorization_code',
         'dva_account_number',
@@ -220,6 +221,7 @@ class User extends Authenticatable implements FilamentUser
             'wellness_check_notified_at' => 'datetime',
             'zakat_nisab_crossed_at' => 'datetime',
             'zakat_last_paid_at' => 'datetime',
+            'loan_penalty_until' => 'datetime',
             'nursing_mother_grace_until' => 'datetime',
             'is_nursing_mother' => 'boolean',
             'baby_birth_date' => 'date',
@@ -417,6 +419,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(SupportMessage::class);
     }
 
+    public function loanPenalties()
+    {
+        return $this->hasMany(LoanPenalty::class);
+    }
+
     public function createdSavingsGroups()
     {
         return $this->hasMany(SavingsGroup::class, 'creator_id');
@@ -584,6 +591,11 @@ class User extends Authenticatable implements FilamentUser
             ->whereColumn('paid_amount', '<', 'principal_amount')
             ->where('principal_amount', '>', 0)
             ->exists();
+    }
+
+    public function hasActiveLoanPenalty(): bool
+    {
+        return $this->loan_penalty_until && $this->loan_penalty_until->gt(now());
     }
 
     /**

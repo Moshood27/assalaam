@@ -80,7 +80,7 @@ class LoanController extends Controller
             $user->syncLoanDefaulterStatus();
         }
 
-        if ($user->is_defaulter) {
+        if ($user->is_defaulter || $user->hasActiveLoanPenalty()) {
             $canRequest = false;
             $eligWithScore = 0;
             $adj['eligibility_adjusted'] = 0;
@@ -93,11 +93,18 @@ class LoanController extends Controller
             $boostPct = 0.0;
         }
 
+        $reason = null;
+        if ($user->is_defaulter) {
+            $reason = 'You cannot apply for a new loan until you clear your outstanding defaulted loan.';
+        } elseif ($user->hasActiveLoanPenalty()) {
+            $reason = "You must wait until {$user->loan_penalty_until->format('Y-m-d')} before you can apply for a new loan due to your previous default.";
+        } elseif ($months < 6) {
+            $reason = 'Member must be in the system for at least 6 months before requesting a loan.';
+        }
+
         $resp = array_merge($adj, [
             'can_request' => $canRequest,
-            'reason' => $user->is_defaulter
-                ? 'You cannot apply for a new loan until you clear your outstanding defaulted loan.'
-                : ($months < 6 ? 'Member must be in the system for at least 6 months before requesting a loan.' : null),
+            'reason' => $reason,
             'coop_score' => $score,
             'instant_approval' => $instant,
             'required_guarantors' => $instant ? 0 : ($low ? 3 : 2),
@@ -191,6 +198,11 @@ class LoanController extends Controller
                 ? 'You cannot apply for a new loan until you clear your outstanding defaulted loan.'
                 : 'You must complete your existing loan before taking a new one.';
             return response()->json(['message' => $msg], 422);
+        }
+
+        // Block if user has an active loan penalty
+        if ($user->hasActiveLoanPenalty()) {
+            return response()->json(['message' => "You must wait until {$user->loan_penalty_until->format('Y-m-d')} before you can apply for a new loan due to your previous default."], 422);
         }
 
         // Validate guarantors based on Attaqwa Score policy

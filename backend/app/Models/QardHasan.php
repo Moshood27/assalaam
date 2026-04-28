@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\TransactionApproval;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use App\Models\LoanPenalty;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Activity;
@@ -114,6 +116,12 @@ class QardHasan extends Model
 
     protected static function booted(): void
     {
+        static::updating(function (QardHasan $loan) {
+            if ($loan->isDirty('defaulted_at') && $loan->getOriginal('defaulted_at') && !$loan->defaulted_at) {
+                $loan->applyPenaltyIfApplicable();
+            }
+        });
+
         static::saving(function (QardHasan $loan) {
             // Auto-complete if fully paid
             if ($loan->paid_amount >= $loan->principal_amount && $loan->principal_amount > 0) {
@@ -464,5 +472,38 @@ class QardHasan extends Model
     public function isAwaitingApprovals(): bool
     {
         return $this->isHighValue() && !$this->hasSufficientApprovals();
+    }
+
+    public function applyPenaltyIfApplicable(): void
+    {
+        $defaultedAt = $this->getOriginal('defaulted_at');
+        if (!$defaultedAt) {
+            return;
+        }
+
+        $now = now();
+        $monthsDefaulted = (int) $defaultedAt->diffInMonths($now);
+        $threshold = (int) Setting::get('loan_default_threshold_months', 1);
+
+        if ($monthsDefaulted >= $threshold) {
+            $penaltyWaitMonths = (int) Setting::get('loan_penalty_wait_months', 2);
+            $penaltyUntil = $now->copy()->addMonths($penaltyWaitMonths);
+
+            LoanPenalty::create([
+                'user_id' => $this->user_id,
+                'qard_hasan_id' => $this->id,
+                'months_defaulted' => $monthsDefaulted,
+                'default_started_at' => $defaultedAt,
+                'default_cleared_at' => $now,
+                'penalty_until' => $penaltyUntil,
+            ]);
+
+            // Update user
+            if ($this->user) {
+                if (!$this->user->loan_penalty_until || $this->user->loan_penalty_until->lt($penaltyUntil)) {
+                    $this->user->update(['loan_penalty_until' => $penaltyUntil]);
+                }
+            }
+        }
     }
 }
