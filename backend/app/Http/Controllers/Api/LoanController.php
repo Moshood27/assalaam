@@ -438,7 +438,7 @@ class LoanController extends Controller
             }
 
             // Block repayments until the loan is disbursed and active
-            if ($q->status !== 'active') {
+            if (!in_array($q->status, ['active', 'defaulted'])) {
                 return response()->json([
                     'message' => 'You cannot repay this loan until it has been disbursed and activated. Please wait for all guarantors to accept or contact the admin.'
                 ], 422);
