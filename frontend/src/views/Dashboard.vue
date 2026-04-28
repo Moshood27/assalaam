@@ -440,6 +440,51 @@
       @close="closeNotice"
     />
 
+    <!-- Force Gender Update Modal -->
+    <div v-if="showGenderModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[100] p-6">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
+        <div class="p-8">
+           <div class="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-emerald-100">👤</div>
+           
+           <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Update Gender</h3>
+           <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">To provide you with tailored services and accurate records, please select your gender.</p>
+           
+           <div class="space-y-3">
+             <button 
+               @click="selectedGender = 'male'"
+               :class="selectedGender === 'male' ? 'bg-emerald-600 text-white border-emerald-600 scale-[1.02] shadow-lg shadow-emerald-100' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'"
+               class="w-full p-5 rounded-2xl border-2 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-between"
+             >
+               <span>Male</span>
+               <span v-if="selectedGender === 'male'" class="text-lg">✓</span>
+             </button>
+             
+             <button 
+               @click="selectedGender = 'female'"
+               :class="selectedGender === 'female' ? 'bg-emerald-600 text-white border-emerald-600 scale-[1.02] shadow-lg shadow-emerald-100' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'"
+               class="w-full p-5 rounded-2xl border-2 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-between"
+             >
+               <span>Female</span>
+               <span v-if="selectedGender === 'female'" class="text-lg">✓</span>
+             </button>
+           </div>
+        </div>
+        
+        <div class="p-6 bg-slate-50 border-t border-slate-100">
+          <button 
+            @click="updateGender" 
+            :disabled="!selectedGender || updatingGender"
+            class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl shadow-xl shadow-slate-200 flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] disabled:opacity-50 active:scale-95 transition-all"
+          >
+            <span v-if="updatingGender" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+            <span v-else>Confirm Profile Update</span>
+          </button>
+          
+          <p class="text-[9px] text-slate-400 text-center mt-4 font-bold uppercase tracking-widest opacity-60">This is required to proceed to your dashboard</p>
+        </div>
+      </div>
+    </div>
+
     <AppBottomNav />
   </div>
 </template>
@@ -472,6 +517,9 @@ const activeTab = ref('transactions')
 const searchQuery = ref('')
 const passbookSummary = ref(null)
 const isLoadingPassbook = ref(false)
+const showGenderModal = ref(false)
+const selectedGender = ref('')
+const updatingGender = ref(false)
 
 const { hideBalances, toggleBalances } = useBalanceVisibility()
 
@@ -646,6 +694,11 @@ const load = async () => {
   
   // Check Migration status
   checkMigration()
+  
+  // Check Gender
+  if (!data.gender) {
+    showGenderModal.value = true
+  }
 
   // Show Zakat alert if reached nisab but not yet paid (or simply reached nisab)
   if (data.zakat_status?.reached_nisab) {
@@ -657,6 +710,22 @@ const load = async () => {
     } else {
       showNotice('Zakat Update', `Your savings have reached the Nisab. Keep tracking your savings to know when your Zakat becomes due!`, 'info')
     }
+  }
+}
+
+const updateGender = async () => {
+  if (!selectedGender.value) return
+  updatingGender.value = true
+  try {
+    const token = localStorage.getItem('token')
+    await axios.post('/api/profile/gender', { gender: selectedGender.value }, { headers: { Authorization: `Bearer ${token}` } })
+    showGenderModal.value = false
+    dashboardData.value.gender = selectedGender.value
+    showNotice('Success', 'Profile updated. Thank you!', 'success')
+  } catch (e) {
+    showNotice('Error', 'Failed to update gender. Please try again.', 'error')
+  } finally {
+    updatingGender.value = false
   }
 }
 

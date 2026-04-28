@@ -524,6 +524,25 @@ class ProfileController extends Controller
     }
 
     /**
+     * Update the authenticated user's gender.
+     */
+    public function updateGender(Request $request)
+    {
+        $request->validate([
+            'gender' => 'required|in:male,female',
+        ]);
+
+        $user = $request->user();
+        $user->gender = $request->gender;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Gender updated successfully',
+            'gender' => $user->gender,
+        ]);
+    }
+
+    /**
      * Update the authenticated user's notification preferences.
      */
     public function updateNotificationPreferences(Request $request)

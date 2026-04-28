@@ -177,6 +177,7 @@ class DashboardController extends Controller
             'id' => $user->id,
             'full_name' => $user->full_name,
             'email' => $user->email,
+            'gender' => $user->gender,
             'membership_id' => $user->membership_number,
             'passport_url' => $passportUrl,
             'balance' => (float) $user->balance,

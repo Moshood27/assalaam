@@ -128,6 +128,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Member profile
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::post('/profile/passport', [ProfileController::class, 'uploadPassport']);
+    Route::post('/profile/gender', [ProfileController::class, 'updateGender']);
     Route::post('/profile/email', [ProfileController::class, 'updateEmail']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::post('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences']);
