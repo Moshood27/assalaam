@@ -130,11 +130,11 @@ class QardHasan extends Model
         static::saving(function (QardHasan $loan) {
             // Auto-complete if fully paid
             if ($loan->paid_amount >= $loan->principal_amount && $loan->principal_amount > 0) {
-                if (in_array($loan->status, ['active', 'pending', 'defaulted'])) {
+                if (!in_array($loan->status, ['cancelled', 'rejected'])) {
                     $loan->status = 'completed';
-                    if ($loan->defaulted_at) {
-                        $loan->defaulted_at = null;
-                    }
+                }
+                if ($loan->defaulted_at) {
+                    $loan->defaulted_at = null;
                 }
             }
 
