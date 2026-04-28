@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Branch;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class LoanPenaltyResource extends Resource
 {
@@ -140,7 +141,7 @@ class LoanPenaltyResource extends Resource
 
                         return response()->streamDownload(
                             fn () => print($pdf->output()),
-                            'loan-penalties-' . ($branch ? str($branch->name)->slug() : 'all') . '-' . now()->format('Y-m-d') . '.pdf'
+                            'loan-penalties-' . ($branch ? Str::slug($branch->name) : 'all') . '-' . now()->format('Y-m-d') . '.pdf'
                         );
                     }),
             ]);
