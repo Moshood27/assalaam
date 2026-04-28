@@ -21,6 +21,8 @@ class SendDefaultLoanReminders extends Command
         $countFlagged = 0;
 
         // 1. Identify and flag NEW defaulters
+        $this->syncMissingPenalties($dry);
+
         $activeLoans = \App\Models\QardHasan::whereIn('status', ['active', 'defaulted'])
             ->whereNull('defaulted_at')
             ->whereColumn('paid_amount', '<', 'principal_amount')
@@ -97,5 +99,41 @@ class SendDefaultLoanReminders extends Command
 
         $this->info(sprintf('Completed. Defaulters checked: %d, Flagged: %d, Emails sent: %d', $countUsers, $countFlagged, $countEmails));
         return self::SUCCESS;
+    }
+
+    protected function syncMissingPenalties(bool $dry): void
+    {
+        // Ensure all currently defaulted loans have an open penalty record
+        $defaultedLoans = \App\Models\QardHasan::whereNotNull('defaulted_at')->get();
+        foreach ($defaultedLoans as $loan) {
+            $exists = \App\Models\LoanPenalty::where('qard_hasan_id', $loan->id)
+                ->whereNull('default_cleared_at')
+                ->exists();
+
+            if (!$exists) {
+                if (!$dry) {
+                    $loan->startPenaltyRecord();
+                    $this->info("Created missing penalty record for loan {$loan->qard_id_string}");
+                } else {
+                    $this->info("[DRY] Would create missing penalty record for loan {$loan->qard_id_string}");
+                }
+            }
+        }
+
+        // Ensure all cleared defaults have their penalty records completed
+        $activePenalties = \App\Models\LoanPenalty::whereNull('default_cleared_at')->get();
+        foreach ($activePenalties as $penalty) {
+            $loan = $penalty->qardHasan;
+            if (!$loan || !$loan->defaulted_at) {
+                if (!$dry) {
+                    if ($loan) {
+                        $loan->completePenaltyRecord();
+                        $this->info("Completed stray penalty record for loan {$loan->qard_id_string}");
+                    } else {
+                        $penalty->update(['default_cleared_at' => now(), 'penalty_until' => now()]);
+                    }
+                }
+            }
+        }
     }
 }
