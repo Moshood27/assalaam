@@ -101,7 +101,10 @@
       <div class="mt-6 bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-slate-800 font-bold text-lg">Loan Eligibility</h3>
-          <router-link to="/loans/analysis" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Analysis</router-link>
+          <div class="flex items-center gap-3">
+            <router-link to="/loans/analysis" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Analysis</router-link>
+            <router-link to="/loans" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Apply for Loan</router-link>
+          </div>
           <div class="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl">💎</div>
         </div>
         
