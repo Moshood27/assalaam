@@ -127,6 +127,9 @@ class QardHasan extends Model
             if ($loan->paid_amount >= $loan->principal_amount && $loan->principal_amount > 0) {
                 if (in_array($loan->status, ['active', 'pending', 'defaulted'])) {
                     $loan->status = 'completed';
+                    if ($loan->defaulted_at) {
+                        $loan->defaulted_at = null;
+                    }
                 }
             }
 
@@ -486,8 +489,8 @@ class QardHasan extends Model
         $threshold = (int) Setting::get('loan_default_threshold_months', 1);
 
         if ($monthsDefaulted >= $threshold) {
-            $penaltyWaitMonths = (int) Setting::get('loan_penalty_wait_months', 2);
-            $penaltyUntil = $now->copy()->addMonths($penaltyWaitMonths);
+            // The penalty duration is exactly the same as the default duration
+            $penaltyUntil = $now->copy()->add($defaultedAt->diff($now));
 
             LoanPenalty::create([
                 'user_id' => $this->user_id,
@@ -497,13 +500,6 @@ class QardHasan extends Model
                 'default_cleared_at' => $now,
                 'penalty_until' => $penaltyUntil,
             ]);
-
-            // Update user
-            if ($this->user) {
-                if (!$this->user->loan_penalty_until || $this->user->loan_penalty_until->lt($penaltyUntil)) {
-                    $this->user->update(['loan_penalty_until' => $penaltyUntil]);
-                }
-            }
         }
     }
 }

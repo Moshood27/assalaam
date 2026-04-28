@@ -97,7 +97,7 @@ class LoanController extends Controller
         if ($user->is_defaulter) {
             $reason = 'You cannot apply for a new loan until you clear your outstanding defaulted loan.';
         } elseif ($user->hasActiveLoanPenalty()) {
-            $reason = "You must wait until {$user->loan_penalty_until->format('Y-m-d')} before you can apply for a new loan due to your previous default.";
+            $reason = "You must wait until {$user->loan_penalty_until->format('Y-m-d H:i')} before you can apply for a new loan due to your previous default.";
         } elseif ($months < 6) {
             $reason = 'Member must be in the system for at least 6 months before requesting a loan.';
         }
@@ -202,7 +202,7 @@ class LoanController extends Controller
 
         // Block if user has an active loan penalty
         if ($user->hasActiveLoanPenalty()) {
-            return response()->json(['message' => "You must wait until {$user->loan_penalty_until->format('Y-m-d')} before you can apply for a new loan due to your previous default."], 422);
+            return response()->json(['message' => "You must wait until {$user->loan_penalty_until->format('Y-m-d H:i')} before you can apply for a new loan due to your previous default."], 422);
         }
 
         // Validate guarantors based on Attaqwa Score policy

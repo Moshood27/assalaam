@@ -56,33 +56,38 @@ class LoanPenaltyResource extends Resource
                     ->label('Branch')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('months_defaulted')
-                    ->label('Months Defaulted')
-                    ->sortable(),
+                    ->label('Months (Full)')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('formatted_default_duration')
+                    ->label('Default Duration')
+                    ->sortable(['default_started_at']),
                 Tables\Columns\TextColumn::make('default_started_at')
                     ->label('Default Started')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('default_cleared_at')
                     ->label('Default Cleared')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('penalty_until')
                     ->label('Wait Until')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('remaining_wait')
-                    ->label('Wait Remaining (Months)')
-                    ->getStateUsing(function (LoanPenalty $record) {
-                        if (!$record->penalty_until || $record->penalty_until->isPast()) {
-                            return 'Expired';
-                        }
-                        $diff = now()->diffInMonths($record->penalty_until, false);
-                        return max(0, round($diff, 1));
-                    }),
+                Tables\Columns\TextColumn::make('formatted_wait_remaining')
+                    ->label('Wait Remaining')
+                    ->sortable(['penalty_until']),
             ])
             ->filters([
                 Tables\Filters\Filter::make('active_penalty')
-                    ->query(fn (Builder $query): Builder => $query->where('penalty_until', '>', now())),
+                    ->query(fn (Builder $query): Builder => $query->where('penalty_until', '>', now()))
+                    ->label('Active Penalties Only'),
+                Tables\Filters\SelectFilter::make('branch')
+                    ->relationship('user.branch', 'name')
+                    ->label('Branch'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
