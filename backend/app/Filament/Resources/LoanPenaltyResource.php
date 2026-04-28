@@ -33,7 +33,7 @@ class LoanPenaltyResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('months_defaulted')
                     ->numeric()
-                    ->required(),
+                    ->default(0),
                 Forms\Components\DateTimePicker::make('default_started_at'),
                 Forms\Components\DateTimePicker::make('default_cleared_at'),
                 Forms\Components\DateTimePicker::make('penalty_until'),
@@ -78,7 +78,14 @@ class LoanPenaltyResource extends Resource
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('formatted_wait_remaining')
-                    ->label('Wait Remaining')
+                    ->label('Status / Remaining')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Expired' => 'gray',
+                        'Pending Clear' => 'danger',
+                        'Calculating...' => 'warning',
+                        default => 'success',
+                    })
                     ->sortable(['penalty_until']),
             ])
             ->filters([

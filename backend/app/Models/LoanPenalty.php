@@ -68,10 +68,12 @@ class LoanPenalty extends Model
 
     public function getFormattedDefaultDurationAttribute(): string
     {
-        if (!$this->default_started_at || !$this->default_cleared_at) {
+        if (!$this->default_started_at) {
             return 'N/A';
         }
-        return $this->default_started_at->diffForHumans($this->default_cleared_at, [
+
+        $end = $this->default_cleared_at ?: now();
+        return $this->default_started_at->diffForHumans($end, [
             'parts' => 3,
             'join' => ', ',
             'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE
@@ -80,7 +82,11 @@ class LoanPenalty extends Model
 
     public function getFormattedWaitRemainingAttribute(): string
     {
-        if (!$this->penalty_until || $this->penalty_until->isPast()) {
+        if (!$this->penalty_until) {
+            return $this->default_cleared_at ? 'Calculating...' : 'Pending Clear';
+        }
+
+        if ($this->penalty_until->isPast()) {
             return 'Expired';
         }
         return now()->diffForHumans($this->penalty_until, [

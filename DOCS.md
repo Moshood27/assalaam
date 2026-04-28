@@ -19,6 +19,7 @@ Feature guides
 - TAKAFUL.md – Mutual protection pool (member and admin flows).
 - MUDARABAH.md – Pooled investment projects (models, flows, profit booking and distribution).
 - QARD_HASAN.md – Benevolent loan logic, flows, and automated recovery hunters.
+- LOAN_PENALTY_SYSTEM.md – **NEW:** Automated default-based loan penalty wait period enforcement.
 - KYC_SYSTEM.md – KYC/Identity verification via BVN and face matching (Dojah/Mock).
 - USER_NOTIFICATIONS.md – In‑app notifications and push integration.
 - ADMIN_CHAT_GUIDE.md – Real-time admin-member support chat guide.

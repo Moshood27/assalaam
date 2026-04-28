@@ -36,7 +36,6 @@ class AppStatusSettings extends Page
             'nursing_mother_grace_period_months' => (int) Setting::get('nursing_mother_grace_period_months', 3),
             'wallet_maintenance_charge_percentage' => Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage')),
             'wallet_maintenance_charge_max' => Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount')),
-            'loan_default_threshold_months' => (int) Setting::get('loan_default_threshold_months', 1),
         ]);
     }
 
@@ -97,16 +96,6 @@ class AppStatusSettings extends Page
                             ->required()
                             ->minValue(1)
                             ->helperText('The number of months a nursing mother is exempt from attendance fines after childbirth or approval.'),
-                    ]),
-                Section::make('Loan Penalty Settings')
-                    ->description('Manage penalties for defaulted loans.')
-                    ->schema([
-                        TextInput::make('loan_default_threshold_months')
-                            ->label('Default Threshold (Months)')
-                            ->numeric()
-                            ->required()
-                            ->minValue(1)
-                            ->helperText('The number of months a loan must be in default to trigger a penalty. The penalty wait duration will be exactly equal to the default duration.'),
                     ]),
                 Section::make('Wallet Settings')
                     ->description('Manage wallet maintenance and transaction charges.')

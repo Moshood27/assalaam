@@ -2,6 +2,14 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
+2026-04-28
+- Implemented automated Loan Penalty System for defaulted members.
+  - Automatically triggers a penalty record when a member defaults on a loan.
+  - Calculates a mandatory wait period for new loans exactly equal to the duration spent in default.
+  - Enforces wait periods via API during eligibility checks and loan application submission.
+  - Added a "Loan Penalties" admin report with branch filtering and precise duration formatting.
+  - Documentation: LOAN_PENALTY_SYSTEM.md
+
 2026-04-16
 - Implemented "Wipe Module" feature for all Admin Filament resources.
   - Added `HasWipeAction` trait to provide a consistent "Wipe Module" header action.

@@ -117,8 +117,13 @@ class QardHasan extends Model
     protected static function booted(): void
     {
         static::updating(function (QardHasan $loan) {
+            // If just defaulted
+            if ($loan->isDirty('defaulted_at') && !$loan->getOriginal('defaulted_at') && $loan->defaulted_at) {
+                $loan->startPenaltyRecord();
+            }
+            // If default cleared
             if ($loan->isDirty('defaulted_at') && $loan->getOriginal('defaulted_at') && !$loan->defaulted_at) {
-                $loan->applyPenaltyIfApplicable();
+                $loan->completePenaltyRecord();
             }
         });
 
@@ -477,21 +482,43 @@ class QardHasan extends Model
         return $this->isHighValue() && !$this->hasSufficientApprovals();
     }
 
-    public function applyPenaltyIfApplicable(): void
+    public function startPenaltyRecord(): void
+    {
+        if (!$this->defaulted_at) {
+            return;
+        }
+
+        LoanPenalty::create([
+            'user_id' => $this->user_id,
+            'qard_hasan_id' => $this->id,
+            'default_started_at' => $this->defaulted_at,
+        ]);
+    }
+
+    public function completePenaltyRecord(): void
     {
         $defaultedAt = $this->getOriginal('defaulted_at');
         if (!$defaultedAt) {
             return;
         }
 
+        $penalty = LoanPenalty::where('qard_hasan_id', $this->id)
+            ->whereNull('default_cleared_at')
+            ->latest()
+            ->first();
+
         $now = now();
         $monthsDefaulted = (int) $defaultedAt->diffInMonths($now);
-        $threshold = (int) Setting::get('loan_default_threshold_months', 1);
+        $penaltyUntil = $now->copy()->add($defaultedAt->diff($now));
 
-        if ($monthsDefaulted >= $threshold) {
-            // The penalty duration is exactly the same as the default duration
-            $penaltyUntil = $now->copy()->add($defaultedAt->diff($now));
-
+        if ($penalty) {
+            $penalty->update([
+                'months_defaulted' => $monthsDefaulted,
+                'default_cleared_at' => $now,
+                'penalty_until' => $penaltyUntil,
+            ]);
+        } else {
+            // Fallback: create if missing for some reason
             LoanPenalty::create([
                 'user_id' => $this->user_id,
                 'qard_hasan_id' => $this->id,
