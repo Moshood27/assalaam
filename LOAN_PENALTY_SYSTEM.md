@@ -43,9 +43,11 @@ Admins can access the **Loan Penalties** resource in the Filament dashboard.
 - **Wait Until**: The date when the penalty expires.
 - **Status**: Visual badges indicating "Pending Clear" (Red), "Active Penalty" (Yellow), or "Expired" (Green).
 
-### Filters:
+### Filters & Actions:
 - **Branch**: View penalties for specific branches.
 - **Active Penalties Only**: Toggle to see only those currently blocked from applying for loans.
+- **Export to PDF**: Generate a professional report of all (or filtered) penalty records, including branch details and precise wait times.
+- **Bulk PDF Export**: Select specific records and export them to a single PDF document.
 
 ## 5) Data Model: `LoanPenalty`
 - `user_id`: Reference to the member.
@@ -65,7 +67,8 @@ php artisan loans:sync-penalties
 This command performs the following:
 1.  **Missing Records**: Identifies defaulted loans that don't have a `LoanPenalty` entry and creates them.
 2.  **Stray Penalties**: Finds open penalty records for loans that are no longer defaulted and completes them.
-3.  **Self-Healing**: This logic is also integrated into the `loans:send-default-reminders` command, allowing the system to automatically repair any missing penalty data during its regular schedule.
+3.  **Missing Dates**: Calculates and fills `penalty_until` for records that have been cleared but are missing their expiration date (useful for fixing manual or migrated data).
+4.  **Self-Healing**: This logic is also integrated into the `loans:send-default-reminders` command, allowing the system to automatically repair any missing penalty data during its regular schedule.
 
 ## 7) Technical Notes
 - **User Sync**: The `User` model has a `loan_penalty_until` column which is automatically kept in sync by `LoanPenalty` model observers (booted hook). This ensures high performance during API checks.

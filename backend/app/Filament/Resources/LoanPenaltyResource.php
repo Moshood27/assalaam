@@ -10,6 +10,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Branch;
+use Illuminate\Support\Collection;
 
 class LoanPenaltyResource extends Resource
 {
@@ -102,7 +105,44 @@ class LoanPenaltyResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('export_pdf')
+                        ->label('Export to PDF (Selected)')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->action(function (Collection $records) {
+                            $pdf = Pdf::loadView('reports.loan-penalties-pdf', [
+                                'penalties' => $records->load(['user.branch']),
+                                'branch' => null, // Multiple branches might be selected
+                            ])->setPaper('a4', 'landscape');
+
+                            return response()->streamDownload(
+                                fn () => print($pdf->output()),
+                                'loan-penalties-selected-' . now()->format('Y-m-d') . '.pdf'
+                            );
+                        }),
                 ]),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('export_pdf_all')
+                    ->label('Export to PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(function (Table $table) {
+                        $query = $table->getFilteredQuery();
+                        $penalties = $query->with(['user.branch'])->get();
+
+                        // Try to identify if a single branch is filtered
+                        $branchId = $table->getFilter('branch')?->getState()['value'] ?? null;
+                        $branch = $branchId ? Branch::find($branchId) : null;
+
+                        $pdf = Pdf::loadView('reports.loan-penalties-pdf', [
+                            'penalties' => $penalties,
+                            'branch' => $branch,
+                        ])->setPaper('a4', 'landscape');
+
+                        return response()->streamDownload(
+                            fn () => print($pdf->output()),
+                            'loan-penalties-' . ($branch ? str($branch->name)->slug() : 'all') . '-' . now()->format('Y-m-d') . '.pdf'
+                        );
+                    }),
             ]);
     }
 

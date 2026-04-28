@@ -59,6 +59,31 @@ class SyncLoanPenalties extends Command
         }
 
         $this->info("Sync completed. Created: {$createdCount}, Completed: {$completedCount}");
+
+        // 3. Fix records where penalty_until is null but default_cleared_at is set
+        $incompletePenalties = LoanPenalty::whereNotNull('default_cleared_at')
+            ->whereNull('penalty_until')
+            ->get();
+        $fixedCount = 0;
+        foreach ($incompletePenalties as $penalty) {
+            $start = $penalty->default_started_at;
+            $end = $penalty->default_cleared_at;
+            if ($start && $end) {
+                $penaltyUntil = $end->copy()->add($start->diff($end));
+                if (!$dry) {
+                    $penalty->update(['penalty_until' => $penaltyUntil]);
+                    $this->info("Calculated penalty_until for record ID {$penalty->id}: {$penaltyUntil}");
+                } else {
+                    $this->info("[DRY] Would calculate penalty_until for record ID {$penalty->id}: {$penaltyUntil}");
+                }
+                $fixedCount++;
+            }
+        }
+
+        if ($fixedCount > 0) {
+            $this->info("Calculated missing penalty dates for {$fixedCount} records.");
+        }
+
         return self::SUCCESS;
     }
 }
