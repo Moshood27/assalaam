@@ -50,41 +50,50 @@ class AttendanceService
             return;
         }
 
-        $amount = !is_null($amount) ? (float)$amount : (float) ($meeting->apology_fine_amount ?? config('cooperative.attendance.apology_fine', 100.00));
+        $amount = !is_null($amount) ? $amount : (float) ($meeting->apology_fine_amount ?? config('cooperative.attendance.apology_fine', 100.00));
         if ($amount <= 0) return;
 
         DB::transaction(function () use ($user, $meeting, $amount, $record) {
             $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
 
-            // 1. Ensure record exists with lateness info
-            if ($record) {
-                $record->update([
-                    'lateness_fine_amount' => $amount,
-                    'lateness_fine_paid' => false,
-                ]);
-            } else {
-                $record = AttendanceRecord::create([
+            $isPaid = false;
+            if ((float) $lockedUser->balance >= $amount) {
+                // Deduct from balance
+                $lockedUser->decrement('balance', $amount);
+
+                $reference = 'LATE_' . $meeting->id . '_' . Str::random(8);
+
+                WalletTransaction::create([
                     'user_id' => $lockedUser->id,
-                    'meeting_id' => $meeting->id,
-                    'status' => 'present',
-                    'attended_at' => now(),
-                    'lateness_fine_amount' => $amount,
-                    'lateness_fine_paid' => false,
+                    'type' => 'debit',
+                    'amount' => $amount,
+                    'reference' => $reference,
+                    'source' => 'attendance_fine',
+                    'withdrawable' => true,
+                    'meta' => [
+                        'meeting_id' => $meeting->id,
+                        'meeting_name' => $meeting->name,
+                        'type' => 'lateness_fine',
+                    ],
                 ]);
+
+                // Record in Charity Ledger (Sadaqah fund)
+                CharityEntry::create([
+                    'user_id' => $lockedUser->id,
+                    'source' => 'Lateness Fine',
+                    'amount' => $amount,
+                    'note' => "Lateness fine for meeting: {$meeting->name} (ID: {$meeting->id})",
+                    'status' => 'processed',
+                    'processed_at' => now(),
+                ]);
+
+                $isPaid = true;
+            } else {
+                // Not enough balance, add to outstanding fines
+                $lockedUser->increment('outstanding_fines', $amount);
             }
 
-            // 2. Accumulate to outstanding fines
-            $lockedUser->outstanding_fines = (float)$lockedUser->outstanding_fines + $amount;
-            $lockedUser->save();
-
-            // 3. Attempt to collect fines from balance
-            $this->collectOutstandingFines($lockedUser);
-
-            // 4. Refresh record to see if it was paid
-            $record->refresh();
-            $isPaid = $record->lateness_fine_paid;
-
-            // 5. Notify user
+            // Notify user about lateness fine
             $lockedUser->notifyMember(
                 "⚠️ Lateness Fine: {$meeting->name}",
                 $isPaid
@@ -97,6 +106,23 @@ class AttendanceService
                     'is_paid' => $isPaid ? 'true' : 'false'
                 ]
             );
+
+            // Update or create record with lateness info
+            if ($record) {
+                $record->update([
+                    'lateness_fine_paid' => $isPaid,
+                    'lateness_fine_amount' => $amount,
+                ]);
+            } else {
+                AttendanceRecord::create([
+                    'user_id' => $user->id,
+                    'meeting_id' => $meeting->id,
+                    'status' => 'present',
+                    'attended_at' => now(),
+                    'lateness_fine_paid' => $isPaid,
+                    'lateness_fine_amount' => $amount,
+                ]);
+            }
         });
     }
 
@@ -120,29 +146,48 @@ class AttendanceService
         DB::transaction(function () use ($user, $meeting, $amount, $record) {
             $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
 
-            // 1. Ensure record exists with fine_pending status
-            if ($record) {
-                $record->update(['status' => 'fine_pending']);
-            } else {
-                $record = AttendanceRecord::create([
+            $status = 'fine_pending';
+            $paidAt = null;
+
+            if ((float) $lockedUser->balance >= $amount) {
+                // Deduct from balance
+                $lockedUser->decrement('balance', $amount);
+
+                $reference = 'FINE_' . $meeting->id . '_' . Str::random(8);
+
+                WalletTransaction::create([
                     'user_id' => $lockedUser->id,
-                    'meeting_id' => $meeting->id,
-                    'status' => 'fine_pending',
+                    'type' => 'debit',
+                    'amount' => $amount,
+                    'reference' => $reference,
+                    'source' => 'attendance_fine',
+                    'withdrawable' => true,
+                    'meta' => [
+                        'meeting_id' => $meeting->id,
+                        'meeting_name' => $meeting->name,
+                        'type' => 'absence_fine',
+                    ],
                 ]);
+
+                $status = 'fine_paid';
+                $paidAt = now();
+
+                // Record in Charity Ledger (Sadaqah fund)
+                CharityEntry::create([
+                    'user_id' => $lockedUser->id,
+                    'source' => 'Attendance Fine',
+                    'amount' => $amount,
+                    'note' => "Fine for meeting: {$meeting->name} (ID: {$meeting->id})",
+                    'status' => 'processed',
+                    'processed_at' => now(),
+                ]);
+            } else {
+                // Not enough balance, add to outstanding fines
+                $lockedUser->increment('outstanding_fines', $amount);
             }
 
-            // 2. Accumulate to outstanding fines
-            $lockedUser->outstanding_fines = (float)$lockedUser->outstanding_fines + $amount;
-            $lockedUser->save();
-
-            // 3. Attempt to collect fines from balance
-            $this->collectOutstandingFines($lockedUser);
-
-            // 4. Refresh record to see if it was paid
-            $record->refresh();
-            $isPaid = ($record->status === 'fine_paid');
-
-            // 5. Notify user
+            // Notify user about absence fine
+            $isPaid = ($status === 'fine_paid');
             $lockedUser->notifyMember(
                 "⚠️ Absence Fine: {$meeting->name}",
                 $isPaid
@@ -155,56 +200,21 @@ class AttendanceService
                     'is_paid' => $isPaid ? 'true' : 'false'
                 ]
             );
+
+            if ($record) {
+                $record->update([
+                    'status' => $status,
+                    'fine_paid_at' => $paidAt,
+                ]);
+            } else {
+                AttendanceRecord::create([
+                    'user_id' => $lockedUser->id,
+                    'meeting_id' => $meeting->id,
+                    'status' => $status,
+                    'fine_paid_at' => $paidAt,
+                ]);
+            }
         });
-    }
-
-    /**
-     * Collect outstanding fines from user balance.
-     */
-    public function collectOutstandingFines(User $user): float
-    {
-        if ((float)$user->outstanding_fines <= 0 || (float)$user->balance <= 0) {
-            return 0;
-        }
-
-        $deduction = min((float) $user->balance, (float) $user->outstanding_fines);
-
-        if ($deduction <= 0) return 0;
-
-        DB::transaction(function () use ($user, $deduction) {
-            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
-
-            $lockedUser->decrement('balance', $deduction);
-            $lockedUser->decrement('outstanding_fines', $deduction);
-
-            WalletTransaction::create([
-                'user_id' => $lockedUser->id,
-                'type' => 'debit',
-                'amount' => $deduction,
-                'reference' => 'FINE_COLLECT_' . Str::random(8),
-                'source' => 'attendance_fine_collection',
-                'withdrawable' => true,
-                'meta' => [
-                    'description' => 'Automatic collection of accumulated attendance fines',
-                    'amount_collected' => $deduction
-                ],
-            ]);
-
-            // Record in Charity Ledger (Sadaqah fund)
-            CharityEntry::create([
-                'user_id' => $lockedUser->id,
-                'source' => 'Attendance Fine Collection',
-                'amount' => $deduction,
-                'note' => 'Automatic collection of accumulated attendance fines',
-                'status' => 'processed',
-                'processed_at' => now(),
-            ]);
-
-            // Try to mark pending records as paid
-            $this->settleOutstandingFines($lockedUser, $deduction);
-        });
-
-        return $deduction;
     }
 
     /**
@@ -216,8 +226,7 @@ class AttendanceService
 
         DB::transaction(function () use ($user, $amount) {
             // Try to mark pending records as paid (Absence Fines)
-            $pendingRecords = AttendanceRecord::with('meeting')
-                ->where('user_id', $user->id)
+            $pendingRecords = AttendanceRecord::where('user_id', $user->id)
                 ->where('status', 'fine_pending')
                 ->orderBy('created_at', 'asc')
                 ->get();
