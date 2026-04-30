@@ -29,6 +29,7 @@ class WalletTransaction extends Model
         'source',
         'withdrawable',
         'meta',
+        'ledger_journal_id',
     ];
 
     protected $casts = [
@@ -51,5 +52,10 @@ class WalletTransaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }

@@ -29,6 +29,7 @@ class CharityEntry extends Model
         'note',
         'status',
         'processed_at',
+        'ledger_journal_id',
     ];
 
     protected $casts = [
@@ -70,5 +71,10 @@ class CharityEntry extends Model
     public function isAwaitingApprovals(): bool
     {
         return $this->isHighValue() && !$this->hasSufficientApprovals();
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }

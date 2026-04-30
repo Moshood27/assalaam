@@ -195,6 +195,7 @@ class QardHasan extends Model
         'agreement_uploaded_at',
         'agreement_verified_at',
         'agreement_rejection_reason',
+        'ledger_journal_id',
     ];
 
     protected $casts = [
@@ -520,5 +521,10 @@ class QardHasan extends Model
             'default_cleared_at' => $now,
             'penalty_until' => $penaltyUntil,
         ]);
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }

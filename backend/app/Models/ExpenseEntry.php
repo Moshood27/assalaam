@@ -45,6 +45,7 @@ class ExpenseEntry extends Model
         'payout_reference',
         'recipient_code',
         'transfer_code',
+        'ledger_journal_id',
     ];
 
     protected $casts = [
@@ -101,5 +102,10 @@ class ExpenseEntry extends Model
     public function isAwaitingApprovals(): bool
     {
         return $this->isHighValue() && !$this->hasSufficientApprovals();
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }

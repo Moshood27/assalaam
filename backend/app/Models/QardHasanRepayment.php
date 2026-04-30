@@ -25,6 +25,7 @@ class QardHasanRepayment extends Model
         'reference',
         'status',
         'paid_at',
+        'ledger_journal_id',
     ];
 
     protected $casts = [
@@ -45,5 +46,10 @@ class QardHasanRepayment extends Model
     public function qardHasan()
     {
         return $this->belongsTo(QardHasan::class);
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }

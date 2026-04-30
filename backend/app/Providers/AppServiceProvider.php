@@ -37,6 +37,13 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\StoreOrder::observe(\App\Observers\StoreOrderObserver::class);
         \App\Models\SadaqahProject::observe(\App\Observers\SadaqahProjectObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+        \App\Models\IncomeEntry::observe(\App\Observers\IncomeEntryObserver::class);
+        \App\Models\ExpenseEntry::observe(\App\Observers\ExpenseEntryObserver::class);
+        \App\Models\CharityEntry::observe(\App\Observers\CharityEntryObserver::class);
+        \App\Models\WalletTransaction::observe(\App\Observers\WalletTransactionObserver::class);
+        \App\Models\Contribution::observe(\App\Observers\ContributionObserver::class);
+        \App\Models\QardHasan::observe(\App\Observers\QardHasanObserver::class);
+        \App\Models\QardHasanRepayment::observe(\App\Observers\QardHasanRepaymentObserver::class);
 
         // Global API rate limiter
         RateLimiter::for('api', function (Request $request) {

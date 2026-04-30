@@ -28,6 +28,7 @@ class IncomeEntry extends Model
         'amount',
         'notes',
         'created_by',
+        'ledger_journal_id',
     ];
 
     protected $casts = [
@@ -38,5 +39,10 @@ class IncomeEntry extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }

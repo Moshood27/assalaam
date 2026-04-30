@@ -37,6 +37,7 @@ class Contribution extends Model
         'reference',
         'status',
         'category',
+        'ledger_journal_id',
     ];
 
     protected static function booted(): void
@@ -225,5 +226,10 @@ class Contribution extends Model
     public function savingsGroup()
     {
         return $this->belongsTo(SavingsGroup::class);
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }
