@@ -27,6 +27,7 @@ class StoreOrder extends Model
         'total_profit',
         'status',
         'meta',
+        'ledger_journal_id',
     ];
 
     protected $casts = [

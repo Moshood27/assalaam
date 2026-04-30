@@ -26,6 +26,7 @@ class ProjectProfit extends Model
         'management_fee_amount',
         'net_distributable',
         'note',
+        'ledger_journal_id',
     ];
 
     protected $casts = [
@@ -62,5 +63,10 @@ class ProjectProfit extends Model
     public function payouts()
     {
         return $this->hasMany(ProjectProfitPayout::class, 'project_profit_id');
+    }
+
+    public function ledgerJournal()
+    {
+        return $this->belongsTo(LedgerJournal::class);
     }
 }

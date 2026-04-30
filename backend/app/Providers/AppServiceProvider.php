@@ -35,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         \Livewire\Livewire::component('admin-notification-listener', \App\Livewire\AdminNotificationListener::class);
 
         \App\Models\StoreOrder::observe(\App\Observers\StoreOrderObserver::class);
+        \App\Models\ProjectProfit::observe(\App\Observers\ProjectProfitObserver::class);
+        \App\Models\ProjectProfitPayout::observe(\App\Observers\ProjectProfitPayoutObserver::class);
         \App\Models\SadaqahProject::observe(\App\Observers\SadaqahProjectObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
         \App\Models\IncomeEntry::observe(\App\Observers\IncomeEntryObserver::class);

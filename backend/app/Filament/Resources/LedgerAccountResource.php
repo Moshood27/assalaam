@@ -63,7 +63,7 @@ class LedgerAccountResource extends Resource
                 TextColumn::make('balance')
                     ->money('ngn', true)
                     ->label('Balance'),
-                TextColumn::make('is_active')
+                Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->label('Active'),
             ])
