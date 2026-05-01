@@ -30,6 +30,11 @@ class ListUsers extends ListRecords
     {
         return [
             $this->getWipeHeaderAction(),
+            Actions\Action::make('printByBranch')
+                ->label('Print Users by Branch')
+                ->icon('heroicon-o-printer')
+                ->color('info')
+                ->url(fn () => \App\Filament\Pages\UsersByBranchReport::getUrl()),
             Actions\Action::make('branchReport')
                 ->label('Branch Balances Report')
                 ->icon('heroicon-o-banknotes')

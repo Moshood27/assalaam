@@ -21,6 +21,33 @@ use Illuminate\Support\Facades\DB;
 class AccountingReportService
 {
     /**
+     * Get balances from the Double-Entry Ledger.
+     */
+    protected function getLedgerBalances(?string $from = null, ?string $to = null): \Illuminate\Support\Collection
+    {
+        $toDate = $to ? Carbon::parse($to)->endOfDay() : Carbon::now();
+        $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
+
+        $query = DB::table('ledger_entries')
+            ->join('ledger_journals', 'ledger_entries.ledger_journal_id', '=', 'ledger_journals.id')
+            ->join('ledger_accounts', 'ledger_entries.ledger_account_id', '=', 'ledger_accounts.id')
+            ->select(
+                'ledger_accounts.name',
+                'ledger_accounts.code',
+                'ledger_accounts.type',
+                DB::raw('SUM(ledger_entries.debit) as total_debit'),
+                DB::raw('SUM(ledger_entries.credit) as total_credit')
+            )
+            ->where('ledger_journals.date', '<=', $toDate->toDateString());
+
+        if ($fromDate) {
+            $query->where('ledger_journals.date', '>=', $fromDate->toDateString());
+        }
+
+        return $query->groupBy('ledger_accounts.id', 'ledger_accounts.name', 'ledger_accounts.code', 'ledger_accounts.type')->get();
+    }
+
+    /**
      * Build a simple Trial Balance between dates (inclusive).
      * If $from is null, computes from beginning of time up to $to (or now).
      */
@@ -1311,6 +1338,50 @@ class AccountingReportService
                 $report['grand_total_gold_weight'] += $branchData['total_gold_weight'];
                 $report['grand_total_gold_value'] += $branchData['total_gold_value'];
                 $report['grand_total_other'] += $branchData['total_other'];
+                $report['grand_total_members_count'] += count($branchData['members']);
+            }
+        }
+
+        return $report;
+    }
+
+    /**
+     * Build Branch-by-Branch Users Report.
+     */
+    public function buildUsersByBranchReport(?int $branchId = null): array
+    {
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users'])
+            ->get();
+
+        $report = [
+            'branches' => [],
+            'grand_total_members_count' => 0,
+        ];
+
+        foreach ($branches as $branch) {
+            $branchData = [
+                'branch_id' => $branch->id,
+                'branch_name' => $branch->name,
+                'members' => [],
+            ];
+
+            foreach ($branch->users as $user) {
+                $branchData['members'][] = [
+                    'member_name' => $user->full_name,
+                    'membership_number' => $user->membership_number,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'status' => $user->approval_status,
+                    'joined_at' => $user->created_at?->format('Y-m-d'),
+                ];
+            }
+
+            if (!empty($branchData['members'])) {
+                // Sort by name
+                usort($branchData['members'], fn($a, $b) => strcmp($a['member_name'], $b['member_name']));
+
+                $report['branches'][] = $branchData;
                 $report['grand_total_members_count'] += count($branchData['members']);
             }
         }
