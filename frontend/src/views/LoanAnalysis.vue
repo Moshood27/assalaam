@@ -14,54 +14,6 @@
       <div v-else-if="error" class="card p-4 text-rose-700 bg-rose-50 border-rose-200">{{ error }}</div>
 
       <div v-else class="space-y-6">
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="card p-4 bg-white shadow-sm">
-            <p class="text-[10px] text-slate-400 font-bold uppercase">Loan Granted</p>
-            <p class="text-lg font-black text-slate-800">₦ {{ n(analysis.summary.total_borrowed) }}</p>
-          </div>
-          <div class="card p-4 bg-white shadow-sm">
-            <p class="text-[10px] text-slate-400 font-bold uppercase">Total Repaid</p>
-            <p class="text-lg font-black text-emerald-600">₦ {{ n(analysis.summary.total_paid) }}</p>
-          </div>
-          <div class="card p-4 bg-white shadow-sm border-l-4 border-rose-500">
-            <p class="text-[10px] text-slate-400 font-bold uppercase">Outstanding</p>
-            <p class="text-lg font-black text-rose-600">₦ {{ n(analysis.summary.outstanding) }}</p>
-          </div>
-          <div class="card p-4 bg-white shadow-sm">
-            <p class="text-[10px] text-slate-400 font-bold uppercase">Active Loans</p>
-            <p class="text-lg font-black text-slate-800">{{ analysis.summary.active_loans_count }}</p>
-          </div>
-        </div>
-
-        <!-- Repayment Progress Chart -->
-        <div class="card p-5 bg-white shadow-sm" v-if="analysis.summary.total_borrowed > 0">
-          <h3 class="section-title mb-4">Overall Repayment Progress</h3>
-          <div class="flex items-center justify-center">
-            <apexchart type="radialBar" height="250" :options="progressChartOptions" :series="[progressPct]" />
-          </div>
-          <div class="text-center mt-2">
-            <p class="text-sm text-slate-500">
-              You have repaid <span class="font-bold text-emerald-600">{{ progressPct.toFixed(1) }}%</span> of your total borrowed principal.
-            </p>
-          </div>
-        </div>
-
-        <!-- Repayment Trend -->
-        <div class="card p-5 bg-white shadow-sm">
-          <h3 class="section-title mb-4">6-Month Repayment Trend</h3>
-          <apexchart type="bar" height="250" :options="trendChartOptions" :series="trendSeries" />
-        </div>
-
-        <!-- Status Distribution -->
-        <div class="card p-5 bg-white shadow-sm">
-          <h3 class="section-title mb-4">Loan Status Distribution</h3>
-          <div v-if="Object.keys(analysis.status_distribution).length">
-             <apexchart type="donut" height="250" :options="statusChartOptions" :series="statusSeries" />
-          </div>
-          <div v-else class="text-center text-slate-400 text-sm py-4">No status data available</div>
-        </div>
-
         <!-- Detailed Loan List -->
         <div class="card overflow-hidden">
           <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
@@ -129,6 +81,34 @@
             <div v-if="!analysis.loans.length" class="p-8 text-center text-slate-400 text-sm">
               No loans found.
             </div>
+          </div>
+        </div>
+
+        <!-- Repayment Trend -->
+        <div class="card p-5 bg-white shadow-sm">
+          <h3 class="section-title mb-4">6-Month Repayment Trend</h3>
+          <apexchart type="bar" height="250" :options="trendChartOptions" :series="trendSeries" />
+        </div>
+
+        <!-- Status Distribution -->
+        <div class="card p-5 bg-white shadow-sm">
+          <h3 class="section-title mb-4">Loan Status Distribution</h3>
+          <div v-if="Object.keys(analysis.status_distribution).length">
+             <apexchart type="donut" height="250" :options="statusChartOptions" :series="statusSeries" />
+          </div>
+          <div v-else class="text-center text-slate-400 text-sm py-4">No status data available</div>
+        </div>
+
+        <!-- Repayment Progress Chart -->
+        <div class="card p-5 bg-white shadow-sm" v-if="analysis.summary.total_borrowed > 0">
+          <h3 class="section-title mb-4">Overall Repayment Progress</h3>
+          <div class="flex items-center justify-center">
+            <apexchart type="radialBar" height="250" :options="progressChartOptions" :series="[progressPct]" />
+          </div>
+          <div class="text-center mt-2">
+            <p class="text-sm text-slate-500">
+              You have repaid <span class="font-bold text-emerald-600">{{ progressPct.toFixed(1) }}%</span> of your total borrowed principal.
+            </p>
           </div>
         </div>
       </div>
