@@ -17,7 +17,7 @@
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 gap-4">
           <div class="card p-4 bg-white shadow-sm">
-            <p class="text-[10px] text-slate-400 font-bold uppercase">Total Borrowed</p>
+            <p class="text-[10px] text-slate-400 font-bold uppercase">Loan Granted</p>
             <p class="text-lg font-black text-slate-800">₦ {{ n(analysis.summary.total_borrowed) }}</p>
           </div>
           <div class="card p-4 bg-white shadow-sm">
@@ -62,24 +62,72 @@
           <div v-else class="text-center text-slate-400 text-sm py-4">No status data available</div>
         </div>
 
-        <!-- Recent Activity -->
+        <!-- Detailed Loan List -->
         <div class="card overflow-hidden">
-          <div class="p-4 bg-slate-50 border-b border-slate-100">
-            <h3 class="section-title">Recent Loans</h3>
+          <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+            <h3 class="section-title">Loan Details</h3>
+            <span class="text-[10px] font-bold text-slate-400 uppercase">{{ analysis.loans.length }} total</span>
           </div>
           <div class="divide-y divide-slate-100">
-            <div v-for="loan in analysis.recent_loans" :key="loan.id" class="p-4 flex justify-between items-center">
-              <div>
-                <p class="text-sm font-bold text-slate-800">{{ loan.qard_id_string }}</p>
-                <p class="text-[10px] text-slate-400 uppercase font-black">{{ new Date(loan.created_at).toLocaleDateString() }}</p>
+            <div v-for="loan in analysis.loans" :key="loan.id" class="p-4 space-y-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-sm font-black text-slate-800">{{ loan.qard_id_string }}</p>
+                  <p class="text-[10px] text-slate-400 uppercase font-black">{{ new Date(loan.created_at).toLocaleDateString() }}</p>
+                </div>
+                <div class="text-right">
+                   <span :class="getStatusClass(loan.status)" class="text-[10px] font-bold uppercase px-2 py-1 rounded-md">{{ loan.status }}</span>
+                </div>
               </div>
-              <div class="text-right">
-                <p class="text-sm font-black text-slate-700">₦ {{ n(loan.principal_amount) }}</p>
-                <span :class="loan.status === 'active' ? 'text-emerald-600' : 'text-slate-400'" class="text-[10px] font-bold uppercase">{{ loan.status }}</span>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                   <p class="text-[9px] text-slate-400 font-bold uppercase">Principal</p>
+                   <p class="text-sm font-bold text-slate-700">₦ {{ n(loan.principal_amount) }}</p>
+                </div>
+                <div>
+                   <p class="text-[9px] text-slate-400 font-bold uppercase">Paid</p>
+                   <p class="text-sm font-bold text-emerald-600">₦ {{ n(loan.paid_amount) }}</p>
+                </div>
+                <div>
+                   <p class="text-[9px] text-slate-400 font-bold uppercase">Remaining</p>
+                   <p class="text-sm font-bold text-rose-600">₦ {{ n(loan.remaining_principal) }}</p>
+                </div>
+                <div v-if="loan.next_due_at">
+                   <p class="text-[9px] text-slate-400 font-bold uppercase">Next Due</p>
+                   <p class="text-sm font-bold text-slate-700">{{ new Date(loan.next_due_at).toLocaleDateString() }}</p>
+                </div>
+                <div v-if="loan.next_installment_amount && loan.status === 'active'">
+                   <p class="text-[9px] text-slate-400 font-bold uppercase">Next Amount</p>
+                   <p class="text-sm font-bold text-amber-600">₦ {{ n(loan.next_installment_amount) }}</p>
+                </div>
+                <div>
+                   <p class="text-[9px] text-slate-400 font-bold uppercase">Interval</p>
+                   <p class="text-sm font-bold text-slate-700 capitalize">{{ loan.interval }} ({{ loan.total_installments }}x)</p>
+                </div>
+              </div>
+
+              <div v-if="loan.guarantors && loan.guarantors.length" class="pt-2 border-t border-slate-50">
+                 <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Guarantors</p>
+                 <div class="flex flex-wrap gap-1">
+                   <span v-for="g in loan.guarantors" :key="g.id" class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full border border-slate-200">
+                     {{ g.name }} <span v-if="g.branch" class="text-[8px] opacity-75">• {{ g.branch.name }}</span>
+                   </span>
+                 </div>
+              </div>
+
+              <div class="pt-1">
+                <div class="flex justify-between text-[9px] font-bold text-slate-400 mb-1 uppercase">
+                  <span>Progress</span>
+                  <span>{{ (loan.progress_pct || 0).toFixed(1) }}%</span>
+                </div>
+                <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500 transition-all duration-500" :style="{ width: (loan.progress_pct || 0) + '%' }"></div>
+                </div>
               </div>
             </div>
-            <div v-if="!analysis.recent_loans.length" class="p-8 text-center text-slate-400 text-sm">
-              No recent loans found.
+            <div v-if="!analysis.loans.length" class="p-8 text-center text-slate-400 text-sm">
+              No loans found.
             </div>
           </div>
         </div>
@@ -102,10 +150,21 @@ const analysis = ref({
   summary: { total_borrowed: 0, total_paid: 0, outstanding: 0, loan_count: 0, active_loans_count: 0 },
   repayment_trend: {},
   status_distribution: {},
+  loans: [],
   recent_loans: []
 })
 
 const n = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'active': return 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+    case 'completed': return 'bg-blue-50 text-blue-700 border border-blue-100'
+    case 'pending': return 'bg-amber-50 text-amber-700 border border-amber-100'
+    case 'defaulted': return 'bg-rose-50 text-rose-700 border border-rose-100'
+    default: return 'bg-slate-50 text-slate-700 border border-slate-100'
+  }
+}
 
 const downloadUrl = computed(() => {
   const token = localStorage.getItem('token')

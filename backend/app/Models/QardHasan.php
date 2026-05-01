@@ -217,6 +217,7 @@ class QardHasan extends Model
         'is_completed',
         'credited_amount',
         'next_due_at',
+        'next_installment_amount',
     ];
 
     public function user()

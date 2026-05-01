@@ -845,7 +845,7 @@ class LoanController extends Controller
     public function analysis(Request $request)
     {
         $user = $request->user();
-        $loans = QardHasan::where('user_id', $user->id)->get();
+        $loans = QardHasan::with(['guarantors.branch'])->where('user_id', $user->id)->get();
 
         $totalBorrowed = (float) $loans->sum('principal_amount');
         $totalPaid = (float) $loans->sum('paid_amount');
@@ -884,6 +884,7 @@ class LoanController extends Controller
             ],
             'repayment_trend' => $repaymentTrend,
             'status_distribution' => $statusDist,
+            'loans' => $loans->sortByDesc('created_at')->values(),
             'recent_loans' => $loans->sortByDesc('created_at')->take(5)->values(),
         ]);
     }
