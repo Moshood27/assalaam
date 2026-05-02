@@ -159,7 +159,7 @@ class MigrationImport extends Page implements HasForms
         $count = 0;
 
         foreach ($users as $user) {
-            $message = "Welcome to Attaqwa Pay! Your digital account is ready. Log in with your phone number and verify your opening balance. Download the app today.";
+            $message = "Welcome to Attaqwa Mobile App! Your digital account is ready. Log in with your phone number and verify your opening balance. Download the app today.";
             if ($smsService->send($user->phone, $message)) {
                 $count++;
             }
