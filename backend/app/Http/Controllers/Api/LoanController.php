@@ -156,19 +156,15 @@ class LoanController extends Controller
         }
         $requiredGuarantors = $instant ? 0 : ($low ? 3 : 2);
 
-        // Enforce 6-month membership before requesting any loan
+        // Compute policy-aware eligibility (handles 6-month rule and migrated status)
+        $adj = $user->adjustedLoanEligibility();
         if ($user->monthsInSystem() < 6) {
             return response()->json(['message' => 'You must be a member for at least 6 months before requesting a loan.'], 422);
         }
 
-        // Calculate base totals and policy-adjusted principal
-        $calc = $user->savingsSharesEligibility();
-        $base = (float) ($calc['base'] ?? 0);
-        $principal = $user->hasCompletedLoan()
-            ? round($base * 2, 2)               // After completing first loan: full eligibility (2x)
-            : round($base * 0.05, 2);           // First loan: 5% of (Savings + Shares)
+        $principal = (float) ($adj['eligibility_adjusted'] ?? 0);
 
-        // Apply score-based limit boost (only after first loan is completed)
+        // Apply score-based limit boost (only after first loan is completed OR if migrated)
         $boostPct = 0.0;
         if ($scoreEnabled) {
             $scoreVal = (float) ($score['score'] ?? 0);
@@ -180,7 +176,9 @@ class LoanController extends Controller
                 $boostPct = 5.0;
             }
         }
-        if ($user->hasCompletedLoan() && $principal > 0 && $boostPct > 0) {
+
+        // Allow boost if user has completed a loan OR is a migrated member
+        if (($user->hasCompletedLoan() || $user->migrated_at) && $principal > 0 && $boostPct > 0) {
             $principal = round($principal * (1 + ($boostPct / 100.0)), 2);
         }
 
@@ -347,7 +345,7 @@ class LoanController extends Controller
             ShariahAudit::log($user, 'create_qard_hasan_instant', [
                 'qard' => $q->qard_id_string,
                 'principal' => $principal,
-                'eligibility' => $calc,
+                'eligibility' => $adj,
                 'coop_score' => $score,
                 'credited_amount' => $credit,
                 'instant_approval' => true,
@@ -406,7 +404,7 @@ class LoanController extends Controller
             ShariahAudit::log($user, 'create_qard_hasan_auto', [
                 'qard' => $q->qard_id_string,
                 'principal' => $principal,
-                'eligibility' => $calc,
+                'eligibility' => $adj,
                 'coop_score' => $score,
                 'guarantors' => $guarantorIds,
                 'instant_approval' => false,

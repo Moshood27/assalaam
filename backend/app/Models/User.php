@@ -108,6 +108,8 @@ class User extends Authenticatable implements FilamentUser
         'nursing_mother_proof_path',
         'is_nursing_mother',
         'baby_birth_date',
+        'migrated_at',
+        'verified_at',
         // Membership Enrolment Form Fields
         'surname',
         'other_names',
@@ -225,6 +227,8 @@ class User extends Authenticatable implements FilamentUser
             'nursing_mother_grace_until' => 'datetime',
             'is_nursing_mother' => 'boolean',
             'baby_birth_date' => 'date',
+            'migrated_at' => 'datetime',
+            'verified_at' => 'datetime',
             'dob' => 'date',
             'admission_date' => 'date',
             'has_other_cooperatives' => 'boolean',
@@ -465,12 +469,25 @@ class User extends Authenticatable implements FilamentUser
      */
     public function savingsSharesEligibility(): array
     {
-        // Scheme IDs for Savings and Shares
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital'])->pluck('id', 'name');
+        // Scheme IDs for Savings, Shares and Migrated balances that count towards eligibility
+        $schemes = Scheme::whereIn('name', [
+            'Savings',
+            'Shares',
+            'Special Savings',
+            'Ordinary Savings',
+            'Share Capital',
+            'Loan Repayment',
+            'Building',
+            'Development',
+            'AGM',
+            'Welfare',
+            'H Savings'
+        ])->pluck('id', 'name');
 
         $savings = 0.0;
         $shares = 0.0;
         $specialSavings = 0.0;
+        $migrated = 0.0;
 
         if (isset($schemes['Savings'])) {
             $savings += (float) $this->contributions()
@@ -503,13 +520,24 @@ class User extends Authenticatable implements FilamentUser
                 ->sum('amount');
         }
 
-        $base = round($savings + $shares + $specialSavings, 2);
+        // Include other migrated balances in the base for loan eligibility
+        foreach (['Loan Repayment', 'Building', 'Development', 'AGM', 'Welfare', 'H Savings'] as $sName) {
+            if (isset($schemes[$sName])) {
+                $migrated += (float) $this->contributions()
+                    ->where('status', 'success')
+                    ->where('scheme_id', $schemes[$sName])
+                    ->sum('amount');
+            }
+        }
+
+        $base = round($savings + $shares + $specialSavings + $migrated, 2);
         $eligibility = round($base * 2, 2);
 
         return [
             'savings' => $savings,
             'shares' => $shares,
             'special_savings' => $specialSavings,
+            'migrated_base' => $migrated,
             'base' => $base,
             'eligibility' => $eligibility,
         ];
@@ -520,6 +548,11 @@ class User extends Authenticatable implements FilamentUser
      */
     public function monthsInSystem(): int
     {
+        // For migrated members, we assume they've passed the probation period (at least 6 months)
+        if ($this->migrated_at) {
+            return 6;
+        }
+
         if (! $this->created_at) {
             return 0;
         }
@@ -551,7 +584,10 @@ class User extends Authenticatable implements FilamentUser
         $base = (float) ($calc['base'] ?? 0);
         $months = $this->monthsInSystem();
         $hasCompleted = $this->hasCompletedLoan();
-        $isFirstLoan = ! $hasCompleted;
+
+        // Policy: First loan is capped at 5% of savings+shares.
+        // Bypassed for migrated members who are assumed to have established history.
+        $isFirstLoan = ! $hasCompleted && ! $this->migrated_at;
 
         $baseAdjusted = $isFirstLoan ? round($base * 0.05, 2) : round($base * 2, 2);
         $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled', true));

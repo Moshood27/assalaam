@@ -41,6 +41,6 @@ const phones = [
   { label: 'Support 2', number: '2348098765432' },
   { label: 'Support 3', number: '2348076543210' },
 ]
-const email = 'support@example.com'
+const email = 'admin@attaqwa.com'
 const wa = (phone) => `https://wa.me/${phone}`
 </script>
