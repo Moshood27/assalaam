@@ -309,8 +309,6 @@ EOD;
             'paid_amount' => $paid,
             'status' => ($principal - $paid <= 0) ? 'completed' : 'active',
             'created_at' => $dateOfLoan,
-            'due_at' => $expiryDate,
-            'reason' => 'System Migration',
             'approved_at' => $dateOfLoan,
             'approved_by' => $admin?->id,
             'received_at' => $dateOfLoan,

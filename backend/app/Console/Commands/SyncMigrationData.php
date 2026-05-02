@@ -64,9 +64,7 @@ class SyncMigrationData extends Command
         QardHasan::whereNull('received_at')
             ->where(function($q) {
                 $q->where('qard_id_string', 'like', 'MIG-%')
-                  ->orWhere('qard_id_string', 'like', 'MGR-%')
-                  ->orWhere('reason', 'like', '%Migration%')
-                  ->orWhere('reason', 'like', '%imported%');
+                  ->orWhere('qard_id_string', 'like', 'MGR-%');
             })
             ->chunkById(100, function($loans) use ($dryRun, &$loanCount) {
                 foreach ($loans as $loan) {
