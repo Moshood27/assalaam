@@ -284,8 +284,14 @@ class AttaqwaScoreService
         }
         $activeMonths = count($months); // 0..6
 
+        // For migrated members, we assume they were consistent before joining the new system.
+        // We give them full 6 months credit if they have any successful contribution or if recently migrated.
+        if ($user->migrated_at && $activeMonths < 6) {
+            $activeMonths = 6;
+        }
+
         // Score: 6/6 months -> full weight; linear scale
-        $ratio = $activeMonths > 6 ? 1.0 : ($activeMonths / 6.0);
+        $ratio = $activeMonths >= 6 ? 1.0 : ($activeMonths / 6.0);
         $score = round($ratio * self::WEIGHT_CONTRIBUTIONS, 1);
 
         return [
@@ -302,7 +308,7 @@ class AttaqwaScoreService
         // Evaluate how much of expected repayments have been made compared to elapsed schedule
         $loans = QardHasan::where('user_id', $user->id)
             ->whereIn('status', ['active', 'completed'])
-            ->get(['id', 'principal_amount', 'per_installment', 'total_installments', 'interval', 'paid_amount', 'created_at', 'status']);
+            ->get(['id', 'principal_amount', 'per_installment', 'total_installments', 'interval', 'paid_amount', 'created_at', 'received_at', 'status']);
 
         if ($loans->isEmpty()) {
             // No loan history: neutral half of weight
@@ -315,7 +321,9 @@ class AttaqwaScoreService
 
         $ratios = [];
         foreach ($loans as $l) {
-            $created = Carbon::parse($l->created_at);
+            // Use received_at (original loan date) if available, otherwise use created_at
+            $startDate = $l->received_at ?: $l->created_at;
+            $created = Carbon::parse($startDate);
             $elapsed = 0;
             $interval = strtolower((string) $l->interval);
             if ($interval === 'daily') {

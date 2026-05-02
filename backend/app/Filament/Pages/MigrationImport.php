@@ -98,6 +98,15 @@ class MigrationImport extends Page implements HasForms
                 ->modalDescription('This will retroactively populate the Double-Entry Ledger for all successful transactions and contributions that are not yet recorded. This ensures the accounting books match the system state after migration.')
                 ->action(fn () => $this->syncLedger()),
 
+            Action::make('syncMigrationData')
+                ->label('Sync Migration Fields')
+                ->color('info')
+                ->icon('heroicon-o-arrow-path-rounded-square')
+                ->requiresConfirmation()
+                ->modalHeading('Sync Migration Fields?')
+                ->modalDescription('This will backfill migrated_at for members and received_at for loans. This is necessary for the new probation and eligibility policies to take effect on already imported data.')
+                ->action(fn () => $this->syncMigrationData()),
+
             Action::make('downloadReport')
                 ->label('Download PDF Report')
                 ->color('info')
@@ -113,6 +122,25 @@ class MigrationImport extends Page implements HasForms
                 ->modalDescription('This will send an onboarding SMS to all members who have been migrated but NOT yet verified their account. Ensure your SMS provider is configured.')
                 ->action(fn () => $this->sendOnboardingSms()),
         ];
+    }
+
+    public function syncMigrationData()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('app:sync-migration-data');
+
+            Notification::make()
+                ->success()
+                ->title('Migration data synced successfully.')
+                ->body('Users and loans have been updated with migration dates to enable new policy rules.')
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->danger()
+                ->title('Sync failed')
+                ->body($e->getMessage())
+                ->send();
+        }
     }
 
     public function sendOnboardingSms()
