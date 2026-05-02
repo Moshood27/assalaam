@@ -153,11 +153,31 @@ class QardHasan extends Model
             if ($loan->wasChanged(['defaulted_at', 'status', 'paid_amount'])) {
                 $loan->syncUserDefaulterStatus();
             }
+
+            // Record Loan Disbursement when status becomes 'active'
+            if ($loan->status === 'active' && $loan->wasChanged('status') && !$loan->ledger_journal_id) {
+                try {
+                    $journal = app(\App\Services\LedgerService::class)->recordLoanDisbursement($loan);
+                    $loan->updateQuietly(['ledger_journal_id' => $journal->id]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record loan disbursement in ledger: " . $e->getMessage());
+                }
+            }
         });
 
         static::created(function (QardHasan $loan) {
             if ($loan->defaulted_at) {
                 $loan->syncUserDefaulterStatus();
+            }
+
+            // Record Loan Disbursement if already active (typical for migration)
+            if ($loan->status === 'active' && !$loan->ledger_journal_id) {
+                try {
+                    $journal = app(\App\Services\LedgerService::class)->recordLoanDisbursement($loan);
+                    $loan->updateQuietly(['ledger_journal_id' => $journal->id]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record loan disbursement in ledger: " . $e->getMessage());
+                }
             }
         });
 

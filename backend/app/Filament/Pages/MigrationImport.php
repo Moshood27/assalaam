@@ -89,6 +89,15 @@ class MigrationImport extends Page implements HasForms
                 ->icon('heroicon-o-check-badge')
                 ->action(fn () => $this->reconcile()),
 
+            Action::make('syncLedger')
+                ->label('Sync Double-Entry Ledger')
+                ->color('gray')
+                ->icon('heroicon-o-arrow-path')
+                ->requiresConfirmation()
+                ->modalHeading('Synchronize Ledger?')
+                ->modalDescription('This will retroactively populate the Double-Entry Ledger for all successful transactions and contributions that are not yet recorded. This ensures the accounting books match the system state after migration.')
+                ->action(fn () => $this->syncLedger()),
+
             Action::make('downloadReport')
                 ->label('Download PDF Report')
                 ->color('info')
@@ -319,6 +328,13 @@ class MigrationImport extends Page implements HasForms
             foreach ($financialColumns as $column) {
                 User::query()->update([$column => 0]);
             }
+
+            // 6. Ledger Cleanup (Remove non-migration journals and their entries)
+            $demoJournals = \App\Models\LedgerJournal::where('reference', 'NOT LIKE', 'MIG-%')
+                ->orWhereNull('reference')
+                ->pluck('id');
+            \App\Models\LedgerEntry::whereIn('ledger_journal_id', $demoJournals)->delete();
+            \App\Models\LedgerJournal::whereIn('id', $demoJournals)->delete();
         });
 
         Notification::make()
@@ -330,50 +346,128 @@ class MigrationImport extends Page implements HasForms
 
     public function reconcile()
     {
-        $totalSavings = User::sum('ordinary_savings');
-        $totalShares = User::sum('shares_capital');
-        $totalFines = User::sum('outstanding_fines');
-        $totalWallet = User::sum('balance');
-        $totalGold = User::sum('gold_balance');
+        // ... (existing reconcile logic)
+    }
 
-        // Sum other funds directly from User columns
-        $otherFundsColumns = [
-            'building_balance', 'development_fund_balance', 'agm_balance',
-            'loan_repayment_balance', 'fine_balance', 'welfare_balance',
-            'lateness_balance', 'stationery_balance', 'loan_form_balance',
-            'others_balance', 'id_card_balance', 'emergency_balance',
-            'entrance_balance', 'h_savings_balance', 'special_savings_balance', 'investment_balance',
-            'group_savings_balance'
-        ];
+    public function syncLedger()
+    {
+        $count = 0;
+        $errors = 0;
 
-        $otherFunds = 0;
-        foreach ($otherFundsColumns as $col) {
-            $otherFunds += User::sum($col);
-        }
+        DB::transaction(function () use (&$count, &$errors) {
+            $ledger = app(\App\Services\LedgerService::class);
 
-        // Add Takaful migration contributions
-        $takafulFunds = \App\Models\TakafulContribution::where('reference', 'LIKE', 'MIG-%TAKF-%')->sum('amount');
+            // 1. Contributions
+            \App\Models\Contribution::whereNull('ledger_journal_id')
+                ->where('status', 'success')
+                ->chunkById(100, function ($records) use ($ledger, &$count, &$errors) {
+                    foreach ($records as $record) {
+                        try {
+                            $journal = $record->category === 'fine'
+                                ? $ledger->recordFine($record)
+                                : $ledger->recordContribution($record);
+                            $record->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            $count++;
+                        } catch (\Exception $e) {
+                            $errors++;
+                        }
+                    }
+                });
 
-        $totalLoans = QardHasan::whereIn('status', ['active', 'defaulted'])->sum('principal_amount');
-        $paidLoans = QardHasan::whereIn('status', ['active', 'defaulted'])->sum('paid_amount');
-        $remainingLoans = $totalLoans - $paidLoans;
+            // 2. Wallet Transactions
+            \App\Models\WalletTransaction::whereNull('ledger_journal_id')
+                ->chunkById(100, function ($records) use ($ledger, &$count, &$errors) {
+                    foreach ($records as $record) {
+                        try {
+                            $journal = strtolower((string) $record->type) === 'credit'
+                                ? $ledger->recordWalletCredit($record)
+                                : $ledger->recordWalletDebit($record);
+                            $record->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            $count++;
+                        } catch (\Exception $e) {
+                            $errors++;
+                        }
+                    }
+                });
 
-        $totalLiabilities = $totalWallet + $totalSavings + $totalShares + $otherFunds + $takafulFunds;
+            // 3. Takaful Contributions
+            \App\Models\TakafulContribution::whereNull('ledger_journal_id')
+                ->where('status', 'success')
+                ->chunkById(100, function ($records) use ($ledger, &$count, &$errors) {
+                    foreach ($records as $record) {
+                        try {
+                            $journal = $ledger->recordTakafulContribution($record);
+                            $record->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            $count++;
+                        } catch (\Exception $e) {
+                            $errors++;
+                        }
+                    }
+                });
+
+            // 4. Loans (Disbursements)
+            \App\Models\QardHasan::whereNull('ledger_journal_id')
+                ->whereIn('status', ['active', 'completed', 'defaulted'])
+                ->chunkById(100, function ($records) use ($ledger, &$count, &$errors) {
+                    foreach ($records as $record) {
+                        try {
+                            $journal = $ledger->recordLoanDisbursement($record);
+                            $record->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            $count++;
+                        } catch (\Exception $e) {
+                            $errors++;
+                        }
+                    }
+                });
+
+            // 5. Loan Repayments
+            \App\Models\QardHasanRepayment::whereNull('ledger_journal_id')
+                ->where('status', 'success')
+                ->chunkById(100, function ($records) use ($ledger, &$count, &$errors) {
+                    foreach ($records as $record) {
+                        try {
+                            $journal = $ledger->recordLoanRepayment($record);
+                            $record->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            $count++;
+                        } catch (\Exception $e) {
+                            $errors++;
+                        }
+                    }
+                });
+
+            // 6. Income & Expenses
+            \App\Models\IncomeEntry::whereNull('ledger_journal_id')
+                ->chunkById(100, function ($records) use ($ledger, &$count, &$errors) {
+                    foreach ($records as $record) {
+                        try {
+                            $journal = $ledger->recordIncome($record);
+                            $record->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            $count++;
+                        } catch (\Exception $e) {
+                            $errors++;
+                        }
+                    }
+                });
+
+            \App\Models\ExpenseEntry::whereNull('ledger_journal_id')
+                ->where('status', 'processed')
+                ->chunkById(100, function ($records) use ($ledger, &$count, &$errors) {
+                    foreach ($records as $record) {
+                        try {
+                            $journal = $ledger->recordExpense($record);
+                            $record->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            $count++;
+                        } catch (\Exception $e) {
+                            $errors++;
+                        }
+                    }
+                });
+        });
 
         Notification::make()
-            ->title('Reconciliation Report')
-            ->body("Total Financial Liabilities: ₦" . number_format($totalLiabilities, 2) . "\n" .
-                  "----------------------------\n" .
-                  "Total Wallet Balance: ₦" . number_format($totalWallet, 2) . "\n" .
-                  "Total Savings: ₦" . number_format($totalSavings, 2) . "\n" .
-                  "Total Shares: ₦" . number_format($totalShares, 2) . "\n" .
-                  "Total Other Funds: ₦" . number_format($otherFunds, 2) . "\n" .
-                  "Total Takaful: ₦" . number_format($takafulFunds, 2) . "\n" .
-                  "Total Digital Gold: " . number_format($totalGold, 4) . "g\n" .
-                  "Total Outstanding Fines: ₦" . number_format($totalFines, 2) . "\n" .
-                  "Outstanding Loans: ₦" . number_format($remainingLoans, 2))
+            ->title('Ledger Sync Complete')
+            ->body("Processed {$count} records into the ledger. Errors: {$errors}")
             ->success()
-            ->persistent()
             ->send();
     }
 }

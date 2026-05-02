@@ -76,6 +76,19 @@ class Contribution extends Model
                 } catch (\Throwable $e) {}
             }
 
+            // Record in Ledger if successful on creation (typical for migration)
+            if ($model->status === 'success' && !$model->ledger_journal_id) {
+                try {
+                    $ledger = app(\App\Services\LedgerService::class);
+                    $journal = $model->category === 'fine'
+                        ? $ledger->recordFine($model)
+                        : $ledger->recordContribution($model);
+                    $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record contribution in ledger: " . $e->getMessage());
+                }
+            }
+
             // If created already successful and linked to a project (e.g., wallet allocation), create investment
             try {
                 if ($model->project_id && $model->status === 'success') {
@@ -141,6 +154,15 @@ class Contribution extends Model
 
                     // Notify admins and user about successful contribution
                     try {
+                        // Record in Ledger if not already recorded
+                        if (!$model->ledger_journal_id) {
+                            $ledger = app(\App\Services\LedgerService::class);
+                            $journal = $model->category === 'fine'
+                                ? $ledger->recordFine($model)
+                                : $ledger->recordContribution($model);
+                            $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                        }
+
                         $user = $model->user;
                         $schemeName = $model->scheme?->name ?? 'Contribution';
 

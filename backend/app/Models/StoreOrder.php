@@ -42,6 +42,27 @@ class StoreOrder extends Model
         static::updated(function ($order) {
             if ($order->wasChanged('status') && $order->status === 'completed') {
                 $order->processVendorPayouts();
+
+                // Record in Ledger
+                if (!$order->ledger_journal_id) {
+                    try {
+                        $journal = app(\App\Services\LedgerService::class)->recordStoreOrder($order);
+                        $order->updateQuietly(['ledger_journal_id' => $journal->id]);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to record store order in ledger: " . $e->getMessage());
+                    }
+                }
+            }
+        });
+
+        static::created(function ($order) {
+            if ($order->status === 'completed' && !$order->ledger_journal_id) {
+                try {
+                    $journal = app(\App\Services\LedgerService::class)->recordStoreOrder($order);
+                    $order->updateQuietly(['ledger_journal_id' => $journal->id]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record store order in ledger: " . $e->getMessage());
+                }
             }
         });
     }

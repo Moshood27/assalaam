@@ -54,6 +54,33 @@ class ExpenseEntry extends Model
         'processed_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::updated(function (ExpenseEntry $expense) {
+            // Record in Ledger when status becomes 'processed'
+            if ($expense->status === 'processed' && $expense->wasChanged('status') && !$expense->ledger_journal_id) {
+                try {
+                    $journal = app(\App\Services\LedgerService::class)->recordExpense($expense);
+                    $expense->updateQuietly(['ledger_journal_id' => $journal->id]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record expense in ledger: " . $e->getMessage());
+                }
+            }
+        });
+
+        static::created(function (ExpenseEntry $expense) {
+            // If already processed on creation
+            if ($expense->status === 'processed' && !$expense->ledger_journal_id) {
+                try {
+                    $journal = app(\App\Services\LedgerService::class)->recordExpense($expense);
+                    $expense->updateQuietly(['ledger_journal_id' => $journal->id]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record expense in ledger: " . $e->getMessage());
+                }
+            }
+        });
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
