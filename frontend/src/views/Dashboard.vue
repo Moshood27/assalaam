@@ -655,7 +655,7 @@ const checkMigration = async () => {
 
   const ok = await modal.prompt(
     'Verify Opening Balance',
-    `Welcome to Attaqwa Pay. Based on our system migration from paper/Excel records, here is your opening balance breakdown:\n\n${breakdownLines}\n\nTotal: ${currency} ${total}\n\nIs this correct?`,
+    `Welcome to Attaqwa Mobile App. Based on our system migration from paper/Excel records, here is your opening balance breakdown:\n\n${breakdownLines}\n\nTotal: ${currency} ${total}\n\nIs this correct?`,
     [
       { label: 'Yes, it is correct', value: 'verify', primary: true },
       { label: 'No, report discrepancy', value: 'report', danger: true },

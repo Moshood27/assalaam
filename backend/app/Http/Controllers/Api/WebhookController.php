@@ -23,6 +23,7 @@ use App\Mail\RepaymentReceiptUser;
 use App\Mail\PaymentStatusMail;
 use App\Services\SmsService;
 use App\Services\TakafulService;
+use App\Services\AdministrativeChargeService;
 
 class WebhookController extends Controller
 {
@@ -950,9 +951,6 @@ class WebhookController extends Controller
      */
     private function calculateMaintenanceCharge(float $amount): float
     {
-        $percentage = Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage', 1)) / 100;
-        $maxCharge = Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount', 500));
-
-        return round(min($amount * $percentage, (float) $maxCharge), 2);
+        return app(AdministrativeChargeService::class)->calculateMaintenanceCharge($amount);
     }
 }

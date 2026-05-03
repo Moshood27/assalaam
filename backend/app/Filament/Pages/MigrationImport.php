@@ -113,6 +113,12 @@ class MigrationImport extends Page implements HasForms
                 ->icon('heroicon-o-document-arrow-down')
                 ->action(fn () => $this->downloadReport()),
 
+            Action::make('viewDiscrepancies')
+                ->label('View Discrepancy Reports')
+                ->color('danger')
+                ->icon('heroicon-o-exclamation-circle')
+                ->url(fn () => \App\Filament\Resources\MigrationDiscrepancyResource::getUrl()),
+
             Action::make('sendOnboardingSms')
                 ->label('Send Onboarding SMS')
                 ->color('warning')

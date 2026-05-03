@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\Setting;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -105,5 +106,73 @@ class AdministrativeChargeService
             if (isset($stats['failed_auto_deduct'])) $stats['failed_auto_deduct']++;
             return false;
         }
+    }
+
+    /**
+     * Calculate system maintenance charge for wallet top-ups.
+     */
+    public function calculateMaintenanceCharge(float $amount): float
+    {
+        $percentage = Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage', 1)) / 100;
+        $maxCharge = Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount', 500));
+
+        return round(min($amount * $percentage, (float) $maxCharge), 2);
+    }
+
+    /**
+     * Apply a manual credit or debit transaction with all applicable charges.
+     */
+    public function applyManualTransaction(User $user, float $amount, string $type, ?string $note = null): array
+    {
+        return DB::transaction(function () use ($user, $amount, $type, $note) {
+            $maintenanceCharge = $this->calculateMaintenanceCharge($amount);
+
+            if ($type === 'credit') {
+                $actualAmount = $amount - $maintenanceCharge;
+                $user->increment('balance', $actualAmount);
+            } else {
+                $actualAmount = $amount + $maintenanceCharge;
+                if ((float) $user->balance < $actualAmount) {
+                    throw new \Exception("Insufficient balance to cover the debit amount plus maintenance charge of ₦" . number_format($maintenanceCharge, 2));
+                }
+                $user->decrement('balance', $actualAmount);
+            }
+
+            $user->refresh();
+
+            // 1. Create main transaction record
+            $transaction = WalletTransaction::create([
+                'user_id' => $user->id,
+                'type' => $type,
+                'amount' => $actualAmount,
+                'reference' => 'MANUAL-' . strtoupper($type) . '-' . $user->id . '-' . time(),
+                'source' => 'manual',
+                'meta' => [
+                    'note' => $note,
+                    'maintenance_charge' => $maintenanceCharge,
+                    'gross_amount' => $amount,
+                    'admin_id' => auth()->id(),
+                ]
+            ]);
+
+            // 2. Process pending administrative charges
+            $adminChargeDeducted = 0;
+            if ($user->admin_charge_balance > 0) {
+                $beforeAdminCharge = (float) $user->balance;
+                if ($this->attemptDeduction($user)) {
+                    $user->refresh();
+                    $adminChargeDeducted = $beforeAdminCharge - (float) $user->balance;
+                }
+            }
+
+            return [
+                'transaction' => $transaction,
+                'gross_amount' => $amount,
+                'maintenance_charge' => $maintenanceCharge,
+                'actual_amount' => $actualAmount,
+                'admin_charge_deducted' => $adminChargeDeducted,
+                'new_balance' => (float) $user->balance,
+            ];
+        });
     }
 }

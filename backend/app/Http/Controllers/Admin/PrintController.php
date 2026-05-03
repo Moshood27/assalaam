@@ -71,7 +71,7 @@ class PrintController extends Controller
             'bf_total' => $matrix->sum('bf'),
         ]);
 
-        return $pdf->stream("passbook-{$user->membership_number}-{$year}.pdf");
+        return $pdf->stream($this->sanitizeFilename("passbook-{$user->membership_number}-{$year}.pdf"));
     }
 
     public function usersList(Request $request)
@@ -130,7 +130,7 @@ class PrintController extends Controller
             'branch' => $branchName,
         ]);
 
-        return $pdf->stream("receipt-{$transaction->reference}.pdf");
+        return $pdf->stream($this->sanitizeFilename("receipt-{$transaction->reference}.pdf"));
     }
 
     public function contributionReceipt(Request $request, Contribution $contribution)
@@ -162,7 +162,7 @@ class PrintController extends Controller
             'branch' => $branchName,
         ]);
 
-        return $pdf->stream("contribution-receipt-{$contribution->reference}.pdf");
+        return $pdf->stream($this->sanitizeFilename("contribution-receipt-{$contribution->reference}.pdf"));
     }
 
     public function utilityReceipt(Request $request, UtilityTransaction $transaction)
@@ -189,6 +189,11 @@ class PrintController extends Controller
             'branch' => $branchName,
         ]);
 
-        return $pdf->stream("utility-receipt-{$transaction->reference}.pdf");
+        return $pdf->stream($this->sanitizeFilename("utility-receipt-{$transaction->reference}.pdf"));
+    }
+
+    private function sanitizeFilename(string $filename): string
+    {
+        return str_replace(['/', '\\'], '_', $filename);
     }
 }

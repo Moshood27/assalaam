@@ -110,6 +110,7 @@ class User extends Authenticatable implements FilamentUser
         'baby_birth_date',
         'migrated_at',
         'verified_at',
+        'discrepancy_reported_at',
         // Membership Enrolment Form Fields
         'surname',
         'other_names',
@@ -229,6 +230,7 @@ class User extends Authenticatable implements FilamentUser
             'baby_birth_date' => 'date',
             'migrated_at' => 'datetime',
             'verified_at' => 'datetime',
+            'discrepancy_reported_at' => 'datetime',
             'dob' => 'date',
             'admission_date' => 'date',
             'has_other_cooperatives' => 'boolean',

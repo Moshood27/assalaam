@@ -18,6 +18,7 @@ use App\Services\AttendanceService;
 use App\Services\PushService;
 use App\Services\SmsService;
 use App\Services\TakafulService;
+use App\Services\AdministrativeChargeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
@@ -658,7 +659,7 @@ class UserResource extends Resource
                         $pdf = Pdf::loadView('pdfs.bulk_membership_applications', ['users' => [$record]])->setPaper('a4');
                         return response()->streamDownload(function () use ($pdf) {
                             echo $pdf->output();
-                        }, "member-{$record->membership_number}.pdf");
+                        }, Str::replace(['/', '\\'], '_', "member-{$record->membership_number}.pdf"));
                     }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
@@ -679,56 +680,63 @@ class UserResource extends Resource
                             ->placeholder('Optional reason'),
                     ])
                     ->action(function (User $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
+                        try {
                             $amount = (float) ($data['amount'] ?? 0);
-                            if ($amount <= 0) {
-                                return;
-                            }
+                            $result = app(AdministrativeChargeService::class)->applyManualTransaction($record, $amount, 'credit', $data['note'] ?? null);
 
-                            $record->increment('balance', $amount);
-                            $newBalance = (float) $record->fresh()->balance;
+                            $actualAmount = $result['actual_amount'];
+                            $maintenanceCharge = $result['maintenance_charge'];
+                            $adminChargeDeducted = $result['admin_charge_deducted'];
+                            $newBalance = $result['new_balance'];
 
-                            DB::afterCommit(function () use ($record, $amount, $data, $newBalance) {
+                            Notification::make()
+                                ->title('Wallet credited successfully')
+                                ->body("Principal: ₦" . number_format($amount, 2) .
+                                      ($maintenanceCharge > 0 ? ". Maintenance charge of ₦" . number_format($maintenanceCharge, 2) . " deducted." : "") .
+                                      ($adminChargeDeducted > 0 ? ". Pending admin charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted." : ""))
+                                ->success()
+                                ->send();
+
+                            DB::afterCommit(function () use ($record, $amount, $actualAmount, $maintenanceCharge, $adminChargeDeducted, $data, $newBalance) {
                                 ShariahAudit::log(auth()->user(), 'credit_wallet_manual', [
                                     'user_id' => $record->id,
-                                    'amount' => $amount,
+                                    'gross_amount' => $amount,
+                                    'actual_credit' => $actualAmount,
+                                    'maintenance_charge' => $maintenanceCharge,
+                                    'admin_charge_deducted' => $adminChargeDeducted,
                                     'note' => $data['note'] ?? null,
                                     'new_balance' => $newBalance,
                                 ]);
-                                if ($record->notify_email && ! empty($record->email)) {
-                                    try {
-                                        Mail::to($record->email)->send(new WalletCredited($record, $amount, $data['note'] ?? null, $newBalance));
-                                    } catch (\Throwable $e) {
-                                        // Swallow email errors to avoid blocking the admin action
-                                    }
-                                }
-                                // Best-effort SMS notification
-                                if ($record->notify_sms) {
-                                    try {
-                                        $sms = app(SmsService::class);
-                                        $msg = 'Wallet credited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
-                                        $sms->send($record->phone ?? null, $msg);
-                                    } catch (\Throwable $e) {
-                                        // ignore SMS errors
-                                    }
-                                }
 
-                                // Best-effort Push notification to the member's device
-                                if ($record->notify_push) {
-                                    try {
-                                        $push = app(PushService::class);
-                                        $token = $record->fcm_token ?: ($record->device_token ?? null);
-                                        $push->send($token, 'Wallet Credited', 'Your wallet has been credited successfully.', [
-                                            'type' => 'wallet_credit',
-                                            'amount' => (float) $amount,
-                                            'balance' => (float) $newBalance,
-                                        ]);
-                                    } catch (\Throwable $e) {
-                                        // ignore push errors
-                                    }
+                                $msg = "Your wallet has been credited with ₦" . number_format($actualAmount, 2);
+                                if ($maintenanceCharge > 0) {
+                                    $msg .= " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2);
                                 }
+                                if ($adminChargeDeducted > 0) {
+                                    $msg .= ". An outstanding administrative charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted.";
+                                }
+                                $msg .= ". New balance: ₦" . number_format($newBalance, 2);
+
+                                $record->notifyMember(
+                                    'Wallet Credited',
+                                    $msg,
+                                    [
+                                        'type' => 'wallet_credit',
+                                        'gross_amount' => (float) $amount,
+                                        'actual_amount' => (float) $actualAmount,
+                                        'maintenance_charge' => (float) $maintenanceCharge,
+                                        'admin_charge_deducted' => (float) $adminChargeDeducted,
+                                        'balance' => (float) $newBalance,
+                                    ]
+                                );
                             });
-                        });
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Action failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     })
                     ->color('success')
                     ->requiresConfirmation(),
@@ -748,56 +756,63 @@ class UserResource extends Resource
                             ->placeholder('Reason for manual debit'),
                     ])
                     ->action(function (User $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
+                        try {
                             $amount = (float) ($data['amount'] ?? 0);
-                            if ($amount <= 0) {
-                                return;
-                            }
+                            $result = app(AdministrativeChargeService::class)->applyManualTransaction($record, $amount, 'debit', $data['note'] ?? null);
 
-                            if ((float) $record->balance < $amount) {
-                                Notification::make()
-                                    ->title('Insufficient balance')
-                                    ->danger()
-                                    ->send();
+                            $actualAmount = $result['actual_amount'];
+                            $maintenanceCharge = $result['maintenance_charge'];
+                            $adminChargeDeducted = $result['admin_charge_deducted'];
+                            $newBalance = $result['new_balance'];
 
-                                return;
-                            }
+                            Notification::make()
+                                ->title('Wallet debited successfully')
+                                ->body("Principal: ₦" . number_format($amount, 2) .
+                                      ($maintenanceCharge > 0 ? ". Maintenance charge of ₦" . number_format($maintenanceCharge, 2) . " added to debit." : "") .
+                                      ($adminChargeDeducted > 0 ? ". Pending admin charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted." : ""))
+                                ->success()
+                                ->send();
 
-                            $record->decrement('balance', $amount);
-                            $newBalance = (float) $record->fresh()->balance;
-
-                            DB::afterCommit(function () use ($record, $amount, $data, $newBalance) {
+                            DB::afterCommit(function () use ($record, $amount, $actualAmount, $maintenanceCharge, $adminChargeDeducted, $data, $newBalance) {
                                 ShariahAudit::log(auth()->user(), 'debit_wallet_manual', [
                                     'user_id' => $record->id,
-                                    'amount' => $amount,
+                                    'gross_amount' => $amount,
+                                    'actual_debit' => $actualAmount,
+                                    'maintenance_charge' => $maintenanceCharge,
+                                    'admin_charge_deducted' => $adminChargeDeducted,
                                     'note' => $data['note'] ?? null,
                                     'new_balance' => $newBalance,
                                 ]);
 
-                                // Best-effort notifications
-                                if ($record->notify_sms) {
-                                    try {
-                                        $sms = app(SmsService::class);
-                                        $msg = 'Wallet debited: ₦'.number_format($amount, 2).'. New bal: ₦'.number_format($newBalance, 2).'.';
-                                        $sms->send($record->phone ?? null, $msg);
-                                    } catch (\Throwable $e) {
-                                    }
+                                $msg = "Your wallet has been debited by ₦" . number_format($actualAmount, 2);
+                                if ($maintenanceCharge > 0) {
+                                    $msg .= " (includes ₦" . number_format($maintenanceCharge, 2) . " maintenance charge)";
                                 }
+                                if ($adminChargeDeducted > 0) {
+                                    $msg .= ". An outstanding administrative charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted.";
+                                }
+                                $msg .= ". New balance: ₦" . number_format($newBalance, 2);
 
-                                if ($record->notify_push) {
-                                    try {
-                                        $push = app(PushService::class);
-                                        $token = $record->fcm_token ?: ($record->device_token ?? null);
-                                        $push->send($token, 'Wallet Debited', 'Your wallet has been debited successfully.', [
-                                            'type' => 'wallet_debit',
-                                            'amount' => (float) $amount,
-                                            'balance' => (float) $newBalance,
-                                        ]);
-                                    } catch (\Throwable $e) {
-                                    }
-                                }
+                                $record->notifyMember(
+                                    'Wallet Debited',
+                                    $msg,
+                                    [
+                                        'type' => 'wallet_debit',
+                                        'gross_amount' => (float) $amount,
+                                        'actual_amount' => (float) $actualAmount,
+                                        'maintenance_charge' => (float) $maintenanceCharge,
+                                        'admin_charge_deducted' => (float) $adminChargeDeducted,
+                                        'balance' => (float) $newBalance,
+                                    ]
+                                );
                             });
-                        });
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Action failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     })
                     ->color('danger')
                     ->requiresConfirmation(),
