@@ -366,6 +366,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::get('/support/messages', [SupportChatController::class, 'index']);
     Route::post('/support/messages', [SupportChatController::class, 'store']);
     Route::post('/support/read', [SupportChatController::class, 'markRead']);
+    Route::post('/support/typing', [SupportChatController::class, 'typing']);
 });
 
 // Existing Qard Hasan prototype endpoints (kept)

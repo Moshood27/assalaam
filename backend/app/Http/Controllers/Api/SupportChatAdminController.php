@@ -20,15 +20,31 @@ class SupportChatAdminController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $data = $request->validate([
-            'body' => ['required', 'string', 'max:2000'],
+        $request->validate([
+            'body' => [$request->hasFile('attachment') ? 'nullable' : 'required', 'string', 'max:2000'],
+            'attachment' => ['nullable', 'file', 'max:10240'],
         ]);
+
+        $type = 'text';
+        $attachmentPath = null;
+        $attachmentName = null;
+
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $attachmentPath = $file->store('support-attachments', 'public');
+            $attachmentName = $file->getClientOriginalName();
+            $mime = $file->getMimeType();
+            $type = str_contains($mime, 'image') ? 'image' : 'file';
+        }
 
         $msg = SupportMessage::create([
             'user_id' => $user->id,
             'sender_type' => 'admin',
             'sender_id' => $admin->id,
-            'body' => trim($data['body']),
+            'body' => trim($request->body) ?: ($type === 'image' ? 'Sent an image' : 'Sent a file'),
+            'type' => $type,
+            'attachment' => $attachmentPath,
+            'attachment_name' => $attachmentName,
         ]);
 
         // Broadcast to the member's private channel
@@ -42,6 +58,9 @@ class SupportChatAdminController extends Controller
                 'sender_type' => (string) $msg->sender_type,
                 'sender_id' => $msg->sender_id ? (int) $msg->sender_id : null,
                 'body' => (string) $msg->body,
+                'type' => (string) $msg->type,
+                'attachment' => $msg->attachment ? asset('storage/' . $msg->attachment) : null,
+                'attachment_name' => (string) $msg->attachment_name,
                 'created_at' => optional($msg->created_at)->toISOString(),
                 'read_at' => optional($msg->read_at)->toISOString(),
             ],

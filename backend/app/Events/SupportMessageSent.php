@@ -25,6 +25,9 @@ class SupportMessageSent implements ShouldBroadcast
             'sender_type' => (string) $message->sender_type,
             'sender_id' => $message->sender_id ? (int) $message->sender_id : null,
             'body' => (string) $message->body,
+            'type' => (string) ($message->type ?? 'text'),
+            'attachment' => $message->attachment ? asset('storage/' . $message->attachment) : null,
+            'attachment_name' => (string) $message->attachment_name,
             'created_at' => optional($message->created_at)->toISOString(),
             'read_at' => optional($message->read_at)->toISOString(),
         ];

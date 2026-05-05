@@ -7,7 +7,44 @@ const messages = ref([])
 const loading = ref(true)
 const sending = ref(false)
 const input = ref('')
+const attachment = ref(null)
+const attachmentPreview = ref(null)
 const userId = ref(null)
+const fileInput = ref(null)
+const adminIsTyping = ref(false)
+let typingTimeout = null
+let adminTypingTimeout = null
+
+function onInput() {
+  if (typingTimeout) clearTimeout(typingTimeout)
+  
+  // Notify backend only once every few seconds
+  if (!typingTimeout) {
+    axios.post('/api/support/typing', { is_typing: true }).catch(() => {})
+  }
+
+  typingTimeout = setTimeout(() => {
+    axios.post('/api/support/typing', { is_typing: false }).catch(() => {})
+    typingTimeout = null
+  }, 3000)
+}
+
+function onFileChange(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  attachment.value = file
+  if (file.type.startsWith('image/')) {
+    attachmentPreview.value = URL.createObjectURL(file)
+  } else {
+    attachmentPreview.value = null
+  }
+}
+
+function removeAttachment() {
+  attachment.value = null
+  attachmentPreview.value = null
+  if (fileInput.value) fileInput.value.value = ''
+}
 let channel = null
 let page = 1
 let lastPage = 1
@@ -59,14 +96,27 @@ async function loadMessages(initial = false) {
 
 async function send() {
   const body = input.value.trim()
-  if (!body || sending.value) return
+  if (!body && !attachment.value || sending.value) return
   try {
     sending.value = true
-    const { data } = await axios.post('/api/support/messages', { body })
+    const formData = new FormData()
+    if (body) formData.append('body', body)
+    if (attachment.value) formData.append('attachment', attachment.value)
+
+    const { data } = await axios.post('/api/support/messages', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    
     input.value = ''
-    // The server will broadcast; we can optimistically append too
+    removeAttachment()
+    
     const m = data?.data
-    if (m) messages.value.push(m)
+    if (m) {
+      // Check if already exists (might have come through Echo)
+      if (!messages.value.find(existing => existing.id === m.id)) {
+        messages.value.push(m)
+      }
+    }
     scrollToBottom()
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to send')
@@ -83,8 +133,31 @@ function subscribe() {
       .listen('.SupportMessageSent', (e) => {
         // e.message contains the message payload
         if (e && e.message) {
-          messages.value.push(e.message)
+          if (!messages.value.find(m => m.id === e.message.id)) {
+            messages.value.push(e.message)
+          }
           scrollToBottom()
+        }
+      })
+      .listen('.SupportTyping', (e) => {
+        if (e && e.senderType === 'admin') {
+          adminIsTyping.value = e.isTyping
+          if (adminTypingTimeout) clearTimeout(adminTypingTimeout)
+          if (e.isTyping) {
+            adminTypingTimeout = setTimeout(() => {
+              adminIsTyping.value = false
+            }, 5000)
+          }
+          scrollToBottom()
+        }
+      })
+      .listen('.SupportMessagesRead', (e) => {
+        if (e && e.readerType === 'admin') {
+          messages.value.forEach(m => {
+            if (m.sender_type === 'member' && !m.read_at) {
+              m.read_at = new Date().toISOString()
+            }
+          })
         }
       })
   } catch (e) {
@@ -136,16 +209,56 @@ onBeforeUnmount(() => unsubscribe())
         <div v-if="messages.length===0" class="text-center text-slate-400 text-sm py-8">No messages yet. Say hi 👋</div>
         <div v-for="m in messages" :key="m.id" class="flex" :class="m.sender_type==='member' ? 'justify-end' : 'justify-start'">
           <div :class="m.sender_type==='member' ? 'bg-emerald-600 text-white' : 'bg-white border'" class="max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow">
+            <div v-if="m.type === 'image' && m.attachment" class="mb-1">
+              <a :href="m.attachment" target="_blank">
+                <img :src="m.attachment" class="rounded-lg max-h-48 w-auto object-cover" />
+              </a>
+            </div>
+            <div v-else-if="m.type === 'file' && m.attachment" class="mb-1 p-2 bg-black/10 rounded flex items-center gap-2">
+              <span class="i-mdi-file-document-outline text-xl opacity-50"></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-[10px] font-bold truncate">{{ m.attachment_name }}</p>
+                <a :href="m.attachment" target="_blank" class="text-[9px] underline opacity-70">Download</a>
+              </div>
+            </div>
+
             <p class="whitespace-pre-wrap">{{ m.body }}</p>
-            <p class="text-[10px] opacity-70 mt-1 text-right">{{ new Date(m.created_at||Date.now()).toLocaleString() }}</p>
+            <div class="flex justify-between items-center mt-1 gap-2">
+              <p class="text-[9px] opacity-70">{{ new Date(m.created_at||Date.now()).toLocaleTimeString() }}</p>
+              <span v-if="m.sender_type==='member'" class="text-[9px] font-bold">
+                {{ m.read_at ? 'Read' : 'Sent' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div v-if="adminIsTyping" class="flex justify-start">
+          <div class="bg-white border rounded-2xl px-3 py-1 text-[10px] text-slate-500 italic animate-pulse shadow-sm">
+            Rep is typing...
           </div>
         </div>
       </template>
     </div>
 
+    <div v-if="attachment" class="px-4 py-2 bg-slate-100 border-t flex items-center justify-between">
+      <div class="flex items-center gap-2 overflow-hidden">
+        <img v-if="attachmentPreview" :src="attachmentPreview" class="w-8 h-8 object-cover rounded" />
+        <span v-else class="i-mdi-file text-xl text-slate-400"></span>
+        <span class="text-[10px] truncate text-slate-600">{{ attachment.name }}</span>
+      </div>
+      <button @click="removeAttachment" class="text-rose-500 text-lg i-mdi-close-circle"></button>
+    </div>
+
     <div class="p-3 border-t flex items-center gap-2">
-      <input v-model="input" type="text" placeholder="Type your message…" class="flex-1 border rounded-xl px-3 py-2 outline-none focus:ring-2 ring-emerald-500" @keydown.enter.prevent="send" />
-      <button :disabled="sending || !input.trim()" @click="send" class="px-4 py-2 rounded-xl bg-emerald-600 text-white disabled:opacity-50">Send</button>
+      <button @click="$refs.fileInput.click()" class="text-slate-400 hover:text-emerald-600 transition p-1">
+        <span class="i-mdi-paperclip text-2xl"></span>
+      </button>
+      <input ref="fileInput" type="file" class="hidden" @change="onFileChange" />
+      
+      <input v-model="input" type="text" placeholder="Type your message…" class="flex-1 border rounded-xl px-3 py-2 outline-none focus:ring-2 ring-emerald-500" @input="onInput" @keydown.enter.prevent="send" />
+      <button :disabled="sending || (!input.trim() && !attachment)" @click="send" class="px-4 py-2 rounded-xl bg-emerald-600 text-white disabled:opacity-50 flex items-center justify-center min-w-[70px]">
+        <span v-if="sending" class="i-mdi-loading animate-spin text-xl"></span>
+        <span v-else>Send</span>
+      </button>
     </div>
   </div>
 </template>

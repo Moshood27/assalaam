@@ -13,7 +13,10 @@ class SupportMessage extends Model
         'user_id',
         'sender_type',
         'sender_id',
+        'type',
         'body',
+        'attachment',
+        'attachment_name',
         'read_at',
     ];
 
