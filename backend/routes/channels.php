@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-// Use Sanctum bearer tokens for channel auth (mobile/web API)
-Broadcast::routes(['middleware' => ['auth:sanctum']]);
+// Support both Sanctum (mobile/web API) and Web (Filament admin)
+Broadcast::routes(['middleware' => ['auth:sanctum,web']]);
 
 Broadcast::channel('support.{userId}', function ($user, int $userId) {
     // Members can only listen to their own channel; admins can listen to any.
