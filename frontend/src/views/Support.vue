@@ -7,7 +7,7 @@
 
     <div class="p-4 space-y-4 max-w-3xl mx-auto">
       <!-- In-App Chat Widget (only for members) -->
-      <div v-if="isLoggedIn" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-4">
+      <div v-if="isLoggedIn" class="mb-6">
         <ChatWidget />
       </div>
 
