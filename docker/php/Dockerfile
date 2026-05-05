@@ -23,6 +23,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         zip \
         intl \
         pcntl \
+        posix \
     && docker-php-ext-enable opcache
 
 # 3. Install Composer
