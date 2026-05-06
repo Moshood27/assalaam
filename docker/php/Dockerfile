@@ -11,7 +11,9 @@ RUN apk add --no-cache \
     unzip \
     icu-dev \
     icu-libs \
-    mysql-client
+    mysql-client \
+    curl \
+    libxml2-dev
 
 # 2. Configure and install PHP extensions
 # Cleaned up redundancy and added pcntl for Laravel Reverb

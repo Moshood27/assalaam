@@ -14,7 +14,7 @@ return [
             'options' => [
                 'host' => env('REVERB_HOST', '127.0.0.1'),
                 'port' => env('REVERB_PORT', 8080),
-                'scheme' => env('REVERB_SCHEME', env('APP_ENV') === 'production' ? 'https' : 'http'),
+                'scheme' => env('REVERB_SCHEME', 'http'),
                 'useTLS' => env('REVERB_SCHEME', 'http') === 'https',
                 'capacity' => env('REVERB_CAPACITY', 100),
                 'max_message_size' => env('REVERB_MAX_MESSAGE_SIZE', 10240),
