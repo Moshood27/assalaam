@@ -6,12 +6,7 @@
     </header>
 
     <div class="p-4 space-y-4 max-w-3xl mx-auto">
-      <!-- In-App Chat Widget (only for members) -->
-      <div v-if="isLoggedIn" class="mb-6">
-        <ChatWidget />
-      </div>
-
-      <div v-else class="bg-emerald-600 rounded-3xl p-6 text-white shadow-lg shadow-emerald-500/20 mb-6">
+      <div v-if="!isLoggedIn" class="bg-emerald-600 rounded-3xl p-6 text-white shadow-lg shadow-emerald-500/20 mb-6">
         <h2 class="text-xl font-black mb-2 leading-tight">Need assistance with your account?</h2>
         <p class="text-emerald-50/80 text-sm leading-relaxed mb-4">
           If you're having trouble signing in or want to learn more about our Cooperative, reach out to our team via WhatsApp or Email below.
@@ -38,7 +33,6 @@
 
 <script setup>
 import { computed } from 'vue'
-import ChatWidget from '../components/ChatWidget.vue'
 import SupportContacts from '../components/SupportContacts.vue'
 
 const isLoggedIn = computed(() => !!localStorage.getItem('token'))

@@ -19,7 +19,14 @@ Broadcast::routes(['middleware' => ['auth:sanctum,web']]);
 
 Broadcast::channel('support.{userId}', function ($user, int $userId) {
     // Members can only listen to their own channel; admins can listen to any.
-    return (int) $user->id === (int) $userId || (bool) ($user->is_admin ?? false);
+    if ((int) $user->id === (int) $userId || (bool) ($user->is_admin ?? false)) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'is_admin' => (bool) ($user->is_admin ?? false)
+        ];
+    }
+    return false;
 });
 
 Broadcast::channel('user.{id}', function ($user, int $id) {

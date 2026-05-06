@@ -21,6 +21,7 @@ class SupportChat extends Component
     public $attachment = null;
     public bool $isTyping = false;
     public bool $memberIsTyping = false;
+    public bool $memberIsOnline = false;
 
     public function mount(User $user)
     {
@@ -43,11 +44,33 @@ class SupportChat extends Component
     public function getListeners()
     {
         return [
-            "echo-private:support.{$this->user->id},SupportMessageSent" => 'onMessageReceived',
-            "echo-private:support.{$this->user->id},SupportTyping" => 'onTypingReceived',
-            "echo-private:support.{$this->user->id},SupportMessagesRead" => 'onMessagesReadReceived',
+            "echo-presence:support.{$this->user->id},here" => 'onPresenceHere',
+            "echo-presence:support.{$this->user->id},joining" => 'onPresenceJoining',
+            "echo-presence:support.{$this->user->id},leaving" => 'onPresenceLeaving',
+            "echo-presence:support.{$this->user->id},SupportMessageSent" => 'onMessageReceived',
+            "echo-presence:support.{$this->user->id},SupportTyping" => 'onTypingReceived',
+            "echo-presence:support.{$this->user->id},SupportMessagesRead" => 'onMessagesReadReceived',
             "message-sent" => '$refresh',
         ];
+    }
+
+    public function onPresenceHere($users)
+    {
+        $this->memberIsOnline = collect($users)->contains('id', $this->user->id);
+    }
+
+    public function onPresenceJoining($user)
+    {
+        if ((int) ($user['id'] ?? 0) === (int) $this->user->id) {
+            $this->memberIsOnline = true;
+        }
+    }
+
+    public function onPresenceLeaving($user)
+    {
+        if ((int) ($user['id'] ?? 0) === (int) $this->user->id) {
+            $this->memberIsOnline = false;
+        }
     }
 
     public function onMessagesReadReceived($data)

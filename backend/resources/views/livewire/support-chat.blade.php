@@ -14,8 +14,8 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Active Session</span>
+            <span class="flex h-2 w-2 rounded-full {{ $memberIsOnline ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300' }}"></span>
+            <span class="text-[10px] font-bold {{ $memberIsOnline ? 'text-emerald-600' : 'text-gray-400' }} uppercase tracking-wider">{{ $memberIsOnline ? 'Online' : 'Offline' }}</span>
         </div>
     </div>
 

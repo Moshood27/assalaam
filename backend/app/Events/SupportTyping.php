@@ -4,7 +4,7 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Contracts\Broadcasting\ShouldRescue;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -27,7 +27,7 @@ class SupportTyping implements ShouldBroadcastNow, ShouldRescue
 
     public function broadcastOn(): Channel
     {
-        return new PrivateChannel('support.' . $this->userId);
+        return new PresenceChannel('support.' . $this->userId);
     }
 
     public function broadcastAs(): string

@@ -13,8 +13,11 @@ const userId = ref(null)
 const fileInput = ref(null)
 const textarea = ref(null)
 const adminIsTyping = ref(false)
+const adminIsOnline = ref(false)
 let typingTimeout = null
 let adminTypingTimeout = null
+let isTypingSent = false
+const emit = defineEmits(['close'])
 
 function onInput(e) {
   if (e?.target) {
@@ -22,15 +25,16 @@ function onInput(e) {
     e.target.style.height = (e.target.scrollHeight) + 'px'
   }
 
-  if (typingTimeout) clearTimeout(typingTimeout)
-  
-  // Notify backend only once every few seconds
-  if (!typingTimeout) {
+  if (!isTypingSent) {
+    isTypingSent = true
     axios.post('/api/support/typing', { is_typing: true }).catch(() => {})
   }
 
+  if (typingTimeout) clearTimeout(typingTimeout)
+
   typingTimeout = setTimeout(() => {
     axios.post('/api/support/typing', { is_typing: false }).catch(() => {})
+    isTypingSent = false
     typingTimeout = null
   }, 3000)
 }
@@ -136,7 +140,21 @@ function subscribe() {
   try {
     if (!userId.value) return
     const Echo = getEcho()
-    channel = Echo.private(`support.${userId.value}`)
+    channel = Echo.join(`support.${userId.value}`)
+      .here((users) => {
+        adminIsOnline.value = users.some(u => u.is_admin)
+      })
+      .joining((user) => {
+        if (user.is_admin) adminIsOnline.value = true
+      })
+      .leaving((user) => {
+        if (user.is_admin) {
+          // Check if there are other admins still here
+          // Echo.join().members might not be directly accessible depending on version, 
+          // but we can re-evaluate or just set to false if it's 1-on-1 mostly.
+          adminIsOnline.value = false 
+        }
+      })
       .listen('.SupportMessageSent', (e) => {
         // e.message contains the message payload
         if (e && e.message) {
@@ -212,11 +230,16 @@ onBeforeUnmount(() => unsubscribe())
         <div>
           <p class="font-bold text-slate-800 leading-none">Support Team</p>
           <div class="flex items-center gap-1.5 mt-1">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Online</p>
+            <span :class="adminIsOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'" class="w-2 h-2 rounded-full"></span>
+            <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{{ adminIsOnline ? 'Online' : 'Offline' }}</p>
           </div>
         </div>
       </div>
+      <button @click="emit('close')" class="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
 
     <div ref="listEl" class="p-4 h-80 overflow-y-auto space-y-2 bg-slate-50">

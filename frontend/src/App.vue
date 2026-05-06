@@ -6,6 +6,7 @@ import { Geolocation } from '@capacitor/geolocation'
 import { SplashScreen } from '@capacitor/splash-screen'
 import BaseModal from './components/BaseModal.vue'
 import InboxDrawer from './components/InboxDrawer.vue'
+import ChatWidget from './components/ChatWidget.vue'
 import router from './router/index.js'
 import axios from './http.js'
 
@@ -13,6 +14,7 @@ const PENDING_PUSH_TOKEN_KEY = 'pending_push_token'
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const showInbox = ref(false)
+const showChat = ref(false)
 const unreadCount = ref(0)
 const isLoggedIn = computed(() => !!localStorage.getItem('token'))
 let unreadTimer = null
@@ -178,14 +180,25 @@ onMounted(async () => {
     <!-- Floating Chat Launcher (visible when logged in) -->
     <button
       v-if="isLoggedIn"
-      @click="$router.push('/support')"
+      @click="showChat = !showChat"
       aria-label="Open Support Chat"
       class="fixed bottom-32 right-6 z-40 bg-emerald-600 text-white shadow-xl shadow-emerald-200 rounded-full w-12 h-12 flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+      <svg v-if="!showChat" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
         <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .621-.504 1.125-1.125 1.125h-1.5a1.125 1.125 0 0 1-1.125-1.125v-4.25c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125Zm-16.5 0v4.25c0 .621.504 1.125 1.125 1.125h1.5a1.125 1.125 0 0 0 1.125-1.125v-4.25c0-.621-.504-1.125-1.125-1.125h-1.5a1.125 1.125 0 0 0-1.125 1.125ZM12 3c4.97 0 9 4.03 9 9.375v.125c0 .414-.336.75-.75.75h-1.5a.75.75 0 0 1-.75-.75V12c0-4.142-3.358-7.5-7.5-7.5S4.5 7.858 4.5 12v.5c0 .414-.336.75-.75.75h-1.5a.75.75 0 0 1-.75-.75v-.125C1.5 7.03 5.53 3 12 3Z" />
       </svg>
+      <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
     </button>
+
+    <!-- Floating Chat Widget -->
+    <div 
+      v-if="isLoggedIn && showChat" 
+      class="fixed bottom-48 right-6 z-50 w-[calc(100vw-3rem)] sm:w-96 mb-[env(safe-area-inset-bottom)] animate-in fade-in slide-in-from-bottom-4 duration-300"
+    >
+      <ChatWidget @close="showChat = false" />
+    </div>
 
     <!-- Floating Inbox Widget (visible when logged in) -->
     <button
