@@ -48,6 +48,22 @@
                       <p class="text-lg font-black text-emerald-600">+{{ eligibility.score_bonus_pct || 0 }}%</p>
                     </div>
                   </div>
+
+                  <!-- Meeting Attendance Info -->
+                  <div v-if="eligibility.meeting_attendance_count !== undefined" class="mb-3 p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between">
+                    <div>
+                      <p class="text-[10px] text-slate-400 font-bold uppercase">Meeting Attendance</p>
+                      <p class="text-lg font-black" :class="eligibility.meeting_attendance_count >= eligibility.required_loan_meetings ? 'text-emerald-600' : 'text-amber-600'">
+                        {{ eligibility.meeting_attendance_count || 0 }} / {{ eligibility.required_loan_meetings || 8 }}
+                      </p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-[10px] text-slate-400 font-bold uppercase">Threshold Status</p>
+                      <p class="text-[11px] font-bold" :class="eligibility.meeting_attendance_count >= eligibility.required_loan_meetings ? 'text-emerald-600' : 'text-amber-600'">
+                        {{ eligibility.meeting_attendance_count >= eligibility.required_loan_meetings ? 'MEETS CRITERIA' : 'ADMIN DECISION REQ.' }}
+                      </p>
+                    </div>
+                  </div>
                   <p v-if="Number(eligibility.limit_boost_pct || 0) > 0" class="text-[10px] text-emerald-700 font-semibold mb-2">
                     Trust boost applied: +{{ eligibility.limit_boost_pct }}% to your loan limit.
                   </p>

@@ -51,9 +51,17 @@ class LoanController extends Controller
         $scoreSvc = app(AttaqwaScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
 
+        $requiredMeetings = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
+        $currentMeetings = $user->meetingAttendanceCount();
+
         if ($scoreEnabled) {
             $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
             $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+
+            // Meeting attendance requirement for instant approval
+            if ($currentMeetings < $requiredMeetings) {
+                $instant = false;
+            }
         } else {
             // If credit score is disabled, default to standard path (not instant, not low)
             $instant = false;
@@ -111,6 +119,8 @@ class LoanController extends Controller
             'limit_boost_pct' => $boostPct,
             'eligibility_with_score' => $eligWithScore,
             'is_defaulted' => (bool) $user->is_defaulter,
+            'meeting_attendance_count' => $currentMeetings,
+            'required_loan_meetings' => $requiredMeetings,
         ]);
         return response()->json($resp);
     }
@@ -146,9 +156,17 @@ class LoanController extends Controller
         $scoreSvc = app(AttaqwaScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
 
+        $requiredMeetings = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
+        $currentMeetings = $user->meetingAttendanceCount();
+
         if ($scoreEnabled) {
             $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
             $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+
+            // Meeting attendance requirement for instant approval
+            if ($currentMeetings < $requiredMeetings) {
+                $instant = false;
+            }
         } else {
             // Default: no instant approval, 2 guarantors
             $instant = false;
