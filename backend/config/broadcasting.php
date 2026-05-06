@@ -17,7 +17,7 @@ return [
                 'scheme' => env('REVERB_SCHEME', 'http'),
                 'useTLS' => env('REVERB_SCHEME', 'http') === 'https',
                 'capacity' => env('REVERB_CAPACITY', 100),
-                'max_message_size' => env('REVERB_MAX_MESSAGE_SIZE', 10240),
+                'max_message_size' => env('REVERB_MAX_MESSAGE_SIZE', 65535),
             ],
         ],
 

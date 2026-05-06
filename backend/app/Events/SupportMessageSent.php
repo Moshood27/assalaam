@@ -7,9 +7,10 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldRescue;
 use Illuminate\Queue\SerializesModels;
 
-class SupportMessageSent implements ShouldBroadcastNow
+class SupportMessageSent implements ShouldBroadcastNow, ShouldRescue
 {
     use InteractsWithSockets, SerializesModels;
 
