@@ -195,7 +195,7 @@ onMounted(async () => {
     <!-- Floating Chat Widget -->
     <div 
       v-if="isLoggedIn && showChat" 
-      class="fixed bottom-48 right-6 z-50 w-[calc(100vw-3rem)] sm:w-96 mb-[env(safe-area-inset-bottom)] animate-in fade-in slide-in-from-bottom-4 duration-300"
+      class="fixed bottom-4 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 mb-[env(safe-area-inset-bottom)] animate-in fade-in slide-in-from-bottom-4 duration-300"
     >
       <ChatWidget @close="showChat = false" />
     </div>
