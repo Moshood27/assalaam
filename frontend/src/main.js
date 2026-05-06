@@ -80,7 +80,9 @@ function setupIdleLogout(router, timeoutMs = 600000) {
     if (hadAdmin && current.startsWith(`${basePath}admin`)) {
       window.location.href = `${basePath}admin/login`
     } else {
-      window.location.href = `${basePath}login`
+      // Fallback to /app/login if basePath is just / (SPA is served under /app/)
+      const target = (basePath === '/' && !current.startsWith('/app/')) ? '/app/login' : `${basePath}login`
+      window.location.href = target
     }
   }
 

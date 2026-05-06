@@ -84,7 +84,8 @@ Route::get('/login', function (\Illuminate\Http\Request $request) {
     if ($request->expectsJson() || $request->is('api/*')) {
         return response()->json(['message' => 'Unauthenticated. Please login.'], 401);
     }
-    return response('Unauthenticated. Please login via the app.', 401);
+    // Redirect browser requests to the member app login page
+    return redirect('/app/login');
 })->name('login');
 
 

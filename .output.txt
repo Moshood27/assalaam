@@ -3,13 +3,10 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
         <title>{{ config('brand.name', config('app.name', 'ATTAQWA CO-OPERATIVE')) }} Admin</title>
-
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-
         <!-- Styles / Scripts -->
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -32,12 +29,11 @@
                         </a>
                     @else
                         <a
-                            href="{{ url('/admin/login') }}"
+                            href="{{ route('login') }}"
                             class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] text-[#1b1b18] border border-transparent hover:border-[#19140035] dark:hover:border-[#3E3E3A] rounded-sm text-sm leading-normal"
                         >
                             Log in
                         </a>
-
                         @if (Route::has('register'))
                             <a
                                 href="{{ route('register') }}"
@@ -71,7 +67,6 @@
                     {{-- Project Logo --}}
                     <img src="{{ asset('images/' . config('brand.slug', 'assalam') . '-logo.svg') }}" alt="{{ config('brand.name', 'ASSALAM CO-OPERATIVE') }} Logo" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain dark:hidden" style="height: 104px;" />
                     <img src="{{ asset('images/' . config('brand.slug', 'assalam') . '-logo-dark.svg') }}" alt="{{ config('brand.name', 'ASSALAM CO-OPERATIVE') }} Logo (Dark)" class="w-full max-w-none transition-all translate-y-0 opacity-100 duration-750 starting:opacity-0 starting:translate-y-6 object-contain hidden dark:block" style="height: 104px;" />
-
                     <!-- Islamic themed geometric background -->
                     <div class="absolute inset-0 opacity-60 mix-blend-multiply pointer-events-none" style="background-image: radial-gradient(ellipse at 10% 0%, rgba(16,185,129,.25) 0, transparent 40%), radial-gradient(ellipse at 90% 0%, rgba(16,185,129,.2) 0, transparent 45%), radial-gradient(circle at 50% 100%, rgba(5,150,105,.25) 0, transparent 50%);"></div>
                     <!-- Subtle pattern -->
@@ -94,13 +89,10 @@
                             <rect x="120" y="110" width="16" height="24" rx="2"/>
                         </g>
                     </svg>
-
-
                     <div class="absolute inset-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]"></div>
                 </div>
             </main>
         </div>
-
         @if (Route::has('login'))
             <div class="h-14.5 hidden lg:block"></div>
         @endif
