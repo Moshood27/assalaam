@@ -35,5 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', [\App\Http\Middleware\TrackUserActivity::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        \Sentry\Laravel\Integration::handles($exceptions);
+        if (class_exists(\Sentry\Laravel\Integration::class)) {
+            \Sentry\Laravel\Integration::handles($exceptions);
+        }
     })->create();
