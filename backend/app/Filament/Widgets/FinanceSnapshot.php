@@ -48,7 +48,8 @@ class FinanceSnapshot extends BaseWidget
             ->count();
 
         $totalGold = (float) User::sum('gold_balance');
-        $goldPrice = (new GoldSilverPriceService())->getGoldPrice()['sell'] ?? 0;
+        $goldPriceData = (new GoldSilverPriceService())->getGoldPriceData();
+        $goldPrice = $goldPriceData['sell_price_ngn'] ?? 0;
         $goldValue = $totalGold * $goldPrice;
 
         return [
