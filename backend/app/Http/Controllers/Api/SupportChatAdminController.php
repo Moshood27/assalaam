@@ -48,7 +48,7 @@ class SupportChatAdminController extends Controller
         ]);
 
         // Broadcast to the member's private channel
-        event(new SupportMessageSent($msg));
+        SupportMessageSent::dispatch($msg);
 
         return response()->json([
             'message' => 'Sent',

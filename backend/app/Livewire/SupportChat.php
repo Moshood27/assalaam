@@ -36,7 +36,7 @@ class SupportChat extends Component
             ->update(['read_at' => now()]);
 
         if ($updated > 0) {
-            event(new SupportMessagesRead($this->user->id, 'admin'));
+            SupportMessagesRead::dispatch($this->user->id, 'admin');
         }
     }
 
@@ -83,7 +83,7 @@ class SupportChat extends Component
 
     public function broadcastTyping($isTyping)
     {
-        event(new SupportTyping($this->user->id, 'admin', $isTyping));
+        SupportTyping::dispatch($this->user->id, 'admin', $isTyping);
     }
 
     public function onMessageReceived($data)
@@ -130,7 +130,7 @@ class SupportChat extends Component
         $this->body = '';
         $this->attachment = null;
 
-        event(new SupportMessageSent($msg));
+        SupportMessageSent::dispatch($msg);
 
         $this->dispatch('message-sent');
     }
