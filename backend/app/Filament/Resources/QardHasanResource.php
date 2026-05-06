@@ -70,6 +70,7 @@ class QardHasanResource extends Resource
                             $principal = $adj['eligibility_adjusted'] ?? 0;
                             $set('principal_amount', $principal);
                             $set('qard_id_string', 'QH-'.now()->format('Y').'-'.strtoupper(Str::random(6)));
+                            $set('meeting_attendance_count', $user->meetingAttendanceCount());
 
                             // Also update per_installment if total_installments is already set
                             $ti = (int) $get('total_installments');
@@ -158,6 +159,11 @@ class QardHasanResource extends Resource
                     ])
                     ->default('pending')
                     ->required(),
+                Forms\Components\TextInput::make('meeting_attendance_count')
+                    ->label('Attendance Count')
+                    ->numeric()
+                    ->helperText('Number of audited meetings attended at the time of application.')
+                    ->default(0),
                 Forms\Components\DateTimePicker::make('received_at')
                     ->label('Date Received')
                     ->helperText('When the member actually received the loan funds.'),
@@ -201,16 +207,15 @@ class QardHasanResource extends Resource
                     ->wrap()
                     ->getStateUsing(fn (QardHasan $record) => $record->guarantors?->map(fn ($u) => $u->full_name)->filter()->implode(', ') ?: '-'),
                 TextColumn::make('meeting_attendance_count')
-                    ->label('Attendance')
+                    ->label('Attendance (S/C)')
                     ->badge()
-                    ->color(function ($state) {
+                    ->getStateUsing(fn (QardHasan $record) => "{$record->meeting_attendance_count} / " . $record->user->meetingAttendanceCount())
+                    ->color(function ($record) {
                         $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
-                        return $state >= $required ? 'success' : 'danger';
+                        $current = $record->user->meetingAttendanceCount();
+                        return $current >= $required ? 'success' : 'danger';
                     })
-                    ->formatStateUsing(function ($state) {
-                        $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
-                        return "{$state} / {$required}";
-                    })
+                    ->description(fn (QardHasan $record) => "Req: " . (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8)))
                     ->toggleable(),
                 TextColumn::make('qard_id_string')->label('Loan ID')->searchable(),
                 TextColumn::make('principal_amount')->money('ngn', true)->label('Principal')->sortable(),
@@ -321,14 +326,15 @@ class QardHasanResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
                     ->visible(fn (QardHasan $record) => $record->status === 'pending' && empty($record->approved_at) && auth()->user()->can('approve_loans'))
-                    ->requiresConfirmation(fn (QardHasan $record) => $record->meeting_attendance_count < (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8)))
+                    ->requiresConfirmation(fn (QardHasan $record) => $record->user->meetingAttendanceCount() < (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8)))
                     ->modalHeading('Confirm Approval')
                     ->modalDescription(function (QardHasan $record) {
                         $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
-                        if ($record->meeting_attendance_count < $required) {
-                            return "WARNING: This member has only attended {$record->meeting_attendance_count} meetings (Required: {$required}). Approval is at the discretion of the Administrator or President. Are you sure you want to proceed?";
+                        $current = $record->user->meetingAttendanceCount();
+                        if ($current < $required) {
+                            return "WARNING: This member has only attended {$current} audited meetings (Required: {$required}). Approval is at the discretion of the Administrator or President. Are you sure you want to proceed?";
                         }
-                        return "Are you sure you want to approve this loan? The member has attended {$record->meeting_attendance_count} meetings.";
+                        return "Are you sure you want to approve this loan? The member has attended {$current} audited meetings.";
                     })
                     ->form([
                         FileUpload::make('agreement_template')
@@ -907,16 +913,15 @@ class QardHasanResource extends Resource
                         TextEntry::make('user.full_name')->label('Member'),
                         TextEntry::make('principal_amount')->money('ngn'),
                         TextEntry::make('meeting_attendance_count')
-                            ->label('Meeting Attendance')
+                            ->label('Meeting Attendance (Snapshot / Current Audited)')
                             ->badge()
-                            ->color(function ($state) {
+                            ->getStateUsing(fn (QardHasan $record) => "{$record->meeting_attendance_count} / " . $record->user->meetingAttendanceCount())
+                            ->color(function ($record) {
                                 $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
-                                return $state >= $required ? 'success' : 'danger';
+                                $current = $record->user->meetingAttendanceCount();
+                                return $current >= $required ? 'success' : 'danger';
                             })
-                            ->formatStateUsing(function ($state) {
-                                $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
-                                return "{$state} / {$required} meetings attended";
-                            }),
+                            ->hint(fn() => "Required: " . (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8))),
                         TextEntry::make('status')
                             ->badge()
                             ->formatStateUsing(fn ($record, $state) => (($record->defaulted_at && $record->defaulted_at->lte(now())) || $state === 'defaulted') ? 'DEFAULTED' : strtoupper($state))

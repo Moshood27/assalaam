@@ -422,7 +422,12 @@ class User extends Authenticatable implements FilamentUser
 
     public function meetingAttendanceCount(): int
     {
-        return $this->attendanceRecords()->where('status', 'present')->count();
+        return $this->attendanceRecords()
+            ->where('status', 'present')
+            ->whereHas('meeting', function ($query) {
+                $query->where('status', 'audited');
+            })
+            ->count();
     }
 
     public function supportMessages()
