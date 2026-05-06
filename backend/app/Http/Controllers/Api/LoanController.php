@@ -263,6 +263,7 @@ class LoanController extends Controller
             'admin_fee_flat' => $data['admin_fee_flat'] ?? 0,
             'admin_fee_pct' => $data['admin_fee_pct'] ?? 0,
             'paid_amount' => 0,
+            'meeting_attendance_count' => $user->meetingAttendanceCount(),
             'status' => $instant ? 'active' : 'pending', // Instant approval activates immediately
         ]);
 
@@ -411,7 +412,10 @@ class LoanController extends Controller
                 'required_guarantors' => $requiredGuarantors,
             ]);
 
-            return response()->json($q, 201);
+            return response()->json([
+                'loan' => $q,
+                'message' => "Loan request submitted. You have attended {$q->meeting_attendance_count} meetings. Final loan approval will be decided by the administrator or president.",
+            ], 201);
         }
     }
 

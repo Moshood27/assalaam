@@ -473,6 +473,10 @@ class UserResource extends Resource
                     ->sortable()
                     ->numeric(6),
                 TextColumn::make('created_at')->label('Date Joined')->date(),
+                TextColumn::make('meeting_attendance_count')
+                    ->label('Attendance')
+                    ->getStateUsing(fn (User $record) => $record->meetingAttendanceCount())
+                    ->sortable(false),
                 TextColumn::make('account_number')
                     ->label('Bank Acct #')
                     ->toggleable(isToggledHiddenByDefault: true)

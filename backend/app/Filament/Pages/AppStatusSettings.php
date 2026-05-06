@@ -33,6 +33,7 @@ class AppStatusSettings extends Page
             'system_announcement' => Setting::get('system_announcement', config('cooperative.system_announcement')),
             'play_store_url' => Setting::get('play_store_url', config('cooperative.play_store_url')),
             'loan_credit_score_enabled' => (bool) Setting::get('loan_credit_score_enabled', true),
+            'required_loan_meetings' => (int) Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8)),
             'nursing_mother_grace_period_months' => (int) Setting::get('nursing_mother_grace_period_months', 3),
             'wallet_maintenance_charge_percentage' => Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage')),
             'wallet_maintenance_charge_max' => Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount')),
@@ -86,6 +87,12 @@ class AppStatusSettings extends Page
                             ->label('Enable Credit Score for Loans')
                             ->helperText('If disabled, the Coop credit score will not be used to determine loan eligibility boost or guarantor requirements.')
                             ->default(true),
+                        TextInput::make('required_loan_meetings')
+                            ->label('Required Meeting Attendance')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0)
+                            ->helperText('The minimum number of meetings a member must attend to be eligible for loan approval (e.g., 8). Admins can still approve manually if below this.'),
                     ]),
                 Section::make('Grace Period Settings')
                     ->description('Manage grace periods for members.')

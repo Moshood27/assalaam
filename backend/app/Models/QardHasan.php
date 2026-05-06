@@ -205,6 +205,7 @@ class QardHasan extends Model
         'admin_fee_pct',
         'paid_amount',
         'status',
+        'meeting_attendance_count',
         'rejection_reason',
         'approved_by',
         'approved_at',

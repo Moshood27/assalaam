@@ -23,6 +23,7 @@ class CreateQardHasan extends CreateRecord
         // Ensure we have a valid user
         $user = User::find($data['user_id'] ?? null);
         if ($user) {
+            $data['meeting_attendance_count'] = $user->meetingAttendanceCount();
             // Enforce 6-month minimum membership
             if ($user->monthsInSystem() < 6) {
                 Notification::make()->title('Eligibility Error')->body('Member must be in the system for at least 6 months before taking a loan.')->danger()->send();

@@ -200,6 +200,18 @@ class QardHasanResource extends Resource
                     ->label('Guarantors')
                     ->wrap()
                     ->getStateUsing(fn (QardHasan $record) => $record->guarantors?->map(fn ($u) => $u->full_name)->filter()->implode(', ') ?: '-'),
+                TextColumn::make('meeting_attendance_count')
+                    ->label('Attendance')
+                    ->badge()
+                    ->color(function ($state) {
+                        $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
+                        return $state >= $required ? 'success' : 'danger';
+                    })
+                    ->formatStateUsing(function ($state) {
+                        $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
+                        return "{$state} / {$required}";
+                    })
+                    ->toggleable(),
                 TextColumn::make('qard_id_string')->label('Loan ID')->searchable(),
                 TextColumn::make('principal_amount')->money('ngn', true)->label('Principal')->sortable(),
                 TextColumn::make('credited_amount')
@@ -309,6 +321,15 @@ class QardHasanResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
                     ->visible(fn (QardHasan $record) => $record->status === 'pending' && empty($record->approved_at) && auth()->user()->can('approve_loans'))
+                    ->requiresConfirmation(fn (QardHasan $record) => $record->meeting_attendance_count < (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8)))
+                    ->modalHeading('Confirm Approval')
+                    ->modalDescription(function (QardHasan $record) {
+                        $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
+                        if ($record->meeting_attendance_count < $required) {
+                            return "WARNING: This member has only attended {$record->meeting_attendance_count} meetings (Required: {$required}). Approval is at the discretion of the Administrator or President. Are you sure you want to proceed?";
+                        }
+                        return "Are you sure you want to approve this loan? The member has attended {$record->meeting_attendance_count} meetings.";
+                    })
                     ->form([
                         FileUpload::make('agreement_template')
                             ->label('Agreement Template')
@@ -885,6 +906,17 @@ class QardHasanResource extends Resource
                         TextEntry::make('qard_id_string')->label('Loan ID'),
                         TextEntry::make('user.full_name')->label('Member'),
                         TextEntry::make('principal_amount')->money('ngn'),
+                        TextEntry::make('meeting_attendance_count')
+                            ->label('Meeting Attendance')
+                            ->badge()
+                            ->color(function ($state) {
+                                $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
+                                return $state >= $required ? 'success' : 'danger';
+                            })
+                            ->formatStateUsing(function ($state) {
+                                $required = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
+                                return "{$state} / {$required} meetings attended";
+                            }),
                         TextEntry::make('status')
                             ->badge()
                             ->formatStateUsing(fn ($record, $state) => (($record->defaulted_at && $record->defaulted_at->lte(now())) || $state === 'defaulted') ? 'DEFAULTED' : strtoupper($state))

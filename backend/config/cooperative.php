@@ -30,6 +30,7 @@ return [
         'apology_fine' => env('COOP_APOLOGY_FINE', 100),
         'radius_meters' => env('COOP_ATTENDANCE_RADIUS', 100),
         'grace_period_minutes' => env('COOP_ATTENDANCE_GRACE_PERIOD', 0),
+        'required_loan_meetings' => env('COOP_REQUIRED_LOAN_MEETINGS', 8),
     ],
     'wallet' => [
         'maintenance_charge' => [

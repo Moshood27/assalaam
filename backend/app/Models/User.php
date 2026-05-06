@@ -420,6 +420,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(AttendanceRecord::class);
     }
 
+    public function meetingAttendanceCount(): int
+    {
+        return $this->attendanceRecords()->where('status', 'present')->count();
+    }
+
     public function supportMessages()
     {
         return $this->hasMany(SupportMessage::class);
