@@ -85,7 +85,7 @@ class ChatController extends Controller
         $room = ChatRoom::create([
             'name' => $request->name,
             'type' => $request->type,
-            'slug' => Str::slug($request->name) . '-' . uniqid(),
+            'metadata' => ['slug' => Str::slug($request->name) . '-' . uniqid()],
         ]);
 
         ChatRoomMember::create([

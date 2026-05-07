@@ -79,10 +79,9 @@ class ChatService
     {
         $room = ChatRoom::create([
             'name' => $name,
-            'slug' => Str::slug($name),
             'type' => $type,
             'creator_id' => $creator->id,
-            'metadata' => $metadata,
+            'metadata' => array_merge($metadata, ['slug' => Str::slug($name)]),
         ]);
 
         $room->members()->create(['user_id' => $creator->id, 'role' => 'admin']);
@@ -92,18 +91,17 @@ class ChatService
 
     public function getOrCreateOfficialRoom($name, $roleRequired)
     {
-        $slug = Str::slug($name);
-        $room = ChatRoom::where('slug', $slug)->first();
+        $room = ChatRoom::where('name', $name)->where('type', 'official')->first();
 
         if (!$room) {
             // System created room
             $room = ChatRoom::create([
                 'name' => $name,
-                'slug' => $slug,
                 'type' => 'official',
                 'metadata' => [
                     'role_required' => $roleRequired,
                     'is_official' => true,
+                    'slug' => Str::slug($name),
                 ],
             ]);
         }
