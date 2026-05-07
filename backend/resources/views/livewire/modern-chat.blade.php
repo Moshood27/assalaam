@@ -75,6 +75,57 @@
 
     <!-- Chat Input -->
     <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+        <!-- Quick Actions -->
+        <div class="flex items-center space-x-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
+            <button wire:click="sendGreeting('Assalamu Alaikum')" class="flex-shrink-0 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                Assalamu Alaikum
+            </button>
+            <button wire:click="sendGreeting('Wa Alaikum Salam')" class="flex-shrink-0 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                Wa Alaikum Salam
+            </button>
+            <button wire:click="sendGreeting('JazakAllah Khair')" class="flex-shrink-0 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                JazakAllah Khair
+            </button>
+            <button wire:click="sendGreeting('BarakAllah Feek')" class="flex-shrink-0 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                BarakAllah Feek
+            </button>
+
+            <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+
+            <!-- Canned Responses Toggle -->
+            <div class="relative" x-data="{ open: @entangle('showCannedResponses') }">
+                <button @click="open = !open" class="flex-shrink-0 px-2 py-1 bg-primary-50 dark:bg-primary-900 border border-primary-200 dark:border-primary-700 rounded text-[10px] font-medium text-primary-700 dark:text-primary-300 hover:bg-primary-100 transition">
+                    Canned Responses
+                </button>
+                <div x-show="open" @click.away="open = false" class="absolute bottom-full mb-2 left-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-48 overflow-y-auto">
+                    @foreach(\App\Models\ChatCannedResponse::all() as $resp)
+                        <button wire:click="sendCannedResponse({{ $resp->id }})" class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="font-bold">{{ $resp->title }}</span>
+                            <p class="text-gray-500 truncate">{{ $resp->message }}</p>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Fintech Actions Toggle -->
+            <div class="relative" x-data="{ open: @entangle('showFintechActions') }">
+                <button @click="open = !open" class="flex-shrink-0 px-2 py-1 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded text-[10px] font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-100 transition">
+                    Fintech Ready
+                </button>
+                <div x-show="open" @click.away="open = false" class="absolute bottom-full mb-2 left-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 p-2">
+                    <h4 class="text-[10px] font-bold uppercase text-gray-500 mb-2 px-1">Financial Actions (Amanah)</h4>
+                    <button wire:click="sendTransactionCard(5000, 'Contribution Payment')" class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center">
+                        <x-heroicon-o-credit-card class="w-4 h-4 mr-2 text-amber-500" />
+                        Send Payment Request (₦5k)
+                    </button>
+                    <button wire:click="sendApprovalRequest('Loan Agreement Approval')" class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center">
+                        <x-heroicon-o-pencil-square class="w-4 h-4 mr-2 text-primary-500" />
+                        Request Digital Signature
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <form wire:submit.prevent="sendMessage" class="flex items-end space-x-2">
             <div class="flex-1">
                 <textarea

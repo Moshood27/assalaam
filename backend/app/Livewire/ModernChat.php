@@ -18,6 +18,9 @@ class ModernChat extends Component
     public $attachment = null;
     public $perPage = 50;
 
+    public $showCannedResponses = false;
+    public $showFintechActions = false;
+
     protected $listeners = [
         'echo:chat.room.{chatRoom.id},ChatMessageSent' => '$refresh',
         'echo:chat.room.{chatRoom.id},ChatMessageDeleted' => '$refresh',
@@ -51,6 +54,44 @@ class ModernChat extends Component
 
         $this->messageBody = '';
         $this->attachment = null;
+        $this->showCannedResponses = false;
+        $this->showFintechActions = false;
+        $this->dispatch('messageSent');
+    }
+
+    public function sendGreeting($greeting, ChatService $chatService)
+    {
+        $chatService->sendMessage($this->chatRoom, Auth::user(), [
+            'body' => $greeting,
+            'type' => 'text',
+        ]);
+        $this->dispatch('messageSent');
+    }
+
+    public function sendCannedResponse($responseId, ChatService $chatService)
+    {
+        $response = \App\Models\ChatCannedResponse::find($responseId);
+        if ($response) {
+            $chatService->sendMessage($this->chatRoom, Auth::user(), [
+                'body' => $response->message,
+                'type' => 'text',
+            ]);
+        }
+        $this->showCannedResponses = false;
+        $this->dispatch('messageSent');
+    }
+
+    public function sendTransactionCard($amount, $description, ChatService $chatService)
+    {
+        $chatService->sendTransactionCard($this->chatRoom, Auth::user(), $amount, $description);
+        $this->showFintechActions = false;
+        $this->dispatch('messageSent');
+    }
+
+    public function sendApprovalRequest($title, $documentPath = null, ChatService $chatService)
+    {
+        $chatService->sendApprovalRequest($this->chatRoom, Auth::user(), $title, ['document_path' => $documentPath]);
+        $this->showFintechActions = false;
         $this->dispatch('messageSent');
     }
 

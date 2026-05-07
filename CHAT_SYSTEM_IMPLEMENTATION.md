@@ -49,7 +49,7 @@ The system supports the specialized needs of Cooperative leadership:
 The system provides a streamlined way for members to receive assistance:
 - **Member-Initiated Inquiries**: Members can start a new "Support Inquiry" directly from the chat dashboard. This creates a dedicated 1-on-1 room between the Member and the Cooperative's Staff.
 - **Staff Assignment**: Admins can assign specific support rooms to available staff members to ensure timely responses (Amanah).
-- **Inquiry Linking**: Support threads can be linked to specific Loan Application IDs or Contribution issues, providing staff with immediate context.
+- 
 - **Canned Responses**: Staff can use pre-approved "Adab-compliant" templates for common questions (e.g., "How to apply for Qard Hasan?"), ensuring consistent and respectful communication.
 
 ## 7. Responsive & Mobile Design

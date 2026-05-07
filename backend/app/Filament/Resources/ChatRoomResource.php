@@ -7,8 +7,10 @@ use App\Filament\Resources\ChatRoomResource\RelationManagers;
 use App\Filament\Resources\ChatRoomResource\Widgets\ChatStatsWidget;
 use App\Models\ChatRoom;
 use App\Models\User;
+use App\Services\ChatService;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -52,6 +54,22 @@ class ChatRoomResource extends Resource
                     ->label('Assigned Staff')
                     ->options(User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))->pluck('name', 'id'))
                     ->searchable(),
+                Forms\Components\Section::make('Sharia & Security (Adab)')
+                    ->schema([
+                        Forms\Components\Toggle::make('metadata.requires_2fa')
+                            ->label('Requires 2FA (Amanah)')
+                            ->helperText('Sensitivity setting for financial data'),
+                        Forms\Components\Select::make('metadata.gender_restriction')
+                            ->label('Gender Restriction')
+                            ->options([
+                                'male' => 'Brothers Only',
+                                'female' => 'Ladies Only',
+                            ])
+                            ->placeholder('No Restriction'),
+                        Forms\Components\Toggle::make('metadata.is_official')
+                            ->label('Official Room')
+                            ->helperText('Mark as official for board/committees'),
+                    ])->columns(3),
                 Forms\Components\KeyValue::make('metadata')
                     ->columnSpanFull(),
             ]);
@@ -60,6 +78,37 @@ class ChatRoomResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                Tables\Actions\Action::make('broadcast')
+                    ->label('Broadcast Message')
+                    ->icon('heroicon-o-megaphone')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\Textarea::make('message')
+                            ->required()
+                            ->label('Message Content')
+                            ->placeholder('Assalamu Alaikum, dear members...'),
+                        Forms\Components\Select::make('type')
+                            ->options([
+                                'broadcast' => 'General Announcement',
+                                'urgent' => 'Urgent Notification',
+                            ])
+                            ->default('broadcast')
+                            ->required(),
+                    ])
+                    ->action(function (array $data, ChatService $chatService): void {
+                        $chatService->broadcastMessage(
+                            auth()->user(),
+                            $data['message'],
+                            $data['type']
+                        );
+
+                        Notification::make()
+                            ->title('Broadcast message sent to all rooms')
+                            ->success()
+                            ->send();
+                    }),
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
@@ -71,6 +120,11 @@ class ChatRoomResource extends Resource
                         'official' => 'warning',
                         'support' => 'success',
                     }),
+                Tables\Columns\TextColumn::make('assigned_staff')
+                    ->label('Assigned Staff')
+                    ->getStateUsing(fn (ChatRoom $record) => User::find($record->metadata['assigned_staff_id'] ?? null)?->name ?? 'Unassigned')
+                    ->badge()
+                    ->color(fn ($state) => $state !== 'Unassigned' ? 'success' : 'gray'),
                 Tables\Columns\TextColumn::make('members_count')
                     ->counts('members')
                     ->label('Members'),
@@ -87,6 +141,15 @@ class ChatRoomResource extends Resource
                         'official' => 'Official',
                         'support' => 'Support',
                     ]),
+                Tables\Filters\TernaryFilter::make('assigned')
+                    ->label('Staff Assignment')
+                    ->placeholder('All Rooms')
+                    ->trueLabel('Assigned Rooms')
+                    ->falseLabel('Unassigned Rooms')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('metadata->assigned_staff_id'),
+                        false: fn (Builder $query) => $query->whereNull('metadata->assigned_staff_id'),
+                    ),
                 Tables\Filters\TernaryFilter::make('has_flagged_messages')
                     ->label('Adab Violations')
                     ->placeholder('All Rooms')
@@ -103,6 +166,27 @@ class ChatRoomResource extends Resource
                     ->icon('heroicon-o-chat-bubble-bottom-center-text')
                     ->color('primary')
                     ->url(fn (ChatRoom $record): string => static::getUrl('chat', ['record' => $record])),
+                Tables\Actions\Action::make('assignStaff')
+                    ->label('Assign Staff')
+                    ->icon('heroicon-o-user-plus')
+                    ->modalWidth('sm')
+                    ->form([
+                        Forms\Components\Select::make('staff_id')
+                            ->label('Staff Member')
+                            ->options(User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))->pluck('name', 'id'))
+                            ->searchable()
+                            ->required(),
+                    ])
+                    ->action(function (ChatRoom $record, array $data, ChatService $chatService): void {
+                        $staff = User::find($data['staff_id']);
+                        $chatService->assignStaff($record, $staff);
+
+                        Notification::make()
+                            ->title('Staff assigned successfully')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn (ChatRoom $record) => $record->type === 'support' || $record->type === 'group'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
