@@ -29,6 +29,21 @@ Broadcast::channel('support.{userId}', function ($user, int $userId) {
     return false;
 });
 
+Broadcast::channel('chat.room.{roomId}', function ($user, int $roomId) {
+    // Check if user is a member of the room OR is staff/admin
+    if ((bool) ($user->is_admin ?? false) || (bool) ($user->is_staff ?? false)) {
+        return true;
+    }
+
+    return \App\Models\ChatRoomMember::where('chat_room_id', $roomId)
+        ->where('user_id', $user->id)
+        ->exists();
+});
+
+Broadcast::channel('App.Models.User.{id}', function ($user, int $id) {
+    return (int) $user->id === (int) $id;
+});
+
 Broadcast::channel('user.{id}', function ($user, int $id) {
     return (int) $user->id === (int) $id;
 });

@@ -58,6 +58,8 @@ export function getEcho() {
                     const t = localStorage.getItem('token')
                     return t ? `Bearer ${t}` : ''
                 })(),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
         },
     })
