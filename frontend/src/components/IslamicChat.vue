@@ -1,0 +1,431 @@
+<script setup>
+import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
+import axios from '../http.js'
+import { getEcho } from '../realtime/echo.js'
+
+const props = defineProps({
+  roomId: {
+    type: [Number, String],
+    required: true
+  }
+})
+
+const messages = ref([])
+const loading = ref(true)
+const sending = ref(false)
+const input = ref('')
+const attachment = ref(null)
+const attachmentPreview = ref(null)
+const userId = ref(null)
+const room = ref(null)
+const greetings = ref([])
+const cannedResponses = ref({})
+const showGreetings = ref(false)
+const showCanned = ref(false)
+const status = ref({ away_message: null, is_prayer_time: false })
+const typingUsers = ref({})
+const editingMessage = ref(null)
+const replyingTo = ref(null)
+
+const listEl = ref(null)
+let channel = null
+let typingTimeout = null
+
+async function fetchInitialData() {
+  try {
+    loading.value = true
+    const [profileRes, roomRes, greetingsRes, cannedRes, statusRes] = await Promise.all([
+      axios.get('/api/profile'),
+      axios.get(`/api/chat/rooms/${props.roomId}`),
+      axios.get('/api/chat/greetings'),
+      axios.get('/api/chat/canned-responses'),
+      axios.get('/api/chat/status')
+    ])
+    
+    userId.value = profileRes.data.id
+    room.value = roomRes.data.room
+    messages.value = roomRes.data.messages.data.reverse()
+    greetings.value = greetingsRes.data
+    cannedResponses.value = cannedRes.data
+    status.value = statusRes.data
+    
+    scrollToBottom()
+    setupRealtime()
+    markRead()
+  } catch (e) {
+    console.error('Failed to fetch chat data', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+function setupRealtime() {
+  const echo = getEcho()
+  if (!echo) return
+
+  channel = echo.private(`chat.room.${props.roomId}`)
+    .listen('.message.sent', (e) => {
+      if (!messages.value.find(m => m.id === e.message.id)) {
+        messages.value.push(e.message)
+        scrollToBottom()
+        markRead()
+      }
+    })
+    .listen('.message.updated', (e) => {
+      const index = messages.value.findIndex(m => m.id === e.message.id)
+      if (index !== -1) {
+        messages.value[index] = e.message
+      }
+    })
+    .listen('.message.deleted', (e) => {
+      messages.value = messages.value.filter(m => m.id !== e.messageId)
+    })
+    .listen('.typing', (e) => {
+      if (e.userId === userId.value) return
+      
+      typingUsers.value[e.userId] = e.userName
+      
+      setTimeout(() => {
+        delete typingUsers.value[e.userId]
+      }, 3000)
+    })
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (listEl.value) {
+      listEl.value.scrollTop = listEl.value.scrollHeight
+    }
+  })
+}
+
+async function markRead() {
+  try {
+    await axios.post(`/api/chat/rooms/${props.roomId}/read`)
+  } catch (e) {}
+}
+
+function handleTyping() {
+  if (typingTimeout) clearTimeout(typingTimeout)
+  
+  axios.post(`/api/chat/rooms/${props.roomId}/typing`, { is_typing: true })
+  
+  typingTimeout = setTimeout(() => {
+    axios.post(`/api/chat/rooms/${props.roomId}/typing`, { is_typing: false })
+  }, 2000)
+}
+
+async function send(type = 'text', customData = null) {
+  if (sending.value) return
+  
+  if (editingMessage.value) {
+    saveEdit()
+    return
+  }
+
+  const payload = customData || {
+    body: input.value,
+    type: type,
+    metadata: replyingTo.value ? { reply_to: replyingTo.value } : null
+  }
+
+  if (!payload.body && !attachment.value && type === 'text') return
+
+  try {
+    sending.value = true
+    const { data } = await axios.post(`/api/chat/rooms/${props.roomId}/messages`, payload)
+    messages.value.push(data)
+    input.value = ''
+    showGreetings.value = false
+    replyingTo.value = null
+    scrollToBottom()
+  } catch (e) {
+    console.error('Failed to send message', e)
+  } finally {
+    sending.value = false
+  }
+}
+
+function startEdit(msg) {
+  editingMessage.value = { ...msg }
+  input.value = msg.body
+}
+
+async function saveEdit() {
+  try {
+    const { data } = await axios.patch(`/api/chat/messages/${editingMessage.value.id}`, {
+      body: input.value
+    })
+    const index = messages.value.findIndex(m => m.id === data.id)
+    if (index !== -1) messages.value[index] = data
+    editingMessage.value = null
+    input.value = ''
+  } catch (e) {
+    console.error('Failed to edit', e)
+  }
+}
+
+async function deleteMessage(id) {
+  if (!confirm('Are you sure you want to delete this message? (Soft-delete for audit trail)')) return
+  try {
+    await axios.delete(`/api/chat/messages/${id}`)
+    messages.value = messages.value.filter(m => m.id !== id)
+  } catch (e) {
+    console.error('Failed to delete', e)
+  }
+}
+
+function setReply(msg) {
+  replyingTo.value = {
+    id: msg.id,
+    body: msg.body,
+    user_name: msg.user?.name || 'User'
+  }
+}
+
+function useGreeting(greeting) {
+  input.value = greeting
+  send()
+}
+
+async function respondToMessage(message, action) {
+  try {
+    const { data } = await axios.post(`/api/chat/messages/${message.id}/respond`, { action })
+    // Update message in local list
+    const index = messages.value.findIndex(m => m.id === message.id)
+    if (index !== -1) {
+      messages.value[index] = data
+    }
+  } catch (e) {
+    console.error('Failed to respond', e)
+  }
+}
+
+onMounted(fetchInitialData)
+onBeforeUnmount(() => {
+  if (channel) {
+    channel.unsubscribe()
+  }
+})
+
+const typingText = computed(() => {
+  const users = Object.values(typingUsers.value)
+  if (users.length === 0) return ''
+  if (users.length === 1) return `${users[0]} is typing...`
+  return 'Multiple people are typing...'
+})
+
+function hasBadge(user, type) {
+  return user?.badges?.some(b => b.badge_type === type)
+}
+
+</script>
+
+<template>
+  <div class="flex flex-col h-full bg-gray-50 dark:bg-gray-900 border rounded-lg overflow-hidden shadow-xl">
+    <!-- Header -->
+    <div class="p-4 bg-white dark:bg-gray-800 border-b flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+          {{ room?.name?.[0] || 'C' }}
+        </div>
+        <div>
+          <h3 class="font-bold dark:text-white">{{ room?.name || 'Cooperative Chat' }}</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            {{ room?.type }}
+            <span v-if="room?.metadata?.assigned_staff_id" class="ml-2 text-emerald-600 font-medium">
+              • Assigned to Staff
+            </span>
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <div v-if="room?.metadata?.requires_2fa" class="flex items-center space-x-1 px-2 py-1 bg-amber-100 text-amber-700 text-[10px] rounded-full font-bold">
+          <span class="material-icons text-xs">lock</span>
+          <span>SENSITIVE (2FA)</span>
+        </div>
+        <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] rounded-full font-bold">
+          SHARIA COMPLIANT (ADAB)
+        </span>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div ref="listEl" class="flex-1 overflow-y-auto p-4 space-y-4">
+      <!-- Away Message / Status -->
+      <div v-if="status.away_message" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="material-icons text-sm">schedule</span>
+          <span>{{ status.away_message }}</span>
+        </div>
+      </div>
+      <div v-if="status.is_prayer_time" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-xs mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="material-icons text-sm">notifications_off</span>
+          <span>Notifications are muted for prayer time. Assalamu Alaikum.</span>
+        </div>
+      </div>
+
+      <div v-if="loading" class="flex justify-center p-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+      
+      <template v-else>
+        <div v-for="msg in messages" :key="msg.id" 
+             :class="['flex flex-col', msg.user_id === userId ? 'items-end' : 'items-start']">
+          
+          <div v-if="msg.user_id !== userId" class="flex items-center space-x-1 mb-1 ml-2">
+            <span class="text-[10px] font-bold text-gray-500">{{ msg.user?.name }}</span>
+            <span v-if="hasBadge(msg.user, 'verified')" class="material-icons text-[10px] text-emerald-500">verified</span>
+          </div>
+
+          <div class="group relative flex items-center">
+            <!-- Message Actions -->
+            <div :class="['hidden group-hover:flex items-center space-x-1 absolute top-0 px-2 py-1 bg-white dark:bg-gray-800 rounded shadow-md border z-10', 
+                          msg.user_id === userId ? 'right-full mr-2' : 'left-full ml-2']">
+              <button @click="setReply(msg)" class="text-gray-500 hover:text-emerald-600">
+                <span class="material-icons text-xs">reply</span>
+              </button>
+              <button v-if="msg.user_id === userId && msg.type === 'text'" @click="startEdit(msg)" class="text-gray-500 hover:text-blue-600">
+                <span class="material-icons text-xs">edit</span>
+              </button>
+              <button v-if="msg.user_id === userId" @click="deleteMessage(msg.id)" class="text-gray-500 hover:text-red-600">
+                <span class="material-icons text-xs">delete</span>
+              </button>
+            </div>
+
+            <div :class="[
+              'max-w-[80vw] sm:max-w-[400px] rounded-2xl px-4 py-2 shadow-sm',
+              msg.user_id === userId ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 dark:text-white rounded-tl-none'
+            ]">
+              <!-- Reply context -->
+              <div v-if="msg.metadata?.reply_to" 
+                   class="mb-2 p-2 bg-black/5 dark:bg-white/5 rounded-lg border-l-4 border-emerald-300 text-[10px] opacity-80 truncate">
+                <p class="font-bold">{{ msg.metadata.reply_to.user_name }}</p>
+                <p>{{ msg.metadata.reply_to.body }}</p>
+              </div>
+
+              <!-- Text message -->
+              <p v-if="msg.type === 'text'" class="text-sm whitespace-pre-wrap">{{ msg.body }}</p>
+
+              <!-- Transaction Card -->
+              <div v-else-if="msg.type === 'transaction'" class="p-2 border rounded-lg bg-emerald-50 dark:bg-emerald-900/20 mt-1">
+                <div class="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
+                  <span class="material-icons text-sm">payments</span>
+                  <span class="font-bold text-xs uppercase">Transaction Request</span>
+                </div>
+                <p class="text-sm mb-3 dark:text-gray-200">{{ msg.body }}</p>
+                <button v-if="msg.metadata?.status === 'pending' && msg.user_id !== userId" 
+                        @click="respondToMessage(msg, 'paid')"
+                        class="w-full py-2 bg-emerald-600 text-white text-xs rounded-md font-bold hover:bg-emerald-700 transition">
+                  Pay Instantly
+                </button>
+                <div v-else class="text-xs font-bold text-emerald-600 bg-white dark:bg-gray-800 px-2 py-1 rounded text-center border border-emerald-100">
+                  {{ msg.metadata?.status.toUpperCase() }}
+                </div>
+              </div>
+
+              <!-- Approval Card -->
+              <div v-else-if="msg.type === 'approval'" class="p-2 border rounded-lg bg-blue-50 dark:bg-blue-900/20 mt-1">
+                <div class="flex items-center space-x-2 text-blue-700 dark:text-blue-400 mb-2">
+                  <span class="material-icons text-sm">verified</span>
+                  <span class="font-bold text-xs uppercase">E-Signature Required</span>
+                </div>
+                <p class="text-sm font-bold dark:text-gray-200">{{ msg.metadata?.title }}</p>
+                <p class="text-xs mb-3 text-gray-600 dark:text-gray-400">{{ msg.metadata?.description }}</p>
+                <div v-if="msg.metadata?.status === 'pending' && msg.user_id !== userId" class="flex space-x-2">
+                  <button @click="respondToMessage(msg, 'approved')"
+                          class="flex-1 py-2 bg-blue-600 text-white text-xs rounded-md font-bold hover:bg-blue-700 transition">
+                    Accept (Ikhlas)
+                  </button>
+                  <button @click="respondToMessage(msg, 'declined')"
+                          class="flex-1 py-2 bg-gray-200 text-gray-700 text-xs rounded-md font-bold hover:bg-gray-300 transition">
+                    Decline
+                  </button>
+                </div>
+                <div v-else class="text-xs font-bold text-blue-600 bg-white dark:bg-gray-800 px-2 py-1 rounded text-center border border-blue-100">
+                  {{ msg.metadata?.status.toUpperCase() }}
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end space-x-1 text-[10px] opacity-70 mt-1">
+                <span v-if="msg.edited_at" class="mr-1 italic">(edited)</span>
+                <span>{{ new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</span>
+                <span v-if="msg.user_id === userId" class="material-icons text-[10px]" :class="msg.metadata?.read_at ? 'text-blue-300' : 'text-gray-300'">
+                  {{ msg.metadata?.read_at ? 'done_all' : 'done' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="typingText" class="text-[10px] text-gray-500 italic px-4 py-1 animate-pulse">
+          {{ typingText }}
+        </div>
+      </template>
+    </div>
+
+    <!-- Input -->
+    <div class="p-4 bg-white dark:bg-gray-800 border-t">
+      <!-- Reply Preview -->
+      <div v-if="replyingTo" class="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg flex justify-between items-center text-xs">
+        <div class="truncate">
+          <span class="font-bold text-emerald-600">Replying to {{ replyingTo.user_name }}:</span>
+          <span class="ml-1 opacity-70">{{ replyingTo.body }}</span>
+        </div>
+        <button @click="replyingTo = null" class="text-gray-500"><span class="material-icons text-sm">close</span></button>
+      </div>
+
+      <!-- Edit Indicator -->
+      <div v-if="editingMessage" class="mb-2 px-2 text-[10px] font-bold text-blue-600 flex justify-between items-center">
+        <span>EDITING MESSAGE</span>
+        <button @click="editingMessage = null; input = ''" class="text-gray-500 uppercase">Cancel</button>
+      </div>
+
+      <!-- Greetings suggestions -->
+      <div v-if="showGreetings" class="flex flex-wrap gap-2 mb-3">
+        <button v-for="g in greetings" :key="g" 
+                @click="useGreeting(g)"
+                class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs hover:bg-emerald-100 transition">
+          {{ g }}
+        </button>
+      </div>
+
+      <!-- Canned responses -->
+      <div v-if="showCanned" class="flex flex-col space-y-2 mb-3 max-h-40 overflow-y-auto">
+        <button v-for="(text, key) in cannedResponses" :key="key" 
+                @click="input = text; showCanned = false"
+                class="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 text-left text-xs rounded-lg hover:bg-emerald-100 transition">
+          <p class="font-bold">{{ key }}</p>
+          <p class="truncate opacity-70">{{ text }}</p>
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button @click="showGreetings = !showGreetings; showCanned = false" 
+                class="p-2 text-gray-500 hover:text-emerald-600">
+          <span class="material-icons">sentiment_satisfied_alt</span>
+        </button>
+        <button @click="showCanned = !showCanned; showGreetings = false" 
+                class="p-2 text-gray-500 hover:text-emerald-600">
+          <span class="material-icons">quickreply</span>
+        </button>
+        <textarea v-model="input" 
+               @input="handleTyping"
+               @keyup.enter.exact.prevent="send('text')"
+               placeholder="Type a message (Maintain Adab)..."
+               rows="1"
+               class="flex-1 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+        <button @click="send('text')" 
+                :disabled="sending || (!input.trim() && !attachment)"
+                class="p-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+          <span class="material-icons">{{ editingMessage ? 'check' : 'send' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+</style>

@@ -430,6 +430,21 @@ class User extends Authenticatable implements FilamentUser
             ->count();
     }
 
+    public function chatRooms()
+    {
+        return $this->belongsToMany(ChatRoom::class, 'chat_room_members', 'user_id', 'chat_room_id');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->is_admin || $this->hasRole('admin');
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->isAdmin() || $this->hasRole('staff') || $this->hasRole('loan_officer');
+    }
+
     public function supportMessages()
     {
         return $this->hasMany(SupportMessage::class);

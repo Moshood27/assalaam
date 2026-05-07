@@ -54,6 +54,7 @@ const UpdateRequired = () => import('../views/UpdateRequired.vue')
 const SavingsGroups = () => import('../views/SavingsGroups.vue')
 const SavingsGroupDetail = () => import('../views/SavingsGroupDetail.vue')
 const SavingsGroupCreate = () => import('../views/SavingsGroupCreate.vue')
+const ChatRooms = () => import('../views/ChatRooms.vue')
 
 const AdminLogin = () => import('../views/admin/AdminLogin.vue')
 const AdminRegister = () => import('../views/admin/AdminRegister.vue')
@@ -106,6 +107,7 @@ const routes = [
   { path: '/savings-groups', name: 'savings.groups', component: SavingsGroups, meta: { requiresAuth: true } },
   { path: '/savings-groups/create', name: 'savings.group.create', component: SavingsGroupCreate, meta: { requiresAuth: true } },
   { path: '/savings-groups/:id', name: 'savings.group.detail', component: SavingsGroupDetail, meta: { requiresAuth: true } },
+  { path: '/chat', name: 'chat', component: ChatRooms, meta: { requiresAuth: true } },
   { path: '/sadaqah', name: 'sadaqah', component: Sadaqah, meta: { requiresAuth: true } },
   { path: '/sadaqah/history', name: 'sadaqah.history', component: SadaqahHistory, meta: { requiresAuth: true } },
   { path: '/sadaqah/:id', name: 'sadaqah.detail', component: SadaqahDetail, meta: { requiresAuth: true } },

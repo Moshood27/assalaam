@@ -367,6 +367,28 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/support/messages', [SupportChatController::class, 'store']);
     Route::post('/support/read', [SupportChatController::class, 'markRead']);
     Route::post('/support/typing', [SupportChatController::class, 'typing']);
+
+    // Enhanced Islamic Cooperative Chat System
+    Route::prefix('chat')->group(function () {
+        Route::get('/rooms', [\App\Http\Controllers\Api\ChatController::class, 'index']);
+        Route::get('/rooms/{room}', [\App\Http\Controllers\Api\ChatController::class, 'show']);
+        Route::post('/rooms/{room}/messages', [\App\Http\Controllers\Api\ChatController::class, 'store']);
+        Route::patch('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'update']);
+        Route::delete('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'destroy']);
+        Route::post('/messages/{message}/respond', [\App\Http\Controllers\Api\ChatController::class, 'respond']);
+        Route::post('/rooms/{room}/read', [\App\Http\Controllers\Api\ChatController::class, 'markRead']);
+        Route::post('/rooms/{room}/typing', [\App\Http\Controllers\Api\ChatController::class, 'typing']);
+        Route::get('/search', [\App\Http\Controllers\Api\ChatController::class, 'search']);
+        Route::get('/greetings', [\App\Http\Controllers\Api\ChatController::class, 'greetings']);
+        Route::get('/canned-responses', [\App\Http\Controllers\Api\ChatController::class, 'cannedResponses']);
+        Route::get('/status', [\App\Http\Controllers\Api\ChatController::class, 'status']);
+        Route::post('/private/{user}', [\App\Http\Controllers\Api\ChatController::class, 'createPrivateRoom']);
+        Route::post('/rooms/{room}/assign', [\App\Http\Controllers\Api\ChatController::class, 'assignStaff']);
+        Route::post('/broadcast', [\App\Http\Controllers\Api\ChatController::class, 'broadcast']);
+        Route::get('/chat-analytics', [\App\Http\Controllers\Api\ChatController::class, 'analytics']);
+        Route::post('/users/{user}/ban', [\App\Http\Controllers\Api\ChatController::class, 'ban']);
+        Route::post('/users/{user}/unban', [\App\Http\Controllers\Api\ChatController::class, 'unban']);
+    });
 });
 
 // Existing Qard Hasan prototype endpoints (kept)
