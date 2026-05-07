@@ -72,9 +72,9 @@ class SupportChatController extends Controller
         // Notify admins about new support message
         \App\Models\User::where('is_admin', true)->each(function ($admin) use ($user, $msg) {
             $admin->notifyMember(
-                "New Support Message",
-                "Message from {$user->name}: " . \Illuminate\Support\Str::limit($msg->body, 50),
-                ['type' => 'support_message', 'user_id' => $user->id]
+                "New Support Inquiry",
+                "{$user->name} sent a support message: " . \Illuminate\Support\Str::limit($msg->body, 50) . ". Please assign available staff.",
+                ['type' => 'support_message', 'user_id' => $user->id, 'route' => 'admin/chat-staff']
             );
         });
 

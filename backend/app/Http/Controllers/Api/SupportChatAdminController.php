@@ -50,6 +50,13 @@ class SupportChatAdminController extends Controller
         // Broadcast to the member's private channel
         SupportMessageSent::dispatch($msg);
 
+        // Notify the user about the support reply
+        $user->notifyMember(
+            "Support Reply",
+            "A staff member replied to your inquiry: " . \Illuminate\Support\Str::limit($msg->body, 50),
+            ['type' => 'support_message', 'admin_id' => $admin->id]
+        );
+
         return response()->json([
             'message' => 'Sent',
             'data' => [

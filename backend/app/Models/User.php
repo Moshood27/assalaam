@@ -290,9 +290,9 @@ class User extends Authenticatable implements FilamentUser
             $useMail = in_array('mail', $resolved, true) && (bool) ($this->notify_email ?? true) && !empty($this->email);
             $useDb = in_array('database', $resolved, true);
 
-            // Use Laravel notification for database/email
+            // Use Laravel notification for database/email (disable push here as we handle it manually below)
             try {
-                $this->notify(new \App\Notifications\GeneralNotification($title, $message, $data, $useMail, $useDb));
+                $this->notify(new \App\Notifications\GeneralNotification($title, $message, $data, $useMail, $useDb, false));
             } catch (\Throwable $e) {
                 // avoid breaking caller flow
             }

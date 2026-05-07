@@ -84,5 +84,13 @@ The chat system is fully integrated into the Filament Admin Panel for centralize
 - **Governance Tools**: Ability to ban/unban users from the chat system directly from the member list to maintain the etiquette of the cooperative.
 - **Chat Analytics**: Real-time statistics on total messages, active rooms, and staff response performance.
 
+## 11. Notifications & Alerts
+
+The system keeps users and staff informed through multiple channels:
+- **Push Notifications**: Real-time push alerts for all chat messages and system updates, ensuring timely response (Amanah).
+- **Admin Assignment Alerts**: Immediate email and push notifications for admins when a new support inquiry is created, including a direct action link to assign staff.
+- **Staff Assignment Notifications**: Members are notified via push when a staff member has been assigned to their inquiry.
+- **Unified Delivery**: Managed via `User::notifyMember` and the `GeneralNotification` system, respecting user preferences for Email, SMS, and Push.
+
 ---
 *Developed for Attaqwa Cooperative - Maintaining the Adab of Finance.*

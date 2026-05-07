@@ -114,6 +114,12 @@ class ChatController extends Controller
             }
         }
 
+        if ($request->type === 'support') {
+            User::where('is_admin', true)->get()->each(function ($admin) use ($room) {
+                $admin->notify(new \App\Notifications\NewSupportInquiryNotification($room, Auth::user()));
+            });
+        }
+
         return response()->json($room->load('users'));
     }
 

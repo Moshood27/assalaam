@@ -66,7 +66,29 @@ class ChatService
 
         $room->update(['last_message_id' => $message->id]);
 
+        $this->notifyRoomMembers($room, $message, $sender);
+
         return $message;
+    }
+
+    public function notifyRoomMembers(ChatRoom $room, $message, User $sender)
+    {
+        $roomName = $room->name ?: ($room->type === 'private' ? 'Private Chat' : 'Chat');
+
+        $room->users()
+            ->where('users.id', '!=', $sender->id)
+            ->get()
+            ->each(function (User $user) use ($roomName, $room, $message, $sender) {
+                $user->notifyMember(
+                    "New message in {$roomName}",
+                    "{$sender->name}: " . Str::limit($message->body ?? 'sent an attachment', 50),
+                    [
+                        'type' => 'chat_message',
+                        'room_id' => $room->id,
+                        'message_id' => $message->id,
+                    ]
+                );
+            });
     }
 
     public function sendTransactionCard(ChatRoom $room, User $sender, $amount, $purpose, $metadata = [])
@@ -142,7 +164,27 @@ class ChatService
             $room->members()->create(['user_id' => $staff->id, 'role' => 'staff']);
         }
 
+        $this->notifyAssignment($room, $staff);
+
         return $room;
+    }
+
+    protected function notifyAssignment(ChatRoom $room, User $staff)
+    {
+        $room->users()
+            ->where('users.id', '!=', $staff->id)
+            ->get()
+            ->each(function (User $user) use ($room, $staff) {
+                $user->notifyMember(
+                    "Support Staff Assigned",
+                    "{$staff->name} has been assigned to your support inquiry and is ready to help.",
+                    [
+                        'type' => 'staff_assigned',
+                        'room_id' => $room->id,
+                        'staff_id' => $staff->id,
+                    ]
+                );
+            });
     }
 
     public function broadcastMessage(User $sender, $body, $type = 'broadcast', $metadata = [])
