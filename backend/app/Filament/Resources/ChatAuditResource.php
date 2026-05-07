@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\ChatAuditResource\Pages;
 use App\Models\ChatMessage;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -90,7 +91,7 @@ class ChatAuditResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ChatAuditResource\Pages\ListChatAudits::route('/'),
+            'index' => Pages\ListChatAudits::route('/'),
         ];
     }
 }

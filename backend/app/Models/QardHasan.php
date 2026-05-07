@@ -92,6 +92,7 @@ class QardHasan extends Model
             $items[] = [
                 'index' => $i + 1,
                 'due_at' => $cursor->copy(),
+                'due_date' => $cursor->toDateString(),
                 'amount' => $per,
             ];
         }

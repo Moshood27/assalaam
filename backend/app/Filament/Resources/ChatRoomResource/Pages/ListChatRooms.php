@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\ChatRoomResource\Pages;
 
+use App\Filament\Resources\ChatRoomResource;
+use App\Filament\Resources\ChatRoomResource\Widgets\ChatStatsWidget;
 use App\Services\ChatService;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -40,7 +42,7 @@ class ListChatRooms extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            ChatRoomResource\Widgets\ChatStatsWidget::class,
+            ChatStatsWidget::class,
         ];
     }
 }

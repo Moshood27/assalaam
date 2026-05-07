@@ -209,7 +209,7 @@ class AttaqwaScoreService
             $schedule = $loan->generateInstallmentSchedule($loan->approved_at);
             if (empty($schedule)) continue;
 
-            $lastDueDate = Carbon::parse(end($schedule)['due_date']);
+            $lastDueDate = Carbon::parse(end($schedule)['due_at']);
             $actualCompletionDate = $loan->repayments()->where('status', 'success')->max('paid_at');
 
             if ($actualCompletionDate && Carbon::parse($actualCompletionDate)->lt($lastDueDate)) {
