@@ -7,8 +7,14 @@ const props = defineProps({
   roomId: {
     type: [Number, String],
     required: true
+  },
+  showBack: {
+    type: Boolean,
+    default: false
   }
 })
+
+const emit = defineEmits(['back'])
 
 const messages = ref([])
 const loading = ref(true)
@@ -255,14 +261,17 @@ function hasBadge(user, type) {
     <!-- Header -->
     <div class="p-4 bg-white dark:bg-gray-800 border-b flex items-center justify-between">
       <div class="flex items-center space-x-3">
+        <button v-if="showBack" @click="emit('back')" class="md:hidden p-1 -ml-1 mr-1 text-gray-500 hover:text-emerald-600 transition">
+          <span class="material-icons">arrow_back</span>
+        </button>
         <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
           {{ room?.name?.[0] || 'C' }}
         </div>
         <div>
-          <h3 class="font-bold dark:text-white flex items-center">
-            {{ room?.name || 'Cooperative Chat' }}
+          <h3 class="font-bold dark:text-white flex items-center max-w-[120px] sm:max-w-none">
+            <span class="truncate">{{ room?.name || 'Cooperative Chat' }}</span>
             <span v-if="room?.type === 'private' && room?.users?.some(u => u.id !== userId && hasBadge(u, 'verified'))" 
-                  class="material-icons text-emerald-500 text-xs ml-1" 
+                  class="material-icons text-emerald-500 text-xs ml-1 flex-shrink-0" 
                   title="Member Verified">verified</span>
           </h3>
           <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -276,10 +285,12 @@ function hasBadge(user, type) {
       <div class="flex items-center space-x-2">
         <div v-if="room?.metadata?.requires_2fa" class="flex items-center space-x-1 px-2 py-1 bg-amber-100 text-amber-700 text-[10px] rounded-full font-bold">
           <span class="material-icons text-xs">lock</span>
-          <span>SENSITIVE (2FA)</span>
+          <span class="hidden xs:inline">SENSITIVE (2FA)</span>
+          <span class="xs:hidden">2FA</span>
         </div>
         <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] rounded-full font-bold">
-          SHARIA COMPLIANT (ADAB)
+          <span class="hidden xs:inline">SHARIA COMPLIANT (ADAB)</span>
+          <span class="xs:hidden">ADAB</span>
         </span>
       </div>
     </div>
@@ -477,7 +488,7 @@ function hasBadge(user, type) {
                @keyup.enter.exact.prevent="send('text')"
                placeholder="Type a message (Maintain Adab)..."
                rows="1"
-               class="flex-1 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+               class="flex-1 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
         <button @click="send('text')" 
                 :disabled="sending || (!input.trim() && !attachment)"
                 class="p-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 disabled:opacity-50 transition-colors">
@@ -489,5 +500,4 @@ function hasBadge(user, type) {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 </style>

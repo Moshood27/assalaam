@@ -124,9 +124,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-[calc(100vh-80px)] overflow-hidden">
+  <div class="flex h-[calc(100vh-80px)] overflow-hidden relative">
     <!-- Sidebar -->
-    <div class="w-80 bg-white dark:bg-gray-800 border-r flex flex-col">
+    <div :class="['w-full md:w-80 bg-white dark:bg-gray-800 border-r flex flex-col absolute md:relative inset-y-0 left-0 z-10 transition-transform duration-300 ease-in-out md:translate-x-0', 
+                  selectedRoomId ? '-translate-x-full md:translate-x-0' : 'translate-x-0']">
       <div class="p-4 border-b">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-xl font-bold dark:text-white">Cooperative Chat</h2>
@@ -190,8 +191,9 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Main Chat Area -->
-    <div class="flex-1 bg-gray-100 dark:bg-gray-900">
-      <IslamicChat v-if="selectedRoomId" :key="selectedRoomId" :room-id="selectedRoomId" />
+    <div :class="['flex-1 bg-gray-100 dark:bg-gray-900 h-full absolute md:relative inset-y-0 right-0 w-full md:w-auto transition-transform duration-300 ease-in-out md:translate-x-0', 
+                  selectedRoomId ? 'translate-x-0' : 'translate-x-full md:translate-x-0']">
+      <IslamicChat v-if="selectedRoomId" :key="selectedRoomId" :room-id="selectedRoomId" :show-back="true" @back="selectedRoomId = null" />
       <div v-else class="h-full flex flex-col items-center justify-center text-gray-500">
         <span class="material-icons text-64 mb-4">chat_bubble_outline</span>
         <p>Select a conversation to start chatting</p>
