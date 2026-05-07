@@ -618,6 +618,8 @@ class QardHasanResource extends Resource
                             ->inline(false)
                             ->columns(1)
                             ->required(),
+                            Tables\Actions\DeleteAction::make()
+                                ->visible(fn () => auth()->user()->hasRole('super_admin')),
                         Forms\Components\Textarea::make('note')
                             ->label('Internal Note (optional)')
                             ->maxLength(200)
