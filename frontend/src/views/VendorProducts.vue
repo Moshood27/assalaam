@@ -140,7 +140,7 @@
                 <button @click="$refs.fileInput.click()" type="button" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
                   Choose Image
                 </button>
-                <p class="text-[9px] text-slate-400 mt-2 font-medium">JPG, PNG or WEBP. Max 2MB.</p>
+                <p class="text-[9px] text-slate-400 mt-2 font-medium">JPG, PNG or WEBP. Max 10MB.</p>
               </div>
             </div>
           </div>
@@ -182,6 +182,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from '../http'
 import getImageUrl from '../utils/image'
+import { compressImage } from '../utils/compress'
 
 const products = ref([])
 const categories = ref([])
@@ -272,11 +273,21 @@ const openEditModal = (p) => {
   showModal.value = true
 }
 
-const handleFileChange = (e) => {
+const handleFileChange = async (e) => {
   const file = e.target.files[0]
   if (file) {
-    selectedFile.value = file
-    imagePreview.value = URL.createObjectURL(file)
+    let blob = file
+    if (blob.size > 2000 * 1024) {
+      blob = await compressImage(file, { maxKB: 2000, maxWidth: 1920, maxHeight: 1920 })
+    }
+    if (blob.size > 10240 * 1024) {
+      alert(`Image too large (${Math.round(blob.size/1024/1024)}MB). Max 10MB allowed.`)
+      e.target.value = ''
+      return
+    }
+
+    selectedFile.value = new File([blob], file.name || 'product.jpg', { type: blob.type })
+    imagePreview.value = URL.createObjectURL(blob)
   }
 }
 

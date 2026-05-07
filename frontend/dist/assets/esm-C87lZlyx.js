@@ -1,0 +1,1 @@
+import{u as e}from"./index-ArEDeKxO.js";export{e as SplashScreen};

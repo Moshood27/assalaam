@@ -325,21 +325,21 @@
               <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Profile Passport Photo</label>
               <div class="relative group">
                 <input @change="e => files.passport = e.target.files?.[0] || null" type="file" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all border border-slate-200/60 rounded-2xl bg-slate-50/30 p-2" />
-                <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">JPEG/PNG up to 5MB.</p>
+                <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">JPEG/PNG up to 10MB.</p>
               </div>
             </div>
             <div class="space-y-2">
               <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Valid ID Card</label>
               <div class="relative group">
                 <input @change="e => files.id_card = e.target.files?.[0] || null" type="file" accept="image/*,application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all border border-slate-200/60 rounded-2xl bg-slate-50/30 p-2" />
-                <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">NIN/Passport/DL (Max 7MB)</p>
+                <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">NIN/Passport/DL (Max 15MB)</p>
               </div>
             </div>
             <div class="space-y-2">
               <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Proof of Address</label>
               <div class="relative group">
                 <input @change="e => files.proof_of_address = e.target.files?.[0] || null" type="file" accept="image/*,application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all border border-slate-200/60 rounded-2xl bg-slate-50/30 p-2" />
-                <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">Utility bill or Letter (Max 7MB)</p>
+                <p class="text-[10px] text-slate-400 mt-1 font-medium ml-1">Utility bill or Letter (Max 15MB)</p>
               </div>
             </div>
             <div class="space-y-2">
