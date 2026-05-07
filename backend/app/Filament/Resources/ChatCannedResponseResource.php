@@ -53,7 +53,7 @@ class ChatCannedResponseResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category')
-                    ->options(ChatCannedResponse::distinct()->pluck('category', 'category')->toArray()),
+                    ->options(ChatCannedResponse::query()->whereNotNull('category')->distinct()->pluck('category', 'category')->toArray()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
