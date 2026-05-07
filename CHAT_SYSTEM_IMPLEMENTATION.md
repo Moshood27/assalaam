@@ -80,6 +80,7 @@ The chat system is fully integrated into the Filament Admin Panel for centralize
 - **Modern Admin Chat**: A rich, Livewire-powered "Modern Chat" interface within the admin panel, allowing staff to communicate in real-time without leaving the dashboard.
 - **Member & Staff Assignment**: Dedicated relation managers to manage room participants and assign staff to specific support inquiries.
 - **Adab Monitoring**: Filters to quickly identify rooms with flagged messages (profanity detections) for audit and intervention.
+- **Staff & Workload Management**: A dedicated **Staff Management** module to oversee staff roles ('Staff', 'Branch Manager', 'Clerk'), monitor active chat workloads, and nominate new users to staff positions.
 - **Governance Tools**: Ability to ban/unban users from the chat system directly from the member list to maintain the etiquette of the cooperative.
 - **Chat Analytics**: Real-time statistics on total messages, active rooms, and staff response performance.
 

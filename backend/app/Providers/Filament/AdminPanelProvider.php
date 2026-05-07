@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Resources\ChatRoomResource;
 use App\Filament\Resources\ChatRoomResource\Widgets\ChatStatsWidget;
 use App\Filament\Resources\ChatAuditResource;
+use App\Filament\Resources\StaffResource;
 use App\Filament\Resources\ActivityLogResource;
 use App\Filament\Resources\WhitelistedIpResource;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -120,6 +121,7 @@ class AdminPanelProvider extends PanelProvider
                 WhitelistedIpResource::class,
                 ChatRoomResource::class,
                 ChatAuditResource::class,
+                StaffResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

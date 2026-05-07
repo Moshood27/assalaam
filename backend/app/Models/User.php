@@ -442,7 +442,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function isStaff(): bool
     {
-        return $this->isAdmin() || $this->hasAnyRole(['Branch Manager', 'Clerk']);
+        return $this->isAdmin() || $this->hasAnyRole(['Staff', 'Branch Manager', 'Clerk']);
     }
 
     public function isBoardMember(): bool
