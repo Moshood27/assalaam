@@ -70,7 +70,7 @@ async function startSupportChat() {
   try {
     const { data } = await axios.post('/api/chat/rooms', {
       name: 'Cooperative Support',
-      type: 'private'
+      type: 'support'
     })
     rooms.value.unshift(data)
     selectedRoomId.value = data.id

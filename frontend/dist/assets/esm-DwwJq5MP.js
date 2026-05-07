@@ -1,0 +1,1 @@
+import{u as e}from"./index-Cg1Olhr-.js";export{e as SplashScreen};

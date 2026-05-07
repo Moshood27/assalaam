@@ -79,12 +79,13 @@ class ChatController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:private,group',
+            'type' => 'required|in:private,group,support',
         ]);
 
         $room = ChatRoom::create([
             'name' => $request->name,
             'type' => $request->type,
+            'creator_id' => Auth::id(),
             'metadata' => ['slug' => Str::slug($request->name) . '-' . uniqid()],
         ]);
 

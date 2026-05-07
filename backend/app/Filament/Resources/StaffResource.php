@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\StaffResource\Pages;
 use App\Models\User;
 use App\Models\ChatRoom;
+use App\Services\ChatService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -112,16 +113,19 @@ class StaffResource extends Resource
                             ->label('Unassigned Support Chat')
                             ->options(fn () => ChatRoom::where('type', 'support')
                                 ->whereNull('metadata->assigned_staff_id')
-                                ->pluck('name', 'id')
+                                ->get()
+                                ->mapWithKeys(function ($room) {
+                                    $creator = $room->creator?->name ?? 'User #' . ($room->members()->first()?->user_id ?? '?');
+                                    $date = $room->created_at->format('M d, H:i');
+                                    return [$room->id => "{$room->name} ({$creator}) - {$date}"];
+                                })
                             )
+                            ->searchable()
                             ->required(),
                     ])
-                    ->action(function (User $record, array $data): void {
-                        $room = ChatRoom::find($data['chat_room_id']);
-                        $metadata = $room->metadata ?? [];
-                        $metadata['assigned_staff_id'] = (string) $record->id;
-                        $room->metadata = $metadata;
-                        $room->save();
+                    ->action(function (User $record, array $data, ChatService $chatService): void {
+                        $room = ChatRoom::findOrFail($data['chat_room_id']);
+                        $chatService->assignStaff($room, $record);
 
                         Notification::make()
                             ->title('Chat assigned successfully')
