@@ -15,15 +15,16 @@ use Illuminate\Support\Facades\Auth;
 */
 
 // Support both Sanctum (mobile/web API) and Web (Filament admin)
-Broadcast::routes(['middleware' => ['auth:sanctum,web']]);
+// Routes are registered in bootstrap/app.php with proper middleware
 
 Broadcast::channel('support.{userId}', function ($user, int $userId) {
     // Members can only listen to their own channel; admins can listen to any.
-    if ((int) $user->id === (int) $userId || (bool) ($user->is_admin ?? false)) {
+    if ((int) $user->id === (int) $userId || $user->isAdmin() || $user->isStaff()) {
         return [
             'id' => $user->id,
             'name' => $user->name,
-            'is_admin' => (bool) ($user->is_admin ?? false)
+            'is_admin' => $user->isAdmin(),
+            'is_staff' => $user->isStaff()
         ];
     }
     return false;
@@ -31,7 +32,7 @@ Broadcast::channel('support.{userId}', function ($user, int $userId) {
 
 Broadcast::channel('chat.room.{roomId}', function ($user, int $roomId) {
     // Check if user is a member of the room OR is staff/admin
-    if ((bool) ($user->is_admin ?? false) || (bool) ($user->is_staff ?? false)) {
+    if ($user->isAdmin() || $user->isStaff()) {
         return true;
     }
 
