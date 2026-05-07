@@ -21,9 +21,27 @@ class ChatRoomResource extends Resource
 {
     protected static ?string $model = ChatRoom::class;
 
+    protected static ?string $recordTitleAttribute = 'name';
+
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
     protected static ?string $navigationGroup = 'Communication';
+
+    protected static ?string $navigationLabel = 'Chat Rooms';
+
+    protected static ?string $pluralLabel = 'Chat Rooms';
+
+    protected static ?string $modelLabel = 'Chat Room';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('type', 'support')->whereNull('metadata->assigned_staff_id')->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
 
     public static function form(Form $form): Form
     {
@@ -52,7 +70,13 @@ class ChatRoomResource extends Resource
                     ->label('Creator'),
                 Forms\Components\Select::make('metadata.assigned_staff_id')
                     ->label('Assigned Staff')
-                    ->options(User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))->pluck('name', 'id'))
+                    ->options(fn () => User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))
+                        ->get()
+                        ->mapWithKeys(function ($user) {
+                            $status = ($user->last_activity_at && $user->last_activity_at->gt(now()->subMinutes(10))) ? '🟢' : '⚪';
+                            return [$user->id => "{$status} {$user->name}"];
+                        })
+                    )
                     ->searchable(),
                 Forms\Components\Section::make('Sharia & Security (Adab)')
                     ->schema([
@@ -159,6 +183,11 @@ class ChatRoomResource extends Resource
                         true: fn (Builder $query) => $query->whereHas('messages', fn ($q) => $q->where('metadata->is_flagged', true)),
                         false: fn (Builder $query) => $query->whereDoesntHave('messages', fn ($q) => $q->where('metadata->is_flagged', true)),
                     ),
+                Tables\Filters\SelectFilter::make('staff_filter')
+                    ->label('Filter by Staff')
+                    ->options(fn () => User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))->pluck('name', 'id'))
+                    ->searchable()
+                    ->query(fn (Builder $query, array $data) => $query->when($data['value'], fn ($q, $v) => $q->where('metadata->assigned_staff_id', $v))),
             ])
             ->actions([
                 Tables\Actions\Action::make('chat')
@@ -173,7 +202,14 @@ class ChatRoomResource extends Resource
                     ->form([
                         Forms\Components\Select::make('staff_id')
                             ->label('Staff Member')
-                            ->options(User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))->pluck('name', 'id'))
+                            ->options(fn () => User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))
+                                ->get()
+                                ->mapWithKeys(function ($user) {
+                                    $status = ($user->last_activity_at && $user->last_activity_at->gt(now()->subMinutes(10))) ? '🟢' : '⚪';
+                                    $assignedCount = ChatRoom::where('metadata->assigned_staff_id', $user->id)->count();
+                                    return [$user->id => "{$status} {$user->name} ({$assignedCount} rooms)"];
+                                })
+                            )
                             ->searchable()
                             ->required(),
                     ])
@@ -185,8 +221,37 @@ class ChatRoomResource extends Resource
                             ->title('Staff assigned successfully')
                             ->success()
                             ->send();
+
+                        Notification::make()
+                            ->title('New Support Assignment (Amanah)')
+                            ->body("You have been assigned to: {$record->name}")
+                            ->icon('heroicon-o-chat-bubble-left-right')
+                            ->color('success')
+                            ->actions([
+                                \Filament\Notifications\Actions\Action::make('view')
+                                    ->label('Open Chat')
+                                    ->url(static::getUrl('chat', ['record' => $record])),
+                            ])
+                            ->sendToDatabase($staff);
                     })
                     ->visible(fn (ChatRoom $record) => $record->type === 'support' || $record->type === 'group'),
+                Tables\Actions\Action::make('unassignStaff')
+                    ->label('Unassign')
+                    ->icon('heroicon-o-user-minus')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->action(function (ChatRoom $record): void {
+                        $metadata = $record->metadata;
+                        unset($metadata['assigned_staff_id']);
+                        unset($metadata['assigned_at']);
+                        $record->update(['metadata' => $metadata]);
+
+                        Notification::make()
+                            ->title('Staff unassigned successfully')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn (ChatRoom $record) => isset($record->metadata['assigned_staff_id'])),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

@@ -18,6 +18,8 @@ class ChatCannedResponseResource extends Resource
 
     protected static ?string $navigationGroup = 'Communication';
 
+    protected static ?string $navigationLabel = 'Canned Responses';
+
     public static function form(Form $form): Form
     {
         return $form

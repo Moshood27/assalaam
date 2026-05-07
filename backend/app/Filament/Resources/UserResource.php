@@ -12,6 +12,8 @@ use App\Models\ShariahAuditLog as ShariahAudit;
 use App\Models\User;
 use App\Models\Contribution;
 use App\Models\MemberApplication;
+use App\Services\ChatService;
+use App\Filament\Resources\ChatRoomResource;
 use App\Mail\NewMemberWelcome;
 use App\Mail\MemberApplicationRejected;
 use App\Services\AttendanceService;
@@ -666,6 +668,14 @@ class UserResource extends Resource
                         }, Str::replace(['/', '\\'], '_', "member-{$record->membership_number}.pdf"));
                     }),
                 Tables\Actions\EditAction::make(),
+                Action::make('chat')
+                    ->label('Chat')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('info')
+                    ->action(function (User $record, ChatService $chatService) {
+                        $room = $chatService->getOrCreatePrivateRoom(auth()->user(), $record);
+                        return redirect(ChatRoomResource::getUrl('chat', ['record' => $room]));
+                    }),
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn () => auth()->user()->hasRole('super_admin')), // Only visible to Super Admin
                 Action::make('creditWallet')

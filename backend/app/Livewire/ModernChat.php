@@ -103,6 +103,23 @@ class ModernChat extends Component
         $chatService->deleteMessage($message);
     }
 
+    public function getAssignedStaffProperty()
+    {
+        $staffId = $this->chatRoom->metadata['assigned_staff_id'] ?? null;
+        if ($staffId) {
+            return \App\Models\User::find($staffId);
+        }
+        return null;
+    }
+
+    public function assignToMe(ChatService $chatService)
+    {
+        if (Auth::user()->hasAnyRole(['Staff', 'Admin'])) {
+            $chatService->assignStaff($this->chatRoom, Auth::user());
+            $this->chatRoom->refresh();
+        }
+    }
+
     public function render()
     {
         $messages = $this->chatRoom->messages()

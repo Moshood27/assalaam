@@ -21,6 +21,16 @@ class ChatMessageResource extends Resource
 
     protected static ?string $navigationLabel = 'Adab Monitoring';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('metadata->is_flagged', true)->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
     public static function form(Form $form): Form
     {
         return $form

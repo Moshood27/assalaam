@@ -15,9 +15,18 @@ class SupportMessageResource extends Resource
 {
     protected static ?string $model = SupportMessage::class;
 
+    protected static ?string $recordTitleAttribute = 'body';
+
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $navigationGroup = 'Communication';
+
+    protected static ?string $navigationLabel = 'Legacy Support';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::whereNull('read_at')->count() ?: null;
+    }
 
     public static function form(Form $form): Form
     {

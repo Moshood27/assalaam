@@ -15,6 +15,21 @@ class ChatService
         'badword1', 'badword2', // Add more or use a library
     ];
 
+    public function getOrCreatePrivateRoom(User $user1, User $user2)
+    {
+        // Try to find an existing private room with exactly these two members
+        $room = ChatRoom::where('type', 'private')
+            ->whereHas('members', fn($q) => $q->where('user_id', $user1->id))
+            ->whereHas('members', fn($q) => $q->where('user_id', $user2->id))
+            ->first();
+
+        if ($room) {
+            return $room;
+        }
+
+        return $this->createPrivateRoom($user1, $user2);
+    }
+
     public function createPrivateRoom(User $user1, User $user2)
     {
         $room = ChatRoom::create([

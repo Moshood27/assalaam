@@ -17,6 +17,22 @@
             </div>
         </div>
         <div class="flex items-center space-x-2">
+            @if($this->assignedStaff)
+                <div class="flex items-center space-x-1 px-2 py-1 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-full" title="Staff responsible for this room (Amanah)">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span class="text-[10px] font-medium text-green-700 dark:text-green-300">
+                        {{ $this->assignedStaff->name }}
+                    </span>
+                </div>
+            @elseif(auth()->user()->hasAnyRole(['Staff', 'Admin']) && $chatRoom->type === 'support')
+                <button wire:click="assignToMe" class="flex items-center space-x-1 px-2 py-1 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-full hover:bg-amber-100 transition">
+                    <x-heroicon-m-user-plus class="w-3 h-3 text-amber-500" />
+                    <span class="text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                        Take Responsibility
+                    </span>
+                </button>
+            @endif
+
             @if($chatRoom->metadata['is_2fa_protected'] ?? false)
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                     <x-heroicon-m-shield-check class="w-3 h-3 mr-1" /> 2FA
