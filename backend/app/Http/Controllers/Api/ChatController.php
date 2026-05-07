@@ -15,9 +15,11 @@ use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ChatController extends Controller
 {
+    use AuthorizesRequests;
     protected $chatService;
 
     public function __construct(ChatService $chatService)
