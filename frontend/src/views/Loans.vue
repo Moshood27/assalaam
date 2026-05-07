@@ -403,7 +403,7 @@ const onAgreementFileChange = async (e, loanId) => {
     showNotice('Success', 'Agreement uploaded successfully. Admin will verify it shortly.', 'success')
     await load()
   } catch (err) {
-    showNotice('Error', err?.response?.data?.message || 'Failed to upload agreement.', 'error')
+    showNotice('Error', err?.response?.data?.message || 'Failed to upload agreement (max 10MB).', 'error')
   } finally {
     uploadingAgreement.value[loanId] = false
     e.target.value = ''

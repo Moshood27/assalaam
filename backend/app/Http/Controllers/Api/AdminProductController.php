@@ -45,7 +45,7 @@ class AdminProductController extends Controller
     public function uploadImage(Request $request, $id)
     {
         $validated = $request->validate([
-            'image' => 'required|image|max:1000', // size in KB
+            'image' => 'required|image|max:10240', // 10MB
         ]);
 
         $product = Product::findOrFail($id);
@@ -55,9 +55,8 @@ class AdminProductController extends Controller
 
         $file = $request->file('image');
         $path = $file->store('products', 'public');
-        $url = Storage::disk('public')->url($path);
 
-        $product->image_url = $url;
+        $product->image_url = $path;
         $product->save();
 
         return response()->json([

@@ -52,9 +52,19 @@ class VendorProductController extends Controller
             'stock_quantity' => 'nullable|integer|min:0',
             'track_stock' => 'nullable|boolean',
             'image_url' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:10240', // 10MB
             'is_active' => 'nullable|boolean',
         ]);
+
+        if ($request->has('image_url')) {
+            $val = (string) $request->input('image_url');
+            $storageUrl = config('app.url') . '/storage/';
+            if (str_starts_with($val, $storageUrl)) {
+                $validated['image_url'] = substr($val, strlen($storageUrl));
+            } elseif (str_starts_with($val, '/storage/')) {
+                $validated['image_url'] = substr($val, strlen('/storage/'));
+            }
+        }
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
@@ -95,9 +105,19 @@ class VendorProductController extends Controller
             'stock_quantity' => 'sometimes|integer|min:0',
             'track_stock' => 'sometimes|boolean',
             'image_url' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:10240', // 10MB
             'is_active' => 'sometimes|boolean',
         ]);
+
+        if ($request->has('image_url')) {
+            $val = (string) $request->input('image_url');
+            $storageUrl = config('app.url') . '/storage/';
+            if (str_starts_with($val, $storageUrl)) {
+                $validated['image_url'] = substr($val, strlen($storageUrl));
+            } elseif (str_starts_with($val, '/storage/')) {
+                $validated['image_url'] = substr($val, strlen('/storage/'));
+            }
+        }
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');

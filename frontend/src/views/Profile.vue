@@ -753,7 +753,7 @@ const onFileChange = async (e) => {
     const { data } = await axios.post('/api/profile/passport', form)
     profile.value.passport_url = data.passport_url
   } catch (err) {
-    alert(err?.response?.data?.message || 'Failed to upload. Please try a smaller image or a different format.')
+    alert(err?.response?.data?.message || 'Failed to upload. Please try a smaller image (max 10MB) or a different format.')
   } finally {
     uploading.value = false
     if (fileInput.value) fileInput.value.value = ''

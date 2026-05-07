@@ -22,7 +22,7 @@ class MeetingApologyController extends Controller
                 $request->excuse_type === 'medical' || $request->excuse_type === 'nursing_mother' || $request->excuse_type === 'travel' ? 'required' : 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
-                'max:5120',
+                'max:10240',
             ],
         ]);
 

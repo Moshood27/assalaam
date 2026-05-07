@@ -845,7 +845,7 @@ class LoanController extends Controller
         }
 
         $request->validate([
-            'signed_agreement' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'], // 5MB limit
+            'signed_agreement' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'], // 10MB limit
         ]);
 
         $path = $request->file('signed_agreement')->store('loan-signed', 'public');

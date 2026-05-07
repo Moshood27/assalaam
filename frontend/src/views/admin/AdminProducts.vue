@@ -103,13 +103,13 @@ const onPick = async (ev, p) => {
     ev.target.value = '' // reset
     if (!file) return
 
-    // Client-side size check and compression to meet <= 1000KB
+    // Client-side size check and compression to meet <= 2000KB (soft limit)
     let blob = file
-    if (blob.size > 1000 * 1024) {
-      blob = await compressImage(file, { maxKB: 1000, maxWidth: 1280, maxHeight: 1280 })
+    if (blob.size > 2000 * 1024) {
+      blob = await compressImage(file, { maxKB: 2000, maxWidth: 1920, maxHeight: 1920 })
     }
-    if (blob.size > 1000 * 1024) {
-      perror.value[p.id] = `Image too large after compression (${Math.round(blob.size/1024)}KB). Please choose a smaller image.`
+    if (blob.size > 10240 * 1024) {
+      perror.value[p.id] = `Image too large (${Math.round(blob.size/1024/1024)}MB). Max 10MB allowed.`
       return
     }
 
@@ -143,7 +143,7 @@ const removeImage = async (p) => {
   }
 }
 
-async function compressImage(file, { maxKB = 1000, maxWidth = 1280, maxHeight = 1280 } = {}) {
+async function compressImage(file, { maxKB = 2000, maxWidth = 1920, maxHeight = 1920 } = {}) {
   const dataUrl = await readAsDataURL(file)
   const img = await loadImage(dataUrl)
   const { canvas, ctx, targetW, targetH } = createCanvasToFit(img, maxWidth, maxHeight)

@@ -243,7 +243,7 @@ class ProfileController extends Controller
 
 
         $data = $request->validate([
-            'passport' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'], // 5MB
+            'passport' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'], // 10MB
         ]);
 
         $file = $request->file('passport');
