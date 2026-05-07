@@ -21,6 +21,9 @@ class ChatRoomPolicy
      */
     public function view(User $user, ChatRoom $chatRoom): bool
     {
+        if ($user->isAdmin() || $user->isStaff()) {
+            return true;
+        }
         return $chatRoom->members()->where('user_id', $user->id)->exists();
     }
 
@@ -29,7 +32,7 @@ class ChatRoomPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -37,7 +40,7 @@ class ChatRoomPolicy
      */
     public function update(User $user, ChatRoom $chatRoom): bool
     {
-        return false;
+        return $user->isAdmin() || $user->isStaff();
     }
 
     /**

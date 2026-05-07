@@ -21,7 +21,7 @@ class ChatMessagePolicy
      */
     public function view(User $user, ChatMessage $chatMessage): bool
     {
-        return false;
+        return $user->isAdmin() || $user->isStaff() || $chatMessage->room->members()->where('user_id', $user->id)->exists();
     }
 
     /**
@@ -45,7 +45,7 @@ class ChatMessagePolicy
      */
     public function delete(User $user, ChatMessage $chatMessage): bool
     {
-        return $user->id === $chatMessage->user_id || $user->is_admin;
+        return $user->id === $chatMessage->user_id || $user->isAdmin();
     }
 
     /**

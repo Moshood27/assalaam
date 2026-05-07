@@ -54,7 +54,7 @@ class ChatController extends Controller
 
         if ($request->type === 'private') {
             // Find a staff member to join the chat
-            $staff = User::where('role', 'staff')->first() ?: User::where('role', 'admin')->first();
+            $staff = User::role('staff')->first() ?: User::role('admin')->first();
             if ($staff && $staff->id !== Auth::id()) {
                 ChatRoomMember::create([
                     'chat_room_id' => $room->id,
