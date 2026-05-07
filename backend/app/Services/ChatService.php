@@ -30,9 +30,14 @@ class ChatService
     public function sendMessage(ChatRoom $room, User $sender, array $data)
     {
         $body = $data['body'] ?? null;
+        $isFlagged = false;
 
         if ($body) {
-            $body = $this->filterProfanity($body);
+            $filteredBody = $this->filterProfanity($body);
+            if ($filteredBody !== $body) {
+                $isFlagged = true;
+                $body = $filteredBody;
+            }
         }
 
         $message = $room->messages()->create([
@@ -41,7 +46,7 @@ class ChatService
             'body' => $body,
             'attachment' => $data['attachment'] ?? null,
             'attachment_name' => $data['attachment_name'] ?? null,
-            'metadata' => $data['metadata'] ?? null,
+            'metadata' => array_merge($data['metadata'] ?? [], ['is_flagged' => $isFlagged]),
         ]);
 
         $room->update(['last_message_id' => $message->id]);

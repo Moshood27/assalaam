@@ -44,26 +44,44 @@ The system supports the specialized needs of Cooperative leadership:
 - **Official Branding**: Official rooms are highlighted with specialized icons (gavel/justice) and badges to distinguish them from general member support chats.
 - **immutable Record**: Discussions in these rooms are preserved for regulatory and audit compliance.
 
-## 6. Responsive & Mobile Design
+## 6. Cooperative Support Chat
+
+The system provides a streamlined way for members to receive assistance:
+- **Member-Initiated Inquiries**: Members can start a new "Support Inquiry" directly from the chat dashboard. This creates a dedicated 1-on-1 room between the Member and the Cooperative's Staff.
+- **Staff Assignment**: Admins can assign specific support rooms to available staff members to ensure timely responses (Amanah).
+- **Inquiry Linking**: Support threads can be linked to specific Loan Application IDs or Contribution issues, providing staff with immediate context.
+- **Canned Responses**: Staff can use pre-approved "Adab-compliant" templates for common questions (e.g., "How to apply for Qard Hasan?"), ensuring consistent and respectful communication.
+
+## 7. Responsive & Mobile Design
 
 - **Mobile Transitions**: Slide-in/out transitions between conversation list and active chat.
 - **Auto-Expanding Textarea**: Message input grows as you type, up to a limit, for better readability.
 - **Safe Area Support**: Bottom navigation and chat input respect mobile safe areas (iOS/Android).
 - **Dashboard Integration**: Quick-access "Chat & Help" cards and back-navigation buttons for seamless flow.
 
-## 6. Real-Time Events
+## 8. Real-Time Events
 
 - `ChatMessageSent`: Instant delivery of new messages.
 - `ChatMessageUpdated/Deleted`: Syncs edits and soft-deletes across all clients.
 - `ChatTyping`: "Brother Ahmed is typing..." indicators.
 - `Notification`: Push/In-app alerts for new messages when not in the active room.
 
-## 7. Technical Notes & Maintenance
+## 9. Technical Notes & Maintenance
 
 - **Adab Filter Implementation**: Located in `ChatService.php`, it uses a configurable list of banned words and replaces them with symbols while logging the violation.
 - **Message Expiry**: A scheduled command `chat:expire-sensitive-files` should be added to the server crontab to run daily.
 - **Real-Time Scaling**: Reverb is configured to handle multiple connections; for high-scale production, ensure the `REVERB_SCALING_ENABLED` env variable is set and Redis is used.
 - **Adding New Fintech Actions**: New card types can be added by updating the `msg.type` switch in `IslamicChat.vue` and adding the corresponding metadata structure in `ChatController`.
+
+## 10. Admin & Management (Filament)
+
+The chat system is fully integrated into the Filament Admin Panel for centralized management:
+- **Chat Room Management**: Full CRUD capabilities for all room types (Private, Group, Official, Support).
+- **Modern Admin Chat**: A rich, Livewire-powered "Modern Chat" interface within the admin panel, allowing staff to communicate in real-time without leaving the dashboard.
+- **Member & Staff Assignment**: Dedicated relation managers to manage room participants and assign staff to specific support inquiries.
+- **Adab Monitoring**: Filters to quickly identify rooms with flagged messages (profanity detections) for audit and intervention.
+- **Governance Tools**: Ability to ban/unban users from the chat system directly from the member list to maintain the etiquette of the cooperative.
+- **Chat Analytics**: Real-time statistics on total messages, active rooms, and staff response performance.
 
 ---
 *Developed for Attaqwa Cooperative - Maintaining the Adab of Finance.*
