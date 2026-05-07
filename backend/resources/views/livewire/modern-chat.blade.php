@@ -55,6 +55,13 @@
                             {!! nl2br(e($message->body)) !!}
                         </div>
 
+                        @if($message->metadata['is_flagged'] ?? false)
+                            <div class="mt-1 flex items-center text-[10px] text-red-200 font-bold bg-red-900 bg-opacity-30 px-1 rounded">
+                                <x-heroicon-m-exclamation-triangle class="w-3 h-3 mr-1" />
+                                Adab Violation Flagged
+                            </div>
+                        @endif
+
                         @if($message->attachment)
                             <div class="mt-2 p-2 bg-black bg-opacity-10 rounded flex items-center space-x-2">
                                 <x-heroicon-o-paper-clip class="w-4 h-4" />
@@ -114,10 +121,10 @@
                     Canned Responses
                 </button>
                 <div x-show="open" @click.away="open = false" class="absolute bottom-full mb-2 left-0 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-48 overflow-y-auto">
-                    @foreach(\App\Models\ChatCannedResponse::all() as $resp)
-                        <button wire:click="sendCannedResponse({{ $resp->id }})" class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                            <span class="font-bold">{{ $resp->title }}</span>
-                            <p class="text-gray-500 truncate">{{ $resp->message }}</p>
+                    @foreach(app(\App\Services\ChatService::class)->getCannedResponses() as $title => $msg)
+                        <button wire:click="sendCannedResponse('{{ $title }}', '{{ $msg }}')" class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="font-bold">{{ $title }}</span>
+                            <p class="text-gray-500 truncate">{{ $msg }}</p>
                         </button>
                     @endforeach
                 </div>

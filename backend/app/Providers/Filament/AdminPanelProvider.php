@@ -2,6 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\ChatRoomResource;
+use App\Filament\Resources\ChatRoomResource\Widgets\ChatStatsWidget;
+use App\Filament\Resources\ChatAuditResource;
 use App\Filament\Resources\ActivityLogResource;
 use App\Filament\Resources\WhitelistedIpResource;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -115,6 +118,8 @@ class AdminPanelProvider extends PanelProvider
                 UtilityTransactionResource::class,
                 ActivityLogResource::class,
                 WhitelistedIpResource::class,
+                ChatRoomResource::class,
+                ChatAuditResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
@@ -129,6 +134,7 @@ class AdminPanelProvider extends PanelProvider
                 UserGrowthChart::class,
                 MemberGrowthChart::class,
                 RecentWalletActivity::class,
+                ChatStatsWidget::class,
                 Widgets\AccountWidget::class,
             ])
             ->plugins([

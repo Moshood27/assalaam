@@ -65,7 +65,7 @@ class ChatRoomResource extends Resource
                     ->image()
                     ->directory('chat-avatars'),
                 Forms\Components\Select::make('creator_id')
-                    ->relationship('users', 'name')
+                    ->relationship('creator', 'name')
                     ->searchable()
                     ->label('Creator'),
                 Forms\Components\Select::make('metadata.assigned_staff_id')
@@ -272,6 +272,7 @@ class ChatRoomResource extends Resource
     {
         return [
             RelationManagers\MembersRelationManager::class,
+            RelationManagers\MessagesRelationManager::class,
         ];
     }
 

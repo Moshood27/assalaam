@@ -68,15 +68,12 @@ class ModernChat extends Component
         $this->dispatch('messageSent');
     }
 
-    public function sendCannedResponse($responseId, ChatService $chatService)
+    public function sendCannedResponse($title, $message, ChatService $chatService)
     {
-        $response = \App\Models\ChatCannedResponse::find($responseId);
-        if ($response) {
-            $chatService->sendMessage($this->chatRoom, Auth::user(), [
-                'body' => $response->message,
-                'type' => 'text',
-            ]);
-        }
+        $chatService->sendMessage($this->chatRoom, Auth::user(), [
+            'body' => $message,
+            'type' => 'text',
+        ]);
         $this->showCannedResponses = false;
         $this->dispatch('messageSent');
     }

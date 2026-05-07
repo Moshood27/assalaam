@@ -33,6 +33,11 @@ class ChatRoom extends Model
         return $this->belongsToMany(User::class, 'chat_room_members', 'chat_room_id', 'user_id');
     }
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id');
+    }
+
     public function messages()
     {
         return $this->hasMany(ChatMessage::class);
