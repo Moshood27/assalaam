@@ -86,7 +86,10 @@ class ChatController extends Controller
             'name' => $request->name,
             'type' => $request->type,
             'creator_id' => Auth::id(),
-            'metadata' => ['slug' => Str::slug($request->name) . '-' . uniqid()],
+            'metadata' => [
+                'slug' => Str::slug($request->name) . '-' . uniqid(),
+                'creator_id' => Auth::id(), // Fallback for no-migration env
+            ],
         ]);
 
         ChatRoomMember::create([

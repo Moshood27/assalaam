@@ -35,7 +35,13 @@ class ChatRoomResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('type', 'support')->whereNull('metadata->assigned_staff_id')->count() ?: null;
+        return static::getModel()::where('type', 'support')
+            ->where(function ($query) {
+                $query->whereNull('metadata->assigned_staff_id')
+                      ->orWhere('metadata->assigned_staff_id', 'null')
+                      ->orWhere('metadata->assigned_staff_id', '');
+            })
+            ->count() ?: null;
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -172,7 +178,11 @@ class ChatRoomResource extends Resource
                     ->falseLabel('Unassigned Rooms')
                     ->queries(
                         true: fn (Builder $query) => $query->whereNotNull('metadata->assigned_staff_id'),
-                        false: fn (Builder $query) => $query->whereNull('metadata->assigned_staff_id'),
+                        false: fn (Builder $query) => $query->where(function ($q) {
+                            $q->whereNull('metadata->assigned_staff_id')
+                              ->orWhere('metadata->assigned_staff_id', 'null')
+                              ->orWhere('metadata->assigned_staff_id', '');
+                        }),
                     ),
                 Tables\Filters\TernaryFilter::make('has_flagged_messages')
                     ->label('Adab Violations')

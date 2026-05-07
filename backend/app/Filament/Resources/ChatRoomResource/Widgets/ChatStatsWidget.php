@@ -22,7 +22,13 @@ class ChatStatsWidget extends BaseWidget
             Stat::make('Avg Response Time', $analytics['avg_response_time'] ?? 'N/A')
                 ->description('Staff responsiveness (Amanah)')
                 ->color('success'),
-            Stat::make('Unassigned Support', ChatRoom::where('type', 'support')->whereNull('metadata->assigned_staff_id')->count())
+            Stat::make('Unassigned Support', ChatRoom::where('type', 'support')
+                ->where(function ($query) {
+                    $query->whereNull('metadata->assigned_staff_id')
+                          ->orWhere('metadata->assigned_staff_id', 'null')
+                          ->orWhere('metadata->assigned_staff_id', '');
+                })
+                ->count())
                 ->color('danger')
                 ->description('Needs attention (Amanah)'),
         ];

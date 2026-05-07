@@ -112,12 +112,37 @@ class StaffResource extends Resource
                         Forms\Components\Select::make('chat_room_id')
                             ->label('Unassigned Support Chat')
                             ->options(fn () => ChatRoom::where('type', 'support')
-                                ->whereNull('metadata->assigned_staff_id')
+                                ->where(function ($query) {
+                                    $query->whereNull('metadata->assigned_staff_id')
+                                          ->orWhere('metadata->assigned_staff_id', 'null')
+                                          ->orWhere('metadata->assigned_staff_id', '');
+                                })
                                 ->get()
                                 ->mapWithKeys(function ($room) {
-                                    $creator = $room->creator?->name ?? 'User #' . ($room->members()->first()?->user_id ?? '?');
-                                    $date = $room->created_at->format('M d, H:i');
-                                    return [$room->id => "{$room->name} ({$creator}) - {$date}"];
+                                    $creatorName = 'Unknown Member';
+                                    try {
+                                        // Try relationship first
+                                        $creatorName = $room->creator?->name;
+                                    } catch (\Exception $e) {
+                                        $creatorName = null;
+                                    }
+
+                                    if (!$creatorName) {
+                                        // Try metadata fallback
+                                        $creatorId = $room->metadata['creator_id'] ?? null;
+                                        if ($creatorId) {
+                                            $creatorName = User::find($creatorId)?->name ?? "User #{$creatorId}";
+                                        } else {
+                                            // Try first member
+                                            $firstMember = $room->members()->first();
+                                            if ($firstMember) {
+                                                $creatorName = User::find($firstMember->user_id)?->name ?? "User #{$firstMember->user_id}";
+                                            }
+                                        }
+                                    }
+
+                                    $date = $room->created_at?->format('M d, H:i') ?? 'N/A';
+                                    return [$room->id => "{$room->name} ({$creatorName}) - {$date}"];
                                 })
                             )
                             ->searchable()

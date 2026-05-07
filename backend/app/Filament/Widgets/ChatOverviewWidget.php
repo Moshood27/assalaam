@@ -25,7 +25,13 @@ class ChatOverviewWidget extends BaseWidget
             Stat::make('Total Messages', $analytics['total_messages'] ?? ChatMessage::count())
                 ->icon('heroicon-o-envelope')
                 ->description('Total communication volume'),
-            Stat::make('Unassigned Support', ChatRoom::where('type', 'support')->whereNull('metadata->assigned_staff_id')->count())
+            Stat::make('Unassigned Support', ChatRoom::where('type', 'support')
+                ->where(function ($query) {
+                    $query->whereNull('metadata->assigned_staff_id')
+                          ->orWhere('metadata->assigned_staff_id', 'null')
+                          ->orWhere('metadata->assigned_staff_id', '');
+                })
+                ->count())
                 ->icon('heroicon-o-exclamation-circle')
                 ->description('Needs attention (Amanah)')
                 ->color('danger'),
