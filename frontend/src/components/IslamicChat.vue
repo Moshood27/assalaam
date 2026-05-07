@@ -36,6 +36,7 @@ const editingMessage = ref(null)
 const replyingTo = ref(null)
 
 const listEl = ref(null)
+const inputEl = ref(null)
 let channel = null
 let typingTimeout = null
 
@@ -115,6 +116,13 @@ async function markRead() {
 }
 
 function handleTyping() {
+  // Auto-resize textarea
+  if (inputEl.value) {
+    inputEl.value.style.height = 'auto'
+    const newHeight = Math.min(inputEl.value.scrollHeight, 120)
+    inputEl.value.style.height = newHeight + 'px'
+  }
+
   if (typingTimeout) clearTimeout(typingTimeout)
   
   axios.post(`/api/chat/rooms/${props.roomId}/typing`, { is_typing: true })
@@ -147,6 +155,9 @@ async function send(type = 'text', customData = null) {
     input.value = ''
     showGreetings.value = false
     replyingTo.value = null
+    if (inputEl.value) {
+      inputEl.value.style.height = 'auto'
+    }
     scrollToBottom()
   } catch (e) {
     console.error('Failed to send message', e)
@@ -158,6 +169,12 @@ async function send(type = 'text', customData = null) {
 function startEdit(msg) {
   editingMessage.value = { ...msg }
   input.value = msg.body
+  nextTick(() => {
+    if (inputEl.value) {
+      inputEl.value.focus()
+      handleTyping()
+    }
+  })
 }
 
 async function saveEdit() {
@@ -169,6 +186,9 @@ async function saveEdit() {
     if (index !== -1) messages.value[index] = data
     editingMessage.value = null
     input.value = ''
+    if (inputEl.value) {
+      inputEl.value.style.height = 'auto'
+    }
   } catch (e) {
     console.error('Failed to edit', e)
   }
@@ -484,11 +504,12 @@ function hasBadge(user, type) {
           <span class="material-icons">quickreply</span>
         </button>
         <textarea v-model="input" 
+               ref="inputEl"
                @input="handleTyping"
                @keyup.enter.exact.prevent="send('text')"
                placeholder="Type a message (Maintain Adab)..."
                rows="1"
-               class="flex-1 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+               class="flex-1 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none overflow-y-auto max-h-[120px]"></textarea>
         <button @click="send('text')" 
                 :disabled="sending || (!input.trim() && !attachment)"
                 class="p-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 disabled:opacity-50 transition-colors">

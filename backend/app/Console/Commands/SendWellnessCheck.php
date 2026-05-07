@@ -67,9 +67,9 @@ class SendWellnessCheck extends Command
             ->get();
 
         if ($suspectedDeceased->isNotEmpty()) {
-            $adminUsers = User::role('Admin')->get(); // Assuming 'Admin' role exists
+            $adminUsers = User::where('is_admin', true)->get();
             if ($adminUsers->isEmpty()) {
-                $adminUsers = User::where('is_admin', true)->get();
+                $adminUsers = User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'Admin']))->get();
             }
 
             foreach ($suspectedDeceased as $user) {

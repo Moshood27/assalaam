@@ -534,7 +534,9 @@ class WebhookController extends Controller
 
                         if ($expense->creator) { $expense->creator->notify($notification); }
 
-                        $treasurers = \App\Models\User::role(['Treasurer', 'super_admin'])->get();
+                        $treasurers = \App\Models\User::whereHas('roles', function($q) {
+                            $q->whereIn('name', ['Treasurer', 'super_admin']);
+                        })->get();
                         foreach ($treasurers as $treasurer) {
                             $treasurer->notify($notification);
                         }

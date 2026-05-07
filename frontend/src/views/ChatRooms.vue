@@ -130,7 +130,12 @@ onBeforeUnmount(() => {
                   selectedRoomId ? '-translate-x-full md:translate-x-0' : 'translate-x-0']">
       <div class="p-4 border-b">
         <div class="flex justify-between items-center mb-3">
-          <h2 class="text-xl font-bold dark:text-white">Cooperative Chat</h2>
+          <div class="flex items-center space-x-2">
+            <button @click="$router.push('/dashboard')" class="p-1 -ml-1 text-gray-500 hover:text-emerald-600 transition" title="Back to Dashboard">
+              <span class="material-icons">arrow_back</span>
+            </button>
+            <h2 class="text-xl font-bold dark:text-white">Chat</h2>
+          </div>
           <button v-if="user?.is_admin" 
                   @click="showBroadcastModal = true"
                   class="p-1 text-emerald-600 hover:bg-emerald-50 rounded-full transition"
