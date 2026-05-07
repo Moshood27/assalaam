@@ -9,10 +9,12 @@ use App\Events\ChatTyping;
 use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
 use App\Models\ChatRoom;
+use App\Models\ChatRoomMember;
 use App\Models\User;
 use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
@@ -28,6 +30,42 @@ class ChatController extends Controller
         $user = Auth::user();
         $rooms = $user->chatRooms()->with(['lastMessage', 'users'])->get();
         return response()->json($rooms);
+    }
+
+    public function storeRoom(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:private,group',
+        ]);
+
+        $room = ChatRoom::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'slug' => Str::slug($request->name) . '-' . uniqid(),
+        ]);
+
+        ChatRoomMember::create([
+            'chat_room_id' => $room->id,
+            'user_id' => Auth::id(),
+            'role' => 'admin',
+            'joined_at' => now(),
+        ]);
+
+        if ($request->type === 'private') {
+            // Find a staff member to join the chat
+            $staff = User::where('role', 'staff')->first() ?: User::where('role', 'admin')->first();
+            if ($staff && $staff->id !== Auth::id()) {
+                ChatRoomMember::create([
+                    'chat_room_id' => $room->id,
+                    'user_id' => $staff->id,
+                    'role' => 'member',
+                    'joined_at' => now(),
+                ]);
+            }
+        }
+
+        return response()->json($room->load('users'));
     }
 
     public function show(ChatRoom $room)

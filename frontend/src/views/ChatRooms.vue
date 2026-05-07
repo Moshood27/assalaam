@@ -66,6 +66,19 @@ async function sendBroadcast() {
   }
 }
 
+async function startSupportChat() {
+  try {
+    const { data } = await axios.post('/api/chat/rooms', {
+      name: 'Cooperative Support',
+      type: 'private'
+    })
+    rooms.value.unshift(data)
+    selectedRoomId.value = data.id
+  } catch (e) {
+    console.error('Could not start support chat', e)
+  }
+}
+
 const filteredRooms = computed(() => {
   let list = rooms.value
   if (searchQuery.value) {
@@ -133,8 +146,14 @@ onBeforeUnmount(() => {
       </div>
       <div class="flex-1 overflow-y-auto">
         <div v-if="loading" class="p-4 text-center text-gray-500">Loading rooms...</div>
-        <div v-else-if="filteredRooms.length === 0" class="p-4 text-center text-gray-500">
-          {{ searchQuery ? 'No chats match your search' : 'No active chats' }}
+        <div v-else-if="filteredRooms.length === 0" class="p-8 text-center">
+          <span class="material-icons text-48 text-gray-300 mb-2">forum</span>
+          <p class="text-sm text-gray-500 mb-4">{{ searchQuery ? 'No chats match your search' : 'No active chats yet' }}</p>
+          <button v-if="!searchQuery" 
+                  @click="startSupportChat"
+                  class="w-full py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition">
+            Start Support Chat
+          </button>
         </div>
         <div v-else v-for="room in filteredRooms" :key="room.id" 
              @click="selectedRoomId = room.id"
@@ -207,5 +226,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.text-48 { font-size: 48px; }
 .text-64 { font-size: 64px; }
 </style>

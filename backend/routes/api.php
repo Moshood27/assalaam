@@ -371,6 +371,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Enhanced Islamic Cooperative Chat System
     Route::prefix('chat')->group(function () {
         Route::get('/rooms', [\App\Http\Controllers\Api\ChatController::class, 'index']);
+        Route::post('/rooms', [\App\Http\Controllers\Api\ChatController::class, 'storeRoom']);
         Route::get('/rooms/{room}', [\App\Http\Controllers\Api\ChatController::class, 'show']);
         Route::post('/rooms/{room}/messages', [\App\Http\Controllers\Api\ChatController::class, 'store']);
         Route::patch('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'update']);

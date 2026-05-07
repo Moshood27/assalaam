@@ -150,6 +150,8 @@ class ProfileController extends Controller
                 'status' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['status'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->status ?? null) : null),
                 'score' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['score'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->score ?? null) : null),
             ],
+            'is_admin' => $user->isAdmin(),
+            'is_staff' => $user->isStaff(),
             'passport_url' => $passportUrl,
             // Transaction PIN status for improved UX on the client
             'pin_set' => method_exists($user, 'hasTransactionPin') ? $user->hasTransactionPin() : (!empty($user->transaction_pin_hash)),

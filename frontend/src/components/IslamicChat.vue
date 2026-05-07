@@ -17,11 +17,13 @@ const input = ref('')
 const attachment = ref(null)
 const attachmentPreview = ref(null)
 const userId = ref(null)
+const userRole = ref('member')
 const room = ref(null)
 const greetings = ref([])
 const cannedResponses = ref({})
 const showGreetings = ref(false)
 const showCanned = ref(false)
+const showFinActions = ref(false)
 const status = ref({ away_message: null, is_prayer_time: false })
 const typingUsers = ref({})
 const editingMessage = ref(null)
@@ -43,6 +45,7 @@ async function fetchInitialData() {
     ])
     
     userId.value = profileRes.data.id
+    userRole.value = profileRes.data.is_admin ? 'admin' : (profileRes.data.is_staff ? 'staff' : 'member')
     room.value = roomRes.data.room
     messages.value = roomRes.data.messages.data.reverse()
     greetings.value = greetingsRes.data
@@ -188,6 +191,32 @@ function useGreeting(greeting) {
   send()
 }
 
+function sendFinAction(type) {
+  showFinActions.value = false
+  if (type === 'transaction') {
+    input.value = "Salam, please make your monthly contribution payment."
+    send('transaction', {
+       body: input.value,
+       type: 'transaction',
+       metadata: { amount: 10000, category: 'Contribution', status: 'pending' }
+    })
+  } else if (type === 'approval') {
+    input.value = "Please review and sign the Qard Hasan loan agreement."
+    send('approval', {
+       body: input.value,
+       type: 'approval',
+       metadata: { title: 'Loan Agreement', description: 'Qard Hasan Contract', status: 'pending' }
+    })
+  } else if (type === 'inquiry') {
+    input.value = "I have a question about my recent loan application."
+    send('text', {
+       body: input.value,
+       type: 'text',
+       metadata: { loan_inquiry: true, loan_id: 'L-7782' }
+    })
+  }
+}
+
 async function respondToMessage(message, action) {
   try {
     const { data } = await axios.post(`/api/chat/messages/${message.id}/respond`, { action })
@@ -230,7 +259,12 @@ function hasBadge(user, type) {
           {{ room?.name?.[0] || 'C' }}
         </div>
         <div>
-          <h3 class="font-bold dark:text-white">{{ room?.name || 'Cooperative Chat' }}</h3>
+          <h3 class="font-bold dark:text-white flex items-center">
+            {{ room?.name || 'Cooperative Chat' }}
+            <span v-if="room?.type === 'private' && room?.users?.some(u => u.id !== userId && hasBadge(u, 'verified'))" 
+                  class="material-icons text-emerald-500 text-xs ml-1" 
+                  title="Member Verified">verified</span>
+          </h3>
           <p class="text-xs text-gray-500 dark:text-gray-400">
             {{ room?.type }}
             <span v-if="room?.metadata?.assigned_staff_id" class="ml-2 text-emerald-600 font-medium">
@@ -401,12 +435,40 @@ function hasBadge(user, type) {
         </button>
       </div>
 
+      <!-- Fintech Quick Actions -->
+      <div v-if="showFinActions" class="flex flex-col space-y-2 mb-3 bg-white dark:bg-gray-800 border rounded-xl p-3 shadow-lg">
+        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Quick Fintech Actions</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button v-if="userRole !== 'member'" 
+                  @click="sendFinAction('transaction')"
+                  class="flex items-center space-x-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition text-xs font-bold">
+            <span class="material-icons text-sm">payments</span>
+            <span>Request Payment</span>
+          </button>
+          <button v-if="userRole !== 'member'" 
+                  @click="sendFinAction('approval')"
+                  class="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition text-xs font-bold">
+            <span class="material-icons text-sm">draw</span>
+            <span>E-Signature</span>
+          </button>
+          <button @click="sendFinAction('inquiry')"
+                  class="flex items-center space-x-2 p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-lg hover:bg-purple-100 transition text-xs font-bold col-span-2">
+            <span class="material-icons text-sm">help_outline</span>
+            <span>Loan/Financial Inquiry</span>
+          </button>
+        </div>
+      </div>
+
       <div class="flex items-center space-x-2">
-        <button @click="showGreetings = !showGreetings; showCanned = false" 
+        <button @click="showFinActions = !showFinActions; showGreetings = false; showCanned = false" 
+                class="p-2 text-emerald-600 hover:text-emerald-700">
+          <span class="material-icons">add_circle</span>
+        </button>
+        <button @click="showGreetings = !showGreetings; showCanned = false; showFinActions = false" 
                 class="p-2 text-gray-500 hover:text-emerald-600">
           <span class="material-icons">sentiment_satisfied_alt</span>
         </button>
-        <button @click="showCanned = !showCanned; showGreetings = false" 
+        <button @click="showCanned = !showCanned; showGreetings = false; showFinActions = false" 
                 class="p-2 text-gray-500 hover:text-emerald-600">
           <span class="material-icons">quickreply</span>
         </button>

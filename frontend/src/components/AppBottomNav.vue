@@ -28,6 +28,7 @@ const navItems = [
   { label: 'Home', path: '/dashboard', icon: 'i-mdi-home-outline', activeIcon: 'i-mdi-home' },
   { label: 'Wallet', path: '/wallet', icon: 'i-mdi-wallet-outline', activeIcon: 'i-mdi-wallet' },
   { label: 'Passbook', path: '/passbook', icon: 'i-mdi-book-open-variant', activeIcon: 'i-mdi-book-open-variant' },
+  { label: 'Chat', path: '/chat', icon: 'i-mdi-chat-processing-outline', activeIcon: 'i-mdi-chat-processing' },
   { label: 'Profile', path: '/profile', icon: 'i-mdi-account-outline', activeIcon: 'i-mdi-account' },
 ]
 
