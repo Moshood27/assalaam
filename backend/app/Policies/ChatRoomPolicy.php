@@ -24,6 +24,18 @@ class ChatRoomPolicy
         if ($user->isAdmin() || $user->isStaff()) {
             return true;
         }
+
+        // Official room check
+        if ($chatRoom->type === 'official') {
+            $roleRequired = $chatRoom->metadata['role_required'] ?? null;
+            if ($roleRequired === 'Board Member' && $user->isBoardMember()) {
+                return true;
+            }
+            if ($roleRequired === 'Committee Member' && $user->isCommitteeMember()) {
+                return true;
+            }
+        }
+
         return $chatRoom->members()->where('user_id', $user->id)->exists();
     }
 

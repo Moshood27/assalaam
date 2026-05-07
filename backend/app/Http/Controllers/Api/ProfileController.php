@@ -152,6 +152,8 @@ class ProfileController extends Controller
             ],
             'is_admin' => $user->isAdmin(),
             'is_staff' => $user->isStaff(),
+            'is_board_member' => $user->isBoardMember(),
+            'is_committee_member' => $user->isCommitteeMember(),
             'passport_url' => $passportUrl,
             // Transaction PIN status for improved UX on the client
             'pin_set' => method_exists($user, 'hasTransactionPin') ? $user->hasTransactionPin() : (!empty($user->transaction_pin_hash)),

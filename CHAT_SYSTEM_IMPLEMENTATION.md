@@ -36,7 +36,15 @@ The system ensures the sanctity of the cooperative environment:
 - **Sensitive File Expiry**: Documents like ID cards auto-expire and are purged after 48 hours.
 - **Channel Authorization**: Strict Laravel Echo private channel rules ensure only authorized members/staff can listen to specific rooms.
 
-## 5. Responsive & Mobile Design
+## 5. Official Governance Groups (Board/Committees)
+
+The system supports the specialized needs of Cooperative leadership:
+- **Auto-Discovery**: Board and Committee members see their respective official rooms (e.g., "Board of Directors") automatically in their chat list.
+- **Role-Based Joining**: Members can join their designated official rooms with one click; access is restricted via strict `ChatRoomPolicy` checks against Spatie roles.
+- **Official Branding**: Official rooms are highlighted with specialized icons (gavel/justice) and badges to distinguish them from general member support chats.
+- **immutable Record**: Discussions in these rooms are preserved for regulatory and audit compliance.
+
+## 6. Responsive & Mobile Design
 
 - **Mobile Transitions**: Slide-in/out transitions between conversation list and active chat.
 - **Auto-Expanding Textarea**: Message input grows as you type, up to a limit, for better readability.

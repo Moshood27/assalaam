@@ -30,8 +30,49 @@ class ChatController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        // Auto-create official rooms for system if they don't exist (Admin only triggers this to save resources)
+        if ($user->isAdmin()) {
+            $this->chatService->getOrCreateOfficialRoom('Board of Directors', 'Board Member');
+            $this->chatService->getOrCreateOfficialRoom('Audit Committee', 'Committee Member');
+            $this->chatService->getOrCreateOfficialRoom('Investment Committee', 'Committee Member');
+        }
+
+        // Rooms where user is a member
         $rooms = $user->chatRooms()->with(['lastMessage', 'users'])->get();
+
+        // Plus official rooms they are eligible for but not yet a member
+        if ($user->isBoardMember() || $user->isCommitteeMember()) {
+            $officialRooms = ChatRoom::where('type', 'official')
+                ->whereNotIn('id', $rooms->pluck('id'))
+                ->get()
+                ->filter(function ($room) use ($user) {
+                    $role = $room->metadata['role_required'] ?? null;
+                    if ($role === 'Board Member') return $user->isBoardMember();
+                    if ($role === 'Committee Member') return $user->isCommitteeMember();
+                    return false;
+                });
+
+            $rooms = $rooms->concat($officialRooms);
+        }
+
         return response()->json($rooms);
+    }
+
+    public function joinRoom(ChatRoom $room)
+    {
+        $this->authorize('view', $room);
+
+        if (!$room->members()->where('user_id', Auth::id())->exists()) {
+            ChatRoomMember::create([
+                'chat_room_id' => $room->id,
+                'user_id' => Auth::id(),
+                'role' => 'member',
+                'joined_at' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Joined successfully', 'room' => $room->load('users')]);
     }
 
     public function storeRoom(Request $request)

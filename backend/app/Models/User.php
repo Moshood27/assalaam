@@ -445,6 +445,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->isAdmin() || $this->hasAnyRole(['Branch Manager', 'Clerk']);
     }
 
+    public function isBoardMember(): bool
+    {
+        return $this->hasRole('Board Member') || $this->hasRole('super_admin');
+    }
+
+    public function isCommitteeMember(): bool
+    {
+        return $this->hasAnyRole(['Audit Committee', 'Investment Committee', 'Credit Committee']) || $this->isBoardMember();
+    }
+
     public function supportMessages()
     {
         return $this->hasMany(SupportMessage::class);

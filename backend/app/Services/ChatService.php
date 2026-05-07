@@ -6,6 +6,7 @@ use App\Models\ChatMessage;
 use App\Models\ChatRoom;
 use App\Models\ChatRoomMember;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
 class ChatService
@@ -78,12 +79,34 @@ class ChatService
     {
         $room = ChatRoom::create([
             'name' => $name,
+            'slug' => Str::slug($name),
             'type' => $type,
             'creator_id' => $creator->id,
             'metadata' => $metadata,
         ]);
 
         $room->members()->create(['user_id' => $creator->id, 'role' => 'admin']);
+
+        return $room;
+    }
+
+    public function getOrCreateOfficialRoom($name, $roleRequired)
+    {
+        $slug = Str::slug($name);
+        $room = ChatRoom::where('slug', $slug)->first();
+
+        if (!$room) {
+            // System created room
+            $room = ChatRoom::create([
+                'name' => $name,
+                'slug' => $slug,
+                'type' => 'official',
+                'metadata' => [
+                    'role_required' => $roleRequired,
+                    'is_official' => true,
+                ],
+            ]);
+        }
 
         return $room;
     }

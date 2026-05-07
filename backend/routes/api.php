@@ -373,6 +373,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
         Route::get('/rooms', [\App\Http\Controllers\Api\ChatController::class, 'index']);
         Route::post('/rooms', [\App\Http\Controllers\Api\ChatController::class, 'storeRoom']);
         Route::get('/rooms/{room}', [\App\Http\Controllers\Api\ChatController::class, 'show']);
+        Route::post('/rooms/{room}/join', [\App\Http\Controllers\Api\ChatController::class, 'joinRoom']);
         Route::post('/rooms/{room}/messages', [\App\Http\Controllers\Api\ChatController::class, 'store']);
         Route::patch('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'update']);
         Route::delete('/messages/{message}', [\App\Http\Controllers\Api\ChatController::class, 'destroy']);

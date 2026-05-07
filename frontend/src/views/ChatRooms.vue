@@ -79,6 +79,25 @@ async function startSupportChat() {
   }
 }
 
+async function joinRoom(room) {
+  try {
+    const { data } = await axios.post(`/api/chat/rooms/${room.id}/join`)
+    // Update local room state
+    const index = rooms.value.findIndex(r => r.id === room.id)
+    if (index !== -1) {
+      rooms.value[index] = data.room
+    }
+    selectedRoomId.value = room.id
+  } catch (e) {
+    alert('Failed to join room')
+  }
+}
+
+const isMember = (room) => {
+  if (!user.value) return false
+  return room.users?.some(u => u.id === user.value.id)
+}
+
 const filteredRooms = computed(() => {
   let list = rooms.value
   if (searchQuery.value) {
@@ -162,30 +181,40 @@ onBeforeUnmount(() => {
           </button>
         </div>
         <div v-else v-for="room in filteredRooms" :key="room.id" 
-             @click="selectedRoomId = room.id"
+             @click="isMember(room) ? selectedRoomId = room.id : null"
              :class="['p-4 border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition relative group', 
-                      selectedRoomId === room.id ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-l-emerald-600' : '']">
+                      selectedRoomId === room.id ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-l-emerald-600' : '',
+                      !isMember(room) ? 'opacity-80' : '']">
           
-          <button @click.stop="togglePin(room.id)" 
+          <button v-if="isMember(room)" @click.stop="togglePin(room.id)" 
                   :class="['absolute right-2 top-2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition opacity-0 group-hover:opacity-100', 
                            pinnedRoomIds.includes(room.id) ? 'opacity-100 text-emerald-600' : 'text-gray-400']">
             <span class="material-icons text-xs">{{ pinnedRoomIds.includes(room.id) ? 'push_pin' : 'push_pin' }}</span>
           </button>
 
           <div class="flex items-center space-x-3">
-            <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold flex-shrink-0">
-              {{ room.name?.[0] || 'C' }}
+            <div :class="['w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0', 
+                          room.type === 'official' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700']">
+              <span v-if="room.type === 'official'" class="material-icons text-xl">gavel</span>
+              <span v-else>{{ room.name?.[0] || 'C' }}</span>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-center mb-1">
-                <p class="font-bold text-sm dark:text-white truncate pr-4">{{ room.name || 'Chat Room' }}</p>
+                <div class="flex items-center space-x-1 truncate">
+                  <p class="font-bold text-sm dark:text-white truncate">{{ room.name || 'Chat Room' }}</p>
+                  <span v-if="room.type === 'official'" class="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[8px] rounded font-bold uppercase">Official</span>
+                </div>
                 <span class="text-[10px] text-gray-500 whitespace-nowrap">
                   {{ room.last_message?.created_at ? formatTime(room.last_message.created_at) : '' }}
                 </span>
               </div>
               <div class="flex justify-between items-center">
-                <p class="text-xs text-gray-500 truncate">{{ room.last_message?.body || 'No messages yet' }}</p>
-                <div v-if="room.unread_count" class="ml-2 px-1.5 py-0.5 bg-emerald-600 text-white text-[10px] rounded-full font-bold">
+                <p v-if="isMember(room)" class="text-xs text-gray-500 truncate">{{ room.last_message?.body || 'No messages yet' }}</p>
+                <button v-else @click.stop="joinRoom(room)" 
+                        class="px-3 py-1 bg-emerald-600 text-white text-[10px] rounded-lg font-bold hover:bg-emerald-700 transition">
+                  Join Room
+                </button>
+                <div v-if="isMember(room) && room.unread_count" class="ml-2 px-1.5 py-0.5 bg-emerald-600 text-white text-[10px] rounded-full font-bold">
                   {{ room.unread_count }}
                 </div>
               </div>
