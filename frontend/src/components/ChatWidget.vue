@@ -219,7 +219,7 @@ onBeforeUnmount(() => unsubscribe())
 </script>
 
 <template>
-  <div class="flex flex-col h-[550px] md:h-[600px] max-h-[85vh] rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+  <div class="flex flex-col h-full rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
     <div class="p-4 border-b flex items-center justify-between bg-white shrink-0">
       <div class="flex items-center gap-3">
         <div class="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner shrink-0">
@@ -242,7 +242,7 @@ onBeforeUnmount(() => unsubscribe())
       </button>
     </div>
 
-    <div ref="listEl" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scroll-smooth">
+    <div ref="listEl" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scroll-smooth overscroll-contain">
       <div v-if="loading" class="flex flex-col items-center justify-center h-full py-20 space-y-3">
         <div class="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
         <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Loading Conversation</p>

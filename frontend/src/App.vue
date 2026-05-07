@@ -182,12 +182,12 @@ onMounted(async () => {
       v-if="isLoggedIn"
       @click="showChat = !showChat"
       aria-label="Open Support Chat"
-      class="fixed bottom-32 right-6 z-40 bg-emerald-600 text-white shadow-xl shadow-emerald-200 rounded-full w-12 h-12 flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
+      class="fixed bottom-32 right-6 z-50 bg-emerald-600 text-white shadow-xl shadow-emerald-200 rounded-full w-14 h-14 flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
     >
-      <svg v-if="!showChat" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+      <svg v-if="!showChat" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
         <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .621-.504 1.125-1.125 1.125h-1.5a1.125 1.125 0 0 1-1.125-1.125v-4.25c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125Zm-16.5 0v4.25c0 .621.504 1.125 1.125 1.125h1.5a1.125 1.125 0 0 0 1.125-1.125v-4.25c0-.621-.504-1.125-1.125-1.125h-1.5a1.125 1.125 0 0 0-1.125 1.125ZM12 3c4.97 0 9 4.03 9 9.375v.125c0 .414-.336.75-.75.75h-1.5a.75.75 0 0 1-.75-.75V12c0-4.142-3.358-7.5-7.5-7.5S4.5 7.858 4.5 12v.5c0 .414-.336.75-.75.75h-1.5a.75.75 0 0 1-.75-.75v-.125C1.5 7.03 5.53 3 12 3Z" />
       </svg>
-      <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+      <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
       </svg>
     </button>
@@ -195,9 +195,9 @@ onMounted(async () => {
     <!-- Floating Chat Widget -->
     <div 
       v-if="isLoggedIn && showChat" 
-      class="fixed bottom-4 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 mb-[env(safe-area-inset-bottom)] animate-in fade-in slide-in-from-bottom-4 duration-300"
+      class="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 md:right-6 z-[60] w-full h-[100dvh] sm:h-[600px] sm:w-96 mb-[env(safe-area-inset-bottom)] animate-in fade-in slide-in-from-bottom-4 duration-300"
     >
-      <ChatWidget @close="showChat = false" />
+      <ChatWidget @close="showChat = false" class="h-full rounded-none sm:rounded-3xl" />
     </div>
 
     <!-- Floating Inbox Widget (visible when logged in) -->

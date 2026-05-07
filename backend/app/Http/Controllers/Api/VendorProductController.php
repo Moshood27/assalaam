@@ -34,6 +34,15 @@ class VendorProductController extends Controller
     public function store(Request $request)
     {
         $vendor = $this->requireVendor($request);
+
+        // Transform boolean-ish strings to real booleans before validation
+        if ($request->has('track_stock')) {
+            $request->merge(['track_stock' => $request->boolean('track_stock')]);
+        }
+        if ($request->has('is_active')) {
+            $request->merge(['is_active' => $request->boolean('is_active')]);
+        }
+
         $validated = $request->validate([
             'category_id' => 'required|integer|exists:categories,id',
             'name' => 'required|string|max:200',
@@ -68,6 +77,15 @@ class VendorProductController extends Controller
     {
         $vendor = $this->requireVendor($request);
         $product = Product::where('vendor_id', $vendor->id)->findOrFail($id);
+
+        // Transform boolean-ish strings to real booleans before validation
+        if ($request->has('track_stock')) {
+            $request->merge(['track_stock' => $request->boolean('track_stock')]);
+        }
+        if ($request->has('is_active')) {
+            $request->merge(['is_active' => $request->boolean('is_active')]);
+        }
+
         $validated = $request->validate([
             'category_id' => 'sometimes|integer|exists:categories,id',
             'name' => 'sometimes|string|max:200',

@@ -9,6 +9,8 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\NewMemberWelcome;
 use App\Mail\MemberApplicationRejected;
+use App\Mail\MemberApplicationInterviewInvitation;
+use App\Services\SmsService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -221,6 +223,65 @@ class MemberApplicationResource extends Resource
                     ->action(fn (MemberApplication $record) => response()->streamDownload(function () use ($record) {
                         echo Pdf::loadView('pdfs.imam_attestation', ['application' => $record])->output();
                     }, "imam-attestation-{$record->id}.pdf")),
+                Tables\Actions\Action::make('invite_to_meeting')
+                    ->label('Invite to Meeting')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('warning')
+                    ->visible(fn (MemberApplication $record) => $record->finalized_at === null && $record->submitted_at !== null)
+                    ->form([
+                        Forms\Components\Select::make('meeting_type')
+                            ->options([
+                                'online' => 'Online Meeting',
+                                'physical' => 'Physical Meeting',
+                            ])
+                            ->required()
+                            ->live(),
+                        Forms\Components\DateTimePicker::make('meeting_date_time')
+                            ->label('Meeting Date & Time')
+                            ->required(),
+                        Forms\Components\TextInput::make('location_or_link')
+                            ->label(fn (Forms\Get $get) => $get('meeting_type') === 'online' ? 'Meeting Link' : 'Location')
+                            ->placeholder(fn (Forms\Get $get) => $get('meeting_type') === 'online' ? 'https://zoom.us/j/...' : 'Main Branch Office')
+                            ->required(),
+                        Forms\Components\Textarea::make('custom_message')
+                            ->label('Additional Message (Optional)')
+                            ->rows(3),
+                    ])
+                    ->action(function (MemberApplication $record, array $data) {
+                        // Send Email
+                        try {
+                            Mail::to($record->email)->send(new MemberApplicationInterviewInvitation(
+                                name: $record->name,
+                                meetingType: $data['meeting_type'],
+                                meetingDateTime: \Carbon\Carbon::parse($data['meeting_date_time'])->format('M d, Y h:i A'),
+                                meetingLocationOrLink: $data['location_or_link'],
+                                customMessage: $data['custom_message'] ?? null
+                            ));
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send interview invitation email', ['error' => $e->getMessage()]);
+                        }
+
+                        // Send SMS
+                        $smsService = app(SmsService::class);
+                        if ($record->phone) {
+                            $appName = config('app.name');
+                            $typeStr = ucfirst($data['meeting_type']);
+                            $dateTime = \Carbon\Carbon::parse($data['meeting_date_time'])->format('M d, h:i A');
+                            $smsMessage = "Salam {$record->name}, you are invited to a {$typeStr} interview for {$appName} on {$dateTime}. Detail: {$data['location_or_link']}";
+
+                            try {
+                                $smsService->send($record->phone, $smsMessage);
+                            } catch (\Exception $e) {
+                                Log::error('Failed to send interview invitation SMS', ['error' => $e->getMessage()]);
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Invitation Sent')
+                            ->body('The applicant has been invited via email and SMS.')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-badge')
@@ -386,6 +447,7 @@ class MemberApplicationResource extends Resource
     {
         return [
             'index' => Pages\ListMemberApplications::route('/'),
+            'view' => Pages\ViewMemberApplication::route('/{record}'),
         ];
     }
 

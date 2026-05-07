@@ -285,8 +285,12 @@ const saveProduct = async () => {
   try {
     const formData = new FormData()
     Object.keys(form.value).forEach(key => {
-      if (form.value[key] !== null && form.value[key] !== undefined) {
-        formData.append(key, form.value[key])
+      let val = form.value[key]
+      if (val !== null && val !== undefined) {
+        if (typeof val === 'boolean') {
+          val = val ? 1 : 0
+        }
+        formData.append(key, val)
       }
     })
     
