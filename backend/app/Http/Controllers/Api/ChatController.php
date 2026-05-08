@@ -92,6 +92,21 @@ class ChatController extends Controller
             ],
         ]);
 
+        $creator = Auth::user();
+
+        // Authorization: members can only initiate private chats with staff or admins
+        if (!$creator->isStaff() && $request->type === 'private') {
+            if ($request->has('user_ids')) {
+                foreach ($request->user_ids as $uid) {
+                    $target = User::find($uid);
+                    if ($target && $target->id !== $creator->id && !$target->isStaff()) {
+                        $room->delete(); // Clean up
+                        abort(403, 'You are only authorized to start private chats with staff or admins.');
+                    }
+                }
+            }
+        }
+
         ChatRoomMember::create([
             'chat_room_id' => $room->id,
             'user_id' => Auth::id(),
@@ -115,7 +130,7 @@ class ChatController extends Controller
         }
 
         if ($request->type === 'support') {
-            User::where('is_admin', true)->get()->each(function ($admin) use ($room) {
+            Auth::user()->getAuthorizedAdmins()->each(function ($admin) use ($room) {
                 $admin->notify(new \App\Notifications\NewSupportInquiryNotification($room, Auth::user()));
             });
         }
@@ -274,7 +289,14 @@ class ChatController extends Controller
 
     public function createPrivateRoom(User $user)
     {
-        $room = $this->chatService->createPrivateRoom(Auth::user(), $user);
+        $creator = Auth::user();
+
+        // Authorization: members can only initiate private chats with staff or admins
+        if (!$creator->isStaff() && !$user->isStaff()) {
+            abort(403, 'You are only authorized to start private chats with staff or admins.');
+        }
+
+        $room = $this->chatService->createPrivateRoom($creator, $user);
         return response()->json($room);
     }
 

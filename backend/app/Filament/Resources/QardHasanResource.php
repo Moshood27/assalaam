@@ -358,15 +358,14 @@ class QardHasanResource extends Resource
                             'principal' => $record->principal_amount,
                         ]);
 
-                        // Send push notifications to other admins for high-value loans
+                        // Send push notifications to authorized admins for high-value loans
                         if ($record->isHighValue()) {
                             $required = config('cooperative.approvals.required_approvals_count', 2);
-                            $admins = User::where('is_admin', true)
+                            $admins = $record->user->getAuthorizedAdmins()
                                 ->where('id', '!=', auth()->id())
-                                ->whereHas('roles', function($q) {
-                                    $q->whereIn('name', ['super_admin', 'Chairman', 'Sharia Auditor']);
-                                })
-                                ->get();
+                                ->filter(function($admin) {
+                                    return $admin->hasAnyRole(['super_admin', 'Chairman', 'Sharia Auditor']);
+                                });
 
                             foreach ($admins as $admin) {
                                 $admin->notifyMember(
@@ -618,8 +617,6 @@ class QardHasanResource extends Resource
                             ->inline(false)
                             ->columns(1)
                             ->required(),
-                            Tables\Actions\DeleteAction::make()
-                                ->visible(fn () => auth()->user()->hasRole('super_admin')),
                         Forms\Components\Textarea::make('note')
                             ->label('Internal Note (optional)')
                             ->maxLength(200)
@@ -768,9 +765,8 @@ class QardHasanResource extends Resource
                             Mail::to($record->user->email)->send(new LoanDisbursedUser($record, $credit));
                         }
 
-                        // Notify all admins
-                        $adminEmails = User::query()
-                            ->where('is_admin', true)
+                        // Notify relevant admins
+                        $adminEmails = $record->user?->getAuthorizedAdmins()
                             ->whereNotNull('email')
                             ->pluck('email')
                             ->all();

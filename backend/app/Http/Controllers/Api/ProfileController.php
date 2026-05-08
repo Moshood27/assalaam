@@ -633,8 +633,8 @@ class ProfileController extends Controller
                 Mail::to($adminEmails)->send(new NursingMotherAdminNotification($user));
             }
 
-            // Also send internal notification to all admins
-            User::where('is_admin', true)->each(function ($admin) use ($user) {
+            // Also send internal notification to relevant admins
+            $user->getAuthorizedAdmins()->each(function ($admin) use ($user) {
                 $admin->notifyMember(
                     "Nursing Mother Grace Request",
                     "New nursing mother grace request from {$user->full_name}.",
@@ -707,8 +707,8 @@ class ProfileController extends Controller
         $user->discrepancy_reported_at = now();
         $user->save();
 
-        // Notify admins
-        User::where('is_admin', true)->each(function ($admin) use ($user, $msgBody) {
+        // Notify relevant admins
+        $user->getAuthorizedAdmins()->each(function ($admin) use ($user, $msgBody) {
             $admin->notifyMember(
                 "Migration Discrepancy",
                 "New report from {$user->name} regarding their opening balance.",

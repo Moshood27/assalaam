@@ -42,8 +42,8 @@ class ProjectProposalController extends Controller
             'voting_type' => 'one_member_one_vote', // Default for new proposals
         ]);
 
-        // Notify admins/Sharia board
-        \App\Models\User::where('is_admin', true)->each(function ($admin) use ($proposal, $user) {
+        // Notify relevant admins/Sharia board
+        $user->getAuthorizedAdmins()->each(function ($admin) use ($proposal, $user) {
             $admin->notifyMember(
                 "New Project Proposal",
                 "A new proposal '{$proposal->title}' has been submitted by {$user->name} for Sharia review."

@@ -173,8 +173,8 @@ class Contribution extends Model
                             ['type' => 'contribution_success', 'contribution_id' => $model->id]
                         );
 
-                        // Notify admins
-                        User::where('is_admin', true)->each(function ($admin) use ($user, $model, $schemeName) {
+                        // Notify relevant admins
+                        $user->getAuthorizedAdmins()->each(function ($admin) use ($user, $model, $schemeName) {
                             $admin->notifyMember(
                                 "Payment Received: {$schemeName}",
                                 "Member {$user->name} successfully paid ₦" . number_format($model->amount, 2) . " for {$schemeName}.",

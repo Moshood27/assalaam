@@ -62,12 +62,16 @@ class ShariaDispute extends Model
     protected static function booted()
     {
         static::created(function ($dispute) {
-            // Notify Admins/Sharia Board
-            $recipients = User::whereHas('roles', function ($query) {
-                $query->where('name', 'sharia_board');
-            })->get();
+            // Notify Admins/Sharia Board who are suppose to receive it
+            $user = $dispute->user;
+            if (!$user) return;
+
+            $recipients = $user->getAuthorizedAdmins()->filter(function ($admin) {
+                return $admin->hasRole('sharia_board') || $admin->hasRole('super_admin');
+            });
+
             if ($recipients->isEmpty()) {
-                $recipients = User::where('is_admin', true)->get();
+                $recipients = $user->getAuthorizedAdmins();
             }
 
             if ($recipients->isNotEmpty()) {

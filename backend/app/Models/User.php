@@ -440,6 +440,24 @@ class User extends Authenticatable implements FilamentUser
         return $this->is_admin || $this->hasRole('super_admin');
     }
 
+    /**
+     * Get admins authorized to receive notifications regarding this user.
+     * Includes branch admins and super admins.
+     */
+    public function getAuthorizedAdmins()
+    {
+        $query = static::query()->where('is_admin', true);
+
+        return $query->where(function ($q) {
+            if ($this->branch_id) {
+                $q->where('branch_id', $this->branch_id)
+                  ->orWhereHas('roles', fn ($sq) => $sq->where('name', 'super_admin'));
+            } else {
+                $q->whereHas('roles', fn ($sq) => $sq->where('name', 'super_admin'));
+            }
+        })->get();
+    }
+
     public function isStaff(): bool
     {
         return $this->isAdmin() || $this->hasAnyRole(['Staff', 'Branch Manager', 'Clerk']);

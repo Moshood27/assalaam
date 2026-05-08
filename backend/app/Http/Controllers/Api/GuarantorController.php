@@ -281,14 +281,14 @@ class GuarantorController extends Controller
 
         // Notify admins via global activity feed (by notifying them as members)
         try {
-            $admins = \App\Models\User::query()->where('is_admin', true)->get();
-            foreach ($admins as $a) {
+            // Notify authorized branch admins or super admins
+            $loan->user?->getAuthorizedAdmins()->each(function ($a) use ($loan, $pending) {
                 $a->notifyMember('Guarantor Escalation', sprintf('Loan %s for %s requires attention. Pending guarantors: %d', $loan->qard_id_string, $loan->user?->full_name ?? 'member', $pending->count()), [
                     'type' => 'guarantor_escalation',
                     'loan_id' => $loan->id,
                     'qard_id_string' => $loan->qard_id_string,
                 ]);
-            }
+            });
         } catch (\Throwable $e) {
             Log::error('Failed to notify admins of escalation: ' . $e->getMessage());
         }

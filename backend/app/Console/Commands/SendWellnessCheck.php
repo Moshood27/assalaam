@@ -67,22 +67,21 @@ class SendWellnessCheck extends Command
             ->get();
 
         if ($suspectedDeceased->isNotEmpty()) {
-            $adminUsers = User::where('is_admin', true)->get();
-            if ($adminUsers->isEmpty()) {
-                $adminUsers = User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'Admin']))->get();
-            }
-
             foreach ($suspectedDeceased as $user) {
-                $this->warn("User {$user->id} ({$user->name}) still inactive after wellness check. Alerting Admin.");
+                $this->warn("User {$user->id} ({$user->name}) still inactive after wellness check. Alerting Authorized Admins.");
 
-                Notification::send($adminUsers, new GeneralNotification(
-                    title: 'Potential Deceased Member Alert',
-                    message: "Member {$user->name} ({$user->membership_number}) has been inactive for a long time and did not respond to the wellness check sent on {$user->wellness_check_notified_at->format('Y-m-d')}.",
-                    data: [
-                        'user_id' => $user->id,
-                        'route' => "/admin/users/{$user->id}/edit"
-                    ]
-                ));
+                $adminUsers = $user->getAuthorizedAdmins();
+
+                if ($adminUsers->isNotEmpty()) {
+                    Notification::send($adminUsers, new GeneralNotification(
+                        title: 'Potential Deceased Member Alert',
+                        message: "Member {$user->name} ({$user->membership_number}) has been inactive for a long time and did not respond to the wellness check sent on {$user->wellness_check_notified_at->format('Y-m-d')}.",
+                        data: [
+                            'user_id' => $user->id,
+                            'route' => "/admin/users/{$user->id}/edit"
+                        ]
+                    ));
+                }
             }
         }
 

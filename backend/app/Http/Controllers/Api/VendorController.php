@@ -64,7 +64,7 @@ class VendorController extends Controller
         $vendor->save();
 
         if ($vendor->wasRecentlyCreated) {
-            \App\Models\User::where('is_admin', true)->each(function ($admin) use ($vendor, $user) {
+            $user->getAuthorizedAdmins()->each(function ($admin) use ($vendor, $user) {
                 $admin->notifyMember(
                     "New Vendor Application",
                     "{$user->name} has submitted a new vendor application for '{$vendor->name}'.",
@@ -234,7 +234,7 @@ class VendorController extends Controller
             ]
         ]);
 
-        \App\Models\User::where('is_admin', true)->each(function ($admin) use ($settlement, $user) {
+        $user->getAuthorizedAdmins()->each(function ($admin) use ($settlement, $user) {
             $admin->notifyMember(
                 "Vendor Settlement Request",
                 "Vendor '{$user->name}' requested a settlement of ₦" . number_format($settlement->amount, 2),

@@ -180,8 +180,8 @@ class SavingsGoalController extends Controller
                 $goal->update(['status' => 'booked']);
             }
 
-            // Notify admins about the new booking
-            \App\Models\User::where('is_admin', true)->each(function ($admin) use ($user, $b, $goal) {
+            // Notify relevant admins about the new booking
+            $user->getAuthorizedAdmins()->each(function ($admin) use ($user, $b, $goal) {
                 $admin->notifyMember(
                     "New Goal Booking",
                     "Member {$user->name} booked their '{$goal->title}' goal with {$b->partner_name}.",

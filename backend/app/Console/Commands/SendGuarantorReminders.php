@@ -85,17 +85,16 @@ class SendGuarantorReminders extends Command
                     ->update(['escalated_at' => now()]);
                 $countEscalated += (int) $affected;
 
-                // Notify admins
+                // Notify authorized admins
                 try {
-                    $admins = User::query()->where('is_admin', true)->get();
-                    foreach ($admins as $a) {
+                    $loan->user?->getAuthorizedAdmins()->each(function ($a) use ($loan, $affected, $push) {
                         $token = $a->fcm_token ?: ($a->device_token ?? null);
                         $push->send($token, 'Guarantor Escalation', sprintf('Loan %s for %s stalled. Pending guarantors escalated: %d', $loan->qard_id_string, $loan->user?->full_name ?? 'member', $affected), [
                             'type' => 'guarantor_escalation_auto',
                             'loan_id' => $loan->id,
                             'qard_id_string' => $loan->qard_id_string,
                         ]);
-                    }
+                    });
                 } catch (\Throwable $e) {
                     // ignore
                 }

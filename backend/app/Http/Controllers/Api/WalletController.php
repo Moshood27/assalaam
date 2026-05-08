@@ -714,9 +714,9 @@ class WalletController extends Controller
             throw $e;
         }
 
-        // Best-effort alert to admins
+        // Best-effort alert to relevant admins
         try {
-            User::where('is_admin', true)->each(function ($admin) use ($user, $amount, $reference, $req) {
+            $user->getAuthorizedAdmins()->each(function ($admin) use ($user, $amount, $reference, $req) {
                 $admin->notifyMember(
                     "New Withdrawal Request",
                     "Member {$user->full_name} requested ₦" . number_format($amount, 2) . " (Ref: {$reference}).",

@@ -310,14 +310,13 @@ class WithdrawalRequestResource extends Resource
                             ->success()
                             ->send();
 
-                        // Notify other admins if high value
+                        // Notify other authorized admins if high value
                         if ($record->isHighValue() && $record->transactionApprovals()->count() === 1) {
-                            $admins = User::where('is_admin', true)
+                            $admins = $record->user->getAuthorizedAdmins()
                                 ->where('id', '!=', auth()->id())
-                                ->whereHas('roles', function($q) {
-                                    $q->whereIn('name', ['super_admin', 'Chairman', 'Sharia Auditor']);
-                                })
-                                ->get();
+                                ->filter(function($admin) {
+                                    return $admin->hasAnyRole(['super_admin', 'Chairman', 'Sharia Auditor']);
+                                });
 
                             foreach ($admins as $admin) {
                                 $admin->notifyMember(

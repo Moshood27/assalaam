@@ -333,8 +333,7 @@ class LoanController extends Controller
 
             // Best-effort: Notification to admins (Filament) about disbursement
             try {
-                $admins = User::query()->where('is_admin', true)->get();
-                foreach ($admins as $a) {
+                $q->user->getAuthorizedAdmins()->each(function ($a) use ($q, $credit) {
                     $memberName = $q->user?->full_name ?: 'Member';
                     $body = 'Loan ' . $q->qard_id_string . ' disbursed: ₦' . number_format($credit, 2) . ' to ' . $memberName;
                     $a->notifyMember('Loan Disbursed', $body, [
@@ -344,7 +343,7 @@ class LoanController extends Controller
                         'member_id' => $q->user?->id,
                         'credited_amount' => (float) $credit,
                     ]);
-                }
+                });
             } catch (\Throwable $e) {
                 Log::error('Failed to notify admins of loan disbursement: ' . $e->getMessage());
             }
@@ -399,8 +398,7 @@ class LoanController extends Controller
 
             // Email admins about new loan request (best-effort)
             try {
-                $adminEmails = \App\Models\User::query()
-                    ->where('is_admin', true)
+                $adminEmails = $user->getAuthorizedAdmins()
                     ->whereNotNull('email')
                     ->pluck('email')
                     ->all();

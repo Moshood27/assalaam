@@ -575,8 +575,8 @@ class MemberRegistrationController extends Controller
         $app->approval_status = 'pending'; // Ensure application is also marked as pending
         $app->save();
 
-        // Notify admins about new member registration
-        User::where('is_admin', true)->each(function ($admin) use ($user) {
+        // Notify relevant admins about new member registration
+        $user->getAuthorizedAdmins()->each(function ($admin) use ($user) {
             $admin->notifyMember(
                 "New Member Registration",
                 "{$user->full_name} has completed KYC registration and is pending approval (Membership: {$user->membership_number}).",
