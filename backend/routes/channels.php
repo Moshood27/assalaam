@@ -52,3 +52,23 @@ Broadcast::channel('user.{id}', function ($user, int $id) {
 Broadcast::channel('admin-notifications', function ($user) {
     return (bool) $user->is_admin;
 });
+
+Broadcast::channel('online-members', function ($user) {
+    if ($user->isAdmin() || $user->isStaff()) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'membership_number' => $user->membership_number,
+            'is_admin' => true,
+            'activity' => 'Monitoring',
+        ];
+    }
+
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'membership_number' => $user->membership_number,
+        'is_admin' => false,
+        'activity' => 'Browsing',
+    ];
+});

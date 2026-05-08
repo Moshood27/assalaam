@@ -47,6 +47,7 @@ use App\Filament\Widgets\StoreOverview;
 use App\Filament\Widgets\SystemHealthChart;
 use App\Filament\Widgets\TotalCollectionsToday;
 use App\Filament\Widgets\UserGrowthChart;
+use App\Filament\Widgets\OnlineMembersWidget;
 use App\Http\Middleware\IpWhitelistMiddleware;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -128,6 +129,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                OnlineMembersWidget::class,
                 StoreOverview::class,
                 FinanceSnapshot::class,
                 RecentPayouts::class,

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 import { Geolocation } from '@capacitor/geolocation'
@@ -9,6 +9,7 @@ import InboxDrawer from './components/InboxDrawer.vue'
 import ChatWidget from './components/ChatWidget.vue'
 import router from './router/index.js'
 import axios from './http.js'
+import { getEcho } from './realtime/echo.js'
 
 const PENDING_PUSH_TOKEN_KEY = 'pending_push_token'
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -16,6 +17,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 const showInbox = ref(false)
 const showChat = ref(false)
 const unreadCount = ref(0)
+const isInputFocused = ref(false)
 const isLoggedIn = computed(() => !!localStorage.getItem('token'))
 let unreadTimer = null
 
@@ -66,7 +68,56 @@ async function flushPendingPushToken() {
   } catch (_) {}
 }
 
+const isNative = Capacitor.getPlatform() !== 'web'
+const isMobile = computed(() => isNative || window.innerWidth < 768)
+
+watch(isLoggedIn, (val) => {
+  if (val) {
+    try {
+      const echo = getEcho()
+      const userId = localStorage.getItem('user_id')
+      echo.join('online-members')
+        .whisper('activity', {
+          id: userId,
+          activity: router.currentRoute.value.meta?.title || router.currentRoute.value.name || 'Browsing'
+        })
+    } catch (_) {}
+  } else {
+    try { getEcho().leave('online-members') } catch (_) {}
+  }
+}, { immediate: true })
+
+router.afterEach((to) => {
+  if (isLoggedIn.value) {
+    const userId = localStorage.getItem('user_id')
+    try {
+      getEcho().join('online-members').whisper('activity', {
+        id: userId,
+        activity: to.meta?.title || to.name || 'Browsing'
+      })
+    } catch (_) {}
+  }
+})
+
+function handleFocusIn(e) {
+  if (['INPUT', 'TEXTAREA'].includes(e.target?.tagName) || e.target?.isContentEditable) {
+    isInputFocused.value = true
+  }
+}
+
+function handleFocusOut() {
+  setTimeout(() => {
+    const activeEl = document.activeElement
+    if (!activeEl || !(['INPUT', 'TEXTAREA'].includes(activeEl.tagName) || activeEl.isContentEditable)) {
+      isInputFocused.value = false
+    }
+  }, 100)
+}
+
 onMounted(async () => {
+  window.addEventListener('focusin', handleFocusIn)
+  window.addEventListener('focusout', handleFocusOut)
+
   // 1. Wait for the app to be visually ready
   try {
     await SplashScreen.hide()
@@ -78,7 +129,6 @@ onMounted(async () => {
   await new Promise(resolve => setTimeout(resolve, 1000))
 
   // 3. Setup Push Notifications only on native platforms
-  const isNative = Capacitor.getPlatform() !== 'web'
   const hasPlugin = Capacitor.isPluginAvailable('PushNotifications')
 
   if (isNative && hasPlugin) {
@@ -171,6 +221,12 @@ onMounted(async () => {
     }
   }
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('focusin', handleFocusIn)
+  window.removeEventListener('focusout', handleFocusOut)
+  if (unreadTimer) clearInterval(unreadTimer)
+})
 </script>
 
 <template>
@@ -179,7 +235,7 @@ onMounted(async () => {
 
     <!-- Floating Chat Launcher (visible when logged in) -->
     <button
-      v-if="isLoggedIn"
+      v-if="isLoggedIn && !(isMobile && isInputFocused)"
       @click="showChat = !showChat"
       aria-label="Open Support Chat"
       class="fixed bottom-32 right-6 z-50 bg-emerald-600 text-white shadow-xl shadow-emerald-200 rounded-full w-14 h-14 flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
@@ -202,7 +258,7 @@ onMounted(async () => {
 
     <!-- Floating Inbox Widget (visible when logged in) -->
     <button
-      v-if="isLoggedIn"
+      v-if="isLoggedIn && !(isMobile && isInputFocused)"
       @click="showInbox = true"
       aria-label="Open Inbox"
       class="fixed bottom-20 right-6 z-40 bg-white border border-slate-200 shadow-xl shadow-slate-200/50 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
