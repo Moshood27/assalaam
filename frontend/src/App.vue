@@ -18,7 +18,14 @@ const showInbox = ref(false)
 const showChat = ref(false)
 const unreadCount = ref(0)
 const isInputFocused = ref(false)
-const isLoggedIn = computed(() => !!localStorage.getItem('token'))
+const authToken = ref(localStorage.getItem('token'))
+const isLoggedIn = computed(() => !!authToken.value)
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'token') {
+    authToken.value = e.newValue
+  }
+})
 let unreadTimer = null
 
 async function refreshUnreadCount() {
@@ -76,11 +83,14 @@ watch(isLoggedIn, (val) => {
     try {
       const echo = getEcho()
       const userId = localStorage.getItem('user_id')
-      echo.join('online-members')
-        .whisper('activity', {
+      const channel = echo.join('online-members')
+      
+      if (userId) {
+        channel.whisper('activity', {
           id: userId,
           activity: router.currentRoute.value.meta?.title || router.currentRoute.value.name || 'Browsing'
         })
+      }
     } catch (_) {}
   } else {
     try { getEcho().leave('online-members') } catch (_) {}
@@ -88,13 +98,23 @@ watch(isLoggedIn, (val) => {
 }, { immediate: true })
 
 router.afterEach((to) => {
+  // Sync token state on route change (covers same-tab login/logout)
+  const currentToken = localStorage.getItem('token')
+  if (authToken.value !== currentToken) {
+    authToken.value = currentToken
+  }
+
   if (isLoggedIn.value) {
     const userId = localStorage.getItem('user_id')
     try {
-      getEcho().join('online-members').whisper('activity', {
-        id: userId,
-        activity: to.meta?.title || to.name || 'Browsing'
-      })
+      const echo = getEcho()
+      const channel = echo.join('online-members')
+      if (userId) {
+        channel.whisper('activity', {
+          id: userId,
+          activity: to.meta?.title || to.name || 'Browsing'
+        })
+      }
     } catch (_) {}
   }
 })
@@ -115,6 +135,17 @@ function handleFocusOut() {
 }
 
 onMounted(async () => {
+  // 0. Ensure user_id is in localStorage if logged in (for real-time tracking)
+  if (isLoggedIn.value && !localStorage.getItem('user_id')) {
+    try {
+      const { data } = await axios.get('/api/profile')
+      if (data?.id) {
+        localStorage.setItem('user_id', data.id)
+        localStorage.setItem('is_admin', data.is_admin ? 'true' : 'false')
+      }
+    } catch (_) {}
+  }
+
   window.addEventListener('focusin', handleFocusIn)
   window.addEventListener('focusout', handleFocusOut)
 

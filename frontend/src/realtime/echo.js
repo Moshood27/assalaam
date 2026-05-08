@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
+import axios from '../http.js'
 
 // Reverb is Pusher-compatible, so we must assign Pusher to the window object
 window.Pusher = Pusher
@@ -51,24 +52,23 @@ export function getEcho() {
         // Force the WebSocket path to root to avoid double "/app" when site is hosted under "/app"
         wsPath: '',
         disableStats: true,
-        authEndpoint,
-        auth: {
-            headers: {
-                Authorization: (() => {
-                    const t = localStorage.getItem('token')
-                    return t ? `Bearer ${t}` : ''
-                })(),
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+        // Use a custom authorizer to ensure we use the latest token from our axios instance
+        authorizer: (channel, options) => {
+            return {
+                authorize: (socketId, callback) => {
+                    axios.post(authEndpoint, {
+                        socket_id: socketId,
+                        channel_name: channel.name
+                    })
+                    .then(response => {
+                        callback(false, response.data)
+                    })
+                    .catch(error => {
+                        callback(true, error)
+                    })
+                }
+            }
         },
-    })
-
-    // Keep Authorization header up to date
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'token' && echoInstance) {
-            echoInstance.options.auth.headers.Authorization = e.newValue ? `Bearer ${e.newValue}` : ''
-        }
     })
 
     return echoInstance
