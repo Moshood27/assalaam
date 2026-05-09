@@ -16,8 +16,10 @@ class ChatService
 
     public function __construct()
     {
-        $this->censor = new CensorWords();
-        $this->censor->setDictionary(['en-us', 'en-uk']);
+        if (class_exists('Snipe\BanBuilder\CensorWords')) {
+            $this->censor = new \Snipe\BanBuilder\CensorWords();
+            $this->censor->setDictionary(['en-us', 'en-uk']);
+        }
     }
 
     public function getOrCreatePrivateRoom(User $user1, User $user2)
@@ -275,6 +277,9 @@ class ChatService
 
     public function filterProfanity($text)
     {
+        if (!$this->censor) {
+            return $text;
+        }
         $result = $this->censor->censorString($text);
         return $result['clean'];
     }
