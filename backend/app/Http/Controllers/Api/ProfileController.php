@@ -102,20 +102,15 @@ class ProfileController extends Controller
 
         $passportUrl = null;
         if (!empty($user->passport_path)) {
-            // Prefer a file that exists in public/{passport_path} (legacy seeder files)
-            $publicPath = public_path($user->passport_path);
-            if (is_file($publicPath)) {
-                // Return a relative path so the frontend dev server can proxy it
-                $passportUrl = '/' . ltrim($user->passport_path, '/');
+            $path = ltrim((string) $user->passport_path, '/');
+            if (is_file(public_path($path))) {
+                $passportUrl = asset($path);
             } else {
-                // Fallback to storage (Filament uploads to storage/app/public)
-                // Typically returns a relative URL like /storage/<path>
-                $passportUrl = Storage::disk('public')->url($user->passport_path);
-                // Ensure it is relative
-                if (str_starts_with($passportUrl, 'http://') || str_starts_with($passportUrl, 'https://')) {
-                    $parsed = parse_url($passportUrl);
-                    $passportUrl = ($parsed['path'] ?? '/') . (isset($parsed['query']) ? ('?' . $parsed['query']) : '');
+                $storagePath = $path;
+                if (str_starts_with($storagePath, 'storage/')) {
+                    $storagePath = substr($storagePath, 8);
                 }
+                $passportUrl = Storage::disk('public')->url($storagePath);
             }
         }
 

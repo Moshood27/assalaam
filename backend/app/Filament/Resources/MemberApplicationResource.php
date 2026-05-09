@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class MemberApplicationResource extends Resource
 {
@@ -176,7 +177,40 @@ class MemberApplicationResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('passport_path')
                     ->label('Photo')
-                    ->circular(),
+                    ->circular()
+                    ->disk('public_root')
+                    ->getStateUsing(function ($record) {
+                        if (empty($record->passport_path)) {
+                            return null;
+                        }
+
+                        $raw = (string) $record->passport_path;
+
+                        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+                            return $raw;
+                        }
+
+                        $path = ltrim($raw, '/');
+
+                        if (is_file(public_path($path))) {
+                            return $path;
+                        }
+
+                        if (str_starts_with($path, 'storage/')) {
+                            $storagePath = substr($path, strlen('storage/'));
+                            return Storage::disk('public')->url($storagePath);
+                        }
+
+                        return Storage::disk('public')->url($path);
+                    })
+                    ->size(40)
+                    ->extraImgAttributes([
+                        'class' => 'transition-transform hover:scale-[5] hover:z-50 hover:relative hover:rounded-none',
+                        'style' => 'cursor: pointer;',
+                    ])
+                    ->extraAttributes([
+                        'class' => 'overflow-visible',
+                    ]),
                 TextColumn::make('full_name')
                     ->label('Name')
                     ->searchable(['name', 'surname', 'other_names'])

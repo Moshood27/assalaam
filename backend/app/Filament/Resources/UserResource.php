@@ -111,8 +111,7 @@ class UserResource extends Resource
                                                         : Storage::disk('public')->url($path);
 
                                                     if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
-                                                        $parsed = parse_url($url);
-                                                        $url = ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
+                                                        // Keep full URL
                                                     }
                                                 }
 
@@ -385,44 +384,43 @@ class UserResource extends Resource
                 ImageColumn::make('passport_path')
                     ->label('Photo')
                     ->circular()
+                    ->disk('public_root')
                     ->getStateUsing(function ($record) {
                         if (empty($record->passport_path)) {
                             return null;
                         }
 
                         $raw = (string) $record->passport_path;
-                        // If a full URL was stored, normalize to a relative URL (same-origin)
-                        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
-                            $parsed = parse_url($raw);
 
-                            return ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
+                        // If it's already a full URL, return it
+                        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+                            return $raw;
                         }
 
                         $path = ltrim($raw, '/');
-                        $wasStoragePrefixed = false;
+
+                        // If it exists in public/, return it as-is (relative to public_root disk)
+                        if (is_file(public_path($path))) {
+                            return $path;
+                        }
+
+                        // If it starts with storage/, we need to resolve it via the public disk
                         if (str_starts_with($path, 'storage/')) {
-                            $path = substr($path, strlen('storage/'));
-                            $wasStoragePrefixed = true;
+                            $storagePath = substr($path, strlen('storage/'));
+                            return Storage::disk('public')->url($storagePath);
                         }
 
-                        $publicPath = public_path($path);
-                        if (is_file($publicPath)) {
-                            return '/'.ltrim($path, '/');
-                        }
-
-                        // Fallback to storage URL. If originally storage-prefixed, avoid double storage.
-                        $url = $wasStoragePrefixed
-                            ? ('/storage/'.ltrim($path, '/'))
-                            : Storage::disk('public')->url($path);
-
-                        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
-                            $parsed = parse_url($url);
-                            $url = ($parsed['path'] ?? '/').(isset($parsed['query']) ? ('?'.$parsed['query']) : '');
-                        }
-
-                        return $url;
+                        // Fallback to public disk URL
+                        return Storage::disk('public')->url($path);
                     })
-                    ->size(40),
+                    ->size(40)
+                    ->extraImgAttributes([
+                        'class' => 'transition-transform hover:scale-[5] hover:z-50 hover:relative hover:rounded-none',
+                        'style' => 'cursor: pointer;',
+                    ])
+                    ->extraAttributes([
+                        'class' => 'overflow-visible',
+                    ]),
                 TextColumn::make('full_name')
                     ->label('Name')
                     ->searchable(['name', 'surname', 'other_names'])

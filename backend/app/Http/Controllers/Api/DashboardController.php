@@ -49,15 +49,15 @@ class DashboardController extends Controller
         // Compute profile passport URL if available
         $passportUrl = null;
         if (!empty($user->passport_path)) {
-            $publicPath = public_path($user->passport_path);
-            if (is_file($publicPath)) {
-                $passportUrl = '/' . ltrim($user->passport_path, '/');
+            $path = ltrim((string) $user->passport_path, '/');
+            if (is_file(public_path($path))) {
+                $passportUrl = asset($path);
             } else {
-                $passportUrl = Storage::disk('public')->url($user->passport_path);
-                if (str_starts_with($passportUrl, 'http://') || str_starts_with($passportUrl, 'https://')) {
-                    $parsed = parse_url($passportUrl);
-                    $passportUrl = ($parsed['path'] ?? '/') . (isset($parsed['query']) ? ('?' . $parsed['query']) : '');
+                $storagePath = $path;
+                if (str_starts_with($storagePath, 'storage/')) {
+                    $storagePath = substr($storagePath, 8);
                 }
+                $passportUrl = Storage::disk('public')->url($storagePath);
             }
         }
 
