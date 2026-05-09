@@ -1,0 +1,1 @@
+import{u as e}from"./index-B8-bg04X.js";export{e as SplashScreen};

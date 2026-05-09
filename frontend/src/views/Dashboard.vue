@@ -495,6 +495,55 @@
       </div>
     </div>
 
+    <!-- Force Email Update Modal -->
+    <div v-if="showEmailModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[101] p-6">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
+        <div class="p-8">
+           <div class="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-emerald-100">📧</div>
+           
+           <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Update Email</h3>
+           <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">Your current email address is invalid. Please provide a valid email to receive notifications and secure your account.</p>
+           
+           <div class="space-y-4">
+             <div>
+               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">New Email Address</label>
+               <input 
+                 v-model="emailForm.email" 
+                 type="email" 
+                 placeholder="yourname@example.com"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
+               />
+               <p v-if="emailErrors.email" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ emailErrors.email[0] }}</p>
+             </div>
+
+             <div>
+               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Confirm Password</label>
+               <input 
+                 v-model="emailForm.password" 
+                 type="password" 
+                 placeholder="••••••••"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
+               />
+               <p v-if="emailErrors.password" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ emailErrors.password[0] }}</p>
+             </div>
+           </div>
+        </div>
+        
+        <div class="p-6 bg-slate-50 border-t border-slate-100">
+          <button 
+            @click="updateEmail" 
+            :disabled="emailSaving"
+            class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl shadow-xl shadow-slate-200 flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] disabled:opacity-50 active:scale-95 transition-all"
+          >
+            <span v-if="emailSaving" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+            <span v-else>Update Email Address</span>
+          </button>
+          
+          <p class="text-[9px] text-slate-400 text-center mt-4 font-bold uppercase tracking-widest opacity-60">This is required to proceed to your dashboard</p>
+        </div>
+      </div>
+    </div>
+
     <AppBottomNav />
   </div>
 </template>
@@ -503,6 +552,7 @@
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import { ref, onMounted, computed } from 'vue'
+import { isValidEmail } from '../utils/validation'
 import { getEcho } from '../realtime/echo'
 import { useAppStatusStore } from '../stores/appStatus'
 import axios from '../http'
@@ -530,6 +580,11 @@ const isLoadingPassbook = ref(false)
 const showGenderModal = ref(false)
 const selectedGender = ref('')
 const updatingGender = ref(false)
+
+const showEmailModal = ref(false)
+const emailForm = ref({ email: '', password: '' })
+const emailSaving = ref(false)
+const emailErrors = ref({})
 
 const { hideBalances, toggleBalances } = useBalanceVisibility()
 
@@ -710,6 +765,13 @@ const load = async () => {
     showGenderModal.value = true
   }
 
+  // Check Email
+  if (!isValidEmail(data.email)) {
+    showEmailModal.value = true
+    // If the email is clearly invalid (like a membership number or nonsense), clear it for them to type fresh
+    emailForm.value.email = '' 
+  }
+
   // Show Zakat alert if reached nisab but not yet paid (or simply reached nisab)
   if (data.zakat_status?.reached_nisab) {
     const due = formatMoney(data.zakat_status.zakat_due)
@@ -736,6 +798,39 @@ const updateGender = async () => {
     showNotice('Error', 'Failed to update gender. Please try again.', 'error')
   } finally {
     updatingGender.value = false
+  }
+}
+
+const updateEmail = async () => {
+  if (!emailForm.value.email || !emailForm.value.password) {
+     emailErrors.value = { 
+       email: !emailForm.value.email ? ['Email is required'] : [],
+       password: !emailForm.value.password ? ['Password is required to confirm change'] : []
+     }
+     return
+  }
+  
+  if (!isValidEmail(emailForm.value.email)) {
+    emailErrors.value = { email: ['Please provide a valid email address.'] }
+    return
+  }
+  
+  emailSaving.value = true
+  emailErrors.value = {}
+  try {
+    const token = localStorage.getItem('token')
+    const { data } = await axios.post('/api/profile/email', emailForm.value, { headers: { Authorization: `Bearer ${token}` } })
+    showEmailModal.value = false
+    dashboardData.value.email = data.email
+    showNotice('Success', 'Email updated successfully!', 'success')
+  } catch (e) {
+    if (e.response?.data?.errors) {
+      emailErrors.value = e.response.data.errors
+    } else {
+      showNotice('Error', e.response?.data?.message || 'Failed to update email. Please try again.', 'error')
+    }
+  } finally {
+    emailSaving.value = false
   }
 }
 
