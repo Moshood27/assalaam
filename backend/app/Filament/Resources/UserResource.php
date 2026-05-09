@@ -1305,7 +1305,6 @@ class UserResource extends Resource
     {
         return [
             RelationManagers\ChatRoomsRelationManager::class,
-            RelationManagers\SupportMessagesRelationManager::class,
             RelationManagers\QardHasansRelationManager::class,
             RelationManagers\QardHasanRepaymentsRelationManager::class,
             RelationManagers\ContributionsRelationManager::class,

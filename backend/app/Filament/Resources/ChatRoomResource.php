@@ -141,6 +141,7 @@ class ChatRoomResource extends Resource
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->description(fn (ChatRoom $record) => $record->type === 'support' ? "Member: " . ($record->creator?->name ?? 'Unknown') : null)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
                     ->badge()

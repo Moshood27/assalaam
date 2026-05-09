@@ -8,12 +8,17 @@ use App\Models\ChatRoomMember;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Snipe\BanBuilder\CensorWords;
 
 class ChatService
 {
-    protected $profanityList = [
-        'badword1', 'badword2', // Add more or use a library
-    ];
+    protected $censor;
+
+    public function __construct()
+    {
+        $this->censor = new CensorWords();
+        $this->censor->setDictionary(['en-us', 'en-uk']);
+    }
 
     public function getOrCreatePrivateRoom(User $user1, User $user2)
     {
@@ -270,10 +275,8 @@ class ChatService
 
     public function filterProfanity($text)
     {
-        foreach ($this->profanityList as $word) {
-            $text = preg_replace("/\b$word\b/i", '***', $text);
-        }
-        return $text;
+        $result = $this->censor->censorString($text);
+        return $result['clean'];
     }
 
     public function getIslamicGreetingSuggestions()

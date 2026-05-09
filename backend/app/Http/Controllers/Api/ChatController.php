@@ -375,4 +375,40 @@ class ChatController extends Controller
             'is_prayer_time' => $this->chatService->isPrayerTime(null, null),
         ]);
     }
+
+    public function getOrCreateSupportRoom()
+    {
+        $user = Auth::user();
+
+        // Find existing support room for this user
+        $room = ChatRoom::where('type', 'support')
+            ->whereHas('members', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->first();
+
+        if (!$room) {
+            $room = ChatRoom::create([
+                'name' => 'Support: ' . $user->name,
+                'type' => 'support',
+                'creator_id' => $user->id,
+                'metadata' => [
+                    'slug' => 'support-' . $user->id . '-' . Str::random(5),
+                    'is_support' => true,
+                    'member_name' => $user->name,
+                ],
+            ]);
+
+            ChatRoomMember::create([
+                'chat_room_id' => $room->id,
+                'user_id' => $user->id,
+                'role' => 'member',
+                'joined_at' => now(),
+            ]);
+
+            // Optional: Automatically assign to an admin or leave unassigned for staff to pick up
+        }
+
+        return response()->json(['room' => $room]);
+    }
 }

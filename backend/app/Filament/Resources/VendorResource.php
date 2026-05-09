@@ -134,6 +134,18 @@ class VendorResource extends Resource
                         Notification::make()->title('Vendor status updated to Pending')->info()->send();
                     }),
                 Tables\Actions\EditAction::make(),
+                Action::make('chat')
+                    ->label('Chat with Owner')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('info')
+                    ->action(function (Vendor $record, \App\Services\ChatService $chatService) {
+                        if (!$record->owner) {
+                             Notification::make()->title('Vendor has no owner assigned')->danger()->send();
+                             return;
+                        }
+                        $room = $chatService->getOrCreatePrivateRoom(auth()->user(), $record->owner);
+                        return redirect(ChatRoomResource::getUrl('chat', ['record' => $room]));
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
@@ -167,7 +179,7 @@ class VendorResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\OwnerChatRelationManager::class,
+            //
         ];
     }
 

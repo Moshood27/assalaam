@@ -323,6 +323,7 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/markbaker/complex" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/markbaker/matrix" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/phpoffice/phpspreadsheet" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/snipe/banbuilder" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

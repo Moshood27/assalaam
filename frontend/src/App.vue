@@ -6,7 +6,7 @@ import { Geolocation } from '@capacitor/geolocation'
 import { SplashScreen } from '@capacitor/splash-screen'
 import BaseModal from './components/BaseModal.vue'
 import InboxDrawer from './components/InboxDrawer.vue'
-import ChatWidget from './components/ChatWidget.vue'
+import IslamicChat from './components/IslamicChat.vue'
 import router from './router/index.js'
 import axios from './http.js'
 import { getEcho } from './realtime/echo.js'
@@ -16,10 +16,29 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const showInbox = ref(false)
 const showChat = ref(false)
+const supportRoomId = ref(null)
+const loadingSupport = ref(false)
 const unreadCount = ref(0)
 const isInputFocused = ref(false)
 const authToken = ref(localStorage.getItem('token'))
 const isLoggedIn = computed(() => !!authToken.value)
+
+async function toggleSupportChat() {
+  if (!showChat.value) {
+    try {
+      loadingSupport.value = true
+      const { data } = await axios.get('/api/chat/support-room')
+      supportRoomId.value = data.room.id
+      showChat.value = true
+    } catch (e) {
+      console.error('Failed to load support room', e)
+    } finally {
+      loadingSupport.value = false
+    }
+  } else {
+    showChat.value = false
+  }
+}
 
 window.addEventListener('storage', (e) => {
   if (e.key === 'token') {
@@ -267,7 +286,7 @@ onBeforeUnmount(() => {
     <!-- Floating Chat Launcher (visible when logged in) -->
     <button
       v-if="isLoggedIn && !(isMobile && isInputFocused)"
-      @click="showChat = !showChat"
+      @click="toggleSupportChat"
       aria-label="Open Support Chat"
       class="fixed bottom-32 right-6 z-50 bg-emerald-600 text-white shadow-xl shadow-emerald-200 rounded-full w-14 h-14 flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
     >
@@ -281,10 +300,17 @@ onBeforeUnmount(() => {
 
     <!-- Floating Chat Widget -->
     <div 
-      v-if="isLoggedIn && showChat" 
-      class="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 md:right-6 z-[60] w-full h-[100dvh] sm:h-[600px] sm:w-96 mb-[env(safe-area-inset-bottom)] animate-in fade-in slide-in-from-bottom-4 duration-300"
+      v-if="isLoggedIn && showChat && supportRoomId" 
+      class="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 md:right-6 z-[60] w-full h-[100dvh] sm:h-[600px] sm:w-[450px] mb-[env(safe-area-inset-bottom)] animate-in fade-in slide-in-from-bottom-4 duration-300"
     >
-      <ChatWidget @close="showChat = false" class="h-full rounded-none sm:rounded-3xl" />
+      <div class="h-full bg-white rounded-none sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl relative border border-slate-200 dark:border-gray-700">
+        <IslamicChat :room-id="supportRoomId" :show-back="false" @back="showChat = false" class="flex-1" />
+        <button @click="showChat = false" class="absolute top-4 right-4 z-[70] p-1 text-slate-400 hover:text-slate-600 bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-full transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Floating Inbox Widget (visible when logged in) -->

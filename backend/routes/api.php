@@ -34,7 +34,6 @@ use App\Http\Controllers\Api\TransparencyController;
 use App\Http\Controllers\Api\MerchantPayController;
 use App\Http\Controllers\Api\WasiyyahController;
 use App\Http\Controllers\Api\JuniorCooperativeController;
-use App\Http\Controllers\Api\SupportChatController;
 use App\Http\Controllers\Api\ScoreController;
 use App\Http\Controllers\Api\GoldController;
 use App\Http\Controllers\Api\SavingsGroupController;
@@ -86,8 +85,6 @@ Route::middleware(['auth:sanctum', 'inactivity', 'admin'])->prefix('admin')->gro
     Route::post('/push/token', [ProfileController::class, 'savePushToken']);
     Route::post('/fcm-token', [ProfileController::class, 'savePushToken']);
 
-    // In-App Support Chat (admin -> member)
-    Route::post('/support/{user}/message', [\App\Http\Controllers\Api\SupportChatAdminController::class, 'sendToUser']);
 
     // Takaful (Mutual Protection Pool) admin endpoints
     Route::get('/takaful/summary', [AdminTakafulController::class, 'summary']);
@@ -362,11 +359,6 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/notifications/{id}/read', [NotificationsController::class, 'readOne']);
     Route::post('/notifications/read-all', [NotificationsController::class, 'readAll']);
 
-    // In-App Support Chat (member)
-    Route::get('/support/messages', [SupportChatController::class, 'index']);
-    Route::post('/support/messages', [SupportChatController::class, 'store']);
-    Route::post('/support/read', [SupportChatController::class, 'markRead']);
-    Route::post('/support/typing', [SupportChatController::class, 'typing']);
 
     // Enhanced Islamic Cooperative Chat System
     Route::prefix('chat')->group(function () {
@@ -384,6 +376,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
         Route::get('/greetings', [\App\Http\Controllers\Api\ChatController::class, 'greetings']);
         Route::get('/canned-responses', [\App\Http\Controllers\Api\ChatController::class, 'cannedResponses']);
         Route::get('/status', [\App\Http\Controllers\Api\ChatController::class, 'status']);
+        Route::get('/support-room', [\App\Http\Controllers\Api\ChatController::class, 'getOrCreateSupportRoom']);
         Route::post('/private/{user}', [\App\Http\Controllers\Api\ChatController::class, 'createPrivateRoom']);
         Route::post('/rooms/{room}/assign', [\App\Http\Controllers\Api\ChatController::class, 'assignStaff']);
         Route::post('/broadcast', [\App\Http\Controllers\Api\ChatController::class, 'broadcast']);

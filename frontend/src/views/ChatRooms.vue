@@ -68,12 +68,11 @@ async function sendBroadcast() {
 
 async function startSupportChat() {
   try {
-    const { data } = await axios.post('/api/chat/rooms', {
-      name: 'Cooperative Support',
-      type: 'support'
-    })
-    rooms.value.unshift(data)
-    selectedRoomId.value = data.id
+    const { data } = await axios.get('/api/chat/support-room')
+    if (!rooms.value.find(r => r.id === data.room.id)) {
+      rooms.value.unshift(data.room)
+    }
+    selectedRoomId.value = data.room.id
   } catch (e) {
     console.error('Could not start support chat', e)
   }
@@ -194,8 +193,10 @@ onBeforeUnmount(() => {
 
           <div class="flex items-center space-x-3">
             <div :class="['w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0', 
-                          room.type === 'official' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700']">
+                          room.type === 'official' ? 'bg-amber-100 text-amber-700' : 
+                          room.type === 'support' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700']">
               <span v-if="room.type === 'official'" class="material-icons text-xl">gavel</span>
+              <span v-else-if="room.type === 'support'" class="material-icons text-xl">help_outline</span>
               <span v-else>{{ room.name?.[0] || 'C' }}</span>
             </div>
             <div class="flex-1 min-w-0">
@@ -203,6 +204,7 @@ onBeforeUnmount(() => {
                 <div class="flex items-center space-x-1 truncate">
                   <p class="font-bold text-sm dark:text-white truncate">{{ room.name || 'Chat Room' }}</p>
                   <span v-if="room.type === 'official'" class="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[8px] rounded font-bold uppercase">Official</span>
+                  <span v-if="room.type === 'support'" class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[8px] rounded font-bold uppercase">Support</span>
                 </div>
                 <span class="text-[10px] text-gray-500 whitespace-nowrap">
                   {{ room.last_message?.created_at ? formatTime(room.last_message.created_at) : '' }}
