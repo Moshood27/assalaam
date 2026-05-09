@@ -1,0 +1,1 @@
+import{u as e}from"./index-08j5PC73.js";export{e as SplashScreen};

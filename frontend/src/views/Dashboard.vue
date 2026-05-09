@@ -544,6 +544,70 @@
       </div>
     </div>
 
+    <!-- Force PIN Setup Modal -->
+    <div v-if="showPinModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[101] p-6">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
+        <div class="p-8">
+           <div class="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-amber-100">🔐</div>
+           
+           <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Set Security PIN</h3>
+           <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">Please set a 4-digit transaction PIN to secure your withdrawals and transfers.</p>
+           
+           <div class="space-y-4">
+             <div>
+               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">New 4-Digit PIN</label>
+               <input 
+                 v-model="pinForm.new_pin" 
+                 type="password" 
+                 inputmode="numeric"
+                 maxlength="4"
+                 placeholder="••••"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700 text-center text-2xl tracking-[0.5em]"
+               />
+               <p v-if="pinErrors.new_pin" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.new_pin) ? pinErrors.new_pin[0] : pinErrors.new_pin }}</p>
+             </div>
+
+             <div>
+               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Confirm PIN</label>
+               <input 
+                 v-model="pinForm.confirm_pin" 
+                 type="password" 
+                 inputmode="numeric"
+                 maxlength="4"
+                 placeholder="••••"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700 text-center text-2xl tracking-[0.5em]"
+               />
+               <p v-if="pinErrors.confirm_pin" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.confirm_pin) ? pinErrors.confirm_pin[0] : pinErrors.confirm_pin }}</p>
+             </div>
+
+             <div>
+               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Account Password</label>
+               <input 
+                 v-model="pinForm.current_password" 
+                 type="password" 
+                 placeholder="••••••••"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
+               />
+               <p v-if="pinErrors.current_password" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.current_password) ? pinErrors.current_password[0] : pinErrors.current_password }}</p>
+             </div>
+           </div>
+        </div>
+        
+        <div class="p-6 bg-slate-50 border-t border-slate-100">
+          <button 
+            @click="updatePin" 
+            :disabled="pinSaving"
+            class="w-full bg-slate-800 text-white font-black py-5 rounded-2xl shadow-xl shadow-slate-200 flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] disabled:opacity-50 active:scale-95 transition-all"
+          >
+            <span v-if="pinSaving" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+            <span v-else>Set Transaction PIN</span>
+          </button>
+          
+          <p class="text-[9px] text-slate-400 text-center mt-4 font-bold uppercase tracking-widest opacity-60">This is required for account security</p>
+        </div>
+      </div>
+    </div>
+
     <AppBottomNav />
   </div>
 </template>
@@ -585,6 +649,11 @@ const showEmailModal = ref(false)
 const emailForm = ref({ email: '', password: '' })
 const emailSaving = ref(false)
 const emailErrors = ref({})
+
+const showPinModal = ref(false)
+const pinForm = ref({ current_password: '', new_pin: '', confirm_pin: '' })
+const pinSaving = ref(false)
+const pinErrors = ref({})
 
 const { hideBalances, toggleBalances } = useBalanceVisibility()
 
@@ -763,13 +832,14 @@ const load = async () => {
   // Check Gender
   if (!data.gender) {
     showGenderModal.value = true
-  }
-
-  // Check Email
-  if (!isValidEmail(data.email)) {
+  } else if (!isValidEmail(data.email)) {
+    // Check Email
     showEmailModal.value = true
     // If the email is clearly invalid (like a membership number or nonsense), clear it for them to type fresh
     emailForm.value.email = '' 
+  } else if (!data.kpis.has_pin) {
+    // Check PIN
+    showPinModal.value = true
   }
 
   // Show Zakat alert if reached nisab but not yet paid (or simply reached nisab)
@@ -831,6 +901,44 @@ const updateEmail = async () => {
     }
   } finally {
     emailSaving.value = false
+  }
+}
+
+const updatePin = async () => {
+  pinErrors.value = {}
+  if (!pinForm.value.current_password) {
+    pinErrors.value.current_password = ['Current password is required.']
+  }
+  if (!pinForm.value.new_pin) {
+    pinErrors.value.new_pin = ['PIN is required.']
+  } else if (!/^\d{4}$/.test(String(pinForm.value.new_pin))) {
+    pinErrors.value.new_pin = ['PIN must be exactly 4 digits.']
+  }
+  if (String(pinForm.value.confirm_pin) !== String(pinForm.value.new_pin)) {
+    pinErrors.value.confirm_pin = ['PIN confirmation does not match.']
+  }
+
+  if (Object.keys(pinErrors.value).length > 0) return
+
+  pinSaving.value = true
+  try {
+    await axios.post('/api/security/pin/set', {
+      current_password: pinForm.value.current_password,
+      new_pin: String(pinForm.value.new_pin),
+      confirm_pin: String(pinForm.value.confirm_pin),
+    })
+    showPinModal.value = false
+    dashboardData.value.kpis.has_pin = true
+    showNotice('Success', 'Transaction PIN set successfully!', 'success')
+  } catch (err) {
+    const e = err?.response?.data
+    if (e?.errors) {
+      pinErrors.value = e.errors
+    } else {
+      showNotice('Error', e?.message || 'Failed to save PIN. Please try again.', 'error')
+    }
+  } finally {
+    pinSaving.value = false
   }
 }
 
