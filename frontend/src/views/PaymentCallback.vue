@@ -29,7 +29,8 @@ import axios from '../http'
 const router = useRouter()
 const route = useRoute()
 
-const reference = route.query.reference || route.query.trxref || ''
+const reference = route.query.reference || route.query.trxref || route.query.tx_ref || ''
+const gateway = route.query.gateway || 'paystack'
 const status = (route.query.status || '').toString().toLowerCase()
 
 onMounted(async () => {
@@ -45,7 +46,7 @@ onMounted(async () => {
     }
 
     // Server-side verification: prevents spoofing
-    const { data } = await axios.post('/api/verify-payment', { reference })
+    const { data } = await axios.post('/api/verify-payment', { reference, gateway })
     if (data?.status === 'success') {
       alert('Payment verified! Your contributions have been allocated.')
     } else if (data?.status === 'pending') {

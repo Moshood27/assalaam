@@ -5,9 +5,16 @@ This repository supports multiple inbound webhooks used to reconcile payments an
 
 ## Paystack (Payments)
 - Route: POST /api/webhooks/paystack
-- Auth: Public; verification performed in WebhookController::handlePaystack
+- Auth: Public; verification performed in WebhookController::handlePaystack (x-paystack-signature)
 - Purpose: Receive payment events (e.g., charge.success) and update internal records.
 - Notes: Ensure your Paystack dashboard points to your public URL + this path.
+
+
+## Flutterwave (Payments & Virtual Accounts)
+- Route: POST /api/webhooks/flutterwave
+- Auth: Public; verification performed in WebhookController::handleFlutterwave (verif-hash)
+- Purpose: Receive payment events (card, bank transfer to DVA) and top-up wallets or finalize scheme payments.
+- Notes: Set the "Secret Hash" in your Flutterwave dashboard and match it in your .env as `FLW_SECRET_HASH`.
 
 
 ## VTpass (VTU Airtime & Data)
@@ -32,8 +39,9 @@ If you run the backend via Laravel Sail locally, you need a public URL so provid
   ```
 
 After you have a public URL, configure your provider dashboards accordingly:
-- Paystack: https://YOUR-PUBLIC-URL/api/webhooks/paystack
-- VTpass:   https://YOUR-PUBLIC-URL/api/vtu/webhook
+- Paystack:    https://YOUR-PUBLIC-URL/api/webhooks/paystack
+- Flutterwave: https://YOUR-PUBLIC-URL/api/webhooks/flutterwave
+- VTpass:      https://YOUR-PUBLIC-URL/api/vtu/webhook
 
 
 ## Security Notes

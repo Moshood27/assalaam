@@ -66,6 +66,32 @@
                             </a>
                         </li>
                     </ul>
+
+                    <div class="mt-12 pt-8 border-t border-[#19140015] dark:border-[#ffffff15]">
+                        <div class="space-y-3">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-[#1b1b18] dark:text-[#EDEDEC]">AT-TAQWA OSOGBO ISLAMIC CICU LTD</span>
+                                <span class="text-[11px] text-[#706f6c] dark:text-[#A1A09A] uppercase tracking-wider">RC Number: 3449303</span>
+                            </div>
+                            <div class="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-[#706f6c] dark:text-[#A1A09A]">
+                                <a href="mailto:attaqwaosogbo@gmail.com" class="flex items-center gap-2 hover:text-black dark:hover:text-white transition-colors">
+                                    <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                    attaqwaosogbo@gmail.com
+                                </a>
+                                <a href="tel:08037282495" class="flex items-center gap-2 hover:text-black dark:hover:text-white transition-colors">
+                                    <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                    08037282495
+                                </a>
+                            </div>
+                            <div class="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium uppercase tracking-wider text-[#706f6c] dark:text-[#A1A09A] pt-2">
+                                <a href="{{ url('/about-us') }}" class="hover:text-emerald-600 transition-colors">About Us</a>
+                                <span class="opacity-30">•</span>
+                                <a href="{{ url('/privacy-policy') }}" class="hover:text-emerald-600 transition-colors">Privacy Policy</a>
+                                <span class="opacity-30">•</span>
+                                <a href="{{ url('/terms') }}" class="hover:text-emerald-600 transition-colors">Terms & Conditions</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-[#081a14] dark:to-[#0b251d]">
                     {{-- Project Logo --}}

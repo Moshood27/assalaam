@@ -11,6 +11,18 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/about-us', function () {
+    return view('pages.about');
+});
+
+Route::get('/privacy-policy', function () {
+    return view('pages.privacy');
+});
+
+Route::get('/terms', function () {
+    return view('pages.terms');
+});
+
 // Fallback handler for public storage files when the symlink (public/storage) is missing or inaccessible.
 // In normal setups, `php artisan storage:link` creates a symlink and Nginx/Apache serves files directly.
 // This route safely serves files from storage/app/public (disk: public) and only runs if the web server

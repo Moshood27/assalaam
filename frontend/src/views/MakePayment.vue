@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pb-56 font-sans">
+  <div class="min-h-screen bg-slate-50 pb-72 font-sans">
     <AppHeader title="Make Payment" :showBack="true" />
 
     <div class="p-4 space-y-6 max-w-md mx-auto">
@@ -84,6 +84,39 @@
           </label>
           <span class="text-xs text-slate-500">Balance: ₦ {{ Number(walletBalance).toLocaleString() }}</span>
         </div>
+
+        <!-- Gateway Selection (only if not paying from wallet) -->
+        <div v-if="!payFromWallet" class="mb-4">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 px-1">Payment Gateway</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button 
+              @click="selectedGateway = 'paystack'"
+              type="button"
+              :class="['p-3 rounded-xl border-2 transition-all text-left relative overflow-hidden', selectedGateway === 'paystack' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']"
+            >
+              <p class="font-bold text-xs" :class="selectedGateway === 'paystack' ? 'text-emerald-700' : 'text-slate-600'">Paystack</p>
+              <p class="text-[9px] text-slate-400">Cards, Transfer</p>
+              <div v-if="selectedGateway === 'paystack'" class="absolute top-1 right-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-emerald-600">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </button>
+            <button 
+              @click="selectedGateway = 'flutterwave'"
+              type="button"
+              :class="['p-3 rounded-xl border-2 transition-all text-left relative overflow-hidden', selectedGateway === 'flutterwave' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']"
+            >
+              <p class="font-bold text-xs" :class="selectedGateway === 'flutterwave' ? 'text-emerald-700' : 'text-slate-600'">Flutterwave</p>
+              <p class="text-[9px] text-slate-400">Cards, Bank</p>
+              <div v-if="selectedGateway === 'flutterwave'" class="absolute top-1 right-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-emerald-600">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
         <button @click="initiatePayment" :disabled="paymentList.length === 0 || loading" class="btn-primary w-full py-4 text-lg">
           {{ loading ? 'Processing…' : (payFromWallet ? 'Allocate from Wallet' : 'Make Payment') }}
         </button>
@@ -141,6 +174,7 @@ const inputAmount = ref('')
 const loading = ref(false)
 const isFine = ref(false)
 const payFromWallet = ref(false)
+const selectedGateway = ref('paystack')
 const walletBalance = ref(0)
 const summaryEnd = ref(null)
 
@@ -208,8 +242,12 @@ const initiatePayment = async () => {
   // Otherwise, go through Paystack checkout
   try {
     loading.value = true
-    const callback_url = `${window.location.origin}${basePath}payment-callback`
-    const { data } = await axios.post('/api/initiate-payment', { items: paymentList.value, callback_url })
+    const callback_url = `${window.location.origin}${basePath}payment-callback?gateway=${selectedGateway.value}`
+    const { data } = await axios.post('/api/initiate-payment', { 
+      items: paymentList.value, 
+      callback_url,
+      gateway: selectedGateway.value 
+    })
     window.location.href = data.checkout_url
   } catch (e) {
     const status = e?.response?.status

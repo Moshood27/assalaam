@@ -553,7 +553,13 @@ class WebhookController extends Controller
         // Verify webhook signature using FLW_SECRET_HASH
         $signature = $request->header('verif-hash');
         $secretHash = config('services.flutterwave.secret_hash');
+
         if (!$secretHash || !$signature || !hash_equals((string)$secretHash, (string)$signature)) {
+            Log::warning('Flutterwave webhook signature verification failed', [
+                'has_config_hash' => !empty($secretHash),
+                'has_header_hash' => !empty($signature),
+                'ip' => $request->ip(),
+            ]);
             return response()->json(['message' => 'Invalid Signature'], 400);
         }
 
