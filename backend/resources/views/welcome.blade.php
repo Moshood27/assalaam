@@ -123,44 +123,6 @@
         </div>
     </section>
 
-    <!-- Services Grid -->
-    <section id="features" class="py-20 px-4 md:px-10 bg-white">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-[#1F2937] mb-4">Our Services</h2>
-                <p class="text-gray-500 max-w-2xl mx-auto">Financial solutions designed to help you grow without compromising your faith.</p>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Murabaha Store -->
-                <div class="p-6 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
-                    <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-3 text-[#1F2937]">Murabaha Store</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed">Purchase household assets and business tools with 0% interest via our ethical marketplace.</p>
-                </div>
-
-                <!-- Qardh Hasan -->
-                <div class="p-6 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
-                    <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-3 text-[#1F2937]">Qardh Hasan</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed">Access interest-free benevolent loans designed to support you during financial emergencies.</p>
-                </div>
-
-                <!-- Halal Investments -->
-                <div class="p-6 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
-                    <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-3 text-[#1F2937]">Halal Investments</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed">Grow your wealth through Sharia-compliant Mudarabah and Musharakah investment pools.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Trust Section -->
     <section id="about" class="py-20 px-4 md:px-10 bg-[#1F2937] text-white">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
@@ -205,7 +167,43 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-100 pt-16 pb-12">
         <div class="max-w-7xl mx-auto px-4 md:px-10">
-            <div class="flex flex-col items-center text-center mb-12">
+            <!-- Centralized Services Section in Footer -->
+            <div id="features" class="mb-20 text-center">
+                <div class="mb-10">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-3">Our Services</h4>
+                    <h2 class="text-2xl font-bold text-[#1F2937]">Ethical Financial Solutions</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <!-- Murabaha Store -->
+                    <div class="p-5 bg-[#F9FAFB] border border-gray-100 rounded-2xl transition-all hover:border-emerald-100">
+                        <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mx-auto mb-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <h3 class="text-base font-bold mb-2 text-[#1F2937]">Murabaha Store</h3>
+                        <p class="text-gray-500 text-xs leading-relaxed">0% interest marketplace for household and business assets.</p>
+                    </div>
+
+                    <!-- Qardh Hasan -->
+                    <div class="p-5 bg-[#F9FAFB] border border-gray-100 rounded-2xl transition-all hover:border-emerald-100">
+                        <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mx-auto mb-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-base font-bold mb-2 text-[#1F2937]">Qardh Hasan</h3>
+                        <p class="text-gray-500 text-xs leading-relaxed">Interest-free benevolent loans for your financial emergencies.</p>
+                    </div>
+
+                    <!-- Halal Investments -->
+                    <div class="p-5 bg-[#F9FAFB] border border-gray-100 rounded-2xl transition-all hover:border-emerald-100">
+                        <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mx-auto mb-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        </div>
+                        <h3 class="text-base font-bold mb-2 text-[#1F2937]">Halal Investments</h3>
+                        <p class="text-gray-500 text-xs leading-relaxed">Sharia-compliant investment pools for sustainable growth.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center text-center mb-12 pt-12 border-t border-gray-100">
                 <div class="flex items-center gap-3 mb-4">
                     <img src="{{ asset('images/attaqwa-logo.svg') }}" alt="{{ config('brand.name', 'ATTAQWA') }}" class="h-8 w-auto">
                     <span class="font-bold text-lg uppercase tracking-tight text-gray-900">{{ config('brand.name', 'ATTAQWA') }}</span>
@@ -219,33 +217,25 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 pt-12 border-t border-gray-100">
-                <div class="col-span-2 md:col-span-1">
-                    <h4 class="font-bold text-xs uppercase tracking-widest text-gray-900 mb-4">Services</h4>
-                    <ul class="space-y-3 text-sm text-gray-500">
-                        <li><a href="#features" class="hover:text-emerald-600">Murabaha Store</a></li>
-                        <li><a href="#features" class="hover:text-emerald-600">Qardh Hasan</a></li>
-                        <li><a href="#features" class="hover:text-emerald-600">Halal Investments</a></li>
-                    </ul>
-                </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-12 mb-12 pt-12 border-t border-gray-100 text-center">
                 <div>
                     <h4 class="font-bold text-xs uppercase tracking-widest text-gray-900 mb-4">Company</h4>
                     <ul class="space-y-3 text-sm text-gray-500">
-                        <li><a href="{{ url('/about-us') }}" class="hover:text-emerald-600">About Us</a></li>
-                        <li><a href="{{ url('/admin/login') }}" class="hover:text-emerald-600">Member Login</a></li>
-                        <li><a href="{{ url('/admin/register') }}" class="hover:text-emerald-600">Join Now</a></li>
+                        <li><a href="{{ url('/about-us') }}" class="hover:text-emerald-600 transition-colors">About Us</a></li>
+                        <li><a href="{{ url('/admin/login') }}" class="hover:text-emerald-600 transition-colors">Member Login</a></li>
+                        <li><a href="{{ url('/admin/register') }}" class="hover:text-emerald-600 transition-colors">Join Now</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="font-bold text-xs uppercase tracking-widest text-gray-900 mb-4">Legal</h4>
                     <ul class="space-y-3 text-sm text-gray-500">
-                        <li><a href="{{ url('/privacy-policy') }}" class="hover:text-emerald-600">Privacy Policy</a></li>
-                        <li><a href="{{ url('/terms') }}" class="hover:text-emerald-600">Terms & Conditions</a></li>
+                        <li><a href="{{ url('/privacy-policy') }}" class="hover:text-emerald-600 transition-colors">Privacy Policy</a></li>
+                        <li><a href="{{ url('/terms') }}" class="hover:text-emerald-600 transition-colors">Terms & Conditions</a></li>
                     </ul>
                 </div>
-                <div class="col-span-2 md:col-span-1">
+                <div>
                     <h4 class="font-bold text-xs uppercase tracking-widest text-gray-900 mb-4">Sharia Board</h4>
-                    <p class="text-sm text-gray-500 leading-relaxed">
+                    <p class="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
                         Strictly monitored to ensure all operations remain 100% Halal and Interest-free.
                     </p>
                 </div>
