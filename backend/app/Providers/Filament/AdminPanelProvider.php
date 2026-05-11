@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Auth\Register;
 use App\Filament\Resources\ChatRoomResource;
 use App\Filament\Resources\ChatRoomResource\Widgets\ChatStatsWidget;
 use App\Filament\Resources\ChatAuditResource;
@@ -74,8 +76,8 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
-            ->registration()
+            ->login(Login::class)
+            ->registration(Register::class)
             ->passwordReset()
             ->brandName(config('brand.name'))
             ->brandLogo(asset('images/'.config('brand.slug', 'attaqwa').'-logo.svg'))
