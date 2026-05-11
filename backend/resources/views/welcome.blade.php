@@ -81,47 +81,48 @@
 
     <!-- Hero -->
     <header class="relative pt-20 pb-24 lg:pt-32 lg:pb-40 bg-gradient-to-b from-brand-50/50 to-transparent dark:from-brand-900/10 dark:to-transparent overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
-                <div class="flex-1 text-center lg:text-left">
-                    <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8">
-                        Ethical Finance, <br class="hidden sm:block" />
-                        <span class="text-brand-600">Purely Islamic.</span>
-                    </h1>
-                    <p class="max-w-2xl mx-auto lg:mx-0 text-lg lg:text-xl text-gray-600 dark:text-gray-400 leading-relaxed mb-12">
-                        Empowering the Ummah with Sharia-compliant financial solutions. AT-TAQWA OSOGBO ISLAMIC CICU LTD offers interest-free growth through cooperation and integrity.
-                    </p>
-                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                        <a href="{{ url('/admin/register') }}" class="w-full sm:w-auto px-10 py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-xl shadow-brand-600/20 text-center">
-                            Get Started
-                        </a>
-                        <a href="#offerings" class="w-full sm:w-auto px-10 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-center">
-                            See How It Works
-                        </a>
-                    </div>
-                </div>
-
-                <div class="w-full lg:w-auto flex flex-col gap-10 lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-16">
-                    <div class="flex flex-col items-center lg:items-start group">
-                        <div class="text-4xl font-bold text-brand-600">3.4M+</div>
-                        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">RC: 3449303</div>
-                    </div>
-                    <div class="flex flex-col items-center lg:items-start group">
-                        <div class="text-4xl font-bold text-gray-900 dark:text-white group-hover:text-brand-600 transition-colors">100%</div>
-                        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">Sharia Compliant</div>
-                    </div>
-                    <div class="flex flex-col items-center lg:items-start group">
-                        <div class="text-4xl font-bold text-gray-900 dark:text-white group-hover:text-brand-600 transition-colors">Pure</div>
-                        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">Interest Free</div>
-                    </div>
-                    <div class="flex flex-col items-center lg:items-start group">
-                        <div class="text-4xl font-bold text-gray-900 dark:text-white group-hover:text-brand-600 transition-colors">Secure</div>
-                        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">Asset Backed</div>
-                    </div>
-                </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8">
+                Ethical Finance, <br class="hidden sm:block" />
+                <span class="text-brand-600">Purely Islamic.</span>
+            </h1>
+            <p class="max-w-2xl mx-auto text-lg lg:text-xl text-gray-600 dark:text-gray-400 leading-relaxed mb-12">
+                Empowering the Ummah with Sharia-compliant financial solutions. AT-TAQWA OSOGBO ISLAMIC CICU LTD offers interest-free growth through cooperation and integrity.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{{ url('/admin/register') }}" class="w-full sm:w-auto px-10 py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-xl shadow-brand-600/20">
+                    Get Started
+                </a>
+                <a href="#offerings" class="w-full sm:w-auto px-10 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                    See How It Works
+                </a>
             </div>
         </div>
     </header>
+
+    <!-- Stats / RC Bar -->
+    <section class="border-y border-gray-100 dark:border-gray-800 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-3xl font-bold text-brand-600">3.4M+</div>
+                    <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">RC: 3449303</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-gray-900 dark:text-white">100%</div>
+                    <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">Sharia Compliant</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-gray-900 dark:text-white">Pure</div>
+                    <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">Interest Free</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-gray-900 dark:text-white">Secure</div>
+                    <div class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mt-1">Asset Backed</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Core Offerings -->
     <section id="offerings" class="py-24 lg:py-32 bg-gray-50/30 dark:bg-gray-900/10">
