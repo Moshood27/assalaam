@@ -108,15 +108,15 @@
         <div class="max-w-7xl mx-auto px-4 md:px-10">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="text-center">
-                    <div class="text-4xl font-extrabold text-emerald-600">5,000+</div>
+                    <div class="text-3xl font-extrabold text-emerald-600">5,000+</div>
                     <div class="mt-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Total Members</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-4xl font-extrabold text-emerald-600">₦250M+</div>
+                    <div class="text-3xl font-extrabold text-emerald-600">₦250M+</div>
                     <div class="mt-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Interest-Free Loans</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-4xl font-extrabold text-emerald-600">₦15M+</div>
+                    <div class="text-3xl font-extrabold text-emerald-600">₦15M+</div>
                     <div class="mt-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Zakat Distributed</div>
                 </div>
             </div>
@@ -132,30 +132,30 @@
             </div>
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Murabaha Store -->
-                <div class="p-8 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
-                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                <div class="p-6 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold mb-3 text-[#1F2937]">Murabaha Store</h3>
-                    <p class="text-gray-600 text-base leading-relaxed">Purchase household assets and business tools with 0% interest via our ethical marketplace.</p>
+                    <h3 class="text-lg font-bold mb-3 text-[#1F2937]">Murabaha Store</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Purchase household assets and business tools with 0% interest via our ethical marketplace.</p>
                 </div>
 
                 <!-- Qardh Hasan -->
-                <div class="p-8 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
-                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="p-6 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold mb-3 text-[#1F2937]">Qardh Hasan</h3>
-                    <p class="text-gray-600 text-base leading-relaxed">Access interest-free benevolent loans designed to support you during financial emergencies.</p>
+                    <h3 class="text-lg font-bold mb-3 text-[#1F2937]">Qardh Hasan</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Access interest-free benevolent loans designed to support you during financial emergencies.</p>
                 </div>
 
                 <!-- Halal Investments -->
-                <div class="p-8 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
-                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <div class="p-6 bg-[#F9FAFB] border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold mb-3 text-[#1F2937]">Halal Investments</h3>
-                    <p class="text-gray-600 text-base leading-relaxed">Grow your wealth through Sharia-compliant Mudarabah and Musharakah investment pools.</p>
+                    <h3 class="text-lg font-bold mb-3 text-[#1F2937]">Halal Investments</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Grow your wealth through Sharia-compliant Mudarabah and Musharakah investment pools.</p>
                 </div>
             </div>
         </div>
