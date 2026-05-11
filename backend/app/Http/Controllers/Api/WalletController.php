@@ -133,6 +133,17 @@ class WalletController extends Controller
                     ))
                     : null,
             ],
+            'flw_virtual_account' => [
+                'account_number' => $user->flw_dva_account_number,
+                'account_name' => $user->flw_dva_account_name,
+                'bank_name' => $user->flw_dva_bank_name,
+                'has_account' => (bool) $user->flw_dva_account_number,
+                'verification_details' => ($user->flw_dva_bank_name && $user->flw_dva_account_number)
+                    ? ($user->flw_dva_bank_name . ' - ' . $user->flw_dva_account_number . (
+                        $user->flw_dva_account_name ? (' (' . $user->flw_dva_account_name . ')') : ''
+                    ))
+                    : null,
+            ],
             'recent_transactions' => $recent,
             'maintenance_charge_config' => [
                 'percentage' => (float) Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage', 1)),

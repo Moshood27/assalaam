@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\FlutterwaveDvaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,15 @@ class VirtualAccountController extends Controller
                 $verificationDetails .= ' (' . $user->dva_account_name . ')';
             }
         }
+
+        $flwVerificationDetails = null;
+        if ($user->flw_dva_bank_name && $user->flw_dva_account_number) {
+            $flwVerificationDetails = $user->flw_dva_bank_name . ' - ' . $user->flw_dva_account_number;
+            if (!empty($user->flw_dva_account_name)) {
+                $flwVerificationDetails .= ' (' . $user->flw_dva_account_name . ')';
+            }
+        }
+
         return response()->json([
             'paystack_customer_code' => $user->paystack_customer_code,
             'account_number' => $user->dva_account_number,
@@ -27,6 +37,11 @@ class VirtualAccountController extends Controller
             'bank_name' => $user->dva_bank_name,
             'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
             'verification_details' => $verificationDetails,
+            // Flutterwave DVA
+            'flw_account_number' => $user->flw_dva_account_number,
+            'flw_account_name' => $user->flw_dva_account_name,
+            'flw_bank_name' => $user->flw_dva_bank_name,
+            'flw_verification_details' => $flwVerificationDetails,
         ]);
     }
 
@@ -126,5 +141,26 @@ class VirtualAccountController extends Controller
             Log::error('DVA Exception', ['msg' => $e->getMessage()]);
             return response()->json(['message' => 'An unexpected error occurred.'], 500);
         }
+    }
+
+    /**
+     * Create a Flutterwave DVA for the authenticated user.
+     */
+    public function assignFlutterwave(Request $request)
+    {
+        $validated = $request->validate([
+            'bvn' => 'required|string|digits:11',
+        ]);
+
+        $user = $request->user();
+        $service = app(FlutterwaveDvaService::class);
+        $result = $service->createVirtualAccount($user, $validated['bvn']);
+
+        if (!$result['success']) {
+            $status = str_contains($result['message'], 'not configured') ? 500 : 422;
+            return response()->json(['message' => $result['message']], $status);
+        }
+
+        return $this->show($request);
     }
 }

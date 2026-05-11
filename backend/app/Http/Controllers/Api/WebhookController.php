@@ -876,8 +876,26 @@ class WebhookController extends Controller
 
         // 3) Wallet Top-up path (no pending contributions and not a loan repayment)
         $meta = $vd['meta'] ?? ($data['meta'] ?? []);
+        if (is_string($meta)) { $decoded = json_decode($meta, true); if (json_last_error() === JSON_ERROR_NONE) { $meta = $decoded; } }
+
         $userId = $meta['user_id'] ?? null;
+        if (is_string($userId) && ctype_digit($userId)) { $userId = (int) $userId; }
+
         $topupUser = $userId ? User::find($userId) : null;
+
+        // Identification by DVA account number for spontaneous bank transfers
+        if (!$topupUser && (($vd['payment_type'] ?? null) === 'bank_transfer')) {
+            $accountNumber = $vd['bank_transfer_details']['account_number'] ?? ($meta['virtual_account_number'] ?? null);
+            if ($accountNumber) {
+                $topupUser = User::where('flw_dva_account_number', $accountNumber)->first();
+                if (!$topupUser) {
+                    $topupUser = User::where('dva_account_number', $accountNumber)->first();
+                }
+            }
+            if (!$topupUser && !empty($vd['customer']['email'])) {
+                $topupUser = User::where('email', $vd['customer']['email'])->first();
+            }
+        }
 
         if (!$topupUser) {
             Log::warning('Flutterwave wallet top-up: user not found', [
@@ -908,12 +926,15 @@ class WebhookController extends Controller
         DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vd) {
             $topupUser->increment('balance', $netAmount);
 
+            $isDva = ($vd['payment_type'] ?? null) === 'bank_transfer';
+            $source = $isDva ? 'flutterwave_dva' : 'flutterwave_charge';
+
             WalletTransaction::create([
                 'user_id' => $topupUser->id,
                 'type' => 'credit',
                 'amount' => $netAmount,
                 'reference' => $reference,
-                'source' => 'flutterwave_charge',
+                'source' => $source,
                 'meta' => [
                     'channel' => $vd['payment_type'] ?? null,
                     'flw_ref' => $vd['flw_ref'] ?? null,

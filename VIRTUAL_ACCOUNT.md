@@ -2,7 +2,7 @@
 
 This document explains how Virtual Accounts (also called Dedicated NUBANs in Nigeria) work end‑to‑end in this project: what they are, how members get one, how wallet top‑ups are credited automatically via webhooks, how funds are allocated to schemes, and how to configure and test the feature.
 
-The implementation in this app uses Paystack as the virtual account provider. The code is structured so that it can be swapped to other providers in the future (e.g., Monnify/Flutterwave) with minimal changes.
+The implementation supports **two providers**: **Paystack** (primary) and **Flutterwave** (alternative). Members can generate accounts from either or both providers. The code is structured so that additional providers can be added in the future with minimal changes.
 
 
 ## What is a Virtual Account?
@@ -85,8 +85,15 @@ Set the following in backend/.env (these are already present in this repo):
 And ensure backend/config/services.php includes:
 - 'paystack' => [ 'public_key' => env('PAYSTACK_PUBLIC_KEY'), 'secret_key' => env('PAYSTACK_SECRET_KEY') ]
 
+For Flutterwave DVA, also set:
+- FLW_PUBLIC_KEY=FLWPUBK_TEST-xxx
+- FLW_SECRET_KEY=FLWSECK_TEST-xxx
+- FLW_SECRET_HASH=your_webhook_secret_hash
+- FLW_WEBHOOK_URL=https://your-domain.tld/api/webhooks/flutterwave
+
 Notes:
 - Your Paystack business must have Dedicated Virtual Accounts (DVA) enabled by Paystack. Without enablement, the /dedicated_account endpoints will return errors.
+- Your Flutterwave account must be approved for virtual account numbers. Set the webhook URL and secret hash in the Flutterwave Dashboard under Settings > Webhooks.
 - For local testing, you can use ngrok to expose the webhook endpoint. This repo includes optional NGROK_* envs to help.
 
 
@@ -98,6 +105,16 @@ Notes:
   3. If assignment fails but a DVA already exists, falls back to GET /dedicated_account?customer=... and uses the first entry.
   4. Persist dva_account_number, dva_account_name, dva_bank_name on the user.
   5. Return the DVA in the response and in GET /api/wallet and GET /api/virtual-account.
+
+
+## How a Member Gets a Flutterwave Virtual Account
+- Client calls: POST /api/virtual-account/assign-flutterwave with { bvn: "12345678901" }
+- Server steps:
+  1. Validates BVN (required, 11 digits).
+  2. FlutterwaveDvaService calls POST https://api.flutterwave.com/v3/virtual-account-numbers with email, BVN, name, phone, is_permanent=true.
+  3. Persists flw_dva_account_number, flw_dva_account_name, flw_dva_bank_name, flw_dva_bank_code, flw_dva_order_ref, flw_dva_flw_ref on the user.
+  4. Returns both Paystack and Flutterwave DVA details via GET /api/virtual-account.
+- Note: BVN is mandatory for Flutterwave virtual accounts (Nigerian regulatory requirement).
 
 
 ## Funding the Wallet
@@ -121,7 +138,23 @@ There are two supported top‑up channels. Both are finalized by the webhook.
       - source=paystack_dva (if channel=bank_transfer) or paystack_charge otherwise
       - meta: channel, customer_code, receiver_account
 
-2) Card Top‑up (Fallback)
+2) Bank Transfer to Flutterwave DVA (Alternative)
+- Member makes a transfer in NGN to their Flutterwave dedicated account.
+- Flutterwave sends a webhook to /api/webhooks/flutterwave.
+- Our WebhookController:
+  - Verifies verif-hash header against FLW_SECRET_HASH.
+  - Calls Flutterwave /v3/transactions/{id}/verify for extra safety.
+  - If no pending Contribution or loan repayment with that reference exists, attempts wallet top‑up:
+    - Finds the user by (in order):
+      - meta.user_id,
+      - flw_dva_account_number (from bank_transfer_details.account_number),
+      - dva_account_number (Paystack fallback),
+      - customer email.
+    - Ensures NGN and amount > 0.
+    - Ensures idempotency via unique reference on WalletTransaction.
+    - Increments user.balance and writes WalletTransaction with source=flutterwave_dva.
+
+3) Card Top‑up (Fallback)
 - Client calls POST /api/wallet/topup/initiate with amount and optional callback_url.
 - Server initializes Paystack checkout and returns authorization_url; user completes on Paystack.
 - The same webhook path above will confirm and credit wallet on success (source=paystack_charge).
@@ -149,16 +182,27 @@ There are two supported top‑up channels. Both are finalized by the webhook.
 - GET  /api/wallet/transactions?type=credit|debit&page=1&per_page=15
 - POST /api/wallet/topup/initiate { amount, callback_url? }
 - POST /api/wallet/allocate { items: [{ scheme_id, amount }] }
+- POST /api/virtual-account/assign-flutterwave { bvn } (creates Flutterwave DVA)
 - POST /api/webhooks/paystack (public; Paystack calls this)
+- POST /api/webhooks/flutterwave (public; Flutterwave calls this)
 
-Example: Assign a DVA
+Example: Assign a DVA (Paystack)
 ```
 curl -X POST \
   -H "Authorization: Bearer <TOKEN>" \
   https://your-domain.tld/api/virtual-account/assign
 ```
 
-Example: Get Wallet (includes virtual_account block)
+Example: Assign a DVA (Flutterwave)
+```
+curl -X POST \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"bvn":"12345678901"}' \
+  https://your-domain.tld/api/virtual-account/assign-flutterwave
+```
+
+Example: Get Wallet (includes virtual_account and flw_virtual_account blocks)
 ```
 curl -H "Authorization: Bearer <TOKEN>" \
   https://your-domain.tld/api/wallet
@@ -208,3 +252,4 @@ curl -H "Authorization: Bearer <TOKEN>" \
 
 ## Changelog
 - 2026‑03‑20: Initial documentation added describing the current Paystack DVA implementation.
+- 2026‑05‑10: Added Flutterwave DVA as alternative provider. New migration (flw_dva_* fields on users), FlutterwaveDvaService, POST /api/virtual-account/assign-flutterwave endpoint, webhook DVA lookup by flw_dva_account_number, flw_virtual_account block in wallet API, and frontend Wallet.vue Flutterwave DVA section.

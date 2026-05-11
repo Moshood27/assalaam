@@ -133,27 +133,82 @@
               </div>
             </div>
             <p class="text-[11px] text-slate-500 text-center px-4">Transfer funds to this account to top up your wallet instantly.</p>
-            <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
-          </div>
+              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+            </div>
 
-          <div v-else class="space-y-3">
-            <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
-            <div class="space-y-2">
-              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">BVN (optional)</label>
-              <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
-                  </svg>
+            <div v-else class="space-y-3">
+              <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
+              <div class="space-y-2">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">BVN (optional)</label>
+                <div class="relative group">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
+                    </svg>
+                  </div>
+                  <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
+                         class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
                 </div>
-                <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
-                       class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                <p v-if="bvn && !bvnValid" class="text-rose-600 text-[10px] font-bold">Please enter a valid 11-digit BVN.</p>
+                <p class="text-[10px] text-slate-400 leading-tight">Providing your BVN helps us verify your dedicated account faster.</p>
               </div>
-              <p v-if="bvn && !bvnValid" class="text-rose-600 text-[10px] font-bold">Please enter a valid 11-digit BVN.</p>
-              <p class="text-[10px] text-slate-400 leading-tight">Providing your BVN helps us verify your dedicated account faster.</p>
             </div>
           </div>
-        </div>
+
+          <!-- Flutterwave Virtual Account Info -->
+          <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt)</h3>
+              <button v-if="!wallet.flw_virtual_account?.account_number" @click="assignFlutterwaveDva" :disabled="assigningFlw || !flwBvnValid"
+                      class="text-[10px] font-black uppercase bg-orange-600 text-white px-3 py-2 rounded-xl disabled:opacity-50">
+                {{ assigningFlw ? 'Creating…' : 'Generate' }}
+              </button>
+            </div>
+
+            <div v-if="wallet.flw_virtual_account?.account_number" class="space-y-4">
+              <div class="bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Bank Name</span>
+                  <span class="font-bold text-slate-800 text-sm">{{ wallet.flw_virtual_account.bank_name }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Name</span>
+                  <span class="font-bold text-slate-800 text-sm">{{ wallet.flw_virtual_account.account_name }}</span>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                  <div>
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
+                    <p class="font-black text-orange-700 text-xl tracking-wider">{{ wallet.flw_virtual_account.account_number }}</p>
+                  </div>
+                  <button @click="copy(wallet.flw_virtual_account.account_number)" class="bg-orange-50 text-orange-700 p-2 rounded-lg hover:bg-orange-100 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 text-center px-4">Alternative account — transfer funds here to top up your wallet.</p>
+              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+            </div>
+
+            <div v-else class="space-y-3">
+              <p class="text-sm text-slate-500">Generate an alternative virtual account (Flutterwave) to fund via bank transfer.</p>
+              <div class="space-y-2">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">BVN (required)</label>
+                <div class="relative group">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-orange-600 text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
+                    </svg>
+                  </div>
+                  <input v-model="flwBvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
+                         class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all" />
+                </div>
+                <p v-if="flwBvn && !flwBvnValid" class="text-rose-600 text-[10px] font-bold">Please enter a valid 11-digit BVN.</p>
+                <p class="text-[10px] text-slate-400 leading-tight">BVN is required by Flutterwave to create your dedicated account.</p>
+              </div>
+            </div>
+          </div>
 
         <!-- Administrative Charges Section -->
         <div v-if="wallet.admin_charge_balance > 0" class="bg-rose-50 p-6 rounded-[2rem] border border-rose-100 shadow-sm relative overflow-hidden">
@@ -578,6 +633,10 @@ const calculatedCharge = computed(() => {
   return Math.min(charge, max_amount)
 })
 const assigning = ref(false)
+const assigningFlw = ref(false)
+const flwBvn = ref('')
+const flwBvnDigits = computed(() => String(flwBvn.value || '').replace(/\D/g, ''))
+const flwBvnValid = computed(() => flwBvnDigits.value.length === 11)
 
 // Withdraw to bank form state
 const withdrawAmount = ref('')
@@ -638,7 +697,7 @@ const statusClass = (status) => {
 const titleFor = (tx) => {
   const src = tx?.source
   if (src === 'wallet_allocation') return 'Allocation to Schemes'
-  if (src === 'paystack_dva') return 'Bank Transfer (DVA)'
+  if (src === 'paystack_dva' || src === 'flutterwave_dva') return 'Bank Transfer (DVA)'
   if (src === 'vtu_airtime') return 'Airtime Purchase'
   if (src === 'vtu_data') return 'Data Purchase'
   if (src === 'p2p_transfer') {
@@ -720,6 +779,21 @@ const assignVirtualAccount = async () => {
     alert(e?.response?.data?.message || 'Failed to generate virtual account')
   } finally {
     assigning.value = false
+  }
+}
+
+const assignFlutterwaveDva = async () => {
+  try {
+    assigningFlw.value = true
+    const payload = { bvn: flwBvnDigits.value }
+    await axios.post('/api/virtual-account/assign-flutterwave', payload)
+    await loadWallet()
+    flwBvn.value = ''
+    alert('Flutterwave virtual account generated!')
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to generate Flutterwave virtual account')
+  } finally {
+    assigningFlw.value = false
   }
 }
 
