@@ -83,12 +83,7 @@ class User extends Authenticatable implements FilamentUser
         'bvn',
         'bvn_verified_at',
         'dva_verification_meta',
-        'flw_dva_account_number',
-        'flw_dva_account_name',
-        'flw_dva_bank_name',
-        'flw_dva_bank_code',
-        'flw_dva_order_ref',
-        'flw_dva_flw_ref',
+        'flw_dva_data',
         'bank_name',
         'bank_code',
         'account_number',
@@ -213,6 +208,7 @@ class User extends Authenticatable implements FilamentUser
             'group_savings_balance' => 'decimal:2',
             'bvn_verified_at' => 'datetime',
             'dva_verification_meta' => 'array',
+            'flw_dva_data' => 'array',
             'pin_set_at' => 'datetime',
             'autosave_enabled' => 'boolean',
             'autosave_amount' => 'decimal:2',
@@ -255,6 +251,36 @@ class User extends Authenticatable implements FilamentUser
                 $user->nursing_mother_status = 'approved';
             }
         });
+    }
+
+    public function getFlwDvaAccountNumberAttribute(): ?string
+    {
+        return $this->flw_dva_data['account_number'] ?? null;
+    }
+
+    public function getFlwDvaAccountNameAttribute(): ?string
+    {
+        return $this->flw_dva_data['account_name'] ?? null;
+    }
+
+    public function getFlwDvaBankNameAttribute(): ?string
+    {
+        return $this->flw_dva_data['bank_name'] ?? null;
+    }
+
+    public function getFlwDvaBankCodeAttribute(): ?string
+    {
+        return $this->flw_dva_data['bank_code'] ?? null;
+    }
+
+    public function getFlwDvaOrderRefAttribute(): ?string
+    {
+        return $this->flw_dva_data['order_ref'] ?? null;
+    }
+
+    public function getFlwDvaFlwRefAttribute(): ?string
+    {
+        return $this->flw_dva_data['flw_ref'] ?? null;
     }
 
     public function getFullNameAttribute(): string

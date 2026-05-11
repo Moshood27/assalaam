@@ -79,12 +79,14 @@ class FlutterwaveDvaService
             $data = $response->json('data');
 
             $user->update([
-                'flw_dva_account_number' => $data['account_number'] ?? null,
-                'flw_dva_account_name' => $data['account_name'] ?? null,
-                'flw_dva_bank_name' => $data['bank_name'] ?? null,
-                'flw_dva_bank_code' => $data['bank_code'] ?? null,
-                'flw_dva_order_ref' => $data['order_ref'] ?? $txRef,
-                'flw_dva_flw_ref' => $data['flw_ref'] ?? null,
+                'flw_dva_data' => [
+                    'account_number' => $data['account_number'] ?? null,
+                    'account_name' => $data['account_name'] ?? null,
+                    'bank_name' => $data['bank_name'] ?? null,
+                    'bank_code' => $data['bank_code'] ?? null,
+                    'order_ref' => $data['order_ref'] ?? $txRef,
+                    'flw_ref' => $data['flw_ref'] ?? null,
+                ],
                 'bvn' => $bvn ?? $user->bvn,
             ]);
 

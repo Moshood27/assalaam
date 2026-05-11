@@ -887,7 +887,7 @@ class WebhookController extends Controller
         if (!$topupUser && (($vd['payment_type'] ?? null) === 'bank_transfer')) {
             $accountNumber = $vd['bank_transfer_details']['account_number'] ?? ($meta['virtual_account_number'] ?? null);
             if ($accountNumber) {
-                $topupUser = User::where('flw_dva_account_number', $accountNumber)->first();
+                $topupUser = User::where('flw_dva_data->account_number', $accountNumber)->first();
                 if (!$topupUser) {
                     $topupUser = User::where('dva_account_number', $accountNumber)->first();
                 }
