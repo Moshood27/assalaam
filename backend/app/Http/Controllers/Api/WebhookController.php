@@ -885,6 +885,12 @@ class WebhookController extends Controller
         if (is_string($meta)) { $decoded = json_decode($meta, true); if (json_last_error() === JSON_ERROR_NONE) { $meta = $decoded; } }
 
         $userId = $meta['user_id'] ?? null;
+        if (!$userId && str_starts_with((string)$reference, 'DVA_')) {
+            $parts = explode('_', (string)$reference);
+            if (isset($parts[2]) && is_numeric($parts[2])) {
+                $userId = (int)$parts[2];
+            }
+        }
         if (is_string($userId) && ctype_digit($userId)) { $userId = (int) $userId; }
 
         $topupUser = $userId ? User::find($userId) : null;
@@ -925,21 +931,23 @@ class WebhookController extends Controller
         $netAmount = round(max(0, $amountNgn - $maintenanceCharge), 2);
 
         // Idempotency check
-        if (WalletTransaction::where('reference', $reference)->exists()) {
+        $isDva = ($vd['payment_type'] ?? null) === 'bank_transfer';
+        $dbReference = $isDva ? ($vd['flw_ref'] ?? $reference) : $reference;
+
+        if (WalletTransaction::where('reference', $dbReference)->exists()) {
             return response()->json(['status' => 'ok']);
         }
 
-        DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vd) {
+        DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $dbReference, $vd, $isDva) {
             $topupUser->increment('balance', $netAmount);
 
-            $isDva = ($vd['payment_type'] ?? null) === 'bank_transfer';
             $source = $isDva ? 'flutterwave_dva' : 'flutterwave_charge';
 
             WalletTransaction::create([
                 'user_id' => $topupUser->id,
                 'type' => 'credit',
                 'amount' => $netAmount,
-                'reference' => $reference,
+                'reference' => $dbReference,
                 'source' => $source,
                 'meta' => [
                     'channel' => $vd['payment_type'] ?? null,
