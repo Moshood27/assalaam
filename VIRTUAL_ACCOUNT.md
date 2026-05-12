@@ -108,13 +108,18 @@ Notes:
 
 
 ## How a Member Gets a Flutterwave Virtual Account
-- Client calls: POST /api/virtual-account/assign-flutterwave with { bvn: "12345678901" }
+- Client calls: POST /api/virtual-account/assign-flutterwave with { bvn: "12345678901" } (BVN is optional if already verified).
 - Server steps:
-  1. Validates BVN (required, 11 digits).
+  1. Validates BVN (if provided) and checks if the member's profile already has a verified BVN.
   2. FlutterwaveDvaService calls POST https://api.flutterwave.com/v3/virtual-account-numbers with email, BVN, name, phone, is_permanent=true.
   3. Persists flw_dva_account_number, flw_dva_account_name, flw_dva_bank_name, flw_dva_bank_code, flw_dva_order_ref, flw_dva_flw_ref on the user.
   4. Returns both Paystack and Flutterwave DVA details via GET /api/virtual-account.
-- Note: BVN is mandatory for Flutterwave virtual accounts (Nigerian regulatory requirement).
+- Note: BVN is mandatory for Flutterwave virtual accounts (Nigerian regulatory requirement). If not provided, it must be already verified on the member's profile.
+
+## Regenerating a Flutterwave Virtual Account
+- Client calls: POST /api/virtual-account/regenerate-flutterwave with { bvn: "12345678901" } (BVN is optional if already verified).
+- This endpoint forces the creation of a new virtual account even if the member already has one.
+- The steps are identical to the assignment flow, but it bypasses the "reuse existing" check.
 
 
 ## Funding the Wallet
@@ -183,6 +188,7 @@ There are two supported top‑up channels. Both are finalized by the webhook.
 - POST /api/wallet/topup/initiate { amount, callback_url? }
 - POST /api/wallet/allocate { items: [{ scheme_id, amount }] }
 - POST /api/virtual-account/assign-flutterwave { bvn } (creates Flutterwave DVA)
+- POST /api/virtual-account/regenerate-flutterwave { bvn } (forces creation of a new Flutterwave DVA)
 - POST /api/webhooks/paystack (public; Paystack calls this)
 - POST /api/webhooks/flutterwave (public; Flutterwave calls this)
 
@@ -200,6 +206,15 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"bvn":"12345678901"}' \
   https://your-domain.tld/api/virtual-account/assign-flutterwave
+```
+
+Example: Regenerate a DVA (Flutterwave)
+```
+curl -X POST \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"bvn":"12345678901"}' \
+  https://your-domain.tld/api/virtual-account/regenerate-flutterwave
 ```
 
 Example: Get Wallet (includes virtual_account and flw_virtual_account blocks)

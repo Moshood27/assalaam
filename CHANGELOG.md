@@ -2,6 +2,14 @@ Changelog
 
 All notable changes to this project will be documented in this file.
 
+2026-05-12
+- Enhanced Flutterwave Dedicated Virtual Account (DVA) integration:
+  - Added support for regenerating virtual accounts for members via `POST /api/virtual-account/regenerate-flutterwave`.
+  - Implemented mandatory BVN validation for members before DVA creation, ensuring profile names match BVN identity.
+  - Fixed an issue where DVA payments were not crediting wallets due to missing user identification fallbacks in the webhook.
+  - Improved webhook idempotency for DVA payments by using `flw_ref` as the unique reference.
+  - Documentation: VIRTUAL_ACCOUNT.md, KYC_SYSTEM.md
+
 2026-04-28
 - Implemented automated Loan Penalty System for defaulted members.
   - Automatically triggers a penalty record when a member defaults on a loan.

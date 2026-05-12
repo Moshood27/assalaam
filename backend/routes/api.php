@@ -201,6 +201,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/virtual-account/assign', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assign']);
     // Virtual Account (Flutterwave DVA)
     Route::post('/virtual-account/assign-flutterwave', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assignFlutterwave']);
+    Route::post('/virtual-account/regenerate-flutterwave', [\App\Http\Controllers\Api\VirtualAccountController::class, 'regenerateFlutterwave']);
 
     // Attendance
     Route::get('/attendance/current', [AttendanceController::class, 'current']);

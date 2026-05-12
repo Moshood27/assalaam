@@ -13,17 +13,18 @@ class FlutterwaveDvaService
      *
      * @param  User   $user
      * @param  string|null $bvn  Optional BVN for KYC
+     * @param  bool $force  Whether to force creation of a new account even if one exists
      * @return array  ['success' => bool, 'data' => [...] | null, 'message' => string]
      */
-    public function createVirtualAccount(User $user, ?string $bvn = null): array
+    public function createVirtualAccount(User $user, ?string $bvn = null, bool $force = false): array
     {
         $secret = config('services.flutterwave.secret_key');
         if (!$secret) {
             return ['success' => false, 'data' => null, 'message' => 'Payment provider not configured'];
         }
 
-        // If user already has a Flutterwave DVA, return it
-        if ($user->flw_dva_account_number) {
+        // If user already has a Flutterwave DVA, return it (unless forcing regeneration)
+        if (!$force && $user->flw_dva_account_number) {
             return [
                 'success' => true,
                 'data' => [
@@ -34,6 +35,17 @@ class FlutterwaveDvaService
                 ],
                 'message' => 'Virtual account already exists',
             ];
+        }
+
+        $bvnToUse = $bvn ?? $user->bvn;
+        if (empty($bvnToUse)) {
+            return ['success' => false, 'data' => null, 'message' => 'BVN is required to create a Flutterwave virtual account.'];
+        }
+
+        // Always validate BVN for member when creating DVA flutterwave
+        $validation = $this->validateBvn($bvnToUse, $user);
+        if (!$validation['success']) {
+            return ['success' => false, 'data' => null, 'message' => $validation['message']];
         }
 
         // Build payload for Flutterwave Create Virtual Account Number API
@@ -53,11 +65,6 @@ class FlutterwaveDvaService
             'lastname' => $lastName,
             'narration' => $firstName . ' ' . $lastName,
         ];
-
-        // BVN is required by Flutterwave for Nigerian virtual accounts
-        if (empty($payload['bvn'])) {
-            return ['success' => false, 'data' => null, 'message' => 'BVN is required to create a Flutterwave virtual account.'];
-        }
 
         try {
             $response = Http::withToken($secret)
@@ -113,5 +120,93 @@ class FlutterwaveDvaService
             ]);
             return ['success' => false, 'data' => null, 'message' => 'An unexpected error occurred.'];
         }
+    }
+    /**
+     * Validate BVN details against the user's profile.
+     */
+    public function validateBvn(string $bvn, User $user): array
+    {
+        // If already verified with this BVN, skip API call
+        if ($user->bvn === $bvn && $user->bvn_verified_at) {
+            return ['success' => true, 'message' => 'BVN already verified'];
+        }
+
+        // For local/testing with mock provider, we simulate validation
+        if (config('kyc.provider') === 'mock') {
+            $last = (int) substr($bvn, -1);
+            if (($last % 2) !== 0) {
+                return ['success' => false, 'message' => 'BVN validation failed (Mock: only even digits pass)'];
+            }
+            return ['success' => true, 'message' => 'BVN validated (Mock)'];
+        }
+
+        $secret = config('services.flutterwave.secret_key');
+        try {
+            $response = Http::withToken($secret)
+                ->acceptJson()
+                ->timeout(20)
+                ->get("https://api.flutterwave.com/v3/kyc/bvns/{$bvn}");
+
+            if (!$response->ok()) {
+                $errorMsg = $response->json('message') ?? 'BVN validation service unavailable';
+                Log::error('Flutterwave BVN validation API error', [
+                    'user_id' => $user->id,
+                    'status' => $response->status(),
+                    'body' => $response->json()
+                ]);
+                return ['success' => false, 'message' => $errorMsg];
+            }
+
+            $bvnData = $response->json('data');
+            if (!$this->namesMatch($bvnData, $user)) {
+                Log::warning('Flutterwave BVN name mismatch', [
+                    'user_id' => $user->id,
+                    'bvn_data' => $bvnData,
+                    'user_name' => $user->name
+                ]);
+                return [
+                    'success' => false,
+                    'message' => 'BVN name mismatch. The identity on this BVN does not match your profile name.'
+                ];
+            }
+
+            // Mark as verified if matched
+            $user->update([
+                'bvn' => $bvn,
+                'bvn_verified_at' => now()
+            ]);
+
+            return ['success' => true, 'message' => 'BVN validated successfully'];
+
+        } catch (\Throwable $e) {
+            Log::error('Flutterwave BVN validation exception', ['error' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Unexpected error during BVN validation'];
+        }
+    }
+
+    /**
+     * Compare names loosely.
+     */
+    protected function namesMatch(array $bvnData, User $user): bool
+    {
+        $bvnFirst = strtolower(trim($bvnData['first_name'] ?? ''));
+        $bvnLast = strtolower(trim($bvnData['last_name'] ?? ''));
+
+        if (empty($bvnFirst) && empty($bvnLast)) return false;
+
+        $fullName = strtolower($user->name);
+        // Use word boundaries for matching to avoid partial matches (e.g. "And" matching "Anderson")
+        $firstMatch = empty($bvnFirst) || (bool)preg_match('/\b' . preg_quote($bvnFirst, '/') . '\b/i', $fullName);
+        $lastMatch = empty($bvnLast) || (bool)preg_match('/\b' . preg_quote($bvnLast, '/') . '\b/i', $fullName);
+
+        // Fallback check against surname and other_names fields
+        if (!$lastMatch && !empty($user->surname)) {
+            $lastMatch = strtolower($user->surname) === $bvnLast;
+        }
+        if (!$firstMatch && !empty($user->other_names)) {
+            $firstMatch = (bool)preg_match('/\b' . preg_quote($bvnFirst, '/') . '\b/i', strtolower($user->other_names));
+        }
+
+        return $firstMatch && $lastMatch;
     }
 }

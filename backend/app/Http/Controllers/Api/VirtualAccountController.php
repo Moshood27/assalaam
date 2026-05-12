@@ -149,12 +149,33 @@ class VirtualAccountController extends Controller
     public function assignFlutterwave(Request $request)
     {
         $validated = $request->validate([
-            'bvn' => 'required|string|digits:11',
+            'bvn' => 'sometimes|required|string|digits:11',
         ]);
 
         $user = $request->user();
         $service = app(FlutterwaveDvaService::class);
-        $result = $service->createVirtualAccount($user, $validated['bvn']);
+        $result = $service->createVirtualAccount($user, $validated['bvn'] ?? null);
+
+        if (!$result['success']) {
+            $status = str_contains($result['message'], 'not configured') ? 500 : 422;
+            return response()->json(['message' => $result['message']], $status);
+        }
+
+        return $this->show($request);
+    }
+
+    /**
+     * Regenerate a Flutterwave DVA for the authenticated user.
+     */
+    public function regenerateFlutterwave(Request $request)
+    {
+        $validated = $request->validate([
+            'bvn' => 'sometimes|required|string|digits:11',
+        ]);
+
+        $user = $request->user();
+        $service = app(FlutterwaveDvaService::class);
+        $result = $service->createVirtualAccount($user, $validated['bvn'] ?? null, true);
 
         if (!$result['success']) {
             $status = str_contains($result['message'], 'not configured') ? 500 : 422;
