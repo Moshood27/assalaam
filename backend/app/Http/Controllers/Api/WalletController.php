@@ -11,6 +11,7 @@ use App\Models\WalletTransaction;
 use App\Models\WithdrawalRequest;
 use App\Models\User;
 use App\Models\Branch;
+use App\Services\MonnifyService;
 use App\Traits\VerifiesOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -175,13 +176,36 @@ class WalletController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'callback_url' => 'nullable|url',
-            'gateway' => 'nullable|in:paystack,flutterwave',
+            'gateway' => 'nullable|in:paystack,flutterwave,monnify',
         ]);
 
         $user = $request->user();
         $gateway = strtolower($validated['gateway'] ?? 'paystack');
 
         $reference = 'WALLET_TOPUP_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
+
+        if ($gateway === 'monnify') {
+            $service = app(MonnifyService::class);
+            $monnifyData = $service->initializeTransaction([
+                'amount' => round((float)$validated['amount'], 2),
+                'customerName' => $user->full_name,
+                'customerEmail' => $user->email,
+                'paymentReference' => $reference,
+                'paymentDescription' => 'Wallet Top-up',
+                'redirectUrl' => $validated['callback_url'] ?? config('app.url'),
+            ]);
+
+            if (!$monnifyData) {
+                return response()->json(['message' => 'Failed to initialize Monnify payment'], 502);
+            }
+
+            return response()->json([
+                'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
+                'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                'reference' => $reference,
+                'amount' => (float)$validated['amount'],
+            ]);
+        }
 
         if ($gateway === 'flutterwave') {
             $flwSecret = config('services.flutterwave.secret_key');

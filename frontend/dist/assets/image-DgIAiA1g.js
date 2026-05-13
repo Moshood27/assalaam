@@ -1,1 +1,0 @@
-var e=e=>{if(!e)return``;let t=String(e);if(/^(https?:|data:|blob:)/i.test(t))return t;let n=`https://attaqwacooposg.com`.replace(/\/$/,``);if(t.startsWith(`/`))return n?`${n}${t}`:t;let r=t.replace(/^\/+/,``);return/^storage\//i.test(r)||(r=`storage/${r}`),r=r.replace(/^storage\/storage\//i,`storage/`),n?`${n}/${r}`:`/${r}`};export{e as t};

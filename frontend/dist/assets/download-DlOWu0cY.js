@@ -1,1 +1,0 @@
-typeof window<`u`&&(window?.Capacitor?.isNativePlatform?.()||window?.Capacitor?.getPlatform&&window.Capacitor.getPlatform());

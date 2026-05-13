@@ -10,6 +10,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
@@ -74,16 +75,9 @@ class User extends Authenticatable implements FilamentUser
         'is_admin',
         'is_defaulter',
         'loan_penalty_until',
-        'paystack_customer_code',
-        'paystack_authorization_code',
-        'dva_account_number',
-        'dva_bank_name',
-        'dva_account_name',
         'passport_path',
         'bvn',
         'bvn_verified_at',
-        'dva_verification_meta',
-        'flw_dva_data',
         'bank_name',
         'bank_code',
         'account_number',
@@ -207,8 +201,6 @@ class User extends Authenticatable implements FilamentUser
             'investment_balance' => 'decimal:2',
             'group_savings_balance' => 'decimal:2',
             'bvn_verified_at' => 'datetime',
-            'dva_verification_meta' => 'array',
-            'flw_dva_data' => 'array',
             'pin_set_at' => 'datetime',
             'autosave_enabled' => 'boolean',
             'autosave_amount' => 'decimal:2',
@@ -253,34 +245,104 @@ class User extends Authenticatable implements FilamentUser
         });
     }
 
+    public function virtualAccount(): HasOne
+    {
+        return $this->hasOne(UserVirtualAccount::class);
+    }
+
+    public function getPaystackCustomerCodeAttribute(): ?string
+    {
+        return $this->virtualAccount?->paystack_customer_code ?? null;
+    }
+
+    public function getPaystackAuthorizationCodeAttribute(): ?string
+    {
+        return $this->virtualAccount?->paystack_authorization_code ?? null;
+    }
+
+    public function getDvaAccountNumberAttribute(): ?string
+    {
+        return $this->virtualAccount?->dva_account_number ?? null;
+    }
+
+    public function getDvaBankNameAttribute(): ?string
+    {
+        return $this->virtualAccount?->dva_bank_name ?? null;
+    }
+
+    public function getDvaAccountNameAttribute(): ?string
+    {
+        return $this->virtualAccount?->dva_account_name ?? null;
+    }
+
+    public function getDvaVerificationMetaAttribute(): ?array
+    {
+        return $this->virtualAccount?->dva_verification_meta ?? null;
+    }
+
     public function getFlwDvaAccountNumberAttribute(): ?string
     {
-        return $this->flw_dva_data['account_number'] ?? null;
+        return $this->virtualAccount?->flw_dva_data['account_number'] ?? null;
     }
 
     public function getFlwDvaAccountNameAttribute(): ?string
     {
-        return $this->flw_dva_data['account_name'] ?? null;
+        return $this->virtualAccount?->flw_dva_data['account_name'] ?? null;
     }
 
     public function getFlwDvaBankNameAttribute(): ?string
     {
-        return $this->flw_dva_data['bank_name'] ?? null;
+        return $this->virtualAccount?->flw_dva_data['bank_name'] ?? null;
     }
 
     public function getFlwDvaBankCodeAttribute(): ?string
     {
-        return $this->flw_dva_data['bank_code'] ?? null;
+        return $this->virtualAccount?->flw_dva_data['bank_code'] ?? null;
     }
 
     public function getFlwDvaOrderRefAttribute(): ?string
     {
-        return $this->flw_dva_data['order_ref'] ?? null;
+        return $this->virtualAccount?->flw_dva_data['order_ref'] ?? null;
     }
 
     public function getFlwDvaFlwRefAttribute(): ?string
     {
-        return $this->flw_dva_data['flw_ref'] ?? null;
+        return $this->virtualAccount?->flw_dva_data['flw_ref'] ?? null;
+    }
+
+    public function getFlwDvaDataAttribute(): ?array
+    {
+        return $this->virtualAccount?->flw_dva_data ?? null;
+    }
+
+    public function getMonnifyCustomerReferenceAttribute(): ?string
+    {
+        return $this->virtualAccount?->monnify_customer_reference ?? null;
+    }
+
+    public function getMonnifyDvaDataAttribute(): ?array
+    {
+        return $this->virtualAccount?->monnify_dva_data ?? null;
+    }
+
+    public function getMonnifyDvaAccountNumberAttribute(): ?string
+    {
+        return $this->virtualAccount?->monnify_dva_data['accountNumber'] ?? null;
+    }
+
+    public function getMonnifyDvaAccountNameAttribute(): ?string
+    {
+        return $this->virtualAccount?->monnify_dva_data['accountName'] ?? null;
+    }
+
+    public function getMonnifyDvaBankNameAttribute(): ?string
+    {
+        return $this->virtualAccount?->monnify_dva_data['bankName'] ?? null;
+    }
+
+    public function getMonnifyDvaBankCodeAttribute(): ?string
+    {
+        return $this->virtualAccount?->monnify_dva_data['bankCode'] ?? null;
     }
 
     public function getFullNameAttribute(): string

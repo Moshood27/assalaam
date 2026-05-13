@@ -150,6 +150,13 @@
               >
                 Flutterwave
               </button>
+              <button 
+                @click="initiateContribution('monnify')"
+                :disabled="submitting || !form.amount"
+                class="bg-sky-600 text-white rounded-2xl py-4 font-black text-[9px] uppercase tracking-tighter hover:bg-sky-700 active:scale-95 transition-all disabled:opacity-50"
+              >
+                Monnify
+              </button>
             </div>
             <p class="text-[9px] text-center text-slate-500 mt-4 px-4 uppercase tracking-tighter leading-tight">
               By contributing, you agree to our terms and conditions. May your contribution be rewarded.

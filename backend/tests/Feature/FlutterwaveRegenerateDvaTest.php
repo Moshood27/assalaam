@@ -24,6 +24,9 @@ class FlutterwaveRegenerateDvaTest extends TestCase
             'phone' => '08012345678',
             'bvn' => '12345678902',
             'bvn_verified_at' => now(),
+        ]);
+
+        $user->virtualAccount()->create([
             'flw_dva_data' => [
                 'account_number' => '1111111111',
                 'bank_name' => 'Old Bank',
@@ -54,6 +57,9 @@ class FlutterwaveRegenerateDvaTest extends TestCase
             'phone' => '08012345678',
             'bvn' => '12345678902',
             'bvn_verified_at' => now(),
+        ]);
+
+        $user->virtualAccount()->create([
             'flw_dva_data' => [
                 'account_number' => '1111111111',
                 'bank_name' => 'Old Bank',

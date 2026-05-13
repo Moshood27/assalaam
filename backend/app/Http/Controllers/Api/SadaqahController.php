@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SadaqahProject;
 use App\Models\SadaqahContribution;
+use App\Models\WalletTransaction;
+use App\Services\MonnifyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -50,6 +52,19 @@ class SadaqahController extends Controller
 
         if ($gateway === 'wallet') {
             return $this->processWalletContribution($user, $project, $amount, $validated['is_anonymous'] ?? false);
+        }
+
+        if ($gateway === 'monnify') {
+            $reference = 'SADAQAH_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
+            SadaqahContribution::create([
+                'user_id' => $user->id,
+                'sadaqah_project_id' => $project->id,
+                'amount' => $amount,
+                'reference' => $reference,
+                'is_anonymous' => $validated['is_anonymous'] ?? false,
+                'status' => 'pending',
+            ]);
+            return $this->initiateMonnify($user, $amount, $reference, $request->input('callback_url'));
         }
 
         $reference = 'SADAQAH_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
@@ -155,6 +170,30 @@ class SadaqahController extends Controller
         $data = $response->json('data');
         return response()->json([
             'authorization_url' => $data['link'],
+            'reference' => $reference,
+            'amount' => $amount,
+        ]);
+    }
+
+    private function initiateMonnify($user, $amount, $reference, $callbackUrl)
+    {
+        $service = app(MonnifyService::class);
+        $monnifyData = $service->initializeTransaction([
+            'amount' => round($amount, 2),
+            'customerName' => $user->name,
+            'customerEmail' => $user->email,
+            'paymentReference' => $reference,
+            'paymentDescription' => 'Sadaqah contribution',
+            'redirectUrl' => $callbackUrl ?? config('app.url'),
+        ]);
+
+        if (!$monnifyData) {
+            return response()->json(['message' => 'Failed to initialize Monnify payment'], 502);
+        }
+
+        return response()->json([
+            'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
+            'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
             'reference' => $reference,
             'amount' => $amount,
         ]);

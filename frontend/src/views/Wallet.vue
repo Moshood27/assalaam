@@ -208,6 +208,47 @@
                 <p class="text-[10px] text-slate-400 leading-tight">BVN is required by Flutterwave to create your dedicated account.</p>
               </div>
             </div>
+
+            <!-- Monnify Virtual Account Info -->
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt 2)</h3>
+                <button v-if="!wallet.monnify_virtual_account?.account_number" @click="assignMonnifyDva" :disabled="assigningMonnify"
+                        class="text-[10px] font-black uppercase bg-emerald-700 text-white px-3 py-2 rounded-xl disabled:opacity-50">
+                  {{ assigningMonnify ? 'Creating…' : 'Generate' }}
+                </button>
+              </div>
+
+              <div v-if="wallet.monnify_virtual_account?.account_number" class="space-y-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Bank Name</span>
+                    <span class="font-bold text-slate-800 text-sm">{{ wallet.monnify_virtual_account.bank_name }}</span>
+                  </div>
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Name</span>
+                    <span class="font-bold text-slate-800 text-sm">{{ wallet.monnify_virtual_account.account_name }}</span>
+                  </div>
+                  <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                    <div>
+                      <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
+                      <p class="font-black text-emerald-700 text-xl tracking-wider">{{ wallet.monnify_virtual_account.account_number }}</p>
+                    </div>
+                    <button @click="copy(wallet.monnify_virtual_account.account_number)" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg hover:bg-emerald-100 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-500 text-center px-4">Monnify account — transfer funds here to top up your wallet.</p>
+                <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+              </div>
+
+              <div v-else class="space-y-3">
+                <p class="text-sm text-slate-500">Generate a Monnify virtual account to fund via bank transfer.</p>
+              </div>
+            </div>
           </div>
 
         <!-- Administrative Charges Section -->
@@ -231,9 +272,19 @@
       <div v-if="activeTab === 'fund'" class="space-y-6">
         <!-- Card Top-up Form -->
         <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 transition-all">
-          <h3 class="font-bold text-slate-800 mb-4">Fund Wallet (Card)</h3>
+          <h3 class="font-bold text-slate-800 mb-4">Fund Wallet (Online)</h3>
           <div class="space-y-4">
             <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Payment Gateway</label>
+              <div class="grid grid-cols-3 gap-2 mb-4">
+                <button v-for="gw in ['paystack', 'flutterwave', 'monnify']" :key="gw"
+                        @click="selectedGateway = gw"
+                        :class="selectedGateway === gw ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-slate-50 text-slate-600 border-slate-100'"
+                        class="py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all">
+                  {{ gw }}
+                </button>
+              </div>
+
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount to Fund</label>
               <div class="relative group">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400 font-bold">₦</div>
@@ -565,6 +616,7 @@ const { notice, showNotice, closeNotice } = useNotice()
 const { hideBalances } = useBalanceVisibility()
 
 const activeTab = ref('overview')
+const selectedGateway = ref('paystack')
 const searchQuery = ref('')
 
 const wallet = ref({ balance: 0, virtual_account: {}, admin_charge_balance: 0 })
@@ -634,6 +686,7 @@ const calculatedCharge = computed(() => {
 })
 const assigning = ref(false)
 const assigningFlw = ref(false)
+const assigningMonnify = ref(false)
 const flwBvn = ref('')
 const flwBvnDigits = computed(() => String(flwBvn.value || '').replace(/\D/g, ''))
 const flwBvnValid = computed(() => flwBvnDigits.value.length === 11)
@@ -753,7 +806,10 @@ const initTopup = async () => {
     loading.value = true
         // Build callback URL only for web; on native apps, omit to avoid invalid localhost redirects
     const cb = !isNative ? (new URL(router.resolve({ name: 'wallet.callback' }).href, window.location.origin).toString()) : null
-    const payload = { amount: Number(topupAmount.value) }
+    const payload = { 
+      amount: Number(topupAmount.value),
+      gateway: selectedGateway.value
+    }
     if (cb) payload.callback_url = cb
     const { data } = await axios.post('/api/wallet/topup/initiate', payload)
     window.location.href = data.checkout_url
@@ -794,6 +850,19 @@ const assignFlutterwaveDva = async () => {
     alert(e?.response?.data?.message || 'Failed to generate Flutterwave virtual account')
   } finally {
     assigningFlw.value = false
+  }
+}
+
+const assignMonnifyDva = async () => {
+  try {
+    assigningMonnify.value = true
+    await axios.post('/api/virtual-account/assign-monnify')
+    await loadWallet()
+    alert('Monnify virtual account generated!')
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to generate Monnify virtual account')
+  } finally {
+    assigningMonnify.value = false
   }
 }
 

@@ -563,13 +563,16 @@ class MemberRegistrationController extends Controller
         // Persist BVN verification results
         $user->bvn = $bvn;
         $user->bvn_verified_at = now();
-        $user->dva_verification_meta = [
-            'provider' => $kyc['provider'] ?? null,
-            'status' => $kyc['status'] ?? null,
-            'score' => $kyc['score'] ?? null,
-            'meta' => $kyc['meta'] ?? null,
-        ];
         $user->save();
+
+        $user->virtualAccount()->create([
+            'dva_verification_meta' => [
+                'provider' => $kyc['provider'] ?? null,
+                'status' => $kyc['status'] ?? null,
+                'score' => $kyc['score'] ?? null,
+                'meta' => $kyc['meta'] ?? null,
+            ]
+        ]);
         $app->finalized_at = now();
         $app->user_id = $user->id; // Link to the newly created user
         $app->approval_status = 'pending'; // Ensure application is also marked as pending

@@ -141,9 +141,9 @@ class ProfileController extends Controller
             'bvn_verified' => (bool) $user->bvn_verified_at,
             'bvn_verified_at' => $user->bvn_verified_at ? $user->bvn_verified_at->toDateTimeString() : null,
             'kyc' => [
-                'provider' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['provider'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->provider ?? null) : null),
-                'status' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['status'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->status ?? null) : null),
-                'score' => is_array($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta['score'] ?? null) : (is_object($user->dva_verification_meta ?? null) ? ($user->dva_verification_meta->score ?? null) : null),
+                'provider' => $user->dva_verification_meta['provider'] ?? null,
+                'status' => $user->dva_verification_meta['status'] ?? null,
+                'score' => $user->dva_verification_meta['score'] ?? null,
             ],
             'is_admin' => $user->isAdmin(),
             'is_staff' => $user->isStaff(),

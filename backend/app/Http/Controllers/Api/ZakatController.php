@@ -8,6 +8,7 @@ use App\Models\Scheme;
 use App\Models\SadaqahProject;
 use App\Models\SadaqahContribution;
 use App\Models\WalletTransaction;
+use App\Services\MonnifyService;
 use App\Services\ZakatService;
 use App\Services\GoldSilverPriceService;
 use Carbon\Carbon;
@@ -95,6 +96,29 @@ class ZakatController extends Controller
             'reference' => $reference,
             'status' => 'pending',
         ]);
+
+        if ($gateway === 'monnify') {
+            $service = app(MonnifyService::class);
+            $monnifyData = $service->initializeTransaction([
+                'amount' => round($amount, 2),
+                'customerName' => $user->name,
+                'customerEmail' => $user->email,
+                'paymentReference' => $reference,
+                'paymentDescription' => 'Zakat payment',
+                'redirectUrl' => $request->input('callback_url') ?? config('app.url'),
+            ]);
+
+            if (!$monnifyData) {
+                return response()->json(['message' => 'Failed to initialize Monnify payment'], 502);
+            }
+
+            return response()->json([
+                'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
+                'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                'reference' => $reference,
+                'total' => $amount,
+            ]);
+        }
 
         if ($gateway === 'flutterwave') {
             $flwSecret = config('services.flutterwave.secret_key');
@@ -212,6 +236,29 @@ class ZakatController extends Controller
             'reference' => $reference,
             'status' => 'pending',
         ]);
+
+        if ($gateway === 'monnify') {
+            $service = app(MonnifyService::class);
+            $monnifyData = $service->initializeTransaction([
+                'amount' => round($amount, 2),
+                'customerName' => $user->name,
+                'customerEmail' => $user->email,
+                'paymentReference' => $reference,
+                'paymentDescription' => 'Zakat Fitr payment',
+                'redirectUrl' => $request->input('callback_url') ?? config('app.url'),
+            ]);
+
+            if (!$monnifyData) {
+                return response()->json(['message' => 'Failed to initialize Monnify payment'], 502);
+            }
+
+            return response()->json([
+                'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
+                'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                'reference' => $reference,
+                'total' => $amount,
+            ]);
+        }
 
         if ($gateway === 'flutterwave') {
             $flwSecret = config('services.flutterwave.secret_key');

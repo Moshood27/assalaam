@@ -85,7 +85,7 @@ class FlutterwaveDvaService
 
             $data = $response->json('data');
 
-            $user->update([
+            $user->virtualAccount()->updateOrCreate([], [
                 'flw_dva_data' => [
                     'account_number' => $data['account_number'] ?? null,
                     'account_name' => $data['account_name'] ?? null,
@@ -94,6 +94,9 @@ class FlutterwaveDvaService
                     'order_ref' => $data['order_ref'] ?? $txRef,
                     'flw_ref' => $data['flw_ref'] ?? null,
                 ],
+            ]);
+
+            $user->update([
                 'bvn' => $bvn ?? $user->bvn,
             ]);
 

@@ -277,6 +277,7 @@
                   <option value="wallet">Wallet</option>
                   <option value="paystack">Paystack</option>
                   <option value="flutterwave">Flutterwave</option>
+                  <option value="monnify">Monnify</option>
                 </select>
                 <button class="btn-primary w-full sm:w-auto" :disabled="loan.is_completed || paying[loan.id]" @click="pay(loan)">
                   <span v-if="!paying[loan.id]">Make payment</span>

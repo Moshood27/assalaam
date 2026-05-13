@@ -210,9 +210,9 @@
             <!-- Payment Gateway Selection -->
             <div class="space-y-3">
               <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Payment Method</label>
-              <div class="grid grid-cols-3 gap-2">
+              <div class="grid grid-cols-2 gap-2">
                 <button 
-                  v-for="gw in ['wallet', 'paystack', 'flutterwave']" 
+                  v-for="gw in ['wallet', 'paystack', 'flutterwave', 'monnify']" 
                   :key="gw"
                   @click="zakatForm.gateway = gw"
                   :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === gw ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-600']"

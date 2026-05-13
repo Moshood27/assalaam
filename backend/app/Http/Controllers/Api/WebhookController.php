@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\UserVirtualAccount;
 use App\Models\WalletTransaction;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
@@ -55,7 +56,9 @@ class WebhookController extends Controller
             }
             if (!$user) {
                 $customerCode = $data['customer']['customer_code'] ?? null;
-                if ($customerCode) { $user = \App\Models\User::where('paystack_customer_code', $customerCode)->first(); }
+                if ($customerCode) {
+                    $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
+                }
                 if (!$user && isset($meta['user_id'])) { $uid = is_numeric($meta['user_id']) ? (int)$meta['user_id'] : null; if ($uid) { $user = \App\Models\User::find($uid); } }
             }
             if ($user) {
@@ -298,10 +301,10 @@ class WebhookController extends Controller
 
                 $topupUser = null;
                 if ($customerCode) {
-                    $topupUser = User::where('paystack_customer_code', $customerCode)->first();
+                    $topupUser = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
                 }
                 if (! $topupUser && $receiverAccount) {
-                    $topupUser = User::where('dva_account_number', $receiverAccount)->first();
+                    $topupUser = User::whereHas('virtualAccount', fn($q) => $q->where('dva_account_number', $receiverAccount))->first();
                 }
                 if (! $topupUser && $metaUserId) {
                     $topupUser = User::find($metaUserId);
@@ -342,17 +345,17 @@ class WebhookController extends Controller
 
                 DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vdChannel, $vd, $customerCode, $metadata) {
                     // Persist Paystack customer code and authorization code for future lookups/charges
-                    $dirty = false;
+                    $vaData = [];
                     if (empty($topupUser->paystack_customer_code) && !empty($customerCode)) {
-                        $topupUser->paystack_customer_code = $customerCode;
-                        $dirty = true;
+                        $vaData['paystack_customer_code'] = $customerCode;
                     }
                     $authCode = $vd['authorization']['authorization_code'] ?? null;
                     if (empty($topupUser->paystack_authorization_code) && !empty($authCode)) {
-                        $topupUser->paystack_authorization_code = $authCode;
-                        $dirty = true;
+                        $vaData['paystack_authorization_code'] = $authCode;
                     }
-                    if ($dirty) { $topupUser->save(); }
+                    if (!empty($vaData)) {
+                        $topupUser->virtualAccount()->updateOrCreate([], $vaData);
+                    }
 
                     // Credit wallet
                     $topupUser->increment('balance', $netAmount);
@@ -419,18 +422,18 @@ class WebhookController extends Controller
             // Persist Paystack customer/authorization codes on user for future autosave charges
             try {
                 if ($user) {
-                    $dirty = false;
+                    $vaData = [];
                     $custCode = $vd['customer']['customer_code'] ?? null;
                     if (empty($user->paystack_customer_code) && !empty($custCode)) {
-                        $user->paystack_customer_code = $custCode;
-                        $dirty = true;
+                        $vaData['paystack_customer_code'] = $custCode;
                     }
                     $authCode = $vd['authorization']['authorization_code'] ?? null;
                     if (empty($user->paystack_authorization_code) && !empty($authCode)) {
-                        $user->paystack_authorization_code = $authCode;
-                        $dirty = true;
+                        $vaData['paystack_authorization_code'] = $authCode;
                     }
-                    if ($dirty) { $user->save(); }
+                    if (!empty($vaData)) {
+                        $user->virtualAccount()->updateOrCreate([], $vaData);
+                    }
                 }
             } catch (\Throwable $e) {
                 // ignore persistence error; not critical for payment finalization
@@ -899,9 +902,9 @@ class WebhookController extends Controller
         if (!$topupUser && (($vd['payment_type'] ?? null) === 'bank_transfer')) {
             $accountNumber = $vd['bank_transfer_details']['account_number'] ?? ($meta['virtual_account_number'] ?? null);
             if ($accountNumber) {
-                $topupUser = User::where('flw_dva_data->account_number', $accountNumber)->first();
+                $topupUser = User::whereHas('virtualAccount', fn($q) => $q->where('flw_dva_data->account_number', $accountNumber))->first();
                 if (!$topupUser) {
-                    $topupUser = User::where('dva_account_number', $accountNumber)->first();
+                    $topupUser = User::whereHas('virtualAccount', fn($q) => $q->where('dva_account_number', $accountNumber))->first();
                 }
             }
             if (!$topupUser && !empty($vd['customer']['email'])) {
@@ -986,6 +989,196 @@ class WebhookController extends Controller
      * @param float $amount
      * @return float
      */
+    public function handleMonnify(Request $request)
+    {
+        $signature = $request->header('x-monnify-signature');
+        $secret = config('services.monnify.secret_key');
+
+        if (!$signature || ($signature !== hash_hmac('sha512', $request->getContent(), (string)$secret))) {
+            Log::warning('Monnify webhook signature verification failed', [
+                'has_config_secret' => !empty($secret),
+                'has_header_signature' => !empty($signature),
+                'ip' => $request->ip(),
+            ]);
+            return response()->json(['message' => 'Invalid Signature'], 400);
+        }
+
+        $payload = $request->all();
+        $eventType = $payload['eventType'] ?? null;
+        $data = $payload['eventData'] ?? [];
+
+        if ($eventType !== 'SUCCESSFUL_TRANSACTION') {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        $reference = $data['paymentReference'] ?? null;
+        if (!$reference) {
+            return response()->json(['message' => 'No reference'], 400);
+        }
+
+        // Verify with Monnify for extra safety
+        $service = app(MonnifyService::class);
+        $verifiedData = $service->verifyTransaction($reference);
+
+        if (!$verifiedData || ($verifiedData['paymentStatus'] ?? '') !== 'PAID') {
+            Log::warning('Monnify verify call failed or not PAID', ['reference' => $reference, 'body' => $verifiedData]);
+            return response()->json(['message' => 'Verification failed'], 400);
+        }
+
+        $amountNgn = (float)($verifiedData['amountPaid'] ?? 0);
+        $currency = $verifiedData['currencyCode'] ?? 'NGN';
+
+        // 1) Contribution path
+        $contributions = Contribution::where('reference', $reference)
+            ->where('status', 'pending')
+            ->get();
+
+        if ($contributions->isNotEmpty()) {
+            $expectedTotal = (float) $contributions->sum('amount');
+            if ($currency !== 'NGN' || ($amountNgn + 0.005) < $expectedTotal) {
+                Log::warning('Monnify webhook: amount/currency mismatch for contributions', [
+                    'reference' => $reference,
+                    'paid_amount' => $amountNgn,
+                    'expected' => $expectedTotal,
+                    'currency' => $currency,
+                ]);
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+
+            DB::transaction(function () use ($contributions) {
+                foreach ($contributions as $contrib) {
+                    $contrib->update(['status' => 'success']);
+                }
+            });
+
+            // Notify user
+            try {
+                $user = User::find($contributions->first()->user_id);
+                if ($user) {
+                    $user->notifyMember(
+                        'Payment Successful',
+                        "Your payment of ₦" . number_format($amountNgn, 2) . " for " . $contributions->count() . " items was successful.",
+                        [
+                            'type' => 'payment_success',
+                            'amount' => (float) $amountNgn,
+                            'reference' => $reference,
+                            'route' => '/pay',
+                        ]
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send Monnify contribution notification', ['error' => $e->getMessage()]);
+            }
+
+            return response()->json(['status' => 'success']);
+        }
+
+        // 2) Sadaqah path
+        $sadaqahContrib = SadaqahContribution::where('reference', $reference)->first();
+        if ($sadaqahContrib) {
+            if ($currency !== 'NGN' || ($amountNgn + 0.005) < (float) $sadaqahContrib->amount) {
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+            if ($sadaqahContrib->status === 'success') {
+                return response()->json(['status' => 'ok']);
+            }
+            DB::transaction(function () use ($sadaqahContrib) {
+                $sadaqahContrib->update(['status' => 'success']);
+                $project = SadaqahProject::lockForUpdate()->find($sadaqahContrib->sadaqah_project_id);
+                if ($project) {
+                    $project->increment('raised_amount', (float) $sadaqahContrib->amount);
+                }
+            });
+            return response()->json(['status' => 'success']);
+        }
+
+        // 3) Loan Repayment path
+        $loanRep = QardHasanRepayment::where('reference', $reference)->first();
+        if ($loanRep) {
+            if ($currency !== 'NGN' || ($amountNgn + 0.005) < (float) $loanRep->amount) {
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+            if ($loanRep->status === 'success') {
+                return response()->json(['status' => 'ok']);
+            }
+            DB::transaction(function () use ($loanRep) {
+                $loan = QardHasan::lockForUpdate()->find($loanRep->qard_hasan_id);
+                if ($loan) {
+                    $loanRep->update(['status' => 'success', 'paid_at' => now()]);
+                    $loan->increment('paid_amount', (float) $loanRep->amount);
+                    if ($loan->paid_amount >= $loan->principal_amount) {
+                        $loan->update(['status' => 'completed']);
+                    }
+                }
+            });
+            return response()->json(['status' => 'success']);
+        }
+
+        // 4) Wallet Top-up path
+        $meta = $verifiedData['metaData'] ?? [];
+        if (is_string($meta)) { $decoded = json_decode($meta, true); if (json_last_error() === JSON_ERROR_NONE) { $meta = $decoded; } }
+
+        $userId = $meta['user_id'] ?? null;
+        $topupUser = $userId ? User::find($userId) : null;
+
+        // DVA lookup
+        if (!$topupUser) {
+            $customerReference = $verifiedData['customer']['customerReference'] ?? null;
+            if ($customerReference) {
+                $topupUser = User::whereHas('virtualAccount', fn($q) => $q->where('monnify_customer_reference', $customerReference))->first();
+            }
+            if (!$topupUser && !empty($verifiedData['customer']['email'])) {
+                $topupUser = User::where('email', $verifiedData['customer']['email'])->first();
+            }
+        }
+
+        if (!$topupUser) {
+            Log::warning('Monnify wallet top-up: user not found', ['reference' => $reference]);
+            return response()->json(['status' => 'ignored']);
+        }
+
+        if ($currency !== 'NGN' || $amountNgn <= 0) {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        $maintenanceCharge = $this->calculateMaintenanceCharge($amountNgn);
+        $netAmount = round(max(0, $amountNgn - $maintenanceCharge), 2);
+
+        if (WalletTransaction::where('reference', $reference)->exists()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $verifiedData) {
+            $topupUser->increment('balance', $netAmount);
+            WalletTransaction::create([
+                'user_id' => $topupUser->id,
+                'type' => 'credit',
+                'amount' => $netAmount,
+                'reference' => $reference,
+                'source' => 'monnify_topup',
+                'meta' => [
+                    'processor' => 'monnify',
+                    'maintenance_charge' => $maintenanceCharge,
+                    'gross_amount' => $amountNgn,
+                    'payment_method' => $verifiedData['paymentMethod'] ?? null,
+                ],
+            ]);
+        });
+
+        $topupUser->notifyMember(
+            'Wallet Top-up Successful',
+            "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+            [
+                'type' => 'wallet_topup',
+                'amount' => (float) $netAmount,
+                'reference' => $reference,
+                'route' => '/wallet',
+            ]
+        );
+
+        return response()->json(['status' => 'success']);
+    }
+
     private function calculateMaintenanceCharge(float $amount): float
     {
         return app(AdministrativeChargeService::class)->calculateMaintenanceCharge($amount);

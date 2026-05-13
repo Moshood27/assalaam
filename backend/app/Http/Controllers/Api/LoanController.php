@@ -10,6 +10,7 @@ use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Services\MonnifyService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -657,6 +658,43 @@ class LoanController extends Controller
             }
 
             // If explicitly requested, initialize via Flutterwave
+            if ($source === 'monnify') {
+                $reference = 'QHREP-MON-' . now()->format('YmdHis') . '-' . $user->id . '-' . Str::upper(Str::random(5));
+                $rep = QardHasanRepayment::create([
+                    'qard_hasan_id' => $q->id,
+                    'amount' => $appliedAmount,
+                    'reference' => $reference,
+                    'status' => 'pending',
+                ]);
+
+                $service = app(MonnifyService::class);
+                $monnifyData = $service->initializeTransaction([
+                    'amount' => round($appliedAmount, 2),
+                    'customerName' => $user->name,
+                    'customerEmail' => $user->email,
+                    'paymentReference' => $reference,
+                    'paymentDescription' => 'Loan Repayment: ' . $q->qard_id_string,
+                    'redirectUrl' => $data['callback_url'] ?? config('app.url'),
+                ]);
+
+                if (!$monnifyData) {
+                    return response()->json(['message' => 'Failed to initialize Monnify payment'], 502);
+                }
+
+                return response()->json([
+                    'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
+                    'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                    'reference' => $reference,
+                    'summary' => [
+                        'amount_input' => $inputAmount,
+                        'amount_applied' => $appliedAmount,
+                        'capped' => $wasCapped,
+                        'source' => 'monnify',
+                        'initiated' => true,
+                    ],
+                ]);
+            }
+
             if ($source === 'flutterwave') {
                 $flwSecret = config('services.flutterwave.secret_key');
                 if (!$flwSecret) {

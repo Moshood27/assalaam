@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\FlutterwaveDvaService;
+use App\Services\MonnifyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -14,11 +15,12 @@ class VirtualAccountController extends Controller
     public function show(Request $request)
     {
         $user = $request->user();
+        $virtualAccount = $user->virtualAccount;
         $verificationDetails = null;
-        if ($user->dva_bank_name && $user->dva_account_number) {
-            $verificationDetails = $user->dva_bank_name . ' - ' . $user->dva_account_number;
-            if (!empty($user->dva_account_name)) {
-                $verificationDetails .= ' (' . $user->dva_account_name . ')';
+        if ($virtualAccount && $virtualAccount->dva_bank_name && $virtualAccount->dva_account_number) {
+            $verificationDetails = $virtualAccount->dva_bank_name . ' - ' . $virtualAccount->dva_account_number;
+            if (!empty($virtualAccount->dva_account_name)) {
+                $verificationDetails .= ' (' . $virtualAccount->dva_account_name . ')';
             }
         }
 
@@ -30,18 +32,31 @@ class VirtualAccountController extends Controller
             }
         }
 
+        $monnifyVerificationDetails = null;
+        if ($user->monnify_dva_bank_name && $user->monnify_dva_account_number) {
+            $monnifyVerificationDetails = $user->monnify_dva_bank_name . ' - ' . $user->monnify_dva_account_number;
+            if (!empty($user->monnify_dva_account_name)) {
+                $monnifyVerificationDetails .= ' (' . $user->monnify_dva_account_name . ')';
+            }
+        }
+
         return response()->json([
-            'paystack_customer_code' => $user->paystack_customer_code,
-            'account_number' => $user->dva_account_number,
-            'account_name' => $user->dva_account_name,
-            'bank_name' => $user->dva_bank_name,
-            'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
+            'paystack_customer_code' => $virtualAccount->paystack_customer_code ?? null,
+            'account_number' => $virtualAccount->dva_account_number ?? null,
+            'account_name' => $virtualAccount->dva_account_name ?? null,
+            'bank_name' => $virtualAccount->dva_bank_name ?? null,
+            'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($virtualAccount && $virtualAccount->dva_account_number && $virtualAccount->dva_bank_name)),
             'verification_details' => $verificationDetails,
             // Flutterwave DVA
             'flw_account_number' => $user->flw_dva_account_number,
             'flw_account_name' => $user->flw_dva_account_name,
             'flw_bank_name' => $user->flw_dva_bank_name,
             'flw_verification_details' => $flwVerificationDetails,
+            // Monnify DVA
+            'monnify_account_number' => $user->monnify_dva_account_number,
+            'monnify_account_name' => $user->monnify_dva_account_name,
+            'monnify_bank_name' => $user->monnify_dva_bank_name,
+            'monnify_verification_details' => $monnifyVerificationDetails,
         ]);
     }
 
@@ -99,11 +114,11 @@ class VirtualAccountController extends Controller
                     return response()->json(['message' => 'Identity sync failed'], 502);
                 }
             } else {
-                $customerCode = $customerResp->json('data.customer_code') ?? $user->paystack_customer_code;
+                $customerCode = $customerResp->json('data.customer_code') ?? ($user->virtualAccount->paystack_customer_code ?? null);
             }
 
             if (!empty($customerCode)) {
-                $user->update(['paystack_customer_code' => $customerCode]);
+                $user->virtualAccount()->updateOrCreate([], ['paystack_customer_code' => $customerCode]);
             }
 
             // 4. Assign the Dedicated Virtual Account
@@ -122,11 +137,14 @@ class VirtualAccountController extends Controller
             if ($assignResp->successful()) {
                 $accData = $assignResp->json('data');
 
-                $user->update([
+                $user->virtualAccount()->updateOrCreate([], [
                     'dva_account_number' => $accData['account_number'],
                     'dva_account_name'   => $accData['account_name'],
                     'dva_bank_name'      => $accData['bank']['name'],
-                    'bvn'                => $validated['bvn'] ?? $user->bvn
+                ]);
+
+                $user->update([
+                    'bvn' => $validated['bvn'] ?? $user->bvn
                 ]);
 
                 return $this->show($request);
@@ -180,6 +198,22 @@ class VirtualAccountController extends Controller
         if (!$result['success']) {
             $status = str_contains($result['message'], 'not configured') ? 500 : 422;
             return response()->json(['message' => $result['message']], $status);
+        }
+
+        return $this->show($request);
+    }
+
+    /**
+     * Create a Monnify DVA for the authenticated user.
+     */
+    public function assignMonnify(Request $request)
+    {
+        $user = $request->user();
+        $service = app(MonnifyService::class);
+        $result = $service->createVirtualAccount($user);
+
+        if (!$result['success']) {
+            return response()->json(['message' => $result['message']], 422);
         }
 
         return $this->show($request);

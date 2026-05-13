@@ -116,6 +116,21 @@
               </div>
             </button>
           </div>
+          <div class="grid grid-cols-1 mt-3">
+             <button 
+              @click="selectedGateway = 'monnify'"
+              type="button"
+              :class="['p-3 rounded-xl border-2 transition-all text-left relative overflow-hidden', selectedGateway === 'monnify' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']"
+            >
+              <p class="font-bold text-xs" :class="selectedGateway === 'monnify' ? 'text-emerald-700' : 'text-slate-600'">Monnify</p>
+              <p class="text-[9px] text-slate-400">Alternative: Cards, Transfer</p>
+              <div v-if="selectedGateway === 'monnify'" class="absolute top-1 right-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-emerald-600">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </button>
+          </div>
         </div>
         <button @click="initiatePayment" :disabled="paymentList.length === 0 || loading" class="btn-primary w-full py-4 text-lg">
           {{ loading ? 'Processing…' : (payFromWallet ? 'Allocate from Wallet' : 'Make Payment') }}

@@ -242,7 +242,7 @@ class ChatService
         $metadata['chat_ban_reason'] = $reason;
         $metadata['chat_banned_at'] = now();
 
-        $user->update(['dva_verification_meta' => $metadata]);
+        $user->virtualAccount()->updateOrCreate([], ['dva_verification_meta' => $metadata]);
         return $user;
     }
 
@@ -253,7 +253,7 @@ class ChatService
         unset($metadata['chat_ban_reason']);
         unset($metadata['chat_banned_at']);
 
-        $user->update(['dva_verification_meta' => $metadata]);
+        $user->virtualAccount()->updateOrCreate([], ['dva_verification_meta' => $metadata]);
         return $user;
     }
 

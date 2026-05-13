@@ -103,6 +103,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'admin'])->prefix('admin')->gro
 // Webhook (public, signature-verified inside controller)
 Route::post('/webhooks/paystack', [WebhookController::class, 'handlePaystack']);
 Route::post('/webhooks/flutterwave', [WebhookController::class, 'handleFlutterwave']);
+Route::post('/webhooks/monnify', [WebhookController::class, 'handleMonnify']);
 
 // VTpass webhook (public) - accept GET (VTpass URL verification) and POST (real callbacks)
 Route::match(['get', 'post'], '/vtu/webhook', [\App\Http\Controllers\Api\UtilityController::class, 'handleWebhook']);
@@ -202,6 +203,8 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Virtual Account (Flutterwave DVA)
     Route::post('/virtual-account/assign-flutterwave', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assignFlutterwave']);
     Route::post('/virtual-account/regenerate-flutterwave', [\App\Http\Controllers\Api\VirtualAccountController::class, 'regenerateFlutterwave']);
+    // Virtual Account (Monnify DVA)
+    Route::post('/virtual-account/assign-monnify', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assignMonnify']);
 
     // Attendance
     Route::get('/attendance/current', [AttendanceController::class, 'current']);

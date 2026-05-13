@@ -2,17 +2,20 @@
   <div class="min-h-screen pb-28 overflow-x-hidden bg-slate-50">
     <AppHeader :user="dashboardData" :showSettings="true" />
 
-    <!-- Global System Announcement -->
-    <div v-if="appStatusStore.systemAnnouncement" 
-         class="bg-emerald-600 text-white px-4 py-3 text-center text-xs font-bold flex items-center justify-center gap-3 shadow-md animate-in fade-in slide-in-from-top duration-500">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.007.51.011.77.011h3.39c.8 0 1.545-.466 1.89-1.159L18.42 12l-1.12-2.25c-.345-.693-1.09-1.159-1.89-1.159h-3.39c-.26 0-.517.004-.77.011m0 9.18c.612.016 1.221.031 1.83.042m-1.83-9.222c.61-.011 1.218-.026 1.83-.042m-1.83 9.222v-9.18m1.83 9.138A17.944 17.944 0 0 1 12 18c-1.353 0-2.65-.148-3.903-.432m10.343-9.43A17.944 17.944 0 0 0 12 6c-1.353 0-2.65.148-3.903.432" />
-      </svg>
-      <p class="leading-tight">{{ appStatusStore.systemAnnouncement }}</p>
-    </div>
+    <div class="max-w-5xl mx-auto px-4 pb-10">
+      <!-- Global System Announcement -->
+      <div v-if="appStatusStore.systemAnnouncement" 
+           class="mt-4 bg-emerald-600 text-white px-4 py-3 rounded-2xl text-center text-xs font-bold flex items-center justify-center gap-3 shadow-md animate-in fade-in slide-in-from-top duration-500 mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.007.51.011.77.011h3.39c.8 0 1.545-.466 1.89-1.159L18.42 12l-1.12-2.25c-.345-.693-1.09-1.159-1.89-1.159h-3.39c-.26 0-.517.004-.77.011m0 9.18c.612.016 1.221.031 1.83.042m-1.83-9.222c.61-.011 1.218-.026 1.83-.042m-1.83 9.222v-9.18m1.83 9.138A17.944 17.944 0 0 1 12 18c-1.353 0-2.65-.148-3.903-.432m10.343-9.43A17.944 17.944 0 0 0 12 6c-1.353 0-2.65.148-3.903.432" />
+        </svg>
+        <p class="leading-tight">{{ appStatusStore.systemAnnouncement }}</p>
+      </div>
 
-    <div class="p-4">
-      <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
+      <div class="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+        <!-- Left Column: Primary Info & Warnings -->
+        <div class="lg:col-span-7 space-y-4">
+          <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
         <div class="flex items-center gap-2 mb-2 relative z-10">
           <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
@@ -98,9 +101,12 @@
           <p class="text-xs text-blue-700">You reported a discrepancy. Our officers are currently reconciling your records.</p>
         </div>
       </div>
+    </div> <!-- end left col -->
 
+    <!-- Right Column: Eligibility & Performance -->
+    <div class="lg:col-span-5 space-y-6 mt-6 lg:mt-0">
       <!-- Loan Eligibility & Savings Section -->
-      <div class="mt-6 bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100">
+      <div class="bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-slate-800 font-bold text-lg">Loan Eligibility</h3>
           <div class="flex items-center gap-3">
@@ -153,17 +159,18 @@
         <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="📊" />
         <StatPill label="Attaqwa Score" :value="String(kpis.attaqwa_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />
       </div>
+    </div> <!-- end right col -->
+  </div> <!-- end grid -->
 
       <!-- Trend chart -->
-      <FinCard class="mt-4" :padded="true" :elevated="true">
+      <FinCard class="mt-6" :padded="true" :elevated="true">
         <template #title>
           Activity Trend
         </template>
         <TrendChart :series="chart.series" :categories="chart.categories" :currency="currency" />
       </FinCard>
-    </div>
 
-    <div class="px-4 grid grid-cols-2 gap-4 mt-2">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-8">
       <button @click="$router.push('/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
         <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">💳</div>
         <span class="text-sm font-bold text-slate-700">Make Payment</span>
@@ -267,7 +274,7 @@
     </div>
 
     <!-- Quick guide links -->
-    <div class="px-4 mt-3 text-[12px] text-slate-600">
+    <div class="mt-6 text-[12px] text-slate-600">
       <p>
         New here? Learn about
         <button class="text-emerald-700 font-semibold underline" @click="showPassbookInfo">Passbook</button>,
@@ -278,7 +285,7 @@
     </div>
 
     <!-- Tabs Navigation -->
-    <div class="px-4 mt-8">
+    <div class="mt-12">
       <div class="flex p-1.5 bg-slate-200/50 rounded-[1.5rem] gap-1 shadow-inner mb-6">
         <button 
           v-for="tab in ['transactions', 'passbook', 'vtu']" 
@@ -439,7 +446,7 @@
           <p>No VTU activity found.</p>
         </div>
       </div>
-    </div>
+    </div> <!-- end max-w container -->
 
     <!-- Reusable Custom Notice Modal for Zakat/info alerts -->
     <CustomNotice

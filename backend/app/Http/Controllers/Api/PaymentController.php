@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Scheme;
 use App\Models\Project;
 use App\Models\Contribution;
+use App\Services\MonnifyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -147,6 +148,29 @@ class PaymentController extends Controller
         $gateway = strtolower($request->input('gateway', 'paystack'));
 
         try {
+            if ($gateway === 'monnify') {
+                $service = app(MonnifyService::class);
+                $monnifyData = $service->initializeTransaction([
+                    'amount' => round($totalAmount, 2),
+                    'customerName' => $user->name,
+                    'customerEmail' => $user->email,
+                    'paymentReference' => $reference,
+                    'paymentDescription' => 'Cooperative payment',
+                    'redirectUrl' => $validated['callback_url'] ?? config('app.url'),
+                ]);
+
+                if (!$monnifyData) {
+                    return response()->json(['message' => 'Failed to initialize Monnify payment'], 502);
+                }
+
+                return response()->json([
+                    'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
+                    'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                    'reference' => $reference,
+                    'total' => $totalAmount,
+                ]);
+            }
+
             if ($gateway === 'flutterwave') {
                 $flwSecret = config('services.flutterwave.secret_key');
                 if (!$flwSecret) {
@@ -261,7 +285,7 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'reference' => 'required|string',
-            'gateway' => 'nullable|in:paystack,flutterwave',
+            'gateway' => 'nullable|in:paystack,flutterwave,monnify',
         ]);
 
         $user = $request->user();
@@ -278,8 +302,8 @@ class PaymentController extends Controller
             }
         }
 
-        if ($gateway === 'flutterwave') {
-            // For now, rely on webhook for Flutterwave (already implemented). Return pending status.
+        if ($gateway === 'flutterwave' || $gateway === 'monnify') {
+            // For now, rely on webhook (already implemented). Return pending status.
             return response()->json(['status' => 'pending', 'message' => 'Awaiting confirmation'], 202);
         }
 
