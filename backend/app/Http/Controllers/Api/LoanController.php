@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Services\MonnifyService;
+use App\Services\OpayService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -441,7 +442,7 @@ class LoanController extends Controller
     {
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'source' => ['nullable', 'in:auto,wallet,paystack,flutterwave,bank_transfer,ussd'],
+            'source' => ['nullable', 'in:auto,wallet,paystack,flutterwave,monnify,opay,bank_transfer,ussd'],
             'callback_url' => ['nullable', 'url'],
         ]);
 
@@ -690,6 +691,43 @@ class LoanController extends Controller
                         'amount_applied' => $appliedAmount,
                         'capped' => $wasCapped,
                         'source' => 'monnify',
+                        'initiated' => true,
+                    ],
+                ]);
+            }
+
+            if ($source === 'opay') {
+                $reference = 'QHREP-OPY-' . now()->format('YmdHis') . '-' . $user->id . '-' . Str::upper(Str::random(5));
+                $rep = QardHasanRepayment::create([
+                    'qard_hasan_id' => $q->id,
+                    'amount' => $appliedAmount,
+                    'reference' => $reference,
+                    'status' => 'pending',
+                ]);
+
+                $service = app(OpayService::class);
+                $opayData = $service->initializeTransaction([
+                    'amount' => round($appliedAmount, 2),
+                    'customerName' => $user->name,
+                    'customerEmail' => $user->email,
+                    'reference' => $reference,
+                    'paymentDescription' => 'Loan Repayment: ' . $q->qard_id_string,
+                    'callbackUrl' => $data['callback_url'] ?? config('app.url'),
+                ]);
+
+                if (!$opayData) {
+                    return response()->json(['message' => 'Failed to initialize Opay payment'], 502);
+                }
+
+                return response()->json([
+                    'authorization_url' => $opayData['cashierUrl'] ?? null,
+                    'checkout_url' => $opayData['cashierUrl'] ?? null,
+                    'reference' => $reference,
+                    'summary' => [
+                        'amount_input' => $inputAmount,
+                        'amount_applied' => $appliedAmount,
+                        'capped' => $wasCapped,
+                        'source' => 'opay',
                         'initiated' => true,
                     ],
                 ]);

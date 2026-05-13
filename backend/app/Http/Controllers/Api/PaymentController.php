@@ -7,6 +7,7 @@ use App\Models\Scheme;
 use App\Models\Project;
 use App\Models\Contribution;
 use App\Services\MonnifyService;
+use App\Services\OpayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -166,6 +167,29 @@ class PaymentController extends Controller
                 return response()->json([
                     'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
                     'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                    'reference' => $reference,
+                    'total' => $totalAmount,
+                ]);
+            }
+
+            if ($gateway === 'opay') {
+                $service = app(OpayService::class);
+                $opayData = $service->initializeTransaction([
+                    'amount' => round($totalAmount, 2),
+                    'customerName' => $user->name,
+                    'customerEmail' => $user->email,
+                    'reference' => $reference,
+                    'paymentDescription' => 'Cooperative payment',
+                    'callbackUrl' => $validated['callback_url'] ?? config('app.url'),
+                ]);
+
+                if (!$opayData) {
+                    return response()->json(['message' => 'Failed to initialize Opay payment'], 502);
+                }
+
+                return response()->json([
+                    'authorization_url' => $opayData['cashierUrl'] ?? null,
+                    'checkout_url' => $opayData['cashierUrl'] ?? null,
                     'reference' => $reference,
                     'total' => $totalAmount,
                 ]);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\FlutterwaveDvaService;
 use App\Services\MonnifyService;
+use App\Services\OpayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -40,6 +41,14 @@ class VirtualAccountController extends Controller
             }
         }
 
+        $opayVerificationDetails = null;
+        if ($user->opay_dva_bank_name && $user->opay_dva_account_number) {
+            $opayVerificationDetails = $user->opay_dva_bank_name . ' - ' . $user->opay_dva_account_number;
+            if (!empty($user->opay_dva_account_name)) {
+                $opayVerificationDetails .= ' (' . $user->opay_dva_account_name . ')';
+            }
+        }
+
         return response()->json([
             'paystack_customer_code' => $virtualAccount->paystack_customer_code ?? null,
             'account_number' => $virtualAccount->dva_account_number ?? null,
@@ -57,6 +66,11 @@ class VirtualAccountController extends Controller
             'monnify_account_name' => $user->monnify_dva_account_name,
             'monnify_bank_name' => $user->monnify_dva_bank_name,
             'monnify_verification_details' => $monnifyVerificationDetails,
+            // Opay DVA
+            'opay_account_number' => $user->opay_dva_account_number,
+            'opay_account_name' => $user->opay_dva_account_name,
+            'opay_bank_name' => $user->opay_dva_bank_name,
+            'opay_verification_details' => $opayVerificationDetails,
         ]);
     }
 
@@ -210,6 +224,22 @@ class VirtualAccountController extends Controller
     {
         $user = $request->user();
         $service = app(MonnifyService::class);
+        $result = $service->createVirtualAccount($user);
+
+        if (!$result['success']) {
+            return response()->json(['message' => $result['message']], 422);
+        }
+
+        return $this->show($request);
+    }
+
+    /**
+     * Create an Opay DVA for the authenticated user.
+     */
+    public function assignOpay(Request $request)
+    {
+        $user = $request->user();
+        $service = app(OpayService::class);
         $result = $service->createVirtualAccount($user);
 
         if (!$result['success']) {

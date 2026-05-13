@@ -18,12 +18,15 @@ class UserVirtualAccount extends Model
         'flw_dva_data',
         'monnify_customer_reference',
         'monnify_dva_data',
+        'opay_user_reference',
+        'opay_dva_data',
     ];
 
     protected $casts = [
         'dva_verification_meta' => 'array',
         'flw_dva_data' => 'array',
         'monnify_dva_data' => 'array',
+        'opay_dva_data' => 'array',
     ];
 
     public function user(): BelongsTo

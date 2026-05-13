@@ -5,7 +5,7 @@
     <div class="p-4 space-y-6">
       <!-- Balance Card -->
       <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
-        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full"></div>
         <div class="flex items-center gap-2 mb-2 relative z-10">
           <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
           <button @click="hideBalances = !hideBalances" class="text-lg opacity-80 p-1 rounded-lg hover:bg-white/10 transition-colors">
@@ -57,7 +57,7 @@
       <div v-if="activeTab === 'merchant'" class="space-y-6">
         <!-- Merchant Pay (QR) Tab Content -->
         <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 text-center relative overflow-hidden">
-          <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50" />
+          <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
           <div class="relative z-10 space-y-6">
             <div class="w-20 h-20 bg-emerald-100 rounded-[2.5rem] flex items-center justify-center mx-auto text-4xl shadow-inner">
               📱
@@ -80,7 +80,7 @@
         </div>
         
         <div class="bg-emerald-900 p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden">
-           <div class="absolute left-0 bottom-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12" />
+           <div class="absolute left-0 bottom-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
            <h4 class="font-bold text-emerald-200 text-[10px] uppercase tracking-widest mb-2">How it works</h4>
            <ul class="space-y-3">
              <li class="flex gap-3 text-xs">
@@ -208,13 +208,14 @@
                 <p class="text-[10px] text-slate-400 leading-tight">BVN is required by Flutterwave to create your dedicated account.</p>
               </div>
             </div>
+          </div>
 
-            <!-- Monnify Virtual Account Info -->
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+          <!-- Monnify Virtual Account Info -->
+          <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt 2)</h3>
                 <button v-if="!wallet.monnify_virtual_account?.account_number" @click="assignMonnifyDva" :disabled="assigningMonnify"
-                        class="text-[10px] font-black uppercase bg-emerald-700 text-white px-3 py-2 rounded-xl disabled:opacity-50">
+                        class="text-[10px] font-black uppercase bg-sky-600 text-white px-3 py-2 rounded-xl disabled:opacity-50">
                   {{ assigningMonnify ? 'Creating…' : 'Generate' }}
                 </button>
               </div>
@@ -232,9 +233,9 @@
                   <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
                     <div>
                       <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
-                      <p class="font-black text-emerald-700 text-xl tracking-wider">{{ wallet.monnify_virtual_account.account_number }}</p>
+                      <p class="font-black text-sky-700 text-xl tracking-wider">{{ wallet.monnify_virtual_account.account_number }}</p>
                     </div>
-                    <button @click="copy(wallet.monnify_virtual_account.account_number)" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg hover:bg-emerald-100 transition-colors">
+                    <button @click="copy(wallet.monnify_virtual_account.account_number)" class="bg-sky-50 text-sky-700 p-2 rounded-lg hover:bg-sky-100 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
@@ -249,11 +250,10 @@
                 <p class="text-sm text-slate-500">Generate a Monnify virtual account to fund via bank transfer.</p>
               </div>
             </div>
-          </div>
 
         <!-- Administrative Charges Section -->
         <div v-if="wallet.admin_charge_balance > 0" class="bg-rose-50 p-6 rounded-[2rem] border border-rose-100 shadow-sm relative overflow-hidden">
-          <div class="absolute right-0 top-0 w-24 h-24 bg-rose-100 rounded-full -mr-12 -mt-12 opacity-50" />
+          <div class="absolute right-0 top-0 w-24 h-24 bg-rose-100 rounded-full -mr-12 -mt-12 opacity-50"></div>
           <div class="relative z-10 flex justify-between items-center">
             <div>
               <h3 class="font-bold text-rose-900">Administrative Charges</h3>

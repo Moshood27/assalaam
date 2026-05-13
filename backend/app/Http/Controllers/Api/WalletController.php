@@ -12,6 +12,7 @@ use App\Models\WithdrawalRequest;
 use App\Models\User;
 use App\Models\Branch;
 use App\Services\MonnifyService;
+use App\Services\OpayService;
 use App\Traits\VerifiesOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -121,6 +122,7 @@ class WalletController extends Controller
             'balance' => (float) $user->balance,
             'gold_balance' => (float) ($user->gold_balance ?? 0),
             'available_for_withdrawal' => (float) ($breakdown['available_for_withdrawal'] ?? 0),
+            'admin_charge_balance' => (float) ($user->admin_charge_balance ?? 0),
             'breakdown' => $breakdown,
             'virtual_account' => [
                 'paystack_customer_code' => $user->paystack_customer_code,
@@ -142,6 +144,17 @@ class WalletController extends Controller
                 'verification_details' => ($user->flw_dva_bank_name && $user->flw_dva_account_number)
                     ? ($user->flw_dva_bank_name . ' - ' . $user->flw_dva_account_number . (
                         $user->flw_dva_account_name ? (' (' . $user->flw_dva_account_name . ')') : ''
+                    ))
+                    : null,
+            ],
+            'monnify_virtual_account' => [
+                'account_number' => $user->monnify_dva_account_number,
+                'account_name' => $user->monnify_dva_account_name,
+                'bank_name' => $user->monnify_dva_bank_name,
+                'has_account' => (bool) $user->monnify_dva_account_number,
+                'verification_details' => ($user->monnify_dva_bank_name && $user->monnify_dva_account_number)
+                    ? ($user->monnify_dva_bank_name . ' - ' . $user->monnify_dva_account_number . (
+                        $user->monnify_dva_account_name ? (' (' . $user->monnify_dva_account_name . ')') : ''
                     ))
                     : null,
             ],
@@ -176,7 +189,7 @@ class WalletController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'callback_url' => 'nullable|url',
-            'gateway' => 'nullable|in:paystack,flutterwave,monnify',
+            'gateway' => 'nullable|in:paystack,flutterwave,monnify,opay',
         ]);
 
         $user = $request->user();
@@ -202,6 +215,29 @@ class WalletController extends Controller
             return response()->json([
                 'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
                 'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                'reference' => $reference,
+                'amount' => (float)$validated['amount'],
+            ]);
+        }
+
+        if ($gateway === 'opay') {
+            $service = app(OpayService::class);
+            $opayData = $service->initializeTransaction([
+                'amount' => round((float)$validated['amount'], 2),
+                'customerName' => $user->full_name,
+                'customerEmail' => $user->email,
+                'reference' => $reference,
+                'paymentDescription' => 'Wallet Top-up',
+                'callbackUrl' => $validated['callback_url'] ?? config('app.url'),
+            ]);
+
+            if (!$opayData) {
+                return response()->json(['message' => 'Failed to initialize Opay payment'], 502);
+            }
+
+            return response()->json([
+                'authorization_url' => $opayData['cashierUrl'] ?? null,
+                'checkout_url' => $opayData['cashierUrl'] ?? null,
                 'reference' => $reference,
                 'amount' => (float)$validated['amount'],
             ]);

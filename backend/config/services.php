@@ -134,4 +134,11 @@ return [
         'base_url' => env('MONNIFY_BASE_URL', 'https://api.monnify.com'),
     ],
 
+    'opay' => [
+        'merchant_id' => env('OPAY_MERCHANT_ID'),
+        'public_key' => env('OPAY_PUBLIC_KEY'),
+        'secret_key' => env('OPAY_SECRET_KEY'),
+        'base_url' => env('OPAY_BASE_URL', 'https://api.opaycheckout.com/api/v1/international'),
+    ],
+
     ];

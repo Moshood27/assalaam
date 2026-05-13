@@ -9,6 +9,7 @@ use App\Models\SadaqahProject;
 use App\Models\SadaqahContribution;
 use App\Models\WalletTransaction;
 use App\Services\MonnifyService;
+use App\Services\OpayService;
 use App\Services\ZakatService;
 use App\Services\GoldSilverPriceService;
 use Carbon\Carbon;
@@ -115,6 +116,29 @@ class ZakatController extends Controller
             return response()->json([
                 'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
                 'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                'reference' => $reference,
+                'total' => $amount,
+            ]);
+        }
+
+        if ($gateway === 'opay') {
+            $service = app(OpayService::class);
+            $opayData = $service->initializeTransaction([
+                'amount' => round($amount, 2),
+                'customerName' => $user->name,
+                'customerEmail' => $user->email,
+                'reference' => $reference,
+                'paymentDescription' => 'Zakat payment',
+                'callbackUrl' => $request->input('callback_url') ?? config('app.url'),
+            ]);
+
+            if (!$opayData) {
+                return response()->json(['message' => 'Failed to initialize Opay payment'], 502);
+            }
+
+            return response()->json([
+                'authorization_url' => $opayData['cashierUrl'] ?? null,
+                'checkout_url' => $opayData['cashierUrl'] ?? null,
                 'reference' => $reference,
                 'total' => $amount,
             ]);
@@ -255,6 +279,29 @@ class ZakatController extends Controller
             return response()->json([
                 'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
                 'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+                'reference' => $reference,
+                'total' => $amount,
+            ]);
+        }
+
+        if ($gateway === 'opay') {
+            $service = app(OpayService::class);
+            $opayData = $service->initializeTransaction([
+                'amount' => round($amount, 2),
+                'customerName' => $user->name,
+                'customerEmail' => $user->email,
+                'reference' => $reference,
+                'paymentDescription' => 'Zakat Fitr payment',
+                'callbackUrl' => $request->input('callback_url') ?? config('app.url'),
+            ]);
+
+            if (!$opayData) {
+                return response()->json(['message' => 'Failed to initialize Opay payment'], 502);
+            }
+
+            return response()->json([
+                'authorization_url' => $opayData['cashierUrl'] ?? null,
+                'checkout_url' => $opayData['cashierUrl'] ?? null,
                 'reference' => $reference,
                 'total' => $amount,
             ]);

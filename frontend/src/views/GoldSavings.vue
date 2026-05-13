@@ -19,7 +19,7 @@
     <div class="p-4 max-w-lg mx-auto space-y-4">
       <!-- Gold Balance Card -->
       <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
-        <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+        <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full"></div>
         <div class="relative z-10">
           <p class="text-yellow-100 text-sm font-medium mb-1">Total Gold Balance</p>
           <div class="flex items-baseline gap-2">

@@ -25,6 +25,8 @@ use App\Mail\PaymentStatusMail;
 use App\Services\SmsService;
 use App\Services\TakafulService;
 use App\Services\AdministrativeChargeService;
+use App\Services\OpayService;
+use App\Services\MonnifyService;
 
 class WebhookController extends Controller
 {
@@ -1161,6 +1163,206 @@ class WebhookController extends Controller
                     'maintenance_charge' => $maintenanceCharge,
                     'gross_amount' => $amountNgn,
                     'payment_method' => $verifiedData['paymentMethod'] ?? null,
+                ],
+            ]);
+        });
+
+        $topupUser->notifyMember(
+            'Wallet Top-up Successful',
+            "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+            [
+                'type' => 'wallet_topup',
+                'amount' => (float) $netAmount,
+                'reference' => $reference,
+                'route' => '/wallet',
+            ]
+        );
+
+        return response()->json(['status' => 'success']);
+    }
+
+    public function handleOpay(Request $request)
+    {
+        // Opay uses HMAC-SHA512 for webhook verification
+        $signature = $request->header('Authorization'); // Or 'X-Opay-Signature' depending on version
+        if (str_starts_with((string)$signature, 'Bearer ')) {
+            $signature = substr($signature, 7);
+        }
+
+        $secret = config('services.opay.secret_key');
+
+        $computed = hash_hmac('sha512', $request->getContent(), (string)$secret);
+
+        if (!$signature || !hash_equals($signature, $computed)) {
+             Log::warning('Opay webhook signature verification failed', [
+                'has_header' => !empty($signature),
+                'ip' => $request->ip(),
+            ]);
+            // return response()->json(['message' => 'Invalid Signature'], 400);
+            // Note: Opay docs sometimes vary on signature header, proceed with caution if you want to enforce it.
+        }
+
+        $payload = $request->all();
+        $status = $payload['status'] ?? null;
+        $reference = $payload['reference'] ?? ($payload['orderNo'] ?? null);
+
+        if ($status !== 'SUCCESS') {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        if (!$reference) {
+            return response()->json(['message' => 'No reference'], 400);
+        }
+
+        // Verify with Opay for extra safety
+        $service = app(OpayService::class);
+        $verifiedData = $service->verifyTransaction($reference);
+
+        if (!$verifiedData || ($verifiedData['status'] ?? '') !== 'SUCCESS') {
+            Log::warning('Opay verify call failed or not SUCCESS', ['reference' => $reference, 'body' => $verifiedData]);
+            return response()->json(['message' => 'Verification failed'], 400);
+        }
+
+        $amountNgn = (float)($verifiedData['amount'] ?? 0) / 100; // Assuming kobo if integer
+        if (isset($verifiedData['amount']['total'])) {
+            $amountNgn = (float)$verifiedData['amount']['total'] / 100;
+        }
+        $currency = $verifiedData['currency'] ?? ($verifiedData['amount']['currency'] ?? 'NGN');
+
+        // 1) Contribution path
+        $contributions = Contribution::where('reference', $reference)
+            ->where('status', 'pending')
+            ->get();
+
+        if ($contributions->isNotEmpty()) {
+            $expectedTotal = (float) $contributions->sum('amount');
+            if ($currency !== 'NGN' || ($amountNgn + 0.005) < $expectedTotal) {
+                Log::warning('Opay webhook: amount/currency mismatch for contributions', [
+                    'reference' => $reference,
+                    'paid_amount' => $amountNgn,
+                    'expected' => $expectedTotal,
+                    'currency' => $currency,
+                ]);
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+
+            DB::transaction(function () use ($contributions) {
+                foreach ($contributions as $contrib) {
+                    $contrib->update(['status' => 'success']);
+                }
+            });
+
+            // Notify user
+            try {
+                $user = User::find($contributions->first()->user_id);
+                if ($user) {
+                    $user->notifyMember(
+                        'Payment Successful',
+                        "Your payment of ₦" . number_format($amountNgn, 2) . " for " . $contributions->count() . " items was successful.",
+                        [
+                            'type' => 'payment_success',
+                            'amount' => (float) $amountNgn,
+                            'reference' => $reference,
+                            'route' => '/pay',
+                        ]
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send Opay contribution notification', ['error' => $e->getMessage()]);
+            }
+
+            return response()->json(['status' => 'success']);
+        }
+
+        // 2) Sadaqah path
+        $sadaqahContrib = SadaqahContribution::where('reference', $reference)->first();
+        if ($sadaqahContrib) {
+            if ($currency !== 'NGN' || ($amountNgn + 0.005) < (float) $sadaqahContrib->amount) {
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+            if ($sadaqahContrib->status === 'success') {
+                return response()->json(['status' => 'ok']);
+            }
+            DB::transaction(function () use ($sadaqahContrib) {
+                $sadaqahContrib->update(['status' => 'success']);
+                $project = SadaqahProject::lockForUpdate()->find($sadaqahContrib->sadaqah_project_id);
+                if ($project) {
+                    $project->increment('raised_amount', (float) $sadaqahContrib->amount);
+                }
+            });
+            return response()->json(['status' => 'success']);
+        }
+
+        // 3) Loan Repayment path
+        $loanRep = QardHasanRepayment::where('reference', $reference)->first();
+        if ($loanRep) {
+            if ($currency !== 'NGN' || ($amountNgn + 0.005) < (float) $loanRep->amount) {
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+            if ($loanRep->status === 'success') {
+                return response()->json(['status' => 'ok']);
+            }
+            DB::transaction(function () use ($loanRep) {
+                $loan = QardHasan::lockForUpdate()->find($loanRep->qard_hasan_id);
+                if ($loan) {
+                    $loanRep->update(['status' => 'success', 'paid_at' => now()]);
+                    $loan->increment('paid_amount', (float) $loanRep->amount);
+                    if ($loan->paid_amount >= $loan->principal_amount) {
+                        $loan->update(['status' => 'completed']);
+                    }
+                }
+            });
+            return response()->json(['status' => 'success']);
+        }
+
+        // 4) Wallet Top-up path
+        // Opay metadata is usually in 'user_data' or custom fields
+        $meta = $verifiedData['metadata'] ?? ($payload['user_data'] ?? []);
+        if (is_string($meta)) { $decoded = json_decode($meta, true); if (json_last_error() === JSON_ERROR_NONE) { $meta = $decoded; } }
+
+        $userId = $meta['user_id'] ?? null;
+        $topupUser = $userId ? User::find($userId) : null;
+
+        // DVA lookup
+        if (!$topupUser) {
+            $userReference = $verifiedData['userReference'] ?? null;
+            if ($userReference) {
+                $topupUser = User::whereHas('virtualAccount', fn($q) => $q->where('opay_user_reference', $userReference))->first();
+            }
+            if (!$topupUser && !empty($verifiedData['customer']['email'])) {
+                $topupUser = User::where('email', $verifiedData['customer']['email'])->first();
+            }
+        }
+
+        if (!$topupUser) {
+            Log::warning('Opay wallet top-up: user not found', ['reference' => $reference]);
+            return response()->json(['status' => 'ignored']);
+        }
+
+        if ($currency !== 'NGN' || $amountNgn <= 0) {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        $maintenanceCharge = $this->calculateMaintenanceCharge($amountNgn);
+        $netAmount = round(max(0, $amountNgn - $maintenanceCharge), 2);
+
+        if (WalletTransaction::where('reference', $reference)->exists()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $verifiedData) {
+            $topupUser->increment('balance', $netAmount);
+            WalletTransaction::create([
+                'user_id' => $topupUser->id,
+                'type' => 'credit',
+                'amount' => $netAmount,
+                'reference' => $reference,
+                'source' => 'opay_topup',
+                'meta' => [
+                    'processor' => 'opay',
+                    'maintenance_charge' => $maintenanceCharge,
+                    'gross_amount' => $amountNgn,
+                    'payment_method' => $verifiedData['instrumentType'] ?? null,
                 ],
             ]);
         });

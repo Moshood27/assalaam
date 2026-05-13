@@ -345,6 +345,31 @@ class User extends Authenticatable implements FilamentUser
         return $this->virtualAccount?->monnify_dva_data['bankCode'] ?? null;
     }
 
+    public function getOpayUserReferenceAttribute(): ?string
+    {
+        return $this->virtualAccount?->opay_user_reference ?? null;
+    }
+
+    public function getOpayDvaDataAttribute(): ?array
+    {
+        return $this->virtualAccount?->opay_dva_data ?? null;
+    }
+
+    public function getOpayDvaAccountNumberAttribute(): ?string
+    {
+        return $this->virtualAccount?->opay_dva_data['accountNumber'] ?? null;
+    }
+
+    public function getOpayDvaAccountNameAttribute(): ?string
+    {
+        return $this->virtualAccount?->opay_dva_data['accountName'] ?? null;
+    }
+
+    public function getOpayDvaBankNameAttribute(): ?string
+    {
+        return $this->virtualAccount?->opay_dva_data['bankName'] ?? null;
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim("{$this->surname} {$this->name} {$this->other_names}");

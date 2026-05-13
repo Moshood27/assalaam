@@ -128,7 +128,7 @@
               <label for="anon" class="text-sm text-slate-300">Contribute anonymously</label>
             </div>
 
-            <div class="grid grid-cols-3 gap-3 mt-4">
+            <div class="grid grid-cols-2 gap-3 mt-4">
               <button 
                 @click="initiateContribution('wallet')"
                 :disabled="submitting || !form.amount || (balance !== null && form.amount > balance)"

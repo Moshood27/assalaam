@@ -7,6 +7,7 @@ use App\Models\SadaqahProject;
 use App\Models\SadaqahContribution;
 use App\Models\WalletTransaction;
 use App\Services\MonnifyService;
+use App\Services\OpayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -41,7 +42,7 @@ class SadaqahController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'is_anonymous' => 'boolean',
-            'gateway' => 'nullable|in:paystack,flutterwave,wallet',
+            'gateway' => 'nullable|in:paystack,flutterwave,monnify,opay,wallet',
             'callback_url' => 'nullable|url',
         ]);
 
@@ -65,6 +66,19 @@ class SadaqahController extends Controller
                 'status' => 'pending',
             ]);
             return $this->initiateMonnify($user, $amount, $reference, $request->input('callback_url'));
+        }
+
+        if ($gateway === 'opay') {
+            $reference = 'SADAQAH_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
+            SadaqahContribution::create([
+                'user_id' => $user->id,
+                'sadaqah_project_id' => $project->id,
+                'amount' => $amount,
+                'reference' => $reference,
+                'is_anonymous' => $validated['is_anonymous'] ?? false,
+                'status' => 'pending',
+            ]);
+            return $this->initiateOpay($user, $amount, $reference, $request->input('callback_url'));
         }
 
         $reference = 'SADAQAH_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
@@ -194,6 +208,30 @@ class SadaqahController extends Controller
         return response()->json([
             'authorization_url' => $monnifyData['checkoutUrl'] ?? null,
             'checkout_url' => $monnifyData['checkoutUrl'] ?? null,
+            'reference' => $reference,
+            'amount' => $amount,
+        ]);
+    }
+
+    private function initiateOpay($user, $amount, $reference, $callbackUrl)
+    {
+        $service = app(OpayService::class);
+        $opayData = $service->initializeTransaction([
+            'amount' => round($amount, 2),
+            'customerName' => $user->name,
+            'customerEmail' => $user->email,
+            'reference' => $reference,
+            'paymentDescription' => 'Sadaqah contribution',
+            'callbackUrl' => $callbackUrl ?? config('app.url'),
+        ]);
+
+        if (!$opayData) {
+            return response()->json(['message' => 'Failed to initialize Opay payment'], 502);
+        }
+
+        return response()->json([
+            'authorization_url' => $opayData['cashierUrl'] ?? null,
+            'checkout_url' => $opayData['cashierUrl'] ?? null,
             'reference' => $reference,
             'amount' => $amount,
         ]);
