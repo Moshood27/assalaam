@@ -29,42 +29,56 @@ return new class extends Migration
         });
 
         // 2. Migrate existing data
-        $users = DB::table('users')->whereNotNull('paystack_customer_code')
-            ->orWhereNotNull('dva_account_number')
-            ->orWhereNotNull('flw_dva_data')
-            ->orWhereNotNull('monnify_customer_reference')
-            ->get();
+        $columnsToMigrate = [
+            'paystack_customer_code',
+            'paystack_authorization_code',
+            'dva_account_number',
+            'dva_bank_name',
+            'dva_account_name',
+            'dva_verification_meta',
+            'flw_dva_data',
+            'monnify_customer_reference',
+            'monnify_dva_data',
+        ];
 
-        foreach ($users as $user) {
-            DB::table('user_virtual_accounts')->insert([
-                'user_id' => $user->id,
-                'paystack_customer_code' => $user->paystack_customer_code ?? null,
-                'paystack_authorization_code' => $user->paystack_authorization_code ?? null,
-                'dva_account_number' => $user->dva_account_number ?? null,
-                'dva_bank_name' => $user->dva_bank_name ?? null,
-                'dva_account_name' => $user->dva_account_name ?? null,
-                'dva_verification_meta' => $user->dva_verification_meta ?? null,
-                'flw_dva_data' => $user->flw_dva_data ?? null,
-                'monnify_customer_reference' => $user->monnify_customer_reference ?? null,
-                'monnify_dva_data' => $user->monnify_dva_data ?? null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        $existingColumns = [];
+        foreach ($columnsToMigrate as $column) {
+            if (Schema::hasColumn('users', $column)) {
+                $existingColumns[] = $column;
+            }
+        }
+
+        if (!empty($existingColumns)) {
+            $users = DB::table('users')->where(function ($query) use ($existingColumns) {
+                foreach ($existingColumns as $column) {
+                    $query->orWhereNotNull($column);
+                }
+            })->get();
+
+            foreach ($users as $user) {
+                $insertData = [
+                    'user_id' => $user->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                foreach ($columnsToMigrate as $column) {
+                    if (property_exists($user, $column)) {
+                        $insertData[$column] = $user->$column;
+                    }
+                }
+
+                DB::table('user_virtual_accounts')->insert($insertData);
+            }
         }
 
         // 3. Drop columns from users table
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn([
-                'paystack_customer_code',
-                'paystack_authorization_code',
-                'dva_account_number',
-                'dva_bank_name',
-                'dva_account_name',
-                'dva_verification_meta',
-                'flw_dva_data',
-                'monnify_customer_reference',
-                'monnify_dva_data',
-            ]);
+        Schema::table('users', function (Blueprint $table) use ($columnsToMigrate) {
+            foreach ($columnsToMigrate as $column) {
+                if (Schema::hasColumn('users', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 
@@ -81,13 +95,13 @@ return new class extends Migration
             $table->string('dva_account_name')->nullable()->after('dva_bank_name');
             $table->json('dva_verification_meta')->nullable()->after('bvn_verified_at');
             $table->json('flw_dva_data')->nullable()->after('dva_verification_meta');
-            $table->string('monnify_customer_reference')->nullable()->after('paystack_customer_code');
-            $table->json('monnify_dva_data')->nullable()->after('flw_dva_data');
+            // Monnify fields are NOT added back to 'users' table because it would exceed row size limit.
+            // They will only exist in 'user_virtual_accounts' table.
         });
 
         $accounts = DB::table('user_virtual_accounts')->get();
         foreach ($accounts as $account) {
-            DB::table('users')->where('id', $account->user_id)->update([
+            $updateData = [
                 'paystack_customer_code' => $account->paystack_customer_code,
                 'paystack_authorization_code' => $account->paystack_authorization_code,
                 'dva_account_number' => $account->dva_account_number,
@@ -95,9 +109,9 @@ return new class extends Migration
                 'dva_account_name' => $account->dva_account_name,
                 'dva_verification_meta' => $account->dva_verification_meta,
                 'flw_dva_data' => $account->flw_dva_data,
-                'monnify_customer_reference' => $account->monnify_customer_reference,
-                'monnify_dva_data' => $account->monnify_dva_data,
-            ]);
+            ];
+
+            DB::table('users')->where('id', $account->user_id)->update($updateData);
         }
 
         Schema::dropIfExists('user_virtual_accounts');

@@ -11,14 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'monnify_customer_reference')) {
-                $table->string('monnify_customer_reference')->nullable()->after('paystack_customer_code');
-            }
-            if (!Schema::hasColumn('users', 'monnify_dva_data')) {
-                $table->json('monnify_dva_data')->nullable()->after('flw_dva_data');
-            }
-        });
+        // No-op: Moved to 2026_05_13_140000_move_virtual_account_fields_to_separate_table.php
+        // to avoid MySQL Row Size limit on users table.
     }
 
     /**
@@ -26,8 +20,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['monnify_customer_reference', 'monnify_dva_data']);
-        });
+        // No-op
     }
 };
