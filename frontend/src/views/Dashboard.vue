@@ -16,7 +16,7 @@
         <!-- Left Column: Primary Info & Warnings -->
         <div class="lg:col-span-7 space-y-4">
           <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
-        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full"></div>
         <div class="flex items-center gap-2 mb-2 relative z-10">
           <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
           <button @click="toggleBalances()" class="text-lg opacity-80 p-1 rounded-lg hover:bg-white/10 transition-colors" title="Toggle visibility">
@@ -378,7 +378,7 @@
         <div v-else-if="passbookSummary" class="space-y-6 animate-in fade-in slide-in-from-bottom duration-500">
           <!-- Yearly Summary Card -->
           <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
-            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full" />
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full"></div>
             <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Yearly Cumulative</p>
             <h2 class="text-4xl font-black tracking-tight">₦ {{ formatMoney(passbookSummary.grand_total) }}</h2>
             
@@ -446,7 +446,8 @@
           <p>No VTU activity found.</p>
         </div>
       </div>
-    </div> <!-- end max-w container -->
+    </div> <!-- end tabs container -->
+  </div> <!-- end max-w container -->
 
     <!-- Reusable Custom Notice Modal for Zakat/info alerts -->
     <CustomNotice
