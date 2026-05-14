@@ -1,1 +1,0 @@
-import{u as e}from"./index-BJ35ofFM.js";export{e as SplashScreen};
