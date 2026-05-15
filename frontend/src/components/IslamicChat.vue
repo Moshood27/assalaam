@@ -226,6 +226,34 @@ function sendFinAction(type) {
        type: 'transaction',
        metadata: { amount: 10000, category: 'Contribution', status: 'pending' }
     })
+  } else if (type === 'peer_transfer') {
+    input.value = "Salam, I've sent you the money for the shared expenses."
+    send('peer_transfer', {
+       body: input.value,
+       type: 'peer_transfer',
+       metadata: { amount: '₦5,000.00', note: 'Contribution for Sadaqah', status: 'completed' }
+    })
+  } else if (type === 'peer_request') {
+    input.value = "Salam, I'm requesting the payment for the lunch we had."
+    send('peer_request', {
+       body: input.value,
+       type: 'peer_request',
+       metadata: { amount: '₦2,500.00', purpose: 'Lunch sharing', status: 'pending' }
+    })
+  } else if (type === 'bill_payment') {
+    input.value = "Salam, I've paid the electricity bill for our branch."
+    send('bill_payment', {
+       body: input.value,
+       type: 'bill_payment',
+       metadata: { bill_type: 'Electricity', amount: '₦12,000.00', status: 'completed', paid_at: new Date().toLocaleString() }
+    })
+  } else if (type === 'mudarabah_update') {
+    input.value = "Assalamu Alaikum, here is the update for our ongoing Rice Farming Mudarabah project."
+    send('mudarabah_update', {
+       body: input.value,
+       type: 'mudarabah_update',
+       metadata: { project_name: 'Rice Farming (Batch B)', roi: '15.5%', amount: '₦45,200.00', status: 'distributed' }
+    })
   } else if (type === 'approval') {
     input.value = "Please review and sign the Qard Hasan loan agreement."
     send('approval', {
@@ -390,6 +418,74 @@ function hasBadge(user, type) {
                 </div>
               </div>
 
+              <!-- Peer Transfer Card -->
+              <div v-else-if="msg.type === 'peer_transfer'" class="p-2 border rounded-lg bg-emerald-100 dark:bg-emerald-800/40 mt-1 min-w-[200px]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center space-x-1 text-emerald-800 dark:text-emerald-300">
+                    <span class="material-icons text-sm">check_circle</span>
+                    <span class="font-bold text-[10px] uppercase">Transfer Sent</span>
+                  </div>
+                  <span class="text-xs font-black text-emerald-700 dark:text-emerald-300">{{ msg.metadata?.amount }}</span>
+                </div>
+                <p class="text-xs dark:text-gray-200">{{ msg.metadata?.note || 'Funds transferred successfully.' }}</p>
+              </div>
+
+              <!-- Peer Request Card -->
+              <div v-else-if="msg.type === 'peer_request'" class="p-2 border rounded-lg bg-amber-50 dark:bg-amber-900/20 mt-1">
+                <div class="flex items-center space-x-2 text-amber-700 dark:text-amber-400 mb-2">
+                  <span class="material-icons text-sm">request_quote</span>
+                  <span class="font-bold text-xs uppercase">Payment Request</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                  <p class="text-sm font-bold dark:text-gray-200">{{ msg.metadata?.amount }}</p>
+                  <span class="text-[10px] px-1 bg-amber-100 text-amber-700 rounded">{{ msg.metadata?.status }}</span>
+                </div>
+                <p v-if="msg.metadata?.purpose" class="text-xs mb-3 text-gray-600 dark:text-gray-400">{{ msg.metadata?.purpose }}</p>
+                <button v-if="msg.metadata?.status === 'pending' && msg.user_id !== userId" 
+                        @click="respondToMessage(msg, 'paid')"
+                        class="w-full py-2 bg-amber-600 text-white text-xs rounded-md font-bold hover:bg-amber-700 transition">
+                  Pay Now
+                </button>
+              </div>
+
+              <!-- Bill Payment Card -->
+              <div v-else-if="msg.type === 'bill_payment'" class="p-2 border rounded-lg bg-indigo-50 dark:bg-indigo-900/20 mt-1">
+                <div class="flex items-center space-x-2 text-indigo-700 dark:text-indigo-400 mb-2">
+                  <span class="material-icons text-sm">receipt_long</span>
+                  <span class="font-bold text-xs uppercase">Bill Paid</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <div>
+                    <p class="text-sm font-bold dark:text-gray-200">{{ msg.metadata?.bill_type }}</p>
+                    <p class="text-[10px] text-gray-500">{{ msg.metadata?.paid_at }}</p>
+                  </div>
+                  <p class="font-bold text-indigo-600">{{ msg.metadata?.amount }}</p>
+                </div>
+              </div>
+
+              <!-- Mudarabah Update Card -->
+              <div v-else-if="msg.type === 'mudarabah_update'" class="p-2 border rounded-lg bg-blue-50 dark:bg-blue-900/20 mt-1">
+                <div class="flex items-center space-x-2 text-blue-700 dark:text-blue-400 mb-2">
+                  <span class="material-icons text-sm">trending_up</span>
+                  <span class="font-bold text-xs uppercase">Investment Update</span>
+                </div>
+                <p class="text-xs font-bold text-gray-700 dark:text-gray-200 mb-1">{{ msg.metadata?.project_name }}</p>
+                <div class="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded border border-blue-100 dark:border-blue-900">
+                  <div class="text-center">
+                    <p class="text-[8px] uppercase text-gray-400">Profit Share</p>
+                    <p class="text-xs font-black text-emerald-600">{{ msg.metadata?.roi }}</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-[8px] uppercase text-gray-400">Amount</p>
+                    <p class="text-xs font-black text-blue-600">{{ msg.metadata?.amount }}</p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-[8px] uppercase text-gray-400">Status</p>
+                    <p class="text-[10px] font-bold text-emerald-600">Distributed</p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Approval Card -->
               <div v-else-if="msg.type === 'approval'" class="p-2 border rounded-lg bg-blue-50 dark:bg-blue-900/20 mt-1">
                 <div class="flex items-center space-x-2 text-blue-700 dark:text-blue-400 mb-2">
@@ -476,6 +572,21 @@ function hasBadge(user, type) {
             <span class="material-icons text-sm">payments</span>
             <span>Request Payment</span>
           </button>
+          <button @click="sendFinAction('peer_transfer')"
+                  class="flex items-center space-x-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition text-xs font-bold">
+            <span class="material-icons text-sm">send</span>
+            <span>Send Money</span>
+          </button>
+          <button @click="sendFinAction('peer_request')"
+                  class="flex items-center space-x-2 p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-100 transition text-xs font-bold">
+            <span class="material-icons text-sm">request_quote</span>
+            <span>Request Money</span>
+          </button>
+          <button @click="sendFinAction('bill_payment')"
+                  class="flex items-center space-x-2 p-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 transition text-xs font-bold">
+            <span class="material-icons text-sm">receipt_long</span>
+            <span>Pay Bill</span>
+          </button>
           <button v-if="userRole !== 'member'" 
                   @click="sendFinAction('approval')"
                   class="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition text-xs font-bold">
@@ -483,9 +594,15 @@ function hasBadge(user, type) {
             <span>E-Signature</span>
           </button>
           <button @click="sendFinAction('inquiry')"
-                  class="flex items-center space-x-2 p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-lg hover:bg-purple-100 transition text-xs font-bold col-span-2">
+                  class="flex items-center space-x-2 p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded-lg hover:bg-purple-100 transition text-xs font-bold">
             <span class="material-icons text-sm">help_outline</span>
-            <span>Loan/Financial Inquiry</span>
+            <span>Inquiry</span>
+          </button>
+          <button v-if="userRole !== 'member'" 
+                  @click="sendFinAction('mudarabah_update')"
+                  class="flex items-center space-x-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition text-xs font-bold">
+            <span class="material-icons text-sm">trending_up</span>
+            <span>Investment Update</span>
           </button>
         </div>
       </div>

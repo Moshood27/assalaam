@@ -32,6 +32,14 @@ class FeatureToggleResource extends Resource
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->unique(ignoreRecord: true)
+                            ->suggestions(array_keys(Feature::KNOWN_FEATURES))
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if (isset(Feature::KNOWN_FEATURES[$state])) {
+                                    $set('label', Feature::KNOWN_FEATURES[$state]['label']);
+                                    $set('description', Feature::KNOWN_FEATURES[$state]['description']);
+                                }
+                            })
                             ->placeholder('e.g., disable-withdrawals')
                             ->helperText('The internal key used in code.'),
                         Forms\Components\TextInput::make('label')

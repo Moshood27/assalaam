@@ -111,6 +111,63 @@ class ChatService
         ]);
     }
 
+    public function sendPeerTransfer(ChatRoom $room, User $sender, $amount, $note = '', $metadata = [])
+    {
+        return $this->sendMessage($room, $sender, [
+            'type' => 'peer_transfer',
+            'body' => "Sent $amount to you. " . ($note ? "Note: $note" : ""),
+            'metadata' => array_merge([
+                'amount' => $amount,
+                'note' => $note,
+                'status' => 'completed',
+                'type' => 'transfer_sent'
+            ], $metadata),
+        ]);
+    }
+
+    public function sendPeerRequest(ChatRoom $room, User $sender, $amount, $purpose = '', $metadata = [])
+    {
+        return $this->sendMessage($room, $sender, [
+            'type' => 'peer_request',
+            'body' => "Requesting $amount" . ($purpose ? " for $purpose" : ""),
+            'metadata' => array_merge([
+                'amount' => $amount,
+                'purpose' => $purpose,
+                'status' => 'pending',
+                'type' => 'request_money'
+            ], $metadata),
+        ]);
+    }
+
+    public function sendBillPayment(ChatRoom $room, User $sender, $billType, $amount, $metadata = [])
+    {
+        return $this->sendMessage($room, $sender, [
+            'type' => 'bill_payment',
+            'body' => "Bill Payment: $billType ($amount)",
+            'metadata' => array_merge([
+                'bill_type' => $billType,
+                'amount' => $amount,
+                'status' => 'completed',
+                'paid_at' => now(),
+            ], $metadata),
+        ]);
+    }
+
+    public function sendMudarabahUpdate(ChatRoom $room, User $sender, $projectName, $roi, $amount, $metadata = [])
+    {
+        return $this->sendMessage($room, $sender, [
+            'type' => 'mudarabah_update',
+            'body' => "Mudarabah Project Update: $projectName",
+            'metadata' => array_merge([
+                'project_name' => $projectName,
+                'roi' => $roi,
+                'amount' => $amount,
+                'status' => 'distributed',
+                'type' => 'investment_update'
+            ], $metadata),
+        ]);
+    }
+
     public function sendApprovalRequest(ChatRoom $room, User $sender, $title, $description, $metadata = [])
     {
         return $this->sendMessage($room, $sender, [

@@ -230,6 +230,20 @@ class ChatController extends Controller
                 ->log('Member accepted agreement (Ikhlas)');
         }
 
+        if (in_array($message->type, ['transaction', 'peer_request']) && $request->action === 'paid') {
+            // Log financial activity
+            activity('finance')
+                ->performedOn($message)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'action' => 'chat_payment',
+                    'amount' => $message->metadata['amount'] ?? 0,
+                    'type' => $message->type,
+                    'room_id' => $message->chat_room_id
+                ])
+                ->log('Payment completed via chat interface');
+        }
+
         return response()->json($message);
     }
 
