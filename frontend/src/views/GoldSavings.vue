@@ -17,8 +17,26 @@
     </header>
 
     <div class="p-4 max-w-lg mx-auto space-y-4">
-      <!-- Gold Balance Card -->
-      <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+      <!-- Feature Disabled Alert -->
+      <div v-if="!appStatusStore.features['gold-savings-beta']" class="bg-amber-50 border border-amber-200 p-8 rounded-[2rem] text-center space-y-4 shadow-sm">
+        <div class="w-20 h-20 bg-amber-100 rounded-[2.5rem] flex items-center justify-center mx-auto text-4xl shadow-inner">
+          ✨
+        </div>
+        <div>
+          <h3 class="text-xl font-black text-slate-800">Exclusive Feature</h3>
+          <p class="text-sm text-slate-500 mt-2 leading-relaxed px-4">
+            Digital Gold Savings is currently available to a limited number of members during our beta phase. 
+            Keep using the app to unlock this feature soon!
+          </p>
+        </div>
+        <button @click="$router.back()" class="w-full bg-slate-800 text-white p-4 rounded-2xl font-bold active:scale-95 transition-all">
+          Back to Dashboard
+        </button>
+      </div>
+
+      <template v-else>
+        <!-- Gold Balance Card -->
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
         <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full"></div>
         <div class="relative z-10">
           <p class="text-yellow-100 text-sm font-medium mb-1">Total Gold Balance</p>
@@ -395,14 +413,17 @@
           Gold is a stable store of value and protects your wealth against inflation. In Islamic tradition, it is considered the most reliable form of currency.
         </p>
       </div>
+    </template>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import axios from '../http.js'
+import { useAppStatusStore } from '../stores/appStatus'
 
+const appStatusStore = useAppStatusStore()
 const loading = ref(false)
 const activeTab = ref('buy')
 const showZakatReport = ref(false)
@@ -503,6 +524,10 @@ const fetchData = async () => {
   try {
     const res = await axios.get('/api/gold/price')
     goldData.value = res.data
+    
+    if (res.data.features) {
+      appStatusStore.setFeatures(res.data.features)
+    }
     
     const histRes = await axios.get('/api/gold/history')
     history.value = histRes.data.data

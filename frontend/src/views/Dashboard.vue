@@ -92,6 +92,18 @@
         <div class="text-white/40">➡️</div>
       </div>
 
+      <!-- Shura Voting Banner -->
+      <div v-if="appStatusStore.features['shura-voting-active']"
+           class="mt-4 p-4 rounded-3xl bg-indigo-600 text-white flex items-center gap-3 shadow-lg shadow-indigo-200 cursor-pointer"
+           @click="$router.push('/agm')">
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-bounce">🗳️</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold">AGM Voting Live</p>
+          <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Cast your vote for the Shura Council</p>
+        </div>
+        <div class="text-white/40">➡️</div>
+      </div>
+
       <!-- Migration Discrepancy Banner -->
       <div v-if="dashboardData.migration?.discrepancy_reported_at && !dashboardData.migration?.verified_at"
            class="mt-4 p-4 rounded-3xl bg-blue-50 border border-blue-200 flex items-center gap-3">
@@ -111,7 +123,7 @@
           <h3 class="text-slate-800 font-bold text-lg">Loan Eligibility</h3>
           <div class="flex items-center gap-3">
             <router-link to="/loans/analysis" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Analysis</router-link>
-            <router-link to="/loans" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Apply for Loan</router-link>
+            <router-link v-if="appStatusStore.features['apply-for-loan']" to="/loans" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Apply for Loan</router-link>
           </div>
           <div class="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl">💎</div>
         </div>
@@ -155,7 +167,7 @@
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
-        <StatPill label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? '≈ ₦ ***' : (kpis.gold_value_naira ? '≈ ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="🪙" @click="$router.push('/gold')" class="cursor-pointer" />
+        <StatPill v-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? '≈ ₦ ***' : (kpis.gold_value_naira ? '≈ ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="🪙" @click="$router.push('/gold')" class="cursor-pointer" />
         <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="📊" />
         <StatPill label="Attaqwa Score" :value="String(kpis.attaqwa_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />
       </div>
@@ -833,6 +845,10 @@ const load = async () => {
   const { data } = await axios.get('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } })
   dashboardData.value = data
   localStorage.setItem('is_admin', data.is_admin ? 'true' : 'false')
+  
+  if (data.features) {
+    appStatusStore.setFeatures(data.features)
+  }
   
   // Check Migration status
   checkMigration()

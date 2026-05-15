@@ -124,6 +124,9 @@ class LoanController extends Controller
             'is_defaulted' => (bool) $user->is_defaulter,
             'meeting_attendance_count' => $currentMeetings,
             'required_loan_meetings' => $requiredMeetings,
+            'features' => [
+                'apply-for-loan' => Feature::active('apply-for-loan'),
+            ]
         ]);
         return response()->json($resp);
     }

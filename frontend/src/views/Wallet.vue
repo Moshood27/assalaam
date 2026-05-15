@@ -35,7 +35,7 @@
           <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">💸</div>
           <span class="text-xs font-bold text-slate-700">Transfer</span>
         </button>
-        <button @click="activeTab = 'withdraw'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
+        <button v-if="appStatusStore.features['withdrawals-enabled']" @click="activeTab = 'withdraw'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
           <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-xl">🏦</div>
           <span class="text-xs font-bold text-slate-700">Withdraw</span>
         </button>
@@ -44,7 +44,7 @@
       <!-- Tabs Navigation -->
       <div class="flex p-1.5 bg-slate-200/50 rounded-[1.5rem] gap-1 shadow-inner overflow-x-auto no-scrollbar">
         <button 
-          v-for="tab in ['overview', 'fund', 'transfer', 'withdraw', 'merchant', 'transactions', 'requests']" 
+          v-for="tab in ['overview', 'fund', 'transfer', 'withdraw', 'merchant', 'transactions', 'requests'].filter(t => t !== 'withdraw' || appStatusStore.features['withdrawals-enabled'])" 
           :key="tab"
           @click="activeTab = tab; searchQuery = ''"
           :class="activeTab === tab ? 'bg-white text-emerald-700 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/30'"
@@ -597,6 +597,7 @@ import AppBottomNav from '../components/AppBottomNav.vue'
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import axios from '../http.js'
 import { useRouter } from 'vue-router'
+import { useAppStatusStore } from '../stores/appStatus'
 import { openBlob } from '../utils/download'
 import { useBalanceVisibility } from '../composables/useBalanceVisibility'
 import CustomNotice from '../components/CustomNotice.vue'
@@ -605,6 +606,7 @@ import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biome
 import { getEcho } from '../realtime/echo'
 
 const router = useRouter()
+const appStatusStore = useAppStatusStore()
 const baseRaw = import.meta?.env?.BASE_URL || '/'
 const basePath = (baseRaw && baseRaw.startsWith('./')) ? '/' : (baseRaw.endsWith('/') ? baseRaw : `${baseRaw}/`)
 const isNative = typeof window !== 'undefined' && !!(window?.Capacitor?.isNativePlatform?.() || (window?.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web'))
@@ -768,6 +770,9 @@ const titleFor = (tx) => {
 const loadWallet = async () => {
   const { data } = await axios.get('/api/wallet')
   wallet.value = data
+  if (data.features) {
+    appStatusStore.setFeatures(data.features)
+  }
   // Prefer server-provided recent list
   transactions.value = data.recent_transactions || []
 }

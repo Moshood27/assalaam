@@ -55,7 +55,10 @@ class GoldController extends Controller
             'current_value' => round($user->gold_balance * $sellPrice, 2), // Current value is what they'd get if they sold
             'performance' => $performance['performance'],
             'zakat' => $performance['zakat'],
-            'price_history' => $priceHistory
+            'price_history' => $priceHistory,
+            'features' => [
+                'gold-savings-beta' => Feature::active('gold-savings-beta'),
+            ]
         ]);
     }
 

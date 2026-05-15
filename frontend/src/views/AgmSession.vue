@@ -110,8 +110,10 @@ import { useRoute } from 'vue-router'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
+import { useAppStatusStore } from '../stores/appStatus'
 import getImageUrl from '../utils/image'
 
+const appStatusStore = useAppStatusStore()
 const route = useRoute()
 const id = Number(route.params.id)
 

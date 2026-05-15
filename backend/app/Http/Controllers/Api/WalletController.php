@@ -175,6 +175,10 @@ class WalletController extends Controller
                 'percentage' => (float) Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage', 1)),
                 'max_amount' => (float) Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount', 500)),
             ],
+            'features' => [
+                'withdrawals-enabled' => Feature::active('withdrawals-enabled'),
+                'payment-provider-failover' => Feature::active('payment-provider-failover'),
+            ],
         ]);
     }
 

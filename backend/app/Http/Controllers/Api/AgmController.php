@@ -57,6 +57,9 @@ class AgmController extends Controller
                     'voted_candidate_id' => optional($myVotes->get($pos))->candidate_id,
                 ];
             }, array_keys($grouped), array_values($grouped)),
+            'features' => [
+                'shura-voting-active' => \Laravel\Pennant\Feature::active('shura-voting-active'),
+            ]
         ]);
     }
 
@@ -67,7 +70,7 @@ class AgmController extends Controller
         ]);
         $user = $request->user();
 
-        if (!$user->isEligibleForShura()) {
+        if (!$user->isEligibleForShura() || !\Laravel\Pennant\Feature::active('shura-voting-active')) {
             return response()->json(['message' => 'You are not eligible to vote at this time'], 403);
         }
 

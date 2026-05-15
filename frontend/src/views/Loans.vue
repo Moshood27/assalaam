@@ -7,6 +7,20 @@
       <div v-else-if="error" class="card p-4 text-rose-700 bg-rose-50 border-rose-200">{{ error }}</div>
 
       <div v-else class="space-y-4">
+              <!-- Feature Disabled Alert -->
+              <div v-if="appStatusStore.features['apply-for-loan'] === false" class="card bg-amber-50 border-amber-200 p-8 rounded-[2rem] text-center space-y-4 shadow-sm mb-6">
+                <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-inner">
+                  🤝
+                </div>
+                <div>
+                  <h3 class="text-lg font-black text-slate-800">Loan Applications Paused</h3>
+                  <p class="text-xs text-slate-500 mt-2 leading-relaxed px-4">
+                    Loan applications are currently restricted. This might be due to monthly budget limits or system maintenance. 
+                    Please check back later or contact your branch admin.
+                  </p>
+                </div>
+              </div>
+
               <!-- Eligibility and Create Loan -->
               <div class="card" v-if="canCreateLoanVisible">
                 <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
@@ -336,11 +350,14 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
+import { useAppStatusStore } from '../stores/appStatus'
 import getImageUrl from '../utils/image'
 import CustomNotice from '../components/CustomNotice.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
 import { getEcho } from '../realtime/echo'
+
+const appStatusStore = useAppStatusStore()
 
 // Policy defaults for admin fees (can be overridden via environment variables)
 const DEFAULT_ADMIN_FEE_FLAT = Number(import.meta.env.VITE_DEFAULT_ADMIN_FEE_FLAT ?? 0)
@@ -364,7 +381,7 @@ const hasAnyLoan = computed(() => (loans.value || []).length > 0)
 const hasOpenLoan = computed(() => (loans.value || []).some(l => ['pending', 'active', 'defaulted'].includes(l?.status) && !l?.is_completed))
 const hasCompletedLoan = computed(() => (loans.value || []).some(l => l?.is_completed || l?.status === 'completed'))
 // Creation is allowed only if no open loan and backend policy allows request (6-month rule and first-loan cap)
-const canCreateLoanVisible = computed(() => !hasOpenLoan.value && !!eligibility.value?.can_request)
+const canCreateLoanVisible = computed(() => !hasOpenLoan.value && !!eligibility.value?.can_request && appStatusStore.features['apply-for-loan'] !== false)
 
 const payAmount = ref({})
 const paySource = ref({})
@@ -460,6 +477,9 @@ const fetchEligibility = async () => {
       headers: { Authorization: `Bearer ${token}` }
     })
     eligibility.value = { ...eligibility.value, ...(data || {}) }
+    if (data.features) {
+      appStatusStore.setFeatures(data.features)
+    }
     // Auto-apply admin fees from policy defaults and lock the inputs
     const feeFlat = Number.isFinite(DEFAULT_ADMIN_FEE_FLAT) ? Number(DEFAULT_ADMIN_FEE_FLAT) : 0
     let feePct = Number.isFinite(DEFAULT_ADMIN_FEE_PCT) ? Number(DEFAULT_ADMIN_FEE_PCT) : 0

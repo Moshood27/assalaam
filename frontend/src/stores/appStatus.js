@@ -9,9 +9,13 @@ export const useAppStatusStore = defineStore('appStatus', {
     isOutdated: false,
     isUpdateAvailable: false,
     currentVersion: '',
-    playStoreUrl: ''
+    playStoreUrl: '',
+    features: {}
   }),
   actions: {
+    setFeatures(features) {
+      this.features = features || {}
+    },
     setStatus(status) {
       this.maintenanceMode = status.maintenanceMode
       this.maintenanceMessage = status.maintenanceMessage
