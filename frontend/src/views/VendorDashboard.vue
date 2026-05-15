@@ -52,9 +52,8 @@
                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Lifetime Earnings</p>
                <p class="text-xl font-black text-slate-800">₦{{ formatMoney(stats.total_earned) }}</p>
              </div>
-             <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100/50 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-emerald-50 transition-colors" @click="$router.push('/vendor/settlements')">
-               <span class="i-mdi-bank-transfer text-2xl text-emerald-600 mb-1"></span>
-               <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Request Settlement</span>
+             <div class="bg-emerald-600 p-4 rounded-3xl flex flex-col justify-center items-center text-center cursor-pointer hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 active:scale-95" @click="$router.push('/vendor/settlements')">
+               <span class="text-[9px] font-black text-white uppercase tracking-widest">Request Settlement</span>
              </div>
           </div>
         </div>

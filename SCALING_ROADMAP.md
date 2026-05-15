@@ -4,9 +4,12 @@ This document outlines the necessary architectural and infrastructure changes to
 
 ## 1. Current State & Immediate Fixes
 We have already implemented several immediate optimizations:
-- **Database Indexes:** Added composite indexes on `contributions`, `wallet_transactions`, and `qard_hasans` to speed up common queries.
-- **Aggregate Optimization:** Refactored `User` model and `DashboardController` to use cached balance columns instead of recalculating sums from the `contributions` table on every request.
-- **Configuration:** Updated `.env` to use `redis` for sessions and cache, and disabled `APP_DEBUG`.
+- **Database Indexes:** Added composite indexes on `contributions`, `wallet_transactions`, and `qard_hasans`. Prepared **Full-Text indexes** for `users` and `products` searching.
+- **Aggregate Optimization:** Refactored `User` model and `DashboardController` to use cached balance columns.
+- **Configuration:** Switched to `redis` for sessions/cache and implemented **Response Caching** for heavy endpoints.
+- **Cloud Readiness:** Refactored file storage to use the **Laravel Storage facade** (compatible with S3) and added an API health check for load balancers.
+- **Data Pruning:** Implemented automated pruning for high-volume tables (logs, webhooks, failed jobs) to prevent database bloat.
+- **Async Processing:** Offloaded heavy side-effects (notifications, ledger recording) to background workers.
 
 ## 2. Infrastructure Scaling (Horizontal)
 To handle millions of users, the application must move away from a single server.

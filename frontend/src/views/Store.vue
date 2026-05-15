@@ -126,13 +126,13 @@
 
                    <div class="flex items-center gap-2 pt-2 border-t border-slate-50">
                       <template v-if="cart[p.id]">
-                        <div class="flex-1 flex items-center justify-between bg-slate-50 rounded-xl p-1 px-3">
-                          <button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors" @click="decQty(p.id)">
-                            <span class="i-mdi-minus text-sm"></span>
+                        <div class="flex-1 flex items-center justify-between bg-slate-100/50 rounded-xl p-1">
+                          <button class="w-8 h-8 flex items-center justify-center bg-white text-slate-500 hover:text-rose-600 rounded-lg shadow-sm transition-all active:scale-90" @click="decQty(p.id)">
+                            <span class="i-mdi-minus text-[10px]"></span>
                           </button>
-                          <span class="text-sm font-black text-slate-800">{{ cart[p.id].qty }}</span>
-                          <button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors disabled:opacity-30" @click="incQty(p.id)" :disabled="p.track_stock && cart[p.id].qty >= p.stock_quantity">
-                            <span class="i-mdi-plus text-sm"></span>
+                          <span class="text-xs font-black text-slate-800">{{ cart[p.id].qty }}</span>
+                          <button class="w-8 h-8 flex items-center justify-center bg-white text-slate-500 hover:text-emerald-600 rounded-lg shadow-sm transition-all active:scale-90 disabled:opacity-30" @click="incQty(p.id)" :disabled="p.track_stock && cart[p.id].qty >= p.stock_quantity">
+                            <span class="i-mdi-plus text-[10px]"></span>
                           </button>
                         </div>
                       </template>
@@ -190,10 +190,14 @@
                 <div class="text-sm font-black text-emerald-700">₦ {{ money(ci.selling_price) }}</div>
               </div>
               <div class="flex flex-col items-end gap-2">
-                <div class="flex items-center bg-white rounded-xl p-1 border border-slate-200">
-                  <button class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-emerald-600" @click="decQty(ci.id)">-</button>
-                  <span class="w-8 text-center text-xs font-black text-slate-800">{{ ci.qty }}</span>
-                  <button class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-emerald-600" @click="incQty(ci.id)">+</button>
+                <div class="flex items-center bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
+                  <button class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-colors" @click="decQty(ci.id)">
+                    <span class="i-mdi-minus text-[10px]"></span>
+                  </button>
+                  <span class="w-8 text-center text-[10px] font-black text-slate-800">{{ ci.qty }}</span>
+                  <button class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors" @click="incQty(ci.id)" :disabled="ci.track_stock && ci.qty >= ci.stock_quantity">
+                    <span class="i-mdi-plus text-[10px]"></span>
+                  </button>
                 </div>
                 <button class="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline" @click="remove(ci.id)">Remove</button>
               </div>
@@ -345,13 +349,13 @@
 
           <!-- Cart Action -->
           <div v-if="!selectedProduct.track_stock || selectedProduct.stock_quantity > 0" class="flex items-center gap-4">
-            <div class="flex items-center bg-slate-100 rounded-2xl p-1 shrink-0">
-              <button class="w-12 h-12 flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-colors" @click="quickQty = Math.max(1, (Number(quickQty)||1)-1)">
-                <span class="i-mdi-minus text-xl"></span>
+            <div class="flex items-center bg-slate-50 rounded-[1.5rem] p-1.5 border border-slate-100 shrink-0">
+              <button class="w-11 h-11 flex items-center justify-center bg-white rounded-xl text-slate-400 hover:text-rose-600 shadow-sm transition-all active:scale-90" @click="quickQty = Math.max(1, (Number(quickQty)||1)-1)">
+                <span class="i-mdi-minus text-lg"></span>
               </button>
-              <input v-model.number="quickQty" type="number" min="1" :max="selectedProduct.track_stock ? selectedProduct.stock_quantity : undefined" class="w-12 text-center bg-transparent font-black text-slate-800 outline-none" />
-              <button class="w-12 h-12 flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-colors" @click="quickQty = Math.min((selectedProduct.track_stock ? selectedProduct.stock_quantity : 999), (Number(quickQty)||1)+1)">
-                <span class="i-mdi-plus text-xl"></span>
+              <input v-model.number="quickQty" type="number" min="1" :max="selectedProduct.track_stock ? selectedProduct.stock_quantity : undefined" class="w-12 text-center bg-transparent font-black text-lg text-slate-800 border-none focus:ring-0" />
+              <button class="w-11 h-11 flex items-center justify-center bg-white rounded-xl text-slate-400 hover:text-emerald-600 shadow-sm transition-all active:scale-90" @click="quickQty = Math.min((selectedProduct.track_stock ? selectedProduct.stock_quantity : 999), (Number(quickQty)||1)+1)">
+                <span class="i-mdi-plus text-lg"></span>
               </button>
             </div>
             
