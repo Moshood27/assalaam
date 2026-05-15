@@ -29,71 +29,71 @@
       </div>
 
       <template v-else>
-        <!-- Business Header -->
-        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
-        <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
-        <div class="relative z-10">
-          <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1">Business Name</p>
-          <h2 class="text-2xl font-black text-slate-800 uppercase leading-tight mb-4">{{ vendor.name }}</h2>
-          
-          <div class="grid grid-cols-2 gap-4 mt-6">
-            <div @click="$router.push('/vendor/settlements')" class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 cursor-pointer active:scale-95 transition-all">
-              <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Available Balance</p>
-              <p class="text-xl font-black text-emerald-700">₦{{ formatMoney(stats.available_balance) }}</p>
+        <!-- Sophisticated Business Header with Chart -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-8 pb-4 flex items-start justify-between">
+            <div class="space-y-1">
+              <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Business Dashboard</p>
+              <h2 class="text-3xl font-black text-slate-800 leading-tight uppercase">{{ vendor.name }}</h2>
             </div>
-            <div class="bg-slate-50 p-4 rounded-2xl">
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Earned</p>
-              <p class="text-xl font-black text-slate-800">₦{{ formatMoney(stats.total_earned) }}</p>
+            <div class="text-right">
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Available to Payout</p>
+              <p class="text-2xl font-black text-emerald-700">₦{{ formatMoney(stats.available_balance) }}</p>
             </div>
           </div>
-          <div class="grid grid-cols-4 gap-2 mt-4">
-            <div class="bg-slate-50 p-2 rounded-2xl">
-              <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Approved</p>
-              <p class="text-sm font-black text-slate-800 text-center">{{ stats.approved_products_count || 0 }}</p>
-            </div>
-            <div class="bg-slate-50 p-2 rounded-2xl">
-              <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Pending</p>
-              <p class="text-sm font-black text-amber-600 text-center">{{ stats.pending_products_count || 0 }}</p>
-            </div>
-            <div class="bg-slate-50 p-2 rounded-2xl">
-              <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Active Orders</p>
-              <p class="text-sm font-black text-blue-600 text-center">{{ stats.pending_orders_count || 0 }}</p>
-            </div>
-            <div class="bg-slate-50 p-2 rounded-2xl">
-              <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Completed</p>
-              <p class="text-sm font-black text-emerald-600 text-center">{{ stats.completed_orders_count || 0 }}</p>
-            </div>
+
+          <!-- Trend Chart Integration -->
+          <div class="px-4 -mb-4">
+             <TrendChart :series="chartSeries" :categories="chartCategories" />
+          </div>
+
+          <div class="p-8 pt-0 grid grid-cols-2 gap-4">
+             <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100/50">
+               <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Lifetime Earnings</p>
+               <p class="text-xl font-black text-slate-800">₦{{ formatMoney(stats.total_earned) }}</p>
+             </div>
+             <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100/50 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-emerald-50 transition-colors" @click="$router.push('/vendor/settlements')">
+               <span class="i-mdi-bank-transfer text-2xl text-emerald-600 mb-1"></span>
+               <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Request Settlement</span>
+             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Low Stock Warning -->
-      <div v-if="stats.low_stock_products_count > 0" @click="$router.push('/vendor/products')" class="bg-rose-50 border border-rose-100 p-4 rounded-3xl flex items-center gap-4 animate-pulse cursor-pointer">
-        <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl">⚠️</div>
-        <div class="flex-1">
-          <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest">Low Stock Alert</p>
-          <p class="text-xs font-bold text-rose-800">{{ stats.low_stock_products_count }} products are running low on stock.</p>
+        <!-- Dynamic Status Grid -->
+        <div class="grid grid-cols-4 gap-3">
+          <div class="bg-white p-3 rounded-3xl border border-slate-100 text-center shadow-sm">
+             <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Approved</p>
+             <p class="text-lg font-black text-slate-800">{{ stats.approved_products_count || 0 }}</p>
+          </div>
+          <div class="bg-white p-3 rounded-3xl border border-slate-100 text-center shadow-sm">
+             <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending</p>
+             <p class="text-lg font-black text-amber-500">{{ stats.pending_products_count || 0 }}</p>
+          </div>
+          <div class="bg-white p-3 rounded-3xl border border-slate-100 text-center shadow-sm">
+             <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Orders</p>
+             <p class="text-lg font-black text-blue-500">{{ stats.pending_orders_count || 0 }}</p>
+          </div>
+          <div class="bg-white p-3 rounded-3xl border border-slate-100 text-center shadow-sm">
+             <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Success</p>
+             <p class="text-lg font-black text-emerald-600">{{ stats.completed_orders_count || 0 }}</p>
+          </div>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
 
-      <!-- Quick Actions -->
-      <div class="grid grid-cols-3 gap-3">
-        <button @click="$router.push('/vendor/products')" class="bg-white p-4 rounded-[1.5rem] shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:scale-95 transition-all">
-          <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">📦</div>
-          <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Products</span>
-        </button>
-        <button @click="$router.push('/vendor/orders')" class="bg-white p-4 rounded-[1.5rem] shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:scale-95 transition-all">
-          <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-xl">📋</div>
-          <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Orders</span>
-        </button>
-        <button @click="$router.push('/vendor/settlements')" class="bg-white p-4 rounded-[1.5rem] shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:scale-95 transition-all">
-          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">💰</div>
-          <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Payout</span>
-        </button>
-      </div>
+        <!-- Enhanced Quick Actions -->
+        <div class="grid grid-cols-3 gap-4">
+          <button @click="$router.push('/vendor/products')" class="group bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-emerald-500/20 hover:shadow-lg hover:shadow-emerald-900/5">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">📦</div>
+            <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Inventory</span>
+          </button>
+          <button @click="$router.push('/vendor/orders')" class="group bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-orange-500/20 hover:shadow-lg hover:shadow-orange-900/5">
+            <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">📋</div>
+            <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Orders</span>
+          </button>
+          <button @click="$router.push('/vendor/settlements')" class="group bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-emerald-500/20 hover:shadow-lg hover:shadow-emerald-900/5">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">💰</div>
+            <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Payouts</span>
+          </button>
+        </div>
 
         <!-- Recent Payouts -->
         <div class="space-y-4">
@@ -129,17 +129,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from '../http'
+import TrendChart from '../components/TrendChart.vue'
 
 const vendor = ref({})
 const stats = ref({
   total_earned: 0,
   products_count: 0,
   pending_orders_count: 0,
-  completed_orders_count: 0
+  completed_orders_count: 0,
+  trend: []
 })
 const activities = ref([])
+
+const chartSeries = computed(() => {
+  return [{
+    name: 'Earnings',
+    data: (stats.value.trend || []).map(t => t.value)
+  }]
+})
+
+const chartCategories = computed(() => {
+  return (stats.value.trend || []).map(t => t.label)
+})
 
 const formatMoney = (val) => {
   return Number(val || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 })

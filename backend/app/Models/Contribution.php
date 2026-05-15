@@ -49,174 +49,45 @@ class Contribution extends Model
         });
 
         static::created(function (self $model) {
-            // Sync user scheme balance if successful
-            try {
-                if ($model->status === 'success' && $model->scheme && $model->category !== 'fine') {
-                    $model->user->syncSchemeBalance($model->scheme->name);
-                }
-            } catch (\Throwable $e) {}
-
-            // Special handling for Fine category
-            if ($model->status === 'success' && $model->category === 'fine') {
+            // If created as success, handle project units decrement immediately (critical for consistency)
+            if ($model->status === 'success' && $model->project_id && $model->units > 0) {
                 try {
-                    $user = $model->user;
-                    $user->decrement('outstanding_fines', min($user->outstanding_fines, $model->amount));
-
-                    // Settle attendance records
-                    app(\App\Services\AttendanceService::class)->settleOutstandingFines($user, (float) $model->amount);
-
-                    \App\Models\CharityEntry::create([
-                        'user_id' => $user->id,
-                        'source' => 'Manual Fine Payment',
-                        'amount' => $model->amount,
-                        'note' => "Manual payment of fine (Reference: {$model->reference})",
-                        'status' => 'processed',
-                        'processed_at' => now(),
-                    ]);
+                    $project = Project::find($model->project_id);
+                    if ($project && $project->is_unit_based) {
+                        $project->decrement('available_units', $model->units);
+                    }
                 } catch (\Throwable $e) {}
             }
 
-            // Record in Ledger if successful on creation (typical for migration)
-            if ($model->status === 'success' && !$model->ledger_journal_id) {
-                try {
-                    $ledger = app(\App\Services\LedgerService::class);
-                    $journal = $model->category === 'fine'
-                        ? $ledger->recordFine($model)
-                        : $ledger->recordContribution($model);
-                    $model->updateQuietly(['ledger_journal_id' => $journal->id]);
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error("Failed to record contribution in ledger: " . $e->getMessage());
-                }
-            }
-
-            // If created already successful and linked to a project (e.g., wallet allocation), create investment
-            try {
-                if ($model->project_id && $model->status === 'success') {
-                    // Decrement available units if applicable
-                    if ($model->units > 0) {
-                        $project = Project::find($model->project_id);
-                        if ($project && $project->is_unit_based) {
-                            $project->decrement('available_units', $model->units);
-                        }
-                    }
-
-                    if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
-                        ProjectInvestment::create([
-                            'user_id' => $model->user_id,
-                            'project_id' => $model->project_id,
-                            'contribution_id' => $model->id,
-                            'amount' => $model->amount,
-                            'units' => $model->units,
-                            'reference' => $model->reference,
-                        ]);
-                    }
-                }
-            } catch (\Throwable $e) {
-                // Don’t block creation on investment linkage failures
+            // Offload all other side-effects to background job
+            if ($model->status === 'success') {
+                \App\Jobs\ProcessContributionSideEffects::dispatch($model->id);
             }
         });
 
         static::updated(function (self $model) {
-            // When a contribution tied to a project is marked successful, create a ProjectInvestment once
-            try {
-                if ($model->status === 'success' && ($model->wasChanged('status') || $model->wasChanged('amount'))) {
-                    // Sync user scheme balance if not a fine
+            // When a contribution is marked successful, offload side-effects
+            if ($model->status === 'success' && $model->wasChanged('status')) {
+
+                // Handle project units decrement immediately (critical)
+                if ($model->project_id && $model->units > 0) {
                     try {
-                        if ($model->scheme && $model->category !== 'fine') {
-                            $model->user->syncSchemeBalance($model->scheme->name);
+                        $project = Project::find($model->project_id);
+                        if ($project && $project->is_unit_based) {
+                            $project->decrement('available_units', $model->units);
                         }
                     } catch (\Throwable $e) {}
-
-                    // Special handling for Fine category when marked as success (e.g. from webhook)
-                    if ($model->category === 'fine') {
-                        try {
-                            $user = $model->user;
-                            $user->decrement('outstanding_fines', min($user->outstanding_fines, $model->amount));
-
-                            // Settle attendance records
-                            app(\App\Services\AttendanceService::class)->settleOutstandingFines($user, (float) $model->amount);
-
-                            \App\Models\CharityEntry::create([
-                                'user_id' => $user->id,
-                                'source' => 'Manual Fine Payment',
-                                'amount' => $model->amount,
-                                'note' => "Manual payment of fine (Reference: {$model->reference})",
-                                'status' => 'processed',
-                                'processed_at' => now(),
-                            ]);
-                        } catch (\Throwable $e) {}
-                    }
-
-                    // Update Attaqwa Score
-                    try {
-                        app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
-                    } catch (\Throwable $e) {}
-
-                    // Notify admins and user about successful contribution
-                    try {
-                        // Record in Ledger if not already recorded
-                        if (!$model->ledger_journal_id) {
-                            $ledger = app(\App\Services\LedgerService::class);
-                            $journal = $model->category === 'fine'
-                                ? $ledger->recordFine($model)
-                                : $ledger->recordContribution($model);
-                            $model->updateQuietly(['ledger_journal_id' => $journal->id]);
-                        }
-
-                        $user = $model->user;
-                        $schemeName = $model->scheme?->name ?? 'Contribution';
-
-                        // Notify user (triggers real-time update)
-                        $user->notifyMember(
-                            "Contribution Successful",
-                            "Your payment of ₦" . number_format($model->amount, 2) . " for {$schemeName} was successful.",
-                            ['type' => 'contribution_success', 'contribution_id' => $model->id]
-                        );
-
-                        // Notify relevant admins
-                        $user->getAuthorizedAdmins()->each(function ($admin) use ($user, $model, $schemeName) {
-                            $admin->notifyMember(
-                                "Payment Received: {$schemeName}",
-                                "Member {$user->name} successfully paid ₦" . number_format($model->amount, 2) . " for {$schemeName}.",
-                                ['type' => 'contribution_success', 'contribution_id' => $model->id]
-                            );
-                        });
-                    } catch (\Throwable $e) {}
-
-                    if ($model->project_id) {
-                        // Decrement available units if applicable
-                        if ($model->units > 0) {
-                            $project = Project::find($model->project_id);
-                            if ($project && $project->is_unit_based) {
-                                $project->decrement('available_units', $model->units);
-                            }
-                        }
-
-                        // Avoid duplicates if re-updated
-                        if (! ProjectInvestment::where('contribution_id', $model->id)->exists()) {
-                            ProjectInvestment::create([
-                                'user_id' => $model->user_id,
-                                'project_id' => $model->project_id,
-                                'contribution_id' => $model->id,
-                                'amount' => $model->amount,
-                                'units' => $model->units,
-                                'reference' => $model->reference,
-                            ]);
-                        }
-                    }
                 }
-            } catch (\Throwable $e) {
-                // Swallow to prevent blocking payment finalization; logs can be added if needed
+
+                \App\Jobs\ProcessContributionSideEffects::dispatch($model->id);
             }
         });
 
         static::deleted(function (self $model) {
-            // Sync user scheme balance if it was successful
-            try {
-                if ($model->status === 'success' && $model->scheme) {
-                    $model->user->syncSchemeBalance($model->scheme->name);
-                }
-            } catch (\Throwable $e) {}
+            // Sync user scheme balance if it was successful (using background job)
+            if ($model->status === 'success' && $model->scheme) {
+                \App\Jobs\SyncUserBalance::dispatch($model->user_id, $model->scheme->name);
+            }
         });
     }
 

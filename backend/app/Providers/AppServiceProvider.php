@@ -89,18 +89,42 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\QardHasan::observe(\App\Observers\QardHasanObserver::class);
         \App\Models\QardHasanRepayment::observe(\App\Observers\QardHasanRepaymentObserver::class);
 
-        // Global API rate limiter
+        // Global API rate limiter with burst capability
         RateLimiter::for('api', function (Request $request) {
-            $key = optional($request->user())->id ?: $request->ip();
+            $user = $request->user();
+            $key = $user ? $user->id : $request->ip();
+
+            // Higher limits for verified members to ensure good UX
+            if ($user && $user->is_verified) {
+                return [
+                    Limit::perMinute(120)->by($key),
+                ];
+            }
+
             return [
                 Limit::perMinute(60)->by($key),
             ];
         });
 
-        // Stricter limiter for login endpoints to mitigate brute force
+        // Stricter limiter for high-cost data aggregation endpoints (e.g., reports, legacy passbook)
+        RateLimiter::for('heavy', function (Request $request) {
+            return [
+                Limit::perMinute(10)->by(optional($request->user())->id ?: $request->ip()),
+            ];
+        });
+
+        // Stricter limiter for login and sensitive auth actions
         RateLimiter::for('login', function (Request $request) {
             return [
                 Limit::perMinute(5)->by($request->ip()),
+                Limit::perMinute(10)->by($request->input('email', $request->ip())),
+            ];
+        });
+
+        // Rate limiter for webhooks to prevent flooding from a single source
+        RateLimiter::for('webhooks', function (Request $request) {
+            return [
+                Limit::perMinute(300)->by($request->ip()),
             ];
         });
     }

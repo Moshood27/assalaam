@@ -16,9 +16,9 @@ The system is built with a **Laravel (Backend)** and **Vue.js (Frontend)** stack
 ## 2. Fintech Integration ("Fintech Ready")
 
 Beyond standard messaging, the system includes financial-grade features:
-- **Transaction Cards**: Staff can send payment requests that members can pay with one click.
+- **Transaction Cards**: Staff can send payment requests that members can pay with one click using their internal wallet balance.
 - **Digital Approvals (E-Signature)**: Legal/Loan agreements can be signed within the chat using the "Ikhlas (Agree)" action.
-- **Peer-to-Peer Transfers**: Members can send money directly to each other within private chats.
+- **Peer-to-Peer Transfers**: Members can send money directly to each other within private chats (debiting/crediting internal wallets).
 - **Money Requests**: Members can request payments for shared expenses (e.g., lunch, Sadaqah).
 - **Bill Payment Receipts**: Automated sharing of utility and service bill payments.
 - **Investment (Mudarabah) Updates**: Real-time project performance and profit distribution updates.

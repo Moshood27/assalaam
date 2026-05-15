@@ -418,20 +418,14 @@ class User extends Authenticatable implements FilamentUser
 
             // SMS
             if (in_array('sms', $resolved, true) && (bool) ($this->notify_sms ?? true) && !empty($this->phone)) {
-                try {
-                    app(\App\Services\SmsService::class)->send($this->phone, $message);
-                } catch (\Throwable $e) {
-                }
+                \App\Jobs\SendSmsNotification::dispatch($this->phone, $message);
             }
 
             // Push
             if (in_array('push', $resolved, true) && (bool) ($this->notify_push ?? true)) {
                 $token = $this->fcm_token ?: ($this->device_token ?? null);
                 if (!empty($token)) {
-                    try {
-                        app(\App\Services\PushService::class)->send($token, $title, $message, $data ?? [], $this);
-                    } catch (\Throwable $e) {
-                    }
+                    \App\Jobs\SendPushNotification::dispatch($token, $title, $message, $data ?? [], $this->id);
                 }
             }
         } catch (\Throwable $e) {
@@ -810,53 +804,58 @@ class User extends Authenticatable implements FilamentUser
      * Compute withdrawable breakdown for the wallet using tiered logic.
      * Debits consume restricted credits first, so available_for_withdrawal reflects
      * what can be cashed out to bank right now.
+     * Optimized: Cached in Redis to prevent multiple SUM queries on high-traffic users.
      */
     public function withdrawableBreakdown(): array
     {
-        // Sum credits that are withdrawable (or older rows without the flag)
-        $creditsWithdrawable = (float) WalletTransaction::where('user_id', $this->id)
-            ->where('type', 'credit')
-            ->where(function ($q) {
-                $q->where('withdrawable', true)->orWhereNull('withdrawable');
-            })
-            ->sum('amount');
+        $cacheKey = "user_withdrawable_breakdown:{$this->id}";
 
-        // Sum credits explicitly restricted (withdrawable=false)
-        $creditsRestricted = (float) WalletTransaction::where('user_id', $this->id)
-            ->where('type', 'credit')
-            ->where('withdrawable', false)
-            ->sum('amount');
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () {
+            // Sum credits that are withdrawable (or older rows without the flag)
+            $creditsWithdrawable = (float) WalletTransaction::where('user_id', $this->id)
+                ->where('type', 'credit')
+                ->where(function ($q) {
+                    $q->where('withdrawable', true)->orWhereNull('withdrawable');
+                })
+                ->sum('amount');
 
-        // Sum all debits
-        $totalDebits = (float) WalletTransaction::where('user_id', $this->id)
-            ->where('type', 'debit')
-            ->sum('amount');
+            // Sum credits explicitly restricted (withdrawable=false)
+            $creditsRestricted = (float) WalletTransaction::where('user_id', $this->id)
+                ->where('type', 'credit')
+                ->where('withdrawable', false)
+                ->sum('amount');
 
-        // Identify cash-out debits (bank withdrawals) that must reduce withdrawable immediately
-        $cashoutDebits = (float) WalletTransaction::where('user_id', $this->id)
-            ->where('type', 'debit')
-            ->whereIn('source', ['bank_withdrawal'])
-            ->sum('amount');
+            // Sum all debits
+            $totalDebits = (float) WalletTransaction::where('user_id', $this->id)
+                ->where('type', 'debit')
+                ->sum('amount');
 
-        $otherDebits = max(0.0, $totalDebits - $cashoutDebits);
+            // Identify cash-out debits (bank withdrawals) that must reduce withdrawable immediately
+            $cashoutDebits = (float) WalletTransaction::where('user_id', $this->id)
+                ->where('type', 'debit')
+                ->whereIn('source', ['bank_withdrawal'])
+                ->sum('amount');
 
-        // For non-cashout spending, consume restricted first, then withdrawable
-        $debitedFromWithdrawableOther = max(0.0, $otherDebits - $creditsRestricted);
+            $otherDebits = max(0.0, $totalDebits - $cashoutDebits);
 
-        // Total debited from withdrawable = cash-out debits (always from withdrawable) + spillover from other debits
-        $debitedFromWithdrawable = $cashoutDebits + $debitedFromWithdrawableOther;
-        $remainingWithdrawable = max(0.0, $creditsWithdrawable - $debitedFromWithdrawable);
+            // For non-cashout spending, consume restricted first, then withdrawable
+            $debitedFromWithdrawableOther = max(0.0, $otherDebits - $creditsRestricted);
 
-        $available = min((float) $this->balance, $remainingWithdrawable);
+            // Total debited from withdrawable = cash-out debits (always from withdrawable) + spillover from other debits
+            $debitedFromWithdrawable = $cashoutDebits + $debitedFromWithdrawableOther;
+            $remainingWithdrawable = max(0.0, $creditsWithdrawable - $debitedFromWithdrawable);
 
-        return [
-            'credits_withdrawable' => round($creditsWithdrawable, 2),
-            'credits_restricted' => round($creditsRestricted, 2),
-            'total_debits' => round($totalDebits, 2),
-            'cashout_debits' => round($cashoutDebits, 2),
-            'remaining_withdrawable' => round($remainingWithdrawable, 2),
-            'available_for_withdrawal' => round($available, 2),
-        ];
+            $available = min((float) $this->balance, $remainingWithdrawable);
+
+            return [
+                'credits_withdrawable' => round($creditsWithdrawable, 2),
+                'credits_restricted' => round($creditsRestricted, 2),
+                'total_debits' => round($totalDebits, 2),
+                'cashout_debits' => round($cashoutDebits, 2),
+                'remaining_withdrawable' => round($remainingWithdrawable, 2),
+                'available_for_withdrawal' => round($available, 2),
+            ];
+        });
     }
 
     /**

@@ -27,13 +27,10 @@ class ZakatService
         // Use the common helper to get base wealth
         $base = $user->zakatBaseWealth($goldPrice ?? 0);
 
-        // Individual components for report
-        $savings = (float) $user->contributions()->where('status', 'success')
-            ->whereIn('scheme_id', Scheme::whereIn('name', ['Savings', 'Ordinary Savings', 'Special Savings'])->pluck('id'))
-            ->sum('amount');
-        $shares = (float) $user->contributions()->where('status', 'success')
-            ->whereIn('scheme_id', Scheme::whereIn('name', ['Shares', 'Share Capital'])->pluck('id'))
-            ->sum('amount');
+        // Individual components for report (Optimized: Using cached balance columns)
+        $savings = (float) ($user->ordinary_savings ?? 0) + (float) ($user->special_savings_balance ?? 0);
+        $shares = (float) ($user->shares_capital ?? 0);
+
         $currentGoldValue = $goldPrice ? round($user->gold_balance * $goldPrice, 2) : 0;
         $walletBalance = (float) $user->balance;
 

@@ -13,102 +13,158 @@
       </div>
     </header>
 
-    <div class="p-4 space-y-6">
-      <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
-        <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
+    <div class="max-w-2xl mx-auto p-4 space-y-6">
+      <!-- Steps Indicator -->
+      <div class="flex items-center justify-between px-4 mb-2">
+        <div v-for="s in 3" :key="s" class="flex items-center gap-2">
+           <div :class="s <= currentStep ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-slate-200 text-slate-500'" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all">
+             {{ s }}
+           </div>
+           <div v-if="s < 3" :class="s < currentStep ? 'bg-emerald-600' : 'bg-slate-200'" class="w-12 h-1 rounded-full transition-all"></div>
+        </div>
+      </div>
+
+      <!-- Step 1: Business Basics -->
+      <div v-if="currentStep === 1" class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 relative overflow-hidden animate-in fade-in slide-in-from-right duration-500">
+        <div class="absolute right-0 top-0 w-40 h-40 bg-emerald-50 rounded-full -mr-20 -mt-20 opacity-40" />
         <div class="relative z-10">
-          <h2 class="text-xl font-black text-slate-800 uppercase mb-2">{{ isEdit ? 'Edit Business' : 'Business Profile' }}</h2>
-          <p class="text-sm text-slate-500 mb-6">{{ isEdit ? 'Update your store information and settlement details.' : 'Register your local business to start selling products to cooperative members.' }}</p>
+          <div class="mb-8">
+            <h2 class="text-2xl font-black text-slate-800 uppercase leading-tight mb-2">{{ isEdit ? 'Update Identity' : 'Business Identity' }}</h2>
+            <p class="text-sm text-slate-500">Let members know who you are and what you offer.</p>
+          </div>
 
-          <div class="space-y-4">
+          <div class="space-y-6">
             <div>
-              <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Business Name</label>
-              <input v-model="form.name" type="text" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-bold text-slate-800" placeholder="e.g. Al-Barakah Electronics" />
+              <label class="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">Business Name</label>
+              <input v-model="form.name" type="text" class="w-full mt-1 px-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-800" placeholder="e.g. Al-Barakah Electronics" />
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Business Phone</label>
-                <input v-model="form.phone" type="tel" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-bold text-slate-800" placeholder="08012345678" />
+                <label class="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">Business Phone</label>
+                <input v-model="form.phone" type="tel" class="w-full mt-1 px-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-800" placeholder="08012345678" />
               </div>
               <div>
-                <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Category</label>
-                <select v-model="form.category" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-bold text-slate-800 appearance-none">
-                  <option value="">Select Category</option>
-                  <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-                </select>
+                <label class="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">Market Category</label>
+                <div class="relative">
+                  <select v-model="form.category" class="w-full mt-1 px-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-800 appearance-none">
+                    <option value="">Select Category</option>
+                    <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
+                  </select>
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 i-mdi-chevron-down text-slate-400 pointer-events-none"></span>
+                </div>
               </div>
             </div>
 
             <div>
-              <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Business Address</label>
-              <textarea v-model="form.address" rows="3" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-bold text-slate-800" placeholder="Store address..."></textarea>
+              <label class="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">Business Tagline</label>
+              <input v-model="form.description" type="text" class="w-full mt-1 px-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-800" placeholder="Briefly describe what you sell" />
             </div>
 
-            <div>
-              <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Short Description</label>
-              <input v-model="form.description" type="text" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-bold text-slate-800" placeholder="What do you sell?" />
-            </div>
+            <button @click="currentStep = 2" :disabled="!form.name || !form.category" class="w-full h-16 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-wider shadow-xl shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30">
+              Continue to Address
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
-        <h2 class="text-xl font-black text-slate-800 uppercase mb-2">Settlement Bank</h2>
-        <p class="text-sm text-slate-500 mb-6">Where should we pay your earnings? (Payouts are made after order fulfillment)</p>
+      <!-- Step 2: Location -->
+      <div v-if="currentStep === 2" class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 animate-in fade-in slide-in-from-right duration-500">
+        <div class="mb-8 flex items-center gap-4">
+           <button @click="currentStep = 1" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400"><span class="i-mdi-arrow-left"></span></button>
+           <div>
+             <h2 class="text-2xl font-black text-slate-800 uppercase leading-tight mb-1">Store Location</h2>
+             <p class="text-sm text-slate-500">Physical address for product fulfillment.</p>
+           </div>
+        </div>
 
-        <div class="space-y-4">
+        <div class="space-y-6">
+          <div>
+            <label class="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">Store / Office Address</label>
+            <textarea v-model="form.address" rows="4" class="w-full mt-1 px-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-800" placeholder="Detailed store address..."></textarea>
+          </div>
+
+          <div class="p-6 bg-emerald-50 rounded-3xl border border-emerald-100 flex items-start gap-4">
+            <div class="text-2xl mt-1">📍</div>
+            <p class="text-xs text-emerald-800 leading-relaxed font-medium">Providing an accurate address helps members trust your business and facilitates smoother logistics.</p>
+          </div>
+
+          <button @click="currentStep = 3" :disabled="!form.address" class="w-full h-16 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-wider shadow-xl shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30">
+            Continue to Settlements
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Payouts -->
+      <div v-if="currentStep === 3" class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 animate-in fade-in slide-in-from-right duration-500">
+         <div class="mb-8 flex items-center gap-4">
+           <button @click="currentStep = 2" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400"><span class="i-mdi-arrow-left"></span></button>
+           <div>
+             <h2 class="text-2xl font-black text-slate-800 uppercase leading-tight mb-1">Settlement Bank</h2>
+             <p class="text-sm text-slate-500">Where we send your earnings.</p>
+           </div>
+        </div>
+
+        <div class="space-y-6">
           <div class="relative">
-            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Bank Name</label>
-            <div class="mt-1 relative">
+            <label class="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">Bank Institution</label>
+            <div class="mt-1 relative group">
               <input
                 v-model="bankSearch"
                 @focus="showBankDropdown = true"
                 type="text"
-                class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-bold text-slate-800"
-                :placeholder="selectedBankName || 'Search bank...'"
+                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-800"
+                :placeholder="selectedBankName || 'Search for your bank...'"
               />
-              <div v-if="showBankDropdown" class="absolute z-20 mt-1 w-full max-h-48 overflow-auto bg-white border border-slate-200 rounded-2xl shadow-xl">
+              <div v-if="showBankDropdown" class="absolute z-20 mt-2 w-full max-h-60 overflow-auto bg-white border border-slate-200 rounded-[1.5rem] shadow-2xl p-2 hide-scrollbar">
                 <button
                   v-for="b in filteredBanks"
                   :key="b.code"
                   @click="selectBank(b)"
-                  class="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition-colors"
+                  class="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 rounded-xl transition-colors flex items-center justify-between group"
                 >
                   {{ b.name }}
+                  <span class="i-mdi-chevron-right opacity-0 group-hover:opacity-100 transition-opacity"></span>
                 </button>
               </div>
             </div>
           </div>
 
           <div>
-            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Account Number</label>
-            <input v-model="form.settlement_account_number" type="tel" maxlength="10" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-bold text-slate-800" placeholder="10-digit account number" />
+            <label class="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">Account Number (NUBAN)</label>
+            <input v-model="form.settlement_account_number" type="tel" maxlength="10" class="w-full mt-1 px-5 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all font-black text-slate-800 tracking-widest text-lg" placeholder="0000000000" />
           </div>
 
-          <div v-if="resolvedAccountName" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-            <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest">Verified Account Name</p>
-            <p class="text-sm font-bold text-emerald-800">{{ resolvedAccountName }}</p>
+          <div v-if="resolvedAccountName" class="p-6 rounded-[2rem] bg-emerald-600 text-white shadow-lg shadow-emerald-200 animate-in zoom-in duration-300">
+            <div class="flex items-center gap-4">
+               <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl">🏛️</div>
+               <div>
+                  <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Verified Account Holder</p>
+                  <p class="text-base font-black uppercase">{{ resolvedAccountName }}</p>
+               </div>
+            </div>
           </div>
           
           <button
             v-if="!resolvedAccountName"
             @click="resolveAccount"
             :disabled="resolving || !form.settlement_bank_code || form.settlement_account_number.length !== 10"
-            class="w-full h-12 rounded-xl border-2 border-emerald-700 text-emerald-700 font-bold hover:bg-emerald-50 transition-colors disabled:opacity-50"
+            class="w-full h-14 rounded-2xl border-2 border-emerald-600 text-emerald-600 font-black uppercase tracking-widest hover:bg-emerald-50 transition-all disabled:opacity-30 active:scale-95"
           >
-            {{ resolving ? 'Verifying...' : 'Verify Bank Account' }}
+            <span v-if="resolving" class="inline-flex items-center gap-2"><span class="i-mdi-loading animate-spin"></span> Verifying...</span>
+            <span v-else>Verify Bank Account</span>
+          </button>
+
+          <button
+            v-if="resolvedAccountName"
+            @click="submit"
+            :disabled="submitting"
+            class="w-full h-16 rounded-[2rem] bg-emerald-600 text-white font-black uppercase tracking-wider shadow-xl shadow-emerald-600/30 disabled:opacity-30 transition-all active:scale-95"
+          >
+            {{ submitting ? 'Processing...' : (isEdit ? 'Update Business Profile' : 'Apply to Become a Vendor') }}
           </button>
         </div>
       </div>
-
-      <button
-        @click="submit"
-        :disabled="submitting || !resolvedAccountName"
-        class="w-full h-16 rounded-3xl bg-emerald-700 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-700/30 disabled:bg-slate-300 disabled:shadow-none transition-all active:scale-95"
-      >
-        {{ submitting ? 'Processing...' : (isEdit ? 'Update Profile' : 'Submit Application') }}
-      </button>
 
       <p class="text-center text-[10px] text-slate-400 px-8 uppercase font-bold tracking-widest leading-relaxed">
         By submitting, you agree to the Cooperative Vendor Terms of Service and commission rates.
@@ -141,6 +197,7 @@ const bankSearch = ref('')
 const showBankDropdown = ref(false)
 const resolving = ref(false)
 const resolvedAccountName = ref('')
+const currentStep = ref(1)
 const submitting = ref(false)
 const isEdit = ref(false)
 

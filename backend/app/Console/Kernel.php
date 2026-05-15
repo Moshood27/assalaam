@@ -65,6 +65,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('backup:clean')->dailyAt('00:00');
         // Run database and application files backup daily at 01:00
         $schedule->command('backup:run')->dailyAt('01:00');
+
+        // Expire sensitive chat files every 48 hours (checked daily)
+        $schedule->command('chat:expire-sensitive-files')->daily();
     }
 
     /**

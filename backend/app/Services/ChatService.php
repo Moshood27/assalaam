@@ -287,9 +287,35 @@ class ChatService
 
     protected function calculateAvgResponseTime()
     {
-        // Logic to calculate average response time between member message and staff reply
-        // Placeholder for complex query
-        return "15 minutes";
+        $supportRooms = ChatRoom::where('type', 'support')->pluck('id');
+
+        $totalMinutes = 0;
+        $count = 0;
+
+        foreach ($supportRooms as $roomId) {
+            $memberMsg = ChatMessage::where('chat_room_id', $roomId)
+                ->whereHas('user', fn($q) => $q->where('is_staff', false)->where('is_admin', false))
+                ->oldest()
+                ->first();
+
+            if ($memberMsg) {
+                $staffReply = ChatMessage::where('chat_room_id', $roomId)
+                    ->where('created_at', '>', $memberMsg->created_at)
+                    ->whereHas('user', fn($q) => $q->where('is_staff', true)->orWhere('is_admin', true))
+                    ->oldest()
+                    ->first();
+
+                if ($staffReply) {
+                    $totalMinutes += $staffReply->created_at->diffInMinutes($memberMsg->created_at);
+                    $count++;
+                }
+            }
+        }
+
+        if ($count === 0) return "N/A";
+
+        $avg = round($totalMinutes / $count);
+        return "{$avg} minutes";
     }
 
     public function banUser(User $user, $reason = null)
@@ -378,10 +404,26 @@ class ChatService
             });
     }
 
-    public function isPrayerTime($latitude, $longitude)
+    public function isPrayerTime($latitude = null, $longitude = null)
     {
-        // Placeholder for prayer time calculation
-        // In a real app, use a library like 'ahmed-reza/prayer-times'
+        // Nigerian Approximate Prayer Windows (WAT/Africa/Lagos)
+        $now = now()->timezone('Africa/Lagos');
+        $time = $now->format('Hi'); // e.g., 1330 for 1:30 PM
+
+        $windows = [
+            ['0500', '0615'], // Fajr
+            ['1300', '1415'], // Dhuhr
+            ['1600', '1715'], // Asr
+            ['1845', '1945'], // Maghrib
+            ['2000', '2115'], // Isha
+        ];
+
+        foreach ($windows as $window) {
+            if ($time >= $window[0] && $time <= $window[1]) {
+                return true;
+            }
+        }
+
         return false;
     }
 

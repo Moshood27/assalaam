@@ -11,9 +11,11 @@ use App\Models\ChatMessage;
 use App\Models\ChatRoom;
 use App\Models\ChatRoomMember;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -141,6 +143,15 @@ class ChatController extends Controller
     public function show(ChatRoom $room)
     {
         $this->authorize('view', $room);
+
+        if ($this->chatService->requires2FA($room)) {
+            $user = Auth::user();
+            // Check if user has 2FA enabled/confirmed (using the trait's property if available or a standard check)
+            if (empty($user->two_factor_secret)) {
+                return response()->json(['error' => 'This sensitive chat room requires Two-Factor Authentication (2FA) to be enabled on your account.'], 403);
+            }
+        }
+
         $messages = $room->messages()->with('user.badges')->latest()->paginate(50);
         return response()->json([
             'room' => $room->load('users.badges'),
@@ -231,15 +242,58 @@ class ChatController extends Controller
         }
 
         if (in_array($message->type, ['transaction', 'peer_request']) && $request->action === 'paid') {
+            $amount = floatval(preg_replace('/[^0-9.]/', '', $message->metadata['amount'] ?? 0));
+            $payer = Auth::user();
+
+            if ($amount > 0) {
+                if ($payer->availableForWithdrawal() < $amount) {
+                    return response()->json(['error' => 'Insufficient balance in your wallet to complete this payment.'], 422);
+                }
+
+                DB::transaction(function () use ($message, $payer, $amount) {
+                    // Debit payer
+                    WalletTransaction::create([
+                        'user_id' => $payer->id,
+                        'type' => 'debit',
+                        'amount' => $amount,
+                        'reference' => 'CHAT_PAY_' . $message->id,
+                        'source' => 'chat_transfer',
+                        'meta' => [
+                            'message_id' => $message->id,
+                            'room_id' => $message->chat_room_id,
+                            'action' => 'paid_via_chat'
+                        ],
+                        'withdrawable' => true
+                    ]);
+
+                    // Credit recipient
+                    $recipient = $message->user;
+                    WalletTransaction::create([
+                        'user_id' => $recipient->id,
+                        'type' => 'credit',
+                        'amount' => $amount,
+                        'reference' => 'CHAT_PAY_' . $message->id,
+                        'source' => 'chat_transfer',
+                        'meta' => [
+                            'message_id' => $message->id,
+                            'sender_id' => $payer->id,
+                            'action' => 'received_via_chat'
+                        ],
+                        'withdrawable' => true
+                    ]);
+                });
+            }
+
             // Log financial activity
             activity('finance')
                 ->performedOn($message)
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'action' => 'chat_payment',
-                    'amount' => $message->metadata['amount'] ?? 0,
+                    'amount' => $amount,
                     'type' => $message->type,
-                    'room_id' => $message->chat_room_id
+                    'room_id' => $message->chat_room_id,
+                    'status' => 'success'
                 ])
                 ->log('Payment completed via chat interface');
         }

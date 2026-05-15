@@ -281,6 +281,8 @@ async function respondToMessage(message, action) {
     }
   } catch (e) {
     console.error('Failed to respond', e)
+    const msg = e.response?.data?.error || 'Failed to complete action. Please check your balance or try again.'
+    alert(msg)
   }
 }
 

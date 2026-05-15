@@ -16,59 +16,67 @@
       </div>
     </header>
 
-    <div class="p-4 space-y-4">
-      <div v-if="loading" class="text-center py-12">
-        <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Loading products...</p>
+    <div class="p-4 space-y-6">
+      <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4">
+        <div class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-600 rounded-full animate-spin"></div>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading catalog...</p>
       </div>
       
-      <div v-else-if="products.length === 0" class="bg-white rounded-[2rem] p-12 text-center border border-dashed border-slate-200">
-        <div class="text-4xl mb-4">📦</div>
-        <h3 class="text-sm font-bold text-slate-800 mb-1">No products yet</h3>
-        <p class="text-xs text-slate-500 mb-6">Start listing your products to sell to members.</p>
-        <button v-if="vendor.is_approved" @click="openCreateModal" class="px-6 py-3 rounded-2xl bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider">Add your first product</button>
-        <div v-else class="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-700 text-xs font-bold uppercase tracking-widest">
+      <div v-else-if="products.length === 0" class="bg-white rounded-[2.5rem] p-16 text-center border-2 border-dashed border-slate-100">
+        <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">📦</div>
+        <h3 class="text-xl font-black text-slate-800 uppercase mb-2">No products yet</h3>
+        <p class="text-sm text-slate-500 mb-8 max-w-[240px] mx-auto">Start listing your products to grow your business with our members.</p>
+        <button v-if="vendor.is_approved" @click="openCreateModal" class="px-8 py-4 rounded-2xl bg-emerald-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-700/20 active:scale-95 transition-all">Add your first product</button>
+        <div v-else class="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-700 text-[10px] font-black uppercase tracking-widest">
           Approval Required to list products
         </div>
       </div>
 
-      <div v-else class="grid gap-4">
-        <div v-for="p in products" :key="p.id" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex gap-4 relative overflow-hidden group">
-          <div class="w-24 h-24 rounded-2xl bg-slate-50 overflow-hidden flex-shrink-0 border border-slate-100">
-            <img v-if="p.image_url" :src="getImageUrl(p.image_url)" class="w-full h-full object-cover" />
-            <div v-else class="w-full h-full flex items-center justify-center text-slate-300 text-2xl">🖼️</div>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-for="p in products" :key="p.id" class="group bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex gap-5 hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300">
+          <div class="w-28 h-28 rounded-3xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 relative">
+            <img v-if="p.image_url" :src="getImageUrl(p.image_url)" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-3xl">🖼️</div>
+            
+            <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+               <button @click="openEditModal(p)" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-lg scale-0 group-hover:scale-100 transition-transform duration-300">
+                  <span class="i-mdi-pencil text-sm"></span>
+               </button>
+            </div>
           </div>
-          <div class="flex-1 min-w-0 flex flex-col justify-center">
-            <div class="flex items-center justify-between">
-              <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">{{ p.category?.name || 'General' }}</p>
-              <div :class="p.is_approved ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'" class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase">
-                {{ p.is_approved ? 'Approved' : 'Pending Approval' }}
+          <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest truncate">{{ p.category?.name || 'General' }}</span>
+                <div :class="p.is_approved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'" class="px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-tighter">
+                  {{ p.is_approved ? 'Approved' : 'Pending' }}
+                </div>
+              </div>
+              <h3 class="text-sm font-black text-slate-800 truncate">{{ p.name }}</h3>
+              <div class="flex items-baseline gap-2">
+                <p class="text-base font-black text-slate-900">₦{{ formatMoney(p.selling_price) }}</p>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Markup: {{ p.markup_percentage }}%</p>
               </div>
             </div>
-            <h3 class="text-sm font-bold text-slate-800 truncate mb-1">{{ p.name }}</h3>
-            <div class="flex items-baseline gap-2 mb-1">
-              <p class="text-lg font-black text-slate-900">₦{{ formatMoney(p.selling_price) }}</p>
-              <p class="text-[10px] text-slate-400 font-bold">Cost: ₦{{ formatMoney(p.cost_price) }}</p>
+            
+            <div class="flex items-center justify-between mt-2">
+              <div class="flex items-center gap-2">
+                <span :class="p.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'" class="px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">
+                  {{ p.is_active ? 'Active' : 'Hidden' }}
+                </span>
+                <span :class="p.stock_quantity <= 5 ? 'text-rose-600 font-black' : 'text-slate-500 font-bold'" class="text-[9px] uppercase tracking-widest">
+                   Stock: {{ p.stock_quantity || 0 }}
+                </span>
+              </div>
+              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button @click="openEditModal(p)" class="p-2 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all">
+                   <span class="i-mdi-pencil text-lg"></span>
+                </button>
+                <button @click="confirmDelete(p)" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all">
+                   <span class="i-mdi-delete-outline text-lg"></span>
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span :class="p.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'" class="px-2 py-0.5 rounded-md text-[8px] font-black uppercase">
-                {{ p.is_active ? 'Active' : 'Inactive' }}
-              </span>
-              <span :class="p.stock_quantity <= 5 ? 'text-rose-600 font-black' : 'text-slate-400 font-medium'" class="text-[10px]">
-                Stock: {{ p.stock_quantity || 0 }}
-              </span>
-            </div>
-          </div>
-          <div class="flex flex-col gap-2 justify-center">
-            <button @click="openEditModal(p)" class="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
-            <button @click="confirmDelete(p)" class="p-2 rounded-xl bg-slate-50 text-rose-600 hover:bg-rose-50 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
           </div>
         </div>
       </div>

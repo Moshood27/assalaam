@@ -3,6 +3,24 @@
     <AppHeader title="AGM Session" :showBack="true" />
 
     <div class="p-4 space-y-6 max-w-2xl mx-auto">
+      <!-- Feature Disabled Alert -->
+      <div v-if="appStatusStore.features['shura-voting-active'] === false" class="card card-elevated p-8 rounded-[2rem] text-center space-y-4 shadow-sm">
+        <div class="w-20 h-20 bg-indigo-100 rounded-[2.5rem] flex items-center justify-center mx-auto text-4xl shadow-inner">
+          🔒
+        </div>
+        <div>
+          <h3 class="text-xl font-black text-slate-800">Voting Restricted</h3>
+          <p class="text-sm text-slate-500 mt-2 leading-relaxed px-4">
+            Shura Council voting is currently restricted for your account or the session is inactive. 
+            Ensure your account is verified and you meet the minimum Attaqwa Score requirements.
+          </p>
+        </div>
+        <button @click="$router.back()" class="w-full bg-slate-800 text-white p-4 rounded-2xl font-bold active:scale-95 transition-all">
+          Go Back
+        </button>
+      </div>
+
+      <template v-else>
       <section class="card card-elevated p-5">
         <div class="flex items-center justify-between mb-6">
           <h2 class="font-black text-slate-800 tracking-tight text-lg">Positions & Candidates</h2>
@@ -98,6 +116,7 @@
           </div>
         </div>
       </section>
+      </template>
     </div>
 
     <AppBottomNav />
@@ -146,6 +165,9 @@ const load = async () => {
     const { data } = await axios.get(`/api/agm/sessions/${id}/candidates`, { headers: { Authorization: `Bearer ${token}` } })
     session.value = data?.session || null
     positions.value = Array.isArray(data?.positions) ? data.positions : []
+    if (data.features) {
+      appStatusStore.setFeatures(data.features)
+    }
   } catch (e) {
     error.value = e?.response?.data?.message || e.message
   } finally {

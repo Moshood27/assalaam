@@ -155,6 +155,21 @@ class VendorController extends Controller
 
         $activities = $recentOrders->concat($recentPayouts)->sortByDesc('date')->values()->all();
 
+        // Earnings trend (last 7 days)
+        $trend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $dt = now()->subDays($i);
+            $daySum = StoreOrderItem::where('vendor_id', $vendor->id)
+                ->whereNotNull('vendor_paid_at')
+                ->whereDate('vendor_paid_at', $dt->format('Y-m-d'))
+                ->sum('vendor_amount');
+
+            $trend[] = [
+                'label' => $dt->format('D'),
+                'value' => (float) $daySum
+            ];
+        }
+
         // Add current available balance
         $availableBalance = method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance;
 
@@ -168,6 +183,7 @@ class VendorController extends Controller
             'pending_orders_count' => $pendingOrders,
             'completed_orders_count' => $completedOrders,
             'activities' => $activities,
+            'trend' => $trend,
         ]);
     }
 
