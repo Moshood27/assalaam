@@ -8,9 +8,9 @@ use App\Models\WalletTransaction;
 use App\Models\Contribution;
 use App\Services\GoldSilverPriceService;
 use App\Services\ZakatService;
-use App\Traits\VerifiesOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Laravel\Pennant\Feature;
 use Illuminate\Support\Facades\Log;
 
 class GoldController extends Controller
@@ -129,6 +129,10 @@ class GoldController extends Controller
 
     public function buy(Request $request)
     {
+        if (Feature::inactive('gold-savings-beta')) {
+            return response()->json(['message' => 'Digital Gold Savings is currently in private beta and not available for your account.'], 403);
+        }
+
         $scheme = Scheme::where('name', 'Digital Gold')->first();
         $minAmount = $scheme ? $scheme->min_amount : 1000;
 
@@ -211,6 +215,10 @@ class GoldController extends Controller
 
     public function sell(Request $request)
     {
+        if (Feature::inactive('gold-savings-beta')) {
+            return response()->json(['message' => 'Digital Gold Savings is currently in private beta and not available for your account.'], 403);
+        }
+
         $request->validate([
             'grams' => 'required|numeric|min:0.000001',
             'pin' => 'required|string',

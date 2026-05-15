@@ -157,6 +157,17 @@
       0 => 'Laravel\\Horizon\\HorizonServiceProvider',
     ),
   ),
+  'laravel/pennant' => 
+  array (
+    'aliases' => 
+    array (
+      'Feature' => 'Laravel\\Pennant\\Feature',
+    ),
+    'providers' => 
+    array (
+      0 => 'Laravel\\Pennant\\PennantServiceProvider',
+    ),
+  ),
   'laravel/reverb' => 
   array (
     'providers' => 

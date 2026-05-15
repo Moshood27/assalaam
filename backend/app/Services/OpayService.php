@@ -97,29 +97,35 @@ class OpayService
 
     /**
      * Create/Assign a Virtual Account (DVA).
-     * Note: Opay DVA API might differ, this is a placeholder based on common Opay DVA patterns.
      */
     public function createVirtualAccount(User $user)
     {
         $virtualAccount = $user->virtualAccount;
-        $userReference = $virtualAccount->opay_user_reference ?? 'OPY_' . $user->id . '_' . time();
+        // Ensure user has a virtual account record
+        if (!$virtualAccount) {
+            $virtualAccount = $user->virtualAccount()->create([]);
+        }
+
+        $userReference = $virtualAccount->opay_user_reference ?? 'OPY_' . $user->id . '_' . bin2hex(random_bytes(4));
 
         $payload = [
             'merchantId' => $this->merchantId,
             'userReference' => $userReference,
-            'userName' => $user->name,
+            'userName' => $user->full_name,
             'userEmail' => $user->email,
             'userPhone' => $user->phone ?? '',
         ];
 
         try {
-            // Placeholder endpoint for Opay DVA assignment
             $signature = hash_hmac('sha512', json_encode($payload), $this->secretKey);
 
+            // Opay Merchant DVA endpoint is typically /merchant/v1/user/account
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$signature}",
                 'MerchantId' => $this->merchantId,
-            ])->post("{$this->baseUrl}/virtual-account/create", $payload);
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->post("{$this->baseUrl}/merchant/v1/user/account", $payload);
 
             if ($response->successful()) {
                 $data = $response->json('data');
@@ -132,8 +138,16 @@ class OpayService
                 return ['success' => true, 'data' => $data];
             }
 
-            Log::error('Opay DVA Assignment Failed', ['body' => $response->body(), 'payload' => $payload]);
-            return ['success' => false, 'message' => $response->json('message') ?? 'Opay DVA Assignment Failed'];
+            Log::error('Opay DVA Assignment Failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'payload' => $payload
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $response->json('message') ?? 'Opay DVA Assignment Failed (' . $response->status() . ')'
+            ];
         } catch (\Exception $e) {
             Log::error('Opay DVA Assignment Exception', ['msg' => $e->getMessage()]);
             return ['success' => false, 'message' => 'An unexpected error occurred during Opay DVA assignment.'];

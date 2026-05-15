@@ -6,6 +6,8 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Pennant\Feature;
+use App\Models\User;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,46 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Define Feature Flags
+        Feature::define('withdrawals-enabled', fn () => true);
+        Feature::define('payment-provider-failover', fn () => false);
+        Feature::define('maintenance-mode-wallets', fn () => false);
+        Feature::define('gold-savings-beta', function ($scope) {
+            if ($scope instanceof User) {
+                if (Feature::for('global')->inactive('gold-savings-beta')) {
+                    return false;
+                }
+                return ($scope->attaqwa_score ?? 0) > 80;
+            }
+            return true;
+        });
+        Feature::define('apply-for-loan', function ($scope) {
+            if ($scope instanceof User) {
+                if (Feature::for('global')->inactive('apply-for-loan')) {
+                    return false;
+                }
+                return $scope->is_verified && ($scope->attaqwa_score ?? 0) > 40;
+            }
+            return true;
+        });
+        Feature::define('shura-voting-active', fn () => false);
+        Feature::define('prayer-time-quiet-mode', fn () => false);
+        Feature::define('gender-segregated-features', function ($scope) {
+            if ($scope instanceof User) {
+                // Example: Only show if user gender matches or is not strictly segregated
+                return true;
+            }
+            return true;
+        });
+        Feature::define('show-flw-balance', function ($scope) {
+            if ($scope instanceof User) {
+                if (Feature::for('global')->inactive('show-flw-balance')) {
+                    return false;
+                }
+            }
+            return config('services.flutterwave.compliance_status') === 'approved';
+        });
+
         // Register Filament Breezy components globally to avoid ComponentNotFoundException during Livewire updates
         \Livewire\Livewire::component('personal_info', \Jeffgreco13\FilamentBreezy\Livewire\PersonalInfo::class);
         \Livewire\Livewire::component('update_password', \Jeffgreco13\FilamentBreezy\Livewire\UpdatePassword::class);

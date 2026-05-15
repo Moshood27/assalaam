@@ -1184,7 +1184,7 @@ class WebhookController extends Controller
     public function handleOpay(Request $request)
     {
         // Opay uses HMAC-SHA512 for webhook verification
-        $signature = $request->header('Authorization'); // Or 'X-Opay-Signature' depending on version
+        $signature = $request->header('Authorization') ?? $request->header('X-Opay-Signature');
         if (str_starts_with((string)$signature, 'Bearer ')) {
             $signature = substr($signature, 7);
         }
@@ -1196,10 +1196,11 @@ class WebhookController extends Controller
         if (!$signature || !hash_equals($signature, $computed)) {
              Log::warning('Opay webhook signature verification failed', [
                 'has_header' => !empty($signature),
+                'header' => $signature,
+                'computed' => $computed,
                 'ip' => $request->ip(),
             ]);
             // return response()->json(['message' => 'Invalid Signature'], 400);
-            // Note: Opay docs sometimes vary on signature header, proceed with caution if you want to enforce it.
         }
 
         $payload = $request->all();

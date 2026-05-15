@@ -7,69 +7,53 @@ APP_DEBUG=true
 APP_URL=https://attaqwacooposg.com
 ASSET_URL=https://attaqwacooposg.com
 #APP_PORT=8000
-
 APP_LOCALE=en
 APP_FALLBACK_LOCALE=en
 APP_FAKER_LOCALE=en_US
-
 APP_MAINTENANCE_DRIVER=file
 # APP_MAINTENANCE_STORE=database
-
 PHP_CLI_SERVER_WORKERS=4
-
 BCRYPT_ROUNDS=12
-
 LOG_CHANNEL=stderr
 LOG_STACK=single
 LOG_DEPRECATIONS_CHANNEL=null
 LOG_LEVEL=debug
-
 DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
 DB_DATABASE=coop_attaqwa
 DB_USERNAME=sail_attaqwa
 DB_PASSWORD=pass_attaqwa
-
 SESSION_DRIVER=database
 SESSION_LIFETIME=5
 SESSION_ENCRYPT=false
 SESSION_PATH=/
 SESSION_DOMAIN=null
-
 BROADCAST_CONNECTION=log
 FILESYSTEM_DISK=local
 QUEUE_CONNECTION=redis
-
 CACHE_STORE=database
 # CACHE_PREFIX=
 APP_SERVICE_BIND_ADDR=0.0.0.0
-
 MEMCACHED_HOST=127.0.0.1
 REDIS_CLIENT=phpredis
 REDIS_HOST=redis
 REDIS_PASSWORD=null
 REDIS_PORT=6379
-
 # If you are using Filament, also check:
 FILAMENT_FILESYSTEM_DISK=public
-
 MAIL_MAILER=brevo
 BREVO_API_KEY=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
 MAIL_FROM_ADDRESS="team@attaqwacooposg.com"
 MAIL_FROM_NAME="${APP_NAME}"
-
 # Optional: Comma-separated admin emails to notify on new loan requests (used in addition to is_admin=true users)
 ADMIN_NOTIFICATION_EMAILS=
-
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_DEFAULT_REGION=us-east-1
 AWS_BUCKET=
 AWS_USE_PATH_STYLE_ENDPOINT=false
-
 VITE_APP_NAME="${APP_NAME}"
-
 # Paystack configuration
 # Mode: test or live (defaults to 'live' when APP_ENV=production, else 'test')
 PAYSTACK_ENV=test
@@ -84,32 +68,25 @@ PAYSTACK_PUBLIC_KEY=pk_test_4d1ffe456b53fb7f1118136a428d27970028d083
 PAYSTACK_SECRET_KEY=sk_test_98c8350f40ff728f68b0bf3ca67cfb1ff1f38eea
 # Optional: Keep this in sync with your Paystack Dashboard webhook setting
 PAYSTACK_WEBHOOK_URL=https://attaqwacooposg.com/api/webhooks/paystack
-
 # Flutterwave configuration
 FLW_PUBLIC_KEY=
 FLW_SECRET_KEY=
 # Secret Hash: set this in your Flutterwave dashboard -> Settings -> Webhooks
 FLW_SECRET_HASH=
 FLW_WEBHOOK_URL=https://attaqwacooposg.com/api/webhooks/flutterwave
-
 # Monnify configuration
 MONNIFY_API_KEY=
 MONNIFY_SECRET_KEY=
 MONNIFY_CONTRACT_CODE=
 MONNIFY_BASE_URL=https://api.monnify.com
-
 # Ngrok (optional, for local webhook testing)
 # Sign up at https://ngrok.com, get your auth token, and set it here to enable the ngrok service in docker-compose
 NGROK_AUTHTOKEN=1uAumGbJMSj6RpEjGWwnFdSJD6Q_31nbTYcweqR1Xfx5WNbht
 # Inspector UI port for ngrok (http://localhost:4040)
 FORWARD_NGROK_INSPECT_PORT=4040
-
-
 # Old data import (members, loans, investment_record_details)
 # Enable this to import and transform data from database/old_databse.sql during seeding
 SEED_OLD_DATA=true
-
-
 # Host port for the Vite dev server container
 FRONTEND_PORT=5174
 # Optional: expose the Laravel container's internal Vite port (not used if you run separate frontend container)
@@ -120,17 +97,14 @@ FORWARD_DB_PORT=33060
 #FORWARD_MAILPIT_PORT=1025
 #FORWARD_MAILPIT_DASHBOARD_PORT=8025
 PHP_VERSION=8.4
-
 # Takaful (Mutual Protection Pool)
 # Monthly non-refundable contribution in NGN (default: 200)
 TAKAFUL_MONTHLY_AMOUNT=200
-
 # Wallet Maintenance Charge
 # Percentage of the top-up amount (e.g., 1 for 1%)
 COOP_WALLET_MAINTENANCE_CHARGE_PERCENTAGE=1
 # Maximum charge amount in NGN
 COOP_WALLET_MAINTENANCE_CHARGE_MAX=500
-
 # Mobile App forced update and maintenance mode
 MOBILE_MIN_VERSION=1.0.0
 MOBILE_CURRENT_VERSION=1.0.0
@@ -139,7 +113,6 @@ MAINTENANCE_MESSAGE="We are currently performing scheduled maintenance to improv
 MAINTENANCE_UNTIL="Approximately 1 hour"
 SYSTEM_ANNOUNCEMENT=null
 PLAY_STORE_URL=https://play.google.com/store/apps/details?id=com.attaqwa.app
-
 # Zakat & Nisab API Integration
 GOLDAPI_KEY=goldapi-jtwy19mo1p67ch-io
 GOLDAPI_CURRENCY=USD
@@ -149,8 +122,6 @@ ZAKAT_NISAB_SILVER_GRAMS=595
 ZAKAT_FITR_AMOUNT=3500
 ZAKAT_RATE=0.025
 ZAKAT_LUNAR_DAYS=354
-
-
 # VTU provider configuration
 # Primary provider is VTpass; you can add others for Smart Routing (see VTU_ROUTING_ORDER below)
 VTU_PROVIDER=vtpass
@@ -188,27 +159,18 @@ SHAGO_ENABLED=false
 SHAGO_BASE_URL=
 SHAGO_API_KEY=
 SHAGO_SECRET=
-
 # Appropriation ratios for Appropriation Account (JSON)
 # List of objects with name and percent keys. The percentages are applied to the surplus; the remainder is carried forward.
 # Example: [{"name":"Statutory Reserve","percent":25},{"name":"General Reserve","percent":10}]
 APPROPRIATION_RATIOS='[{"name":"Statutory Reserve","percent":25},{"name":"General Reserve","percent":10}]'
-
-
-
 # CORS configuration
 # Comma-separated list of allowed origins for cross-origin requests. Do NOT use '*'.
 # Example: https://app.example.com,https://admin.example.com
 CORS_ALLOWED_ORIGINS=https://attaqwacooposg.com,https://www.attaqwacooposg.com,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,capacitor://localhost,ionic://localhost,app://localhost
 # If you rely on cookies (not typical for this app which uses Bearer tokens), set to true.
 CORS_SUPPORTS_CREDENTIALS=true
-
 INACTIVITY_TIMEOUT_SECONDS=300
 VITE_HTTP_TIMEOUT=15000
-
-
-
-
 # SMS notifications
 # Master switch to enable/disable SMS sending
 SMS_ENABLED=false
@@ -222,11 +184,8 @@ SMS_BASE_URL=https://api.ng.termii.com
 SMS_CHANNEL=generic
 # Generic JSON provider endpoint (if using SMS_DRIVER=generic)
 SMS_URL=
-
 # Google Maps configuration
 GOOGLE_MAPS_API_KEY=
-
-
 # Push notifications
 # Enable push notifications via Firebase Cloud Messaging (FCM) or log driver for local dev.
 PUSH_ENABLED=true
@@ -240,7 +199,6 @@ FCM_SERVER_KEY=
 FCM_BASE_URL=https://fcm.googleapis.com
 FIREBASE_CREDENTIALS=storage/app/firebase_credentials.json
 FCM_PROJECT_ID=assalamcoop-e0dbe
-
 #
 # Real-time broadcasting (Laravel Reverb)
 # Keep default as 'log' for local/dev without Reverb. Set to 'reverb' when Reverb is configured.
@@ -258,7 +216,6 @@ REVERB_MAX_REQUEST_SIZE=10240
 REVERB_MAX_MESSAGE_SIZE=10240
 # Comma-separated allowed origins for WebSocket upgrades when behind a proxy (optional)
 REVERB_ALLOWED_ORIGINS=
-
 # KYC provider settings
 # Available providers: mock, dojah
 KYC_PROVIDER=mock
@@ -268,7 +225,6 @@ KYC_FACE_MATCH_MIN=0.82
 DOJAH_APP_ID=
 DOJAH_SECRET=
 DOJAH_BASE_URL=https://api.dojah.io
-
 # Opay configuration
 OPAY_MERCHANT_ID=
 OPAY_PUBLIC_KEY=

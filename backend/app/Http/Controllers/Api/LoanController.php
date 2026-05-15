@@ -24,6 +24,7 @@ use App\Services\AttaqwaScoreService;
 use App\Notifications\LoanApprovedNotification;
 use App\Traits\VerifiesOtp;
 use App\Notifications\OtpNotification;
+use Laravel\Pennant\Feature;
 
 class LoanController extends Controller
 {
@@ -131,6 +132,10 @@ class LoanController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
+
+        if (Feature::inactive('apply-for-loan')) {
+            return response()->json(['message' => 'Loan applications are currently restricted for your account level or system-wide.'], 403);
+        }
 
         $data = $request->validate([
             'total_installments' => ['required', 'integer', 'min:1'],

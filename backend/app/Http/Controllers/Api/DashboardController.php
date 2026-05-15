@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ZakatController;
 use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Services\GoldSilverPriceService;
+use Laravel\Pennant\Feature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -248,6 +249,15 @@ class DashboardController extends Controller
             ],
             'kpis' => $kpis,
             'zakat_status' => $zakatStatus,
+            'features' => [
+                'withdrawals_enabled' => Feature::for('global')->active('withdrawals-enabled'),
+                'apply_for_loan' => Feature::active('apply-for-loan'),
+                'gold_market' => Feature::active('gold-savings-beta'),
+                'payment_failover' => Feature::for('global')->active('payment-provider-failover'),
+                'shura_voting' => Feature::for('global')->active('shura-voting-active'),
+                'prayer_quiet_mode' => Feature::for('global')->active('prayer-time-quiet-mode'),
+                'show_flw_balance' => Feature::active('show-flw-balance'),
+            ],
             'is_ramadan' => $this->priceService->isRamadan(),
             'is_admin' => (bool) $user->is_admin,
             'fitr_amount' => (float) config('zakat.fitr_amount', 3500),

@@ -332,6 +332,7 @@
       <path value="$PROJECT_DIR$/backend/vendor/ezyang/htmlpurifier" />
       <path value="$PROJECT_DIR$/backend/vendor/phpoffice/phpspreadsheet" />
       <path value="$PROJECT_DIR$/backend/vendor/snipe/banbuilder" />
+      <path value="$PROJECT_DIR$/backend/vendor/laravel/pennant" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2">

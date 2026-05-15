@@ -324,6 +324,7 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/markbaker/matrix" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/phpoffice/phpspreadsheet" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/snipe/banbuilder" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/laravel/pennant" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

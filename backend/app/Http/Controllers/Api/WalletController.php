@@ -14,6 +14,7 @@ use App\Models\Branch;
 use App\Services\MonnifyService;
 use App\Services\OpayService;
 use App\Traits\VerifiesOtp;
+use Laravel\Pennant\Feature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -158,6 +159,17 @@ class WalletController extends Controller
                     ))
                     : null,
             ],
+            'opay_virtual_account' => [
+                'account_number' => $user->opay_dva_account_number,
+                'account_name' => $user->opay_dva_account_name,
+                'bank_name' => $user->opay_dva_bank_name,
+                'has_account' => (bool) $user->opay_dva_account_number,
+                'verification_details' => ($user->opay_dva_bank_name && $user->opay_dva_account_number)
+                    ? ($user->opay_dva_bank_name . ' - ' . $user->opay_dva_account_number . (
+                        $user->opay_dva_account_name ? (' (' . $user->opay_dva_account_name . ')') : ''
+                    ))
+                    : null,
+            ],
             'recent_transactions' => $recent,
             'maintenance_charge_config' => [
                 'percentage' => (float) Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage', 1)),
@@ -193,7 +205,17 @@ class WalletController extends Controller
         ]);
 
         $user = $request->user();
+
+        if (Feature::for('global')->active('maintenance-mode-wallets')) {
+            return response()->json(['message' => 'Wallet transactions are currently disabled for nightly reconciliation. Please try again later.'], 503);
+        }
+
         $gateway = strtolower($validated['gateway'] ?? 'paystack');
+
+        // Payment provider failover: If Flutterwave is down, force Paystack
+        if ($gateway === 'flutterwave' && Feature::for('global')->active('payment-provider-failover')) {
+            $gateway = 'paystack';
+        }
 
         $reference = 'WALLET_TOPUP_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
 
@@ -334,6 +356,10 @@ class WalletController extends Controller
 
     public function allocateToSchemes(Request $request)
     {
+        if (Feature::for('global')->active('maintenance-mode-wallets')) {
+            return response()->json(['message' => 'Wallet transactions are currently disabled for nightly reconciliation. Please try again later.'], 503);
+        }
+
         $validated = $request->validate([
             'items' => 'required|array|min:1',
             'items.*.scheme_id' => 'required|exists:schemes,id',
@@ -686,6 +712,14 @@ class WalletController extends Controller
 
     public function withdraw(Request $request)
     {
+        if (Feature::for('global')->active('maintenance-mode-wallets')) {
+            return response()->json(['message' => 'Wallet transactions are currently disabled for nightly reconciliation. Please try again later.'], 503);
+        }
+
+        if (Feature::for('global')->inactive('withdrawals-enabled')) {
+            return response()->json(['message' => 'Withdrawals are currently disabled for maintenance.'], 403);
+        }
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'pin' => ['required','regex:/^\\d{4}$/'],
