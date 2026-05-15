@@ -93,11 +93,17 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // Aggregates for KPIs
-        $totalContributions = 0;
-        if (Schema::hasTable('contributions')) {
-            $totalContributions = (float) $user->contributions()->where('status', 'success')->sum('amount');
-        }
+        // Aggregates for KPIs (Optimized: Using cached balance columns)
+        $totalContributions = (float) ($user->ordinary_savings ?? 0) +
+                             (float) ($user->shares_capital ?? 0) +
+                             (float) ($user->special_savings_balance ?? 0) +
+                             (float) ($user->building_balance ?? 0) +
+                             (float) ($user->development_fund_balance ?? 0) +
+                             (float) ($user->agm_balance ?? 0) +
+                             (float) ($user->loan_repayment_balance ?? 0) +
+                             (float) ($user->welfare_balance ?? 0) +
+                             (float) ($user->h_savings_balance ?? 0) +
+                             (float) ($user->takaful_balance ?? 0);
 
         $outstandingLoans = 0;
         if (Schema::hasTable('qard_hasans')) {
@@ -205,7 +211,7 @@ class DashboardController extends Controller
                 'total_balance' => (float) $user->balance +
                                   (float) $user->ordinary_savings +
                                   (float) $user->shares_capital +
-                                  (float) $user->takafulContributions()->where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount') +
+                                  (float) $user->takaful_balance +
                                   (float) $user->building_balance +
                                   (float) $user->development_fund_balance +
                                   (float) $user->agm_balance +
@@ -227,7 +233,7 @@ class DashboardController extends Controller
                     'Wallet' => (float) $user->balance,
                     'Ordinary Savings' => (float) $user->ordinary_savings,
                     'Shares Capital' => (float) $user->shares_capital,
-                    'Takaful' => (float) $user->takafulContributions()->where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount'),
+                    'Takaful' => (float) $user->takaful_balance,
                     'Building' => (float) $user->building_balance,
                     'Development' => (float) $user->development_fund_balance,
                     'AGM' => (float) $user->agm_balance,

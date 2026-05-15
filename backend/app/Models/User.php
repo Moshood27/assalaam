@@ -643,66 +643,17 @@ class User extends Authenticatable implements FilamentUser
      */
     public function savingsSharesEligibility(): array
     {
-        // Scheme IDs for Savings, Shares and Migrated balances that count towards eligibility
-        $schemes = Scheme::whereIn('name', [
-            'Savings',
-            'Shares',
-            'Special Savings',
-            'Ordinary Savings',
-            'Share Capital',
-            'Loan Repayment',
-            'Building',
-            'Development',
-            'AGM',
-            'Welfare',
-            'H Savings'
-        ])->pluck('id', 'name');
+        $savings = (float) ($this->ordinary_savings ?? 0);
+        $shares = (float) ($this->shares_capital ?? 0);
+        $specialSavings = (float) ($this->special_savings_balance ?? 0);
 
-        $savings = 0.0;
-        $shares = 0.0;
-        $specialSavings = 0.0;
-        $migrated = 0.0;
-
-        if (isset($schemes['Savings'])) {
-            $savings += (float) $this->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Savings'])
-                ->sum('amount');
-        }
-        if (isset($schemes['Ordinary Savings'])) {
-            $savings += (float) $this->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Ordinary Savings'])
-                ->sum('amount');
-        }
-        if (isset($schemes['Shares'])) {
-            $shares += (float) $this->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Shares'])
-                ->sum('amount');
-        }
-        if (isset($schemes['Share Capital'])) {
-            $shares += (float) $this->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Share Capital'])
-                ->sum('amount');
-        }
-        if (isset($schemes['Special Savings'])) {
-            $specialSavings = (float) $this->contributions()
-                ->where('status', 'success')
-                ->where('scheme_id', $schemes['Special Savings'])
-                ->sum('amount');
-        }
-
-        // Include other migrated balances in the base for loan eligibility
-        foreach (['Loan Repayment', 'Building', 'Development', 'AGM', 'Welfare', 'H Savings'] as $sName) {
-            if (isset($schemes[$sName])) {
-                $migrated += (float) $this->contributions()
-                    ->where('status', 'success')
-                    ->where('scheme_id', $schemes[$sName])
-                    ->sum('amount');
-            }
-        }
+        // Include other migrated balances that count towards base
+        $migrated = (float) ($this->loan_repayment_balance ?? 0) +
+                    (float) ($this->building_balance ?? 0) +
+                    (float) ($this->development_fund_balance ?? 0) +
+                    (float) ($this->agm_balance ?? 0) +
+                    (float) ($this->welfare_balance ?? 0) +
+                    (float) ($this->h_savings_balance ?? 0);
 
         $base = round($savings + $shares + $specialSavings + $migrated, 2);
         $eligibility = round($base * 2, 2);
@@ -923,13 +874,9 @@ class User extends Authenticatable implements FilamentUser
      */
     public function zakatBaseWealth(float $goldPrice): float
     {
-        // Savings, Shares are usually stored in Contributions
-        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital'])->pluck('id');
-
-        $savingsAndShares = (float) $this->contributions()
-            ->where('status', 'success')
-            ->whereIn('scheme_id', $schemes)
-            ->sum('amount');
+        $savingsAndShares = (float) ($this->ordinary_savings ?? 0) +
+                           (float) ($this->shares_capital ?? 0) +
+                           (float) ($this->special_savings_balance ?? 0);
 
         $goldValue = round(($this->gold_balance ?? 0) * $goldPrice, 2);
         $walletBalance = (float) ($this->balance ?? 0);
