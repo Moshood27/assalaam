@@ -3,10 +3,10 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 
-class LoanAgreementVerifiedNotification extends Notification
+class LoanAgreementVerifiedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

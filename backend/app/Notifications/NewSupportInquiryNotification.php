@@ -16,7 +16,9 @@ class NewSupportInquiryNotification extends Notification implements ShouldQueue
     public function __construct(
         public ChatRoom $room,
         public User $member
-    ) {}
+    ) {
+        $this->onQueue('notifications');
+    }
 
     /**
      * Get the notification's delivery channels.

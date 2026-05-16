@@ -5,10 +5,11 @@ namespace App\Mail;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class RepaymentReceiptUser extends Mailable
+class RepaymentReceiptUser extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

@@ -47,6 +47,8 @@ class ZakatService
 
         // If we don't have tracking data yet, fallback to the old cumulative contribution estimation
         if (!$crossedOn && $base >= $nisab) {
+            // Optimization: Fetch and calculate. We limit to avoid memory issues at scale.
+            // Persisting the result ensures this is a one-time calculation.
             $contribs = $user->contributions()
                 ->where('status', 'success')
                 ->whereIn('scheme_id', array_values($schemes->toArray()))
@@ -61,7 +63,16 @@ class ZakatService
                     break;
                 }
             }
-            if (!$crossedOn) $crossedOn = now();
+
+            if (!$crossedOn && $base >= $nisab) {
+                $crossedOn = now();
+            }
+
+            // Persist the result so we don't re-calculate this expensive history scan
+            if ($crossedOn) {
+                $user->zakat_nisab_crossed_at = $crossedOn;
+                $user->saveQuietly();
+            }
         }
 
         if ($crossedOn) {

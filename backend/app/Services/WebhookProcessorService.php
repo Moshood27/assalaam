@@ -111,6 +111,11 @@ class WebhookProcessorService
         }
 
         if ($user) {
+            // Capture to Sentry to notify admin immediately
+            if (app()->bound('sentry')) {
+                app('sentry')->captureMessage('Payment Failure: Paystack ' . $reason, \Sentry\Severity::error());
+            }
+
             try {
                 $user->notifyMember('Payment Failed', 'Your payment attempt was not successful. ' . $reason, [
                     'type' => 'payment_failed',
@@ -209,7 +214,10 @@ class WebhookProcessorService
             $loanRep->update(['status' => 'success', 'paid_at' => now()]);
             $loan->increment('paid_amount', (float) $loanRep->amount);
             if ($loan->paid_amount >= $loan->principal_amount) {
-                $loan->update(['status' => 'completed']);
+                $loan->update([
+                    'status' => 'completed',
+                    'defaulted_at' => null
+                ]);
             }
 
             if ($loan->user) {
@@ -237,9 +245,25 @@ class WebhookProcessorService
             if ($contribution->status === 'success') continue;
             $contribution->update(['status' => 'success']);
 
+            // Record in Ledger
+            try {
+                app(\App\Services\LedgerService::class)->recordContribution($contribution);
+            } catch (\Throwable $e) {
+                Log::error('Ledger recording failed during webhook processing: ' . $e->getMessage());
+            }
+
             $schemeName = $contribution->scheme?->name;
             if ($schemeName && in_array($schemeName, ['Zakat', 'Zakat Al-Fitr'])) {
                 $this->handleZakatContribution($contribution, $user, $schemeName);
+            }
+
+            // Takaful specific logic
+            if ($schemeName === 'Takaful' && $user) {
+                try {
+                    app(TakafulService::class)->activatePolicy($user);
+                } catch (\Throwable $e) {
+                    Log::error('Takaful activation failed during webhook processing: ' . $e->getMessage());
+                }
             }
         }
 
@@ -333,10 +357,7 @@ class WebhookProcessorService
 
     protected function calculateMaintenanceCharge(float $amount): float
     {
-        // Simple implementation, should match Controller
-        if ($amount <= 5000) return 10.0;
-        if ($amount <= 50000) return 25.0;
-        return 50.0;
+        return app(AdministrativeChargeService::class)->calculateMaintenanceCharge($amount);
     }
 
     protected function processFlutterwave(array $payload): void
@@ -406,6 +427,12 @@ class WebhookProcessorService
 
         if ($user) {
             $reason = $vd['processor_response'] ?? 'Payment failed';
+
+            // Capture to Sentry to notify admin immediately
+            if (app()->bound('sentry')) {
+                app('sentry')->captureMessage('Payment Failure: Flutterwave ' . $reason, \Sentry\Severity::error());
+            }
+
             $user->notifyMember('Payment Failed', 'Your payment attempt was not successful. ' . $reason, [
                 'type' => 'payment_failed',
                 'amount' => (float) ($vd['charged_amount'] ?? $vd['amount'] ?? 0),

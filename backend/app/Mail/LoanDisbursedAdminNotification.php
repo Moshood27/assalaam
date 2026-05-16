@@ -4,10 +4,11 @@ namespace App\Mail;
 
 use App\Models\QardHasan;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class LoanDisbursedAdminNotification extends Mailable
+class LoanDisbursedAdminNotification extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

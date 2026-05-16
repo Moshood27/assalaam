@@ -3,10 +3,11 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentStatusMail extends Mailable
+class PaymentStatusMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -37,6 +38,8 @@ class PaymentStatusMail extends Mailable
         $this->channel = $channel;
         $this->route = $route;
         $this->meta = $meta;
+
+        $this->onQueue('notifications');
     }
 
     public function build(): self

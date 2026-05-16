@@ -43,6 +43,10 @@ class QardHasanRepayment extends Model
                         $model->updateQuietly(['ledger_journal_id' => $journal->id]);
                     }
 
+                    if ($model->qardHasan && $model->qardHasan->user) {
+                        $model->qardHasan->user->syncOutstandingLoans();
+                    }
+
                     app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to record loan repayment in ledger: " . $e->getMessage());
@@ -57,6 +61,10 @@ class QardHasanRepayment extends Model
                     if (!$model->ledger_journal_id) {
                         $journal = app(\App\Services\LedgerService::class)->recordLoanRepayment($model);
                         $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                    }
+
+                    if ($model->qardHasan && $model->qardHasan->user) {
+                        $model->qardHasan->user->syncOutstandingLoans();
                     }
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to record loan repayment in ledger: " . $e->getMessage());

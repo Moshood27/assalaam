@@ -47,18 +47,20 @@ class DashboardController extends Controller
             \Log::error('Failed to calculate Zakat status for dashboard: ' . $e->getMessage());
         }
 
-        // Compute profile passport URL if available
+        // Compute profile passport URL if available (Scalable: using Storage facade)
         $passportUrl = null;
         if (!empty($user->passport_path)) {
-            $path = ltrim((string) $user->passport_path, '/');
-            if (is_file(public_path($path))) {
-                $passportUrl = asset($path);
-            } else {
-                $storagePath = $path;
-                if (str_starts_with($storagePath, 'storage/')) {
-                    $storagePath = substr($storagePath, 8);
+            $storagePath = ltrim((string) $user->passport_path, '/');
+            if (str_starts_with($storagePath, 'storage/')) {
+                $storagePath = substr($storagePath, 8);
+            }
+
+            try {
+                if (Storage::disk('public')->exists($storagePath)) {
+                    $passportUrl = Storage::disk('public')->url($storagePath);
                 }
-                $passportUrl = Storage::disk('public')->url($storagePath);
+            } catch (\Exception $e) {
+                // Ignore storage errors in dashboard
             }
         }
 
@@ -105,13 +107,8 @@ class DashboardController extends Controller
                              (float) ($user->h_savings_balance ?? 0) +
                              (float) ($user->takaful_balance ?? 0);
 
-        $outstandingLoans = 0;
-        if (Schema::hasTable('qard_hasans')) {
-            $outstandingLoans = (float) $user->qardHasans()
-                ->whereIn('status', ['active', 'pending', 'defaulted'])
-                ->whereColumn('paid_amount', '<', 'principal_amount')
-                ->sum(DB::raw('principal_amount - paid_amount'));
-        }
+        // Aggregates for KPIs (Optimized: Using cached balance columns)
+        $outstandingLoans = (float) ($user->outstanding_loans ?? 0);
 
         $goldBasePrice = $this->priceService->getGoldPrice();
         $goldSellPrice = $this->priceService->getSellPrice();

@@ -11,6 +11,11 @@ class WellnessCheckNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    public function __construct()
+    {
+        $this->onQueue('notifications');
+    }
+
     /**
      * Get the notification's delivery channels.
      *

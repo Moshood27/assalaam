@@ -4,9 +4,10 @@ namespace App\Notifications;
 
 use App\Models\ProjectProfit;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class ProjectProfitDistributed extends Notification
+class ProjectProfitDistributed extends Notification implements ShouldQueue
 {
     use Queueable;
 

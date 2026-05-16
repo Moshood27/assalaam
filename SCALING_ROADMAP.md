@@ -5,11 +5,17 @@ This document outlines the necessary architectural and infrastructure changes to
 ## 1. Current State & Immediate Fixes
 We have already implemented several immediate optimizations:
 - **Database Indexes:** Added composite indexes on `contributions`, `wallet_transactions`, and `qard_hasans`. Prepared **Full-Text indexes** for `users` and `products` searching.
-- **Aggregate Optimization:** Refactored `User` model and `DashboardController` to use cached balance columns.
+- **Aggregate Optimization:** Refactored `User` model and `DashboardController` to use cached balance columns (ordinary_savings, shares_capital, etc.), `outstanding_loans`, and **cached wallet totals** (total_credits, total_debits) to eliminate all heavy `sum()` queries on the `wallet_transactions` table.
+- **Asynchronous Exports:** Heavy PDF/CSV reports (Passbook, Statement) are now offloaded to **background jobs**. Users are notified once their files are generated and stored in shared storage, preventing server timeouts under load.
+- **Scalable UI:** Optimized real-time widgets (e.g., Online Members) to limit rendering overhead and handle thousands of concurrent presence channel participants efficiently.
+- **Queued Broadcasting:** Switched all real-time events (UserAccountUpdated, NewMemberJoined) from synchronous to **queued broadcasting**, ensuring the request-response cycle is never blocked by socket communications.
+- **Robust Identifiers:** Increased `membership_number` to 10 digits to prevent collisions when scaling to millions/billions of users.
 - **Configuration:** Switched to `redis` for sessions/cache and implemented **Response Caching** for heavy endpoints.
-- **Cloud Readiness:** Refactored file storage to use the **Laravel Storage facade** (compatible with S3) and added an API health check for load balancers.
-- **Data Pruning:** Implemented automated pruning for high-volume tables (logs, webhooks, failed jobs) to prevent database bloat.
-- **Async Processing:** Offloaded heavy side-effects (notifications, ledger recording) to background workers.
+- **Cloud Readiness:** Refactored file storage to use the **Laravel Storage facade** exclusively (compatible with S3), removing local filesystem dependencies (`public_path`).
+- **One-time Calculations:** Optimized `ZakatService` to persist expensive historical wealth scans.
+ - **Asynchronous Processing:** Refactored `WebhookController` to use a non-blocking architecture. All payment webhooks (Paystack, Flutterwave, Monnify, Opay) are now stored and processed via background workers, preventing timeouts and ensuring immediate response to providers.
+- **Scalable Notifications:** Switched all Notifications (OTP, Loan status, Profit distribution) and Mailables (Receipts, Welcome emails, Admin alerts) to **ShouldQueue**. All SMS and Push notifications are offloaded to a dedicated `notifications` queue.
+- **Batch Communication:** Refactored bulk messaging to use **Laravel Job Batches**. Sending a message to 1,000,000 users in a branch is now distributed across thousands of small, parallel jobs, preventing timeouts and enabling horizontal scaling of workers.
 
 ## 2. Infrastructure Scaling (Horizontal)
 To handle millions of users, the application must move away from a single server.

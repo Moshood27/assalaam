@@ -40,6 +40,9 @@ class ProcessWalletTransactionSideEffects implements ShouldQueue
                     : $ledger->recordWalletDebit($tx);
                 $tx->updateQuietly(['ledger_journal_id' => $journal->id]);
             }
+
+            // Sync cached totals for the user
+            $tx->user?->syncWalletTotals();
         } catch (\Throwable $e) {
             Log::error('ProcessWalletTransactionSideEffects job failed', [
                 'tx_id' => $this->transactionId,

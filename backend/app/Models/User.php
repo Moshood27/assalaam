@@ -71,6 +71,11 @@ class User extends Authenticatable implements FilamentUser
         'h_savings_balance',
         'investment_balance',
         'group_savings_balance',
+        'outstanding_loans',
+        'total_credits_withdrawable',
+        'total_credits_restricted',
+        'total_debits',
+        'total_cashout_debits',
         'created_at',
         'is_admin',
         'is_defaulter',
@@ -181,6 +186,11 @@ class User extends Authenticatable implements FilamentUser
             'is_defaulter' => 'boolean',
             'balance' => 'decimal:2',
             'outstanding_fines' => 'decimal:2',
+            'outstanding_loans' => 'decimal:2',
+            'total_credits_withdrawable' => 'decimal:2',
+            'total_credits_restricted' => 'decimal:2',
+            'total_debits' => 'decimal:2',
+            'total_cashout_debits' => 'decimal:2',
             'ordinary_savings' => 'decimal:2',
             'special_savings_balance' => 'decimal:2',
             'shares_capital' => 'decimal:2',
@@ -776,19 +786,33 @@ class User extends Authenticatable implements FilamentUser
         return $this->morphMany(Activity::class, 'subject');
     }
 
+    public function syncOutstandingLoans(): void
+    {
+        $total = (float) $this->qardHasans()
+            ->whereIn('status', ['active', 'pending', 'defaulted'])
+            ->whereColumn('paid_amount', '<', 'principal_amount')
+            ->sum(DB::raw('principal_amount - paid_amount'));
+
+        if ((float) $this->outstanding_loans !== $total) {
+            $this->outstanding_loans = $total;
+            $this->save();
+        }
+    }
+
     /**
-     * Generate a unique 6-digit membership number for a branch.
+     * Generate a unique 10-digit membership number for a branch.
+     * Increased to 10 digits to support billions of users across branches.
      */
     public static function generateMembershipNumber(int $branchId): string
     {
         // Try up to 20 attempts to avoid rare collisions
         for ($i = 0; $i < 20; $i++) {
-            $num = (string) random_int(100000, 999999);
+            $num = (string) random_int(1000000000, 9999999999);
             $exists = self::where('branch_id', $branchId)->where('membership_number', $num)->exists();
             if (!$exists) return $num;
         }
         // Fallback to timestamp-based unique suffix
-        return substr((string) (time() . random_int(10, 99)), -6);
+        return substr((string) (time() . random_int(1000, 9999)), -10);
     }
 
     public function canAccessPanel(Panel $panel): bool
@@ -801,61 +825,57 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Compute withdrawable breakdown for the wallet using tiered logic.
-     * Debits consume restricted credits first, so available_for_withdrawal reflects
-     * what can be cashed out to bank right now.
-     * Optimized: Cached in Redis to prevent multiple SUM queries on high-traffic users.
+     * Compute withdrawable breakdown for the wallet using pre-calculated totals.
+     * This eliminates expensive SUM queries on the wallet_transactions table.
      */
     public function withdrawableBreakdown(): array
     {
-        $cacheKey = "user_withdrawable_breakdown:{$this->id}";
+        $creditsWithdrawable = (float) $this->total_credits_withdrawable;
+        $creditsRestricted = (float) $this->total_credits_restricted;
+        $totalDebits = (float) $this->total_debits;
+        $cashoutDebits = (float) $this->total_cashout_debits;
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () {
-            // Sum credits that are withdrawable (or older rows without the flag)
-            $creditsWithdrawable = (float) WalletTransaction::where('user_id', $this->id)
-                ->where('type', 'credit')
-                ->where(function ($q) {
-                    $q->where('withdrawable', true)->orWhereNull('withdrawable');
-                })
-                ->sum('amount');
+        $otherDebits = max(0.0, $totalDebits - $cashoutDebits);
 
-            // Sum credits explicitly restricted (withdrawable=false)
-            $creditsRestricted = (float) WalletTransaction::where('user_id', $this->id)
-                ->where('type', 'credit')
-                ->where('withdrawable', false)
-                ->sum('amount');
+        // For non-cashout spending, consume restricted first, then withdrawable
+        $debitedFromWithdrawableOther = max(0.0, $otherDebits - $creditsRestricted);
 
-            // Sum all debits
-            $totalDebits = (float) WalletTransaction::where('user_id', $this->id)
-                ->where('type', 'debit')
-                ->sum('amount');
+        // Total debited from withdrawable = cash-out debits (always from withdrawable) + spillover from other debits
+        $debitedFromWithdrawable = $cashoutDebits + $debitedFromWithdrawableOther;
+        $remainingWithdrawable = max(0.0, $creditsWithdrawable - $debitedFromWithdrawable);
 
-            // Identify cash-out debits (bank withdrawals) that must reduce withdrawable immediately
-            $cashoutDebits = (float) WalletTransaction::where('user_id', $this->id)
-                ->where('type', 'debit')
-                ->whereIn('source', ['bank_withdrawal'])
-                ->sum('amount');
+        $available = min((float) $this->balance, $remainingWithdrawable);
 
-            $otherDebits = max(0.0, $totalDebits - $cashoutDebits);
+        return [
+            'credits_withdrawable' => round($creditsWithdrawable, 2),
+            'credits_restricted' => round($creditsRestricted, 2),
+            'total_debits' => round($totalDebits, 2),
+            'cashout_debits' => round($cashoutDebits, 2),
+            'remaining_withdrawable' => round($remainingWithdrawable, 2),
+            'available_for_withdrawal' => round($available, 2),
+        ];
+    }
 
-            // For non-cashout spending, consume restricted first, then withdrawable
-            $debitedFromWithdrawableOther = max(0.0, $otherDebits - $creditsRestricted);
+    /**
+     * Sync the user's cached wallet transaction totals.
+     */
+    public function syncWalletTotals(): void
+    {
+        $totals = WalletTransaction::where('user_id', $this->id)
+            ->selectRaw("
+                SUM(CASE WHEN type = 'credit' AND (withdrawable = 1 OR withdrawable IS NULL) THEN amount ELSE 0 END) as credits_withdrawable,
+                SUM(CASE WHEN type = 'credit' AND withdrawable = 0 THEN amount ELSE 0 END) as credits_restricted,
+                SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) as total_debits,
+                SUM(CASE WHEN type = 'debit' AND source = 'bank_withdrawal' THEN amount ELSE 0 END) as cashout_debits
+            ")
+            ->first();
 
-            // Total debited from withdrawable = cash-out debits (always from withdrawable) + spillover from other debits
-            $debitedFromWithdrawable = $cashoutDebits + $debitedFromWithdrawableOther;
-            $remainingWithdrawable = max(0.0, $creditsWithdrawable - $debitedFromWithdrawable);
-
-            $available = min((float) $this->balance, $remainingWithdrawable);
-
-            return [
-                'credits_withdrawable' => round($creditsWithdrawable, 2),
-                'credits_restricted' => round($creditsRestricted, 2),
-                'total_debits' => round($totalDebits, 2),
-                'cashout_debits' => round($cashoutDebits, 2),
-                'remaining_withdrawable' => round($remainingWithdrawable, 2),
-                'available_for_withdrawal' => round($available, 2),
-            ];
-        });
+        $this->forceFill([
+            'total_credits_withdrawable' => (float) ($totals->credits_withdrawable ?? 0),
+            'total_credits_restricted' => (float) ($totals->credits_restricted ?? 0),
+            'total_debits' => (float) ($totals->total_debits ?? 0),
+            'total_cashout_debits' => (float) ($totals->cashout_debits ?? 0),
+        ])->save();
     }
 
     /**
