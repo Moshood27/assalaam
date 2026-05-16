@@ -131,7 +131,7 @@ class AppStatusSettings extends Page
                             ->helperText('The maintenance charge will be capped at this amount.'),
                     ]),
                 Section::make('Payment Gateways')
-                    ->description('Enable or disable payment gateways globally and select the primary provider.')
+                    ->description('Enable or disable payment gateways globally and select the primary provider. Disabling a gateway also hides its Dedicated Virtual Account (DVA) from members.')
                     ->schema([
                         Select::make('primary_payment_gateway')
                             ->label('Primary Payment Gateway')

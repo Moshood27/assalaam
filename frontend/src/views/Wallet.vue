@@ -101,7 +101,7 @@
 
       <div v-if="activeTab === 'overview'" class="space-y-6">
         <!-- Virtual Account Info -->
-        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <div v-if="appStatusStore.paymentGateways['paystack']" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
           <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-slate-800">Bank Transfer Account</h3>
             <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (!!bvn && !bvnValid)"
@@ -156,7 +156,7 @@
           </div>
 
           <!-- Flutterwave Virtual Account Info -->
-          <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+          <div v-if="appStatusStore.paymentGateways['flutterwave']" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
             <div class="flex justify-between items-center mb-4">
               <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt)</h3>
               <button v-if="!wallet.flw_virtual_account?.account_number" @click="assignFlutterwaveDva" :disabled="assigningFlw || !flwBvnValid"
@@ -211,7 +211,7 @@
           </div>
 
           <!-- Monnify Virtual Account Info -->
-          <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+          <div v-if="appStatusStore.paymentGateways['monnify']" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt 2)</h3>
                 <button v-if="!wallet.monnify_virtual_account?.account_number" @click="assignMonnifyDva" :disabled="assigningMonnify"
@@ -250,6 +250,47 @@
                 <p class="text-sm text-slate-500">Generate a Monnify virtual account to fund via bank transfer.</p>
               </div>
             </div>
+
+          <!-- Opay Virtual Account Info -->
+          <div v-if="appStatusStore.paymentGateways['opay']" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt 3)</h3>
+              <button v-if="!wallet.opay_virtual_account?.account_number" @click="assignOpayDva" :disabled="assigningOpay"
+                      class="text-[10px] font-black uppercase bg-teal-600 text-white px-3 py-2 rounded-xl disabled:opacity-50">
+                {{ assigningOpay ? 'Creating…' : 'Generate' }}
+              </button>
+            </div>
+
+            <div v-if="wallet.opay_virtual_account?.account_number" class="space-y-4">
+              <div class="bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Bank Name</span>
+                  <span class="font-bold text-slate-800 text-sm">{{ wallet.opay_virtual_account.bank_name }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Name</span>
+                  <span class="font-bold text-slate-800 text-sm">{{ wallet.opay_virtual_account.account_name }}</span>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                  <div>
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
+                    <p class="font-black text-teal-700 text-xl tracking-wider">{{ wallet.opay_virtual_account.account_number }}</p>
+                  </div>
+                  <button @click="copy(wallet.opay_virtual_account.account_number)" class="bg-teal-50 text-teal-700 p-2 rounded-lg hover:bg-teal-100 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 text-center px-4">Opay account — transfer funds here to top up your wallet.</p>
+              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+            </div>
+
+            <div v-else class="space-y-3">
+              <p class="text-sm text-slate-500">Generate an Opay virtual account to fund via bank transfer.</p>
+            </div>
+          </div>
 
         <!-- Administrative Charges Section -->
         <div v-if="wallet.admin_charge_balance > 0" class="bg-rose-50 p-6 rounded-[2rem] border border-rose-100 shadow-sm relative overflow-hidden">
@@ -696,6 +737,7 @@ const calculatedCharge = computed(() => {
 const assigning = ref(false)
 const assigningFlw = ref(false)
 const assigningMonnify = ref(false)
+const assigningOpay = ref(false)
 const flwBvn = ref('')
 const flwBvnDigits = computed(() => String(flwBvn.value || '').replace(/\D/g, ''))
 const flwBvnValid = computed(() => flwBvnDigits.value.length === 11)
@@ -788,6 +830,19 @@ const resetWithdrawals = async () => {
   withdrawalsPage.value = 1
   withdrawals.value = []
   await loadWithdrawals()
+}
+
+const assignOpayDva = async () => {
+  try {
+    assigningOpay.value = true
+    await axios.post('/api/virtual-account/assign-opay')
+    await loadWallet()
+    alert('Opay virtual account generated!')
+  } catch (e) {
+    alert(e?.response?.data?.message || 'Failed to generate Opay virtual account')
+  } finally {
+    assigningOpay.value = false
+  }
 }
 
 const loadWithdrawals = async () => {
