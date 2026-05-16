@@ -67,15 +67,16 @@ class FeatureToggleResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('label')
+                TextColumn::make('display_name')
                     ->label('Feature')
                     ->description(fn (Feature $record): string => $record->name)
                     ->searchable(['name', 'label'])
-                    ->sortable(),
-                TextColumn::make('scope')
+                    ->sortable(['label', 'name']),
+                TextColumn::make('display_scope')
+                    ->label('Scope')
                     ->badge()
-                    ->color(fn (string $state): string => $state === 'global' ? 'success' : 'warning')
-                    ->sortable(),
+                    ->color(fn (Feature $record): string => $record->scope === 'global' ? 'success' : 'warning')
+                    ->sortable(['scope']),
                 ToggleColumn::make('value')
                     ->label('Status')
                     ->afterStateUpdated(function (Feature $record, $state) {

@@ -8,6 +8,25 @@ class Feature extends Model
 {
     protected $fillable = ['name', 'label', 'description', 'scope', 'value'];
 
+    protected $appends = ['display_name', 'display_scope'];
+
+    public function getDisplayNameAttribute()
+    {
+        if ($this->label) return $this->label;
+        return self::KNOWN_FEATURES[$this->name]['label'] ?? $this->name;
+    }
+
+    public function getDisplayScopeAttribute()
+    {
+        if ($this->scope === 'global') return 'Global';
+        if (str_contains((string)$this->scope, '|')) {
+            [$class, $id] = explode('|', (string)$this->scope);
+            $shortClass = class_basename($class);
+            return "{$shortClass} #{$id}";
+        }
+        return $this->scope;
+    }
+
     public function getValueAttribute($value)
     {
         if ($value === null) return null;
