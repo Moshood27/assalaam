@@ -18,7 +18,6 @@ class PaymentNotification extends Notification implements ShouldQueue
         public ?string $reference = null,
         public ?string $source = null
     ) {
-        $this->onQueue('notifications');
     }
 
     public function via(object $notifiable): array

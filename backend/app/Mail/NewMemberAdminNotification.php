@@ -4,11 +4,10 @@ namespace App\Mail;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class NewMemberAdminNotification extends Mailable implements ShouldQueue
+class NewMemberAdminNotification extends Mailable
 {
     use Queueable, SerializesModels;
 

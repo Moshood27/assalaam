@@ -47,20 +47,18 @@ class DashboardController extends Controller
             \Log::error('Failed to calculate Zakat status for dashboard: ' . $e->getMessage());
         }
 
-        // Compute profile passport URL if available (Scalable: using Storage facade)
+        // Compute profile passport URL if available
         $passportUrl = null;
         if (!empty($user->passport_path)) {
-            $storagePath = ltrim((string) $user->passport_path, '/');
-            if (str_starts_with($storagePath, 'storage/')) {
-                $storagePath = substr($storagePath, 8);
-            }
-
-            try {
-                if (Storage::disk('public')->exists($storagePath)) {
-                    $passportUrl = Storage::disk('public')->url($storagePath);
+            $path = ltrim((string) $user->passport_path, '/');
+            if (is_file(public_path($path))) {
+                $passportUrl = asset($path);
+            } else {
+                $storagePath = $path;
+                if (str_starts_with($storagePath, 'storage/')) {
+                    $storagePath = substr($storagePath, 8);
                 }
-            } catch (\Exception $e) {
-                // Ignore storage errors in dashboard
+                $passportUrl = Storage::disk('public')->url($storagePath);
             }
         }
 
@@ -95,20 +93,19 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // Aggregates for KPIs (Optimized: Using cached balance columns)
-        $totalContributions = (float) ($user->ordinary_savings ?? 0) +
-                             (float) ($user->shares_capital ?? 0) +
-                             (float) ($user->special_savings_balance ?? 0) +
-                             (float) ($user->building_balance ?? 0) +
-                             (float) ($user->development_fund_balance ?? 0) +
-                             (float) ($user->agm_balance ?? 0) +
-                             (float) ($user->loan_repayment_balance ?? 0) +
-                             (float) ($user->welfare_balance ?? 0) +
-                             (float) ($user->h_savings_balance ?? 0) +
-                             (float) ($user->takaful_balance ?? 0);
+        // Aggregates for KPIs
+        $totalContributions = 0;
+        if (Schema::hasTable('contributions')) {
+            $totalContributions = (float) $user->contributions()->where('status', 'success')->sum('amount');
+        }
 
-        // Aggregates for KPIs (Optimized: Using cached balance columns)
-        $outstandingLoans = (float) ($user->outstanding_loans ?? 0);
+        $outstandingLoans = 0;
+        if (Schema::hasTable('qard_hasans')) {
+            $outstandingLoans = (float) $user->qardHasans()
+                ->whereIn('status', ['active', 'pending', 'defaulted'])
+                ->whereColumn('paid_amount', '<', 'principal_amount')
+                ->sum(DB::raw('principal_amount - paid_amount'));
+        }
 
         $goldBasePrice = $this->priceService->getGoldPrice();
         $goldSellPrice = $this->priceService->getSellPrice();
@@ -208,7 +205,7 @@ class DashboardController extends Controller
                 'total_balance' => (float) $user->balance +
                                   (float) $user->ordinary_savings +
                                   (float) $user->shares_capital +
-                                  (float) $user->takaful_balance +
+                                  (float) $user->takafulContributions()->where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount') +
                                   (float) $user->building_balance +
                                   (float) $user->development_fund_balance +
                                   (float) $user->agm_balance +
@@ -230,7 +227,7 @@ class DashboardController extends Controller
                     'Wallet' => (float) $user->balance,
                     'Ordinary Savings' => (float) $user->ordinary_savings,
                     'Shares Capital' => (float) $user->shares_capital,
-                    'Takaful' => (float) $user->takaful_balance,
+                    'Takaful' => (float) $user->takafulContributions()->where('reference', 'LIKE', 'MIG-TAKF-%')->sum('amount'),
                     'Building' => (float) $user->building_balance,
                     'Development' => (float) $user->development_fund_balance,
                     'AGM' => (float) $user->agm_balance,
@@ -253,13 +250,13 @@ class DashboardController extends Controller
             'kpis' => $kpis,
             'zakat_status' => $zakatStatus,
             'features' => [
-                'withdrawals-enabled' => Feature::for('global')->active('withdrawals-enabled'),
-                'apply-for-loan' => Feature::for('global')->active('apply-for-loan'),
-                'gold-savings-beta' => Feature::for('global')->active('gold-savings-beta'),
-                'payment-provider-failover' => Feature::for('global')->active('payment-provider-failover'),
-                'shura-voting-active' => Feature::for('global')->active('shura-voting-active'),
-                'prayer-time-quiet-mode' => Feature::for('global')->active('prayer-time-quiet-mode'),
-                'show-flw-balance' => Feature::for('global')->active('show-flw-balance'),
+                'withdrawals_enabled' => Feature::for('global')->active('withdrawals-enabled'),
+                'apply_for_loan' => Feature::active('apply-for-loan'),
+                'gold_market' => Feature::active('gold-savings-beta'),
+                'payment_failover' => Feature::for('global')->active('payment-provider-failover'),
+                'shura_voting' => Feature::for('global')->active('shura-voting-active'),
+                'prayer_quiet_mode' => Feature::for('global')->active('prayer-time-quiet-mode'),
+                'show_flw_balance' => Feature::active('show-flw-balance'),
             ],
             'is_ramadan' => $this->priceService->isRamadan(),
             'is_admin' => (bool) $user->is_admin,

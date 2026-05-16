@@ -27,10 +27,13 @@ class ZakatService
         // Use the common helper to get base wealth
         $base = $user->zakatBaseWealth($goldPrice ?? 0);
 
-        // Individual components for report (Optimized: Using cached balance columns)
-        $savings = (float) ($user->ordinary_savings ?? 0) + (float) ($user->special_savings_balance ?? 0);
-        $shares = (float) ($user->shares_capital ?? 0);
-
+        // Individual components for report
+        $savings = (float) $user->contributions()->where('status', 'success')
+            ->whereIn('scheme_id', Scheme::whereIn('name', ['Savings', 'Ordinary Savings', 'Special Savings'])->pluck('id'))
+            ->sum('amount');
+        $shares = (float) $user->contributions()->where('status', 'success')
+            ->whereIn('scheme_id', Scheme::whereIn('name', ['Shares', 'Share Capital'])->pluck('id'))
+            ->sum('amount');
         $currentGoldValue = $goldPrice ? round($user->gold_balance * $goldPrice, 2) : 0;
         $walletBalance = (float) $user->balance;
 
@@ -47,8 +50,6 @@ class ZakatService
 
         // If we don't have tracking data yet, fallback to the old cumulative contribution estimation
         if (!$crossedOn && $base >= $nisab) {
-            // Optimization: Fetch and calculate. We limit to avoid memory issues at scale.
-            // Persisting the result ensures this is a one-time calculation.
             $contribs = $user->contributions()
                 ->where('status', 'success')
                 ->whereIn('scheme_id', array_values($schemes->toArray()))
@@ -63,16 +64,7 @@ class ZakatService
                     break;
                 }
             }
-
-            if (!$crossedOn && $base >= $nisab) {
-                $crossedOn = now();
-            }
-
-            // Persist the result so we don't re-calculate this expensive history scan
-            if ($crossedOn) {
-                $user->zakat_nisab_crossed_at = $crossedOn;
-                $user->saveQuietly();
-            }
+            if (!$crossedOn) $crossedOn = now();
         }
 
         if ($crossedOn) {

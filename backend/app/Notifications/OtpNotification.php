@@ -6,10 +6,9 @@ use App\Channels\PushChannel;
 use App\Channels\SmsChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class OtpNotification extends Notification implements ShouldQueue
+class OtpNotification extends Notification
 {
     use Queueable;
 
@@ -19,7 +18,6 @@ class OtpNotification extends Notification implements ShouldQueue
         public string $channel = 'sms', // sms | email | push | all
         public ?array $context = null
     ) {
-        $this->onQueue('notifications');
     }
 
     public function via(object $notifiable): array

@@ -247,25 +247,35 @@ class ProfileController extends Controller
 
         $file = $request->file('passport');
 
-        // Store file using public disk (configured for local or S3)
+        // Ensure upload directory exists under public/upload for direct serving
+        $destDir = public_path('upload');
+        if (!is_dir($destDir)) {
+            @mkdir($destDir, 0755, true);
+        }
+
+        // Create a deterministic-ish filename: user-<id>-<timestamp>.<ext>
         $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $filename = 'user-' . $user->id . '-' . time() . '.' . $ext;
-        $path = $file->storeAs('upload', $filename, 'public');
 
-        // Remove previous public upload if it exists
+        // Move file to public/upload
+        $file->move($destDir, $filename);
+
+        // Optionally remove previous public upload if it was in public/upload
         if (!empty($user->passport_path)) {
-            if (Storage::disk('public')->exists($user->passport_path)) {
-                Storage::disk('public')->delete($user->passport_path);
+            $oldPath = public_path($user->passport_path);
+            if (str_starts_with($user->passport_path, 'upload/') && is_file($oldPath)) {
+                @unlink($oldPath);
             }
         }
 
-        $user->passport_path = $path;
+        $relativePath = 'upload/' . $filename;
+        $user->passport_path = $relativePath;
         $user->save();
 
         return response()->json([
             'message' => 'Passport uploaded successfully.',
-            'passport_url' => Storage::disk('public')->url($path),
-            'passport_path' => $path,
+            'passport_url' => '/' . ltrim($relativePath, '/'),
+            'passport_path' => $relativePath,
         ]);
     }
 

@@ -26,22 +26,74 @@ class ExportController extends Controller
 
     public function downloadPassbook(Request $request)
     {
+        // Ensure user is authenticated (Sanctum)
         $user = $request->user();
         if (! $user) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
+            return response()->json(['message' => 'Unauthenticated. Please login again.'], 401);
         }
 
         try {
+            // Allow optional year filter to reduce payload size (defaults to current year)
             $year = (int) $request->integer('year', now()->year);
 
-            \App\Jobs\GenerateExportJob::dispatch($user, 'passbook', ['year' => $year]);
+            $contributions = $user->contributions()
+                ->with('scheme')
+                ->where('status', 'success')
+                ->when($year > 0, function ($q) use ($year) {
+                    $q->whereYear('created_at', $year);
+                })
+                ->orderBy('created_at')
+                ->get();
 
-            return response()->json([
-                'message' => 'Your passbook is being generated. You will receive a notification when it is ready for download.'
-            ], 202);
+            // Build Matrix data for the PDF (matching the UI)
+            $startOfYear = Carbon::create($year, 1, 1, 0, 0, 0);
+            $yearContributions = $user->contributions()
+                ->whereYear('created_at', $year)
+                ->where('status', 'success')
+                ->get();
+            $bfContributions = $user->contributions()
+                ->where('created_at', '<', $startOfYear)
+                ->where('status', 'success')
+                ->get();
+
+            $schemes = Scheme::orderBy('name')->get();
+            $matrix = $schemes->map(function ($scheme) use ($yearContributions, $bfContributions) {
+                $row = [
+                    'scheme_name' => $scheme->name,
+                    'months' => array_fill(1, 12, 0),
+                    'bf' => 0.0,
+                    'total' => 0.0,
+                ];
+                foreach ($bfContributions as $con) {
+                    if ($con->scheme_id === $scheme->id) {
+                        $row['bf'] += (float) $con->amount;
+                    }
+                }
+                foreach ($yearContributions as $con) {
+                    if ($con->scheme_id === $scheme->id) {
+                        $month = $con->created_at->month;
+                        $row['months'][$month] += (float) $con->amount;
+                        $row['total'] += (float) $con->amount;
+                    }
+                }
+                return $row;
+            });
+
+            $data = [
+                'user' => $user,
+                'branch' => optional($user->branch)->name,
+                'year' => $year,
+                'contributions' => $contributions,
+                'matrix' => $matrix,
+                'grand_total' => $matrix->sum('total'),
+                'bf_total' => $matrix->sum('bf'),
+            ];
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.passbook', $data);
+            return $pdf->download($this->sanitizeFilename('Coop_Statement_' . $user->membership_number . '.pdf'));
         } catch (\Throwable $e) {
             \Log::error('downloadPassbook error', ['exception' => $e->getMessage()]);
-            return response()->json(['message' => 'Unable to initiate export.'], 422);
+            return response()->json(['message' => 'Unable to generate PDF at the moment. Please try again later.'], 422);
         }
     }
 
@@ -96,16 +148,40 @@ class ExportController extends Controller
         }
 
         try {
-            $months = (int) $request->query('months', 6);
+            $format = strtolower((string) $request->query('format', 'pdf'));
+            $sixMonthsAgo = now()->subMonths(6)->startOfDay();
 
-            \App\Jobs\GenerateExportJob::dispatch($user, 'statement', ['months' => $months]);
+            // Calculate opening balance
+            $openingBalance = (float) WalletTransaction::where('user_id', $user->id)
+                ->where('created_at', '<', $sixMonthsAgo)
+                ->selectRaw("SUM(CASE WHEN type = 'credit' THEN amount ELSE -amount END) as balance")
+                ->value('balance') ?? 0.0;
 
-            return response()->json([
-                'message' => 'Your bank statement is being generated. You will receive a notification when it is ready.'
-            ], 202);
+            $transactions = WalletTransaction::where('user_id', $user->id)
+                ->where('created_at', '>=', $sixMonthsAgo)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $data = [
+                'user' => $user,
+                'branch' => optional($user->branch)->name,
+                'transactions' => $transactions,
+                'opening_balance' => $openingBalance,
+                'period' => [
+                    'from' => $sixMonthsAgo->format('Y-m-d'),
+                    'to' => now()->format('Y-m-d'),
+                ],
+            ];
+
+            if ($format === 'csv') {
+                return $this->generateStatementCsv($data);
+            }
+
+            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.bank_statement', $data);
+            return $pdf->download($this->sanitizeFilename('Statement_' . $user->membership_number . '.pdf'));
         } catch (\Throwable $e) {
             \Log::error('downloadStatement error', ['exception' => $e->getMessage()]);
-            return response()->json(['message' => 'Unable to initiate export.'], 422);
+            return response()->json(['message' => 'Unable to generate export at the moment.'], 422);
         }
     }
 

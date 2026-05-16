@@ -2,11 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Mail\BulkCommunication;
 use App\Models\User;
+use App\Services\PushService;
+use App\Services\SmsService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendBulkCommunication implements ShouldQueue
 {
@@ -28,23 +31,24 @@ class SendBulkCommunication implements ShouldQueue
      */
     public function handle(): void
     {
-        $batchJobs = [];
+        $count = 0;
+        User::where('branch_id', $this->branchId)->chunk(200, function ($users) use (&$count) {
+            foreach ($users as $user) {
+                // Determine channels for this user: intersection of job's channels and user preferences
+                $userChannels = array_filter($this->channels, function($ch) use ($user) {
+                    if ($ch === 'sms') return (bool) ($user->notify_sms ?? true);
+                    if ($ch === 'mail') return (bool) ($user->notify_email ?? true);
+                    if ($ch === 'push') return (bool) ($user->notify_push ?? true);
+                    return true; // database, etc
+                });
 
-        User::where('branch_id', $this->branchId)->chunk(500, function ($users) use (&$batchJobs) {
-            $batchJobs[] = new ProcessBulkCommunicationChunk(
-                $users->pluck('id')->toArray(),
-                $this->title,
-                $this->message,
-                $this->channels
-            );
+                if (!empty($userChannels)) {
+                    $user->notifyMember($this->title, $this->message, [], array_values($userChannels));
+                    $count++;
+                }
+            }
         });
 
-        if (!empty($batchJobs)) {
-            Bus::batch($batchJobs)
-                ->name("Bulk Communication - Branch {$this->branchId}")
-                ->dispatch();
-        }
-
-        Log::info("Bulk communication batch dispatched for branch {$this->branchId}. Total chunks: " . count($batchJobs));
+        Log::info("Bulk communication Job finished for branch {$this->branchId}. Total users notified: $count.");
     }
 }

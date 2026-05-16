@@ -151,11 +151,8 @@ class QardHasan extends Model
         });
 
         static::updated(function (QardHasan $loan) {
-            if ($loan->wasChanged(['defaulted_at', 'status', 'paid_amount', 'principal_amount'])) {
+            if ($loan->wasChanged(['defaulted_at', 'status', 'paid_amount'])) {
                 $loan->syncUserDefaulterStatus();
-                if ($loan->user) {
-                    $loan->user->syncOutstandingLoans();
-                }
             }
 
             // Record Loan Disbursement when status becomes 'active'
@@ -172,9 +169,6 @@ class QardHasan extends Model
         static::created(function (QardHasan $loan) {
             if ($loan->defaulted_at) {
                 $loan->syncUserDefaulterStatus();
-            }
-            if ($loan->user) {
-                $loan->user->syncOutstandingLoans();
             }
 
             // Record Loan Disbursement if already active (typical for migration)
@@ -198,9 +192,6 @@ class QardHasan extends Model
 
         static::deleted(function (QardHasan $loan) {
             $loan->syncUserDefaulterStatus();
-            if ($loan->user) {
-                $loan->user->syncOutstandingLoans();
-            }
         });
     }
 

@@ -1194,7 +1194,16 @@ class AccountingReportService
         $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
         $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
 
-        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))->get();
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users.contributions' => function ($query) use ($fromDate, $toDate) {
+                $query->whereIn('status', ['success', 'paid', 'completed']);
+                if ($fromDate) {
+                    $query->where('created_at', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('created_at', '<=', $toDate);
+                }
+            }])->get();
 
         $report = [
             'branches' => [],
@@ -1212,38 +1221,24 @@ class AccountingReportService
                 'total_amount' => 0,
             ];
 
-            // Optimized aggregation query
-            $membersData = DB::table('users')
-                ->join('contributions', 'users.id', '=', 'contributions.user_id')
-                ->where('users.branch_id', $branch->id)
-                ->whereIn('contributions.status', ['success', 'paid', 'completed'])
-                ->when($fromDate, fn($q) => $q->where('contributions.created_at', '>=', $fromDate))
-                ->when($toDate, fn($q) => $q->where('contributions.created_at', '<=', $toDate))
-                ->select(
-                    'users.surname',
-                    'users.name',
-                    'users.other_names',
-                    'users.membership_number',
-                    DB::raw('SUM(contributions.amount) as total_contributed'),
-                    DB::raw('MAX(contributions.created_at) as last_contribution_date')
-                )
-                ->groupBy('users.id', 'users.surname', 'users.name', 'users.other_names', 'users.membership_number')
-                ->having('total_contributed', '>', 0)
-                ->orderByDesc('total_contributed')
-                ->get();
+            foreach ($branch->users as $user) {
+                $userTotal = $user->contributions->sum('amount');
 
-            foreach ($membersData as $row) {
-                $fullName = trim("{$row->surname} {$row->name} {$row->other_names}");
-                $branchData['members'][] = [
-                    'member_name' => $fullName,
-                    'membership_number' => $row->membership_number,
-                    'total_contributed' => (float)$row->total_contributed,
-                    'last_contribution_date' => $row->last_contribution_date,
-                ];
-                $branchData['total_amount'] += (float)$row->total_contributed;
+                if ($userTotal > 0) {
+                    $branchData['members'][] = [
+                        'member_name' => $user->full_name,
+                        'membership_number' => $user->membership_number,
+                        'total_contributed' => (float)$userTotal,
+                        'last_contribution_date' => $user->contributions->max('created_at'),
+                    ];
+                    $branchData['total_amount'] += (float)$userTotal;
+                }
             }
 
             if (!empty($branchData['members'])) {
+                // Sort members by amount descending
+                usort($branchData['members'], fn($a, $b) => $b['total_contributed'] <=> $a['total_contributed']);
+
                 $report['branches'][] = $branchData;
                 $report['grand_total_amount'] += $branchData['total_amount'];
                 $report['grand_total_members_count'] += count($branchData['members']);
@@ -1258,7 +1253,9 @@ class AccountingReportService
      */
     public function buildBranchMemberBalancesReport(?int $branchId = null, float $goldPrice = 0.0): array
     {
-        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))->get();
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users'])
+            ->get();
 
         $report = [
             'branches' => [],
@@ -1284,45 +1281,34 @@ class AccountingReportService
                 'total_other' => 0,
             ];
 
-            // Optimized: Fetching only users with balances using database-level sorting
-            $usersQuery = DB::table('users')
-                ->where('branch_id', $branch->id)
-                ->select('*', DB::raw("
-                    (ordinary_savings + special_savings_balance + shares_capital + (gold_balance * {$goldPrice}) +
-                    building_balance + development_fund_balance + agm_balance + loan_repayment_balance +
-                    fine_balance + welfare_balance + lateness_balance + stationery_balance +
-                    loan_form_balance + others_balance + id_card_balance + emergency_balance +
-                    entrance_balance + h_savings_balance + investment_balance + group_savings_balance) as total_wealth
-                "))
-                ->having('total_wealth', '>', 0)
-                ->orderByDesc('total_wealth');
+            foreach ($branch->users as $user) {
+                $otherTotal = (float)$user->building_balance +
+                              (float)$user->development_fund_balance +
+                              (float)$user->agm_balance +
+                              (float)$user->loan_repayment_balance +
+                              (float)$user->fine_balance +
+                              (float)$user->welfare_balance +
+                              (float)$user->lateness_balance +
+                              (float)$user->stationery_balance +
+                              (float)$user->loan_form_balance +
+                              (float)$user->others_balance +
+                              (float)$user->id_card_balance +
+                              (float)$user->emergency_balance +
+                              (float)$user->entrance_balance +
+                              (float)$user->h_savings_balance +
+                              (float)$user->investment_balance +
+                              (float)$user->group_savings_balance;
 
-            // For millions of users, we still return them all in this specific report format,
-            // but we process them efficiently using chunking to build the response array.
-            $usersQuery->chunk(1000, function ($users) use (&$branchData, $goldPrice) {
-                foreach ($users as $user) {
-                    $otherTotal = (float)$user->building_balance +
-                                  (float)$user->development_fund_balance +
-                                  (float)$user->agm_balance +
-                                  (float)$user->loan_repayment_balance +
-                                  (float)$user->fine_balance +
-                                  (float)$user->welfare_balance +
-                                  (float)$user->lateness_balance +
-                                  (float)$user->stationery_balance +
-                                  (float)$user->loan_form_balance +
-                                  (float)$user->others_balance +
-                                  (float)$user->id_card_balance +
-                                  (float)$user->emergency_balance +
-                                  (float)$user->entrance_balance +
-                                  (float)$user->h_savings_balance +
-                                  (float)$user->investment_balance +
-                                  (float)$user->group_savings_balance;
+                $hasBalance = (float)$user->ordinary_savings > 0 ||
+                              (float)$user->special_savings_balance > 0 ||
+                              (float)$user->shares_capital > 0 ||
+                              (float)$user->gold_balance > 0 ||
+                              $otherTotal > 0;
 
+                if ($hasBalance) {
                     $goldValue = (float)$user->gold_balance * $goldPrice;
-                    $fullName = trim("{$user->surname} {$user->name} {$user->other_names}");
-
                     $branchData['members'][] = [
-                        'member_name' => $fullName,
+                        'member_name' => $user->full_name,
                         'membership_number' => $user->membership_number,
                         'savings' => (float)$user->ordinary_savings,
                         'special_savings' => (float)$user->special_savings_balance,
@@ -1330,7 +1316,7 @@ class AccountingReportService
                         'gold_weight' => (float)$user->gold_balance,
                         'gold_value' => $goldValue,
                         'other_funds' => $otherTotal,
-                        'total_wealth' => (float)$user->total_wealth,
+                        'total_wealth' => (float)$user->ordinary_savings + (float)$user->special_savings_balance + (float)$user->shares_capital + $goldValue + $otherTotal,
                     ];
                     $branchData['total_savings'] += (float)$user->ordinary_savings;
                     $branchData['total_special_savings'] += (float)$user->special_savings_balance;
@@ -1339,9 +1325,12 @@ class AccountingReportService
                     $branchData['total_gold_value'] += $goldValue;
                     $branchData['total_other'] += $otherTotal;
                 }
-            });
+            }
 
             if (!empty($branchData['members'])) {
+                // Sort by total wealth descending
+                usort($branchData['members'], fn($a, $b) => $b['total_wealth'] <=> $a['total_wealth']);
+
                 $report['branches'][] = $branchData;
                 $report['grand_total_savings'] += $branchData['total_savings'];
                 $report['grand_total_special_savings'] += $branchData['total_special_savings'];
@@ -1361,7 +1350,9 @@ class AccountingReportService
      */
     public function buildUsersByBranchReport(?int $branchId = null): array
     {
-        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))->get();
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users'])
+            ->get();
 
         $report = [
             'branches' => [],
@@ -1375,27 +1366,21 @@ class AccountingReportService
                 'members' => [],
             ];
 
-            // Optimized: Database-level sorting and chunking
-            DB::table('users')
-                ->where('branch_id', $branch->id)
-                ->select('surname', 'name', 'other_names', 'membership_number', 'email', 'phone', 'approval_status', 'created_at')
-                ->orderBy('surname')
-                ->orderBy('name')
-                ->chunk(1000, function ($users) use (&$branchData) {
-                    foreach ($users as $user) {
-                        $fullName = trim("{$user->surname} {$user->name} {$user->other_names}");
-                        $branchData['members'][] = [
-                            'member_name' => $fullName,
-                            'membership_number' => $user->membership_number,
-                            'email' => $user->email,
-                            'phone' => $user->phone,
-                            'status' => $user->approval_status,
-                            'joined_at' => $user->created_at ? Carbon::parse($user->created_at)->format('Y-m-d') : null,
-                        ];
-                    }
-                });
+            foreach ($branch->users as $user) {
+                $branchData['members'][] = [
+                    'member_name' => $user->full_name,
+                    'membership_number' => $user->membership_number,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'status' => $user->approval_status,
+                    'joined_at' => $user->created_at?->format('Y-m-d'),
+                ];
+            }
 
             if (!empty($branchData['members'])) {
+                // Sort by name
+                usort($branchData['members'], fn($a, $b) => strcmp($a['member_name'], $b['member_name']));
+
                 $report['branches'][] = $branchData;
                 $report['grand_total_members_count'] += count($branchData['members']);
             }
@@ -1412,80 +1397,62 @@ class AccountingReportService
         $fromDate = $from ? Carbon::parse($from)->startOfDay() : Carbon::now()->startOfYear();
         $toDate = $to ? Carbon::parse($to)->endOfDay() : Carbon::now();
 
-        $logsCount = \App\Models\ShariahAuditLog::whereBetween('created_at', [$fromDate, $toDate])->count();
+        $logs = \App\Models\ShariahAuditLog::whereBetween('created_at', [$fromDate, $toDate])->get();
 
         // Murabahah Summary (Store orders with financing)
-        $murabahahQuery = \App\Models\StoreOrder::whereBetween('created_at', [$fromDate, $toDate])
+        $murabahahOrders = \App\Models\StoreOrder::whereBetween('created_at', [$fromDate, $toDate])
             ->where('status', '!=', 'cancelled')
             ->where(function ($q) {
                 $q->whereJsonContains('meta->financing->type', 'murabaha')
                     ->orWhere('status', 'like', 'murabaha_%');
-            });
+            })
+            ->get();
 
-        $totalMurabahahValue = $murabahahQuery->sum('total_amount');
-        $totalMurabahahProfit = $murabahahQuery->sum('total_profit');
-        $murabahahCount = $murabahahQuery->count();
+        $totalMurabahahValue = $murabahahOrders->sum('total_amount');
+        $totalMurabahahProfit = $murabahahOrders->sum('total_profit');
 
         // Project Summary (Mudarabah/Musharakah)
-        $totalProjectCapital = \App\Models\Project::whereBetween('created_at', [$fromDate, $toDate])->sum('capital_goal');
-        $projectsCount = \App\Models\Project::whereBetween('created_at', [$fromDate, $toDate])->count();
+        $projects = \App\Models\Project::whereBetween('created_at', [$fromDate, $toDate])->get();
+        $totalProjectCapital = $projects->sum('capital_goal');
 
         // Takaful Settlement Summary
-        $takafulPayoutsSum = \App\Models\TakafulPoolEntry::whereBetween('created_at', [$fromDate, $toDate])
+        $takafulPayouts = \App\Models\TakafulPoolEntry::whereBetween('created_at', [$fromDate, $toDate])
             ->where('direction', 'debit')
-            ->sum('amount');
-        $takafulPayoutsCount = \App\Models\TakafulPoolEntry::whereBetween('created_at', [$fromDate, $toDate])
-            ->where('direction', 'debit')
-            ->count();
+            ->get();
 
         // Zakat Distribution Summary
-        $charityDisbursementsSum = \App\Models\CharityEntry::whereBetween('created_at', [$fromDate, $toDate])
+        $charityDisbursements = \App\Models\CharityEntry::whereBetween('created_at', [$fromDate, $toDate])
             ->where('amount', '<', 0)
             ->where('status', 'processed')
-            ->sum('amount');
-        $charityDisbursementsCount = \App\Models\CharityEntry::whereBetween('created_at', [$fromDate, $toDate])
-            ->where('amount', '<', 0)
-            ->where('status', 'processed')
-            ->count();
-
-        $actionsSummary = \App\Models\ShariahAuditLog::whereBetween('created_at', [$fromDate, $toDate])
-            ->select('action', DB::raw('count(*) as count'))
-            ->groupBy('action')
-            ->pluck('count', 'action');
-
-        $recentLogs = \App\Models\ShariahAuditLog::whereBetween('created_at', [$fromDate, $toDate])
-            ->latest()
-            ->take(50)
-            ->get()
-            ->map(fn($l) => [
-                'date' => $l->created_at->toDateTimeString(),
-                'action' => $l->action,
-                'payload' => $l->payload,
-            ]);
+            ->get();
 
         return [
             'from' => $fromDate->toDateString(),
             'to' => $toDate->toDateString(),
-            'total_audits' => $logsCount,
+            'total_audits' => $logs->count(),
             'murabahah' => [
-                'count' => $murabahahCount,
+                'count' => $murabahahOrders->count(),
                 'total_value' => (float)$totalMurabahahValue,
                 'total_profit' => (float)$totalMurabahahProfit,
             ],
             'projects' => [
-                'count' => $projectsCount,
+                'count' => $projects->count(),
                 'total_capital' => (float)$totalProjectCapital,
             ],
             'takaful' => [
-                'count' => $takafulPayoutsCount,
-                'total_amount' => (float)$takafulPayoutsSum,
+                'count' => $takafulPayouts->count(),
+                'total_amount' => (float)$takafulPayouts->sum('amount'),
             ],
             'charity_disbursements' => [
-                'count' => $charityDisbursementsCount,
-                'total_amount' => abs((float)$charityDisbursementsSum),
+                'count' => $charityDisbursements->count(),
+                'total_amount' => abs((float)$charityDisbursements->sum('amount')),
             ],
-            'actions_summary' => $actionsSummary,
-            'recent_logs' => $recentLogs,
+            'actions_summary' => $logs->groupBy('action')->map(fn($group) => $group->count()),
+            'recent_logs' => $logs->take(50)->map(fn($l) => [
+                'date' => $l->created_at->toDateTimeString(),
+                'action' => $l->action,
+                'payload' => $l->payload,
+            ]),
         ];
     }
     /**
@@ -1498,9 +1465,17 @@ class AccountingReportService
         $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
 
         $schemes = \App\Models\Scheme::where('active', true)->get();
-        $schemeIds = $schemes->pluck('id')->toArray();
 
-        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))->get();
+        $branches = \App\Models\Branch::when($branchId, fn($q) => $q->where('id', $branchId))
+            ->with(['users.contributions' => function ($query) use ($fromDate, $toDate) {
+                $query->whereIn('status', ['success', 'paid', 'completed']);
+                if ($fromDate) {
+                    $query->where('created_at', '>=', $fromDate);
+                }
+                if ($toDate) {
+                    $query->where('created_at', '<=', $toDate);
+                }
+            }])->get();
 
         $report = [
             'branches' => [],
@@ -1529,54 +1504,34 @@ class AccountingReportService
                 $branchData['totals'][$s->id] = 0;
             }
 
-            // Optimized: Aggregate everything in SQL
-            $usersContributions = DB::table('users')
-                ->join('contributions', 'users.id', '=', 'contributions.user_id')
-                ->where('users.branch_id', $branch->id)
-                ->whereIn('contributions.status', ['success', 'paid', 'completed'])
-                ->whereIn('contributions.scheme_id', $schemeIds)
-                ->when($fromDate, fn($q) => $q->where('contributions.created_at', '>=', $fromDate))
-                ->when($toDate, fn($q) => $q->where('contributions.created_at', '<=', $toDate))
-                ->select(
-                    'users.id',
-                    'users.surname',
-                    'users.name',
-                    'users.other_names',
-                    'users.membership_number',
-                    'contributions.scheme_id',
-                    DB::raw('SUM(contributions.amount) as total_amount')
-                )
-                ->groupBy('users.id', 'users.surname', 'users.name', 'users.other_names', 'users.membership_number', 'contributions.scheme_id')
-                ->get()
-                ->groupBy('id');
-
-            foreach ($usersContributions as $userId => $contribs) {
-                $first = $contribs->first();
-                $fullName = trim("{$first->surname} {$first->name} {$first->other_names}");
-
+            foreach ($branch->users as $user) {
                 $memberSchemes = [];
                 $memberTotal = 0;
+                $hasContribution = false;
 
-                // Pre-fill all schemes with 0
-                foreach ($schemeIds as $sId) {
-                    $memberSchemes[$sId] = 0.0;
+                $userContributions = $user->contributions->groupBy('scheme_id');
+
+                foreach ($schemes as $s) {
+                    $sum = $userContributions->has($s->id) ? $userContributions->get($s->id)->sum('amount') : 0;
+                    $memberSchemes[$s->id] = (float)$sum;
+                    $memberTotal += (float)$sum;
+
+                    $branchData['totals'][$s->id] += (float)$sum;
+                    $report['grand_totals'][$s->id] += (float)$sum;
+
+                    if ($sum > 0) $hasContribution = true;
                 }
 
-                foreach ($contribs as $c) {
-                    $memberSchemes[$c->scheme_id] = (float)$c->total_amount;
-                    $memberTotal += (float)$c->total_amount;
-                    $branchData['totals'][$c->scheme_id] += (float)$c->total_amount;
-                    $report['grand_totals'][$c->scheme_id] += (float)$c->total_amount;
+                if ($hasContribution) {
+                    $branchData['members'][] = [
+                        'member_name' => $user->full_name,
+                        'membership_number' => $user->membership_number,
+                        'schemes' => $memberSchemes,
+                        'total' => $memberTotal,
+                    ];
+                    $branchData['branch_total'] += $memberTotal;
+                    $report['grand_total_all'] += $memberTotal;
                 }
-
-                $branchData['members'][] = [
-                    'member_name' => $fullName,
-                    'membership_number' => $first->membership_number,
-                    'schemes' => $memberSchemes,
-                    'total' => $memberTotal,
-                ];
-                $branchData['branch_total'] += $memberTotal;
-                $report['grand_total_all'] += $memberTotal;
             }
 
             if (!empty($branchData['members'])) {

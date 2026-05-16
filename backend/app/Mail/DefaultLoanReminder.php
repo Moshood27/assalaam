@@ -19,8 +19,6 @@ class DefaultLoanReminder extends Mailable implements ShouldQueue
     {
         $this->loans = $loans;
         $this->totalOutstanding = $totalOutstanding;
-
-        $this->onQueue('notifications');
     }
 
     public function build()

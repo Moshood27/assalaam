@@ -27,40 +27,47 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Define Feature Flags with robust permissive defaults and global overrides
-        $defineFeature = function ($name, $default = true) {
-            Feature::define($name, function ($scope) use ($name, $default) {
-                // Check for a global override in the database
-                $global = \App\Models\Feature::where('name', $name)->where('scope', 'global')->first();
-                if ($global !== null) {
-                    $val = $global->value;
-                    // Use filter_var to handle strings like "false", "0", etc. correctly
-                    return filter_var($val, FILTER_VALIDATE_BOOLEAN);
+        // Define Feature Flags
+        Feature::define('withdrawals-enabled', fn () => true);
+        Feature::define('payment-provider-failover', fn () => false);
+        Feature::define('maintenance-mode-wallets', fn () => false);
+        Feature::define('gold-savings-beta', function ($scope) {
+            if ($scope instanceof User) {
+                if (Feature::for('global')->inactive('gold-savings-beta')) {
+                    return false;
                 }
-
-                // Fallback to default if no global toggle exists
-                return is_callable($default) ? $default($scope) : $default;
-            });
-        };
-
-        $defineFeature('withdrawals-enabled', true);
-        $defineFeature('payment-provider-failover', false);
-        $defineFeature('maintenance-mode-wallets', false);
-        $defineFeature('gold-savings-beta', true);
-        $defineFeature('apply-for-loan', true);
-        $defineFeature('shura-voting-active', fn() => \App\Models\AgmSession::where('status', 'open')->exists());
-        $defineFeature('prayer-time-quiet-mode', false);
-        $defineFeature('gender-segregated-features', true);
-
+                return ($scope->attaqwa_score ?? 0) > 80;
+            }
+            return true;
+        });
+        Feature::define('apply-for-loan', function ($scope) {
+            if ($scope instanceof User) {
+                if (Feature::for('global')->inactive('apply-for-loan')) {
+                    return false;
+                }
+                return $scope->is_verified && ($scope->attaqwa_score ?? 0) > 40;
+            }
+            return true;
+        });
+        Feature::define('shura-voting-active', fn () => false);
+        Feature::define('prayer-time-quiet-mode', fn () => false);
+        Feature::define('gender-segregated-features', function ($scope) {
+            if ($scope instanceof User) {
+                // Example: Only show if user gender matches or is not strictly segregated
+                return true;
+            }
+            return true;
+        });
         Feature::define('show-flw-balance', function ($scope) {
-            if ($scope !== 'global') {
-                $global = \App\Models\Feature::where('name', 'show-flw-balance')->where('scope', 'global')->first();
-                if ($global !== null) return (bool) $global->value;
+            if ($scope instanceof User) {
+                if (Feature::for('global')->inactive('show-flw-balance')) {
+                    return false;
+                }
             }
             return config('services.flutterwave.compliance_status') === 'approved';
         });
 
-        // Register Filament Breezy components globally
+        // Register Filament Breezy components globally to avoid ComponentNotFoundException during Livewire updates
         \Livewire\Livewire::component('personal_info', \Jeffgreco13\FilamentBreezy\Livewire\PersonalInfo::class);
         \Livewire\Livewire::component('update_password', \Jeffgreco13\FilamentBreezy\Livewire\UpdatePassword::class);
         \Livewire\Livewire::component('two_factor_authentication', \Jeffgreco13\FilamentBreezy\Livewire\TwoFactorAuthentication::class);
@@ -82,42 +89,18 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\QardHasan::observe(\App\Observers\QardHasanObserver::class);
         \App\Models\QardHasanRepayment::observe(\App\Observers\QardHasanRepaymentObserver::class);
 
-        // Global API rate limiter with burst capability
+        // Global API rate limiter
         RateLimiter::for('api', function (Request $request) {
-            $user = $request->user();
-            $key = $user ? $user->id : $request->ip();
-
-            // Higher limits for verified members to ensure good UX
-            if ($user && $user->is_verified) {
-                return [
-                    Limit::perMinute(120)->by($key),
-                ];
-            }
-
+            $key = optional($request->user())->id ?: $request->ip();
             return [
                 Limit::perMinute(60)->by($key),
             ];
         });
 
-        // Stricter limiter for high-cost data aggregation endpoints (e.g., reports, legacy passbook)
-        RateLimiter::for('heavy', function (Request $request) {
-            return [
-                Limit::perMinute(10)->by(optional($request->user())->id ?: $request->ip()),
-            ];
-        });
-
-        // Stricter limiter for login and sensitive auth actions
+        // Stricter limiter for login endpoints to mitigate brute force
         RateLimiter::for('login', function (Request $request) {
             return [
                 Limit::perMinute(5)->by($request->ip()),
-                Limit::perMinute(10)->by($request->input('email', $request->ip())),
-            ];
-        });
-
-        // Rate limiter for webhooks to prevent flooding from a single source
-        RateLimiter::for('webhooks', function (Request $request) {
-            return [
-                Limit::perMinute(300)->by($request->ip()),
             ];
         });
     }

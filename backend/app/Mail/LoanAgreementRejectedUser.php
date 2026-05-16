@@ -4,11 +4,10 @@ namespace App\Mail;
 
 use App\Models\QardHasan;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class LoanAgreementRejectedUser extends Mailable implements ShouldQueue
+class LoanAgreementRejectedUser extends Mailable
 {
     use Queueable, SerializesModels;
 

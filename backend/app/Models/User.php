@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
@@ -72,11 +71,6 @@ class User extends Authenticatable implements FilamentUser
         'h_savings_balance',
         'investment_balance',
         'group_savings_balance',
-        'outstanding_loans',
-        'total_credits_withdrawable',
-        'total_credits_restricted',
-        'total_debits',
-        'total_cashout_debits',
         'created_at',
         'is_admin',
         'is_defaulter',
@@ -187,11 +181,6 @@ class User extends Authenticatable implements FilamentUser
             'is_defaulter' => 'boolean',
             'balance' => 'decimal:2',
             'outstanding_fines' => 'decimal:2',
-            'outstanding_loans' => 'decimal:2',
-            'total_credits_withdrawable' => 'decimal:2',
-            'total_credits_restricted' => 'decimal:2',
-            'total_debits' => 'decimal:2',
-            'total_cashout_debits' => 'decimal:2',
             'ordinary_savings' => 'decimal:2',
             'special_savings_balance' => 'decimal:2',
             'shares_capital' => 'decimal:2',
@@ -429,14 +418,20 @@ class User extends Authenticatable implements FilamentUser
 
             // SMS
             if (in_array('sms', $resolved, true) && (bool) ($this->notify_sms ?? true) && !empty($this->phone)) {
-                \App\Jobs\SendSmsNotification::dispatch($this->phone, $message);
+                try {
+                    app(\App\Services\SmsService::class)->send($this->phone, $message);
+                } catch (\Throwable $e) {
+                }
             }
 
             // Push
             if (in_array('push', $resolved, true) && (bool) ($this->notify_push ?? true)) {
                 $token = $this->fcm_token ?: ($this->device_token ?? null);
                 if (!empty($token)) {
-                    \App\Jobs\SendPushNotification::dispatch($token, $title, $message, $data ?? [], $this->id);
+                    try {
+                        app(\App\Services\PushService::class)->send($token, $title, $message, $data ?? [], $this);
+                    } catch (\Throwable $e) {
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -559,20 +554,6 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(ChatRoom::class, 'chat_room_members', 'user_id', 'chat_room_id');
     }
 
-    public function scopeStaff($query)
-    {
-        return $query->where(function ($q) {
-            $q->where('is_admin', true)
-                ->orWhereHas('roles', fn ($rq) => $rq->whereIn('name', ['super_admin', 'Staff', 'Branch Manager', 'Clerk']));
-        });
-    }
-
-    public function scopeMember($query)
-    {
-        return $query->where('is_admin', false)
-            ->whereDoesntHave('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'Staff', 'Branch Manager', 'Clerk']));
-    }
-
     public function isAdmin(): bool
     {
         return $this->is_admin || $this->hasRole('super_admin');
@@ -662,17 +643,66 @@ class User extends Authenticatable implements FilamentUser
      */
     public function savingsSharesEligibility(): array
     {
-        $savings = (float) ($this->ordinary_savings ?? 0);
-        $shares = (float) ($this->shares_capital ?? 0);
-        $specialSavings = (float) ($this->special_savings_balance ?? 0);
+        // Scheme IDs for Savings, Shares and Migrated balances that count towards eligibility
+        $schemes = Scheme::whereIn('name', [
+            'Savings',
+            'Shares',
+            'Special Savings',
+            'Ordinary Savings',
+            'Share Capital',
+            'Loan Repayment',
+            'Building',
+            'Development',
+            'AGM',
+            'Welfare',
+            'H Savings'
+        ])->pluck('id', 'name');
 
-        // Include other migrated balances that count towards base
-        $migrated = (float) ($this->loan_repayment_balance ?? 0) +
-                    (float) ($this->building_balance ?? 0) +
-                    (float) ($this->development_fund_balance ?? 0) +
-                    (float) ($this->agm_balance ?? 0) +
-                    (float) ($this->welfare_balance ?? 0) +
-                    (float) ($this->h_savings_balance ?? 0);
+        $savings = 0.0;
+        $shares = 0.0;
+        $specialSavings = 0.0;
+        $migrated = 0.0;
+
+        if (isset($schemes['Savings'])) {
+            $savings += (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Savings'])
+                ->sum('amount');
+        }
+        if (isset($schemes['Ordinary Savings'])) {
+            $savings += (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Ordinary Savings'])
+                ->sum('amount');
+        }
+        if (isset($schemes['Shares'])) {
+            $shares += (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Shares'])
+                ->sum('amount');
+        }
+        if (isset($schemes['Share Capital'])) {
+            $shares += (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Share Capital'])
+                ->sum('amount');
+        }
+        if (isset($schemes['Special Savings'])) {
+            $specialSavings = (float) $this->contributions()
+                ->where('status', 'success')
+                ->where('scheme_id', $schemes['Special Savings'])
+                ->sum('amount');
+        }
+
+        // Include other migrated balances in the base for loan eligibility
+        foreach (['Loan Repayment', 'Building', 'Development', 'AGM', 'Welfare', 'H Savings'] as $sName) {
+            if (isset($schemes[$sName])) {
+                $migrated += (float) $this->contributions()
+                    ->where('status', 'success')
+                    ->where('scheme_id', $schemes[$sName])
+                    ->sum('amount');
+            }
+        }
 
         $base = round($savings + $shares + $specialSavings + $migrated, 2);
         $eligibility = round($base * 2, 2);
@@ -801,33 +831,19 @@ class User extends Authenticatable implements FilamentUser
         return $this->morphMany(Activity::class, 'subject');
     }
 
-    public function syncOutstandingLoans(): void
-    {
-        $total = (float) $this->qardHasans()
-            ->whereIn('status', ['active', 'pending', 'defaulted'])
-            ->whereColumn('paid_amount', '<', 'principal_amount')
-            ->sum(DB::raw('principal_amount - paid_amount'));
-
-        if ((float) $this->outstanding_loans !== $total) {
-            $this->outstanding_loans = $total;
-            $this->save();
-        }
-    }
-
     /**
-     * Generate a unique 10-digit membership number for a branch.
-     * Increased to 10 digits to support billions of users across branches.
+     * Generate a unique 6-digit membership number for a branch.
      */
     public static function generateMembershipNumber(int $branchId): string
     {
         // Try up to 20 attempts to avoid rare collisions
         for ($i = 0; $i < 20; $i++) {
-            $num = (string) random_int(1000000000, 9999999999);
+            $num = (string) random_int(100000, 999999);
             $exists = self::where('branch_id', $branchId)->where('membership_number', $num)->exists();
             if (!$exists) return $num;
         }
         // Fallback to timestamp-based unique suffix
-        return substr((string) (time() . random_int(1000, 9999)), -10);
+        return substr((string) (time() . random_int(10, 99)), -6);
     }
 
     public function canAccessPanel(Panel $panel): bool
@@ -840,15 +856,36 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Compute withdrawable breakdown for the wallet using pre-calculated totals.
-     * This eliminates expensive SUM queries on the wallet_transactions table.
+     * Compute withdrawable breakdown for the wallet using tiered logic.
+     * Debits consume restricted credits first, so available_for_withdrawal reflects
+     * what can be cashed out to bank right now.
      */
     public function withdrawableBreakdown(): array
     {
-        $creditsWithdrawable = (float) $this->total_credits_withdrawable;
-        $creditsRestricted = (float) $this->total_credits_restricted;
-        $totalDebits = (float) $this->total_debits;
-        $cashoutDebits = (float) $this->total_cashout_debits;
+        // Sum credits that are withdrawable (or older rows without the flag)
+        $creditsWithdrawable = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'credit')
+            ->where(function ($q) {
+                $q->where('withdrawable', true)->orWhereNull('withdrawable');
+            })
+            ->sum('amount');
+
+        // Sum credits explicitly restricted (withdrawable=false)
+        $creditsRestricted = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'credit')
+            ->where('withdrawable', false)
+            ->sum('amount');
+
+        // Sum all debits
+        $totalDebits = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'debit')
+            ->sum('amount');
+
+        // Identify cash-out debits (bank withdrawals) that must reduce withdrawable immediately
+        $cashoutDebits = (float) WalletTransaction::where('user_id', $this->id)
+            ->where('type', 'debit')
+            ->whereIn('source', ['bank_withdrawal'])
+            ->sum('amount');
 
         $otherDebits = max(0.0, $totalDebits - $cashoutDebits);
 
@@ -872,28 +909,6 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Sync the user's cached wallet transaction totals.
-     */
-    public function syncWalletTotals(): void
-    {
-        $totals = WalletTransaction::where('user_id', $this->id)
-            ->selectRaw("
-                SUM(CASE WHEN type = 'credit' AND (withdrawable = 1 OR withdrawable IS NULL) THEN amount ELSE 0 END) as credits_withdrawable,
-                SUM(CASE WHEN type = 'credit' AND withdrawable = 0 THEN amount ELSE 0 END) as credits_restricted,
-                SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) as total_debits,
-                SUM(CASE WHEN type = 'debit' AND source = 'bank_withdrawal' THEN amount ELSE 0 END) as cashout_debits
-            ")
-            ->first();
-
-        $this->forceFill([
-            'total_credits_withdrawable' => (float) ($totals->credits_withdrawable ?? 0),
-            'total_credits_restricted' => (float) ($totals->credits_restricted ?? 0),
-            'total_debits' => (float) ($totals->total_debits ?? 0),
-            'total_cashout_debits' => (float) ($totals->cashout_debits ?? 0),
-        ])->save();
-    }
-
-    /**
      * Convenience helper: numeric available-for-withdrawal.
      */
     public function availableForWithdrawal(): float
@@ -908,9 +923,13 @@ class User extends Authenticatable implements FilamentUser
      */
     public function zakatBaseWealth(float $goldPrice): float
     {
-        $savingsAndShares = (float) ($this->ordinary_savings ?? 0) +
-                           (float) ($this->shares_capital ?? 0) +
-                           (float) ($this->special_savings_balance ?? 0);
+        // Savings, Shares are usually stored in Contributions
+        $schemes = Scheme::whereIn('name', ['Savings', 'Shares', 'Special Savings', 'Ordinary Savings', 'Share Capital'])->pluck('id');
+
+        $savingsAndShares = (float) $this->contributions()
+            ->where('status', 'success')
+            ->whereIn('scheme_id', $schemes)
+            ->sum('amount');
 
         $goldValue = round(($this->gold_balance ?? 0) * $goldPrice, 2);
         $walletBalance = (float) ($this->balance ?? 0);

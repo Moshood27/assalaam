@@ -88,23 +88,30 @@ class UserResource extends Resource
                                         Forms\Components\FileUpload::make('passport_path')
                                             ->label('Passport / Profile Photo')
                                             ->image()
-                                            ->disk('public')
+                                            ->disk('public_root')
                                             ->directory('upload')
                                             ->visibility('public')
                                             ->fetchFileInformation(false)
                                             ->getUploadedFileUsing(function (BaseFileUpload $component, string $file, string|array|null $storedFileNames) {
-                                                $path = ltrim((string) $file, '/');
+                                                $raw = (string) $file;
+                                                $path = ltrim($raw, '/');
+                                                $wasStoragePrefixed = false;
+                                                if (str_starts_with($path, 'storage/')) {
+                                                    $path = substr($path, strlen('storage/'));
+                                                    $wasStoragePrefixed = true;
+                                                }
 
-                                                // Handle legacy public/upload paths
-                                                if (str_starts_with($path, 'upload/') && !Storage::disk('public')->exists($path)) {
-                                                    $fullPublicPath = public_path($path);
-                                                    if (is_file($fullPublicPath)) {
-                                                        return [
-                                                            'name' => basename($path),
-                                                            'size' => filesize($fullPublicPath),
-                                                            'type' => null,
-                                                            'url' => '/' . $path,
-                                                        ];
+                                                $url = null;
+                                                $publicFull = public_path($path);
+                                                if (is_file($publicFull)) {
+                                                    $url = '/'.ltrim($path, '/');
+                                                } else {
+                                                    $url = $wasStoragePrefixed
+                                                        ? ('/storage/'.ltrim($path, '/'))
+                                                        : Storage::disk('public')->url($path);
+
+                                                    if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+                                                        // Keep full URL
                                                     }
                                                 }
 
@@ -112,7 +119,7 @@ class UserResource extends Resource
                                                     'name' => basename($path),
                                                     'size' => 0,
                                                     'type' => null,
-                                                    'url' => Storage::disk('public')->url($path),
+                                                    'url' => $url,
                                                 ];
                                             })
                                             ->imageEditor()
@@ -164,8 +171,8 @@ class UserResource extends Resource
                                         Forms\Components\Toggle::make('is_defaulter')
                                             ->label('Defaulter')
                                             ->helperText('Restricts certain features for the member'),
-                                        Forms\Components\FileUpload::make('id_card_path')->label('ID Card')->image()->disk('public')->directory('upload'),
-                                        Forms\Components\FileUpload::make('proof_of_address_path')->label('Proof of Address')->image()->disk('public')->directory('upload'),
+                                        Forms\Components\FileUpload::make('id_card_path')->label('ID Card')->image()->disk('public_root')->directory('upload'),
+                                        Forms\Components\FileUpload::make('proof_of_address_path')->label('Proof of Address')->image()->disk('public_root')->directory('upload'),
                                     ])->columns(2),
 
                                 Forms\Components\Section::make('Membership')

@@ -18,9 +18,7 @@ class GeneralNotification extends Notification implements ShouldQueue
         public bool $useMail = true,
         public bool $useDatabase = true,
         public bool $usePush = true,
-    ) {
-        $this->onQueue('notifications');
-    }
+    ) {}
 
     /**
      * Determine channels dynamically based on flags and notifiable preferences.

@@ -13,13 +13,6 @@ return new class extends Migration
     {
         Schema::create('webhook_calls', function (Blueprint $table) {
             $table->id();
-            $table->string('provider')->index();
-            $table->string('external_id')->nullable()->index();
-            $table->json('payload');
-            $table->json('headers')->nullable();
-            $table->string('status')->default('pending')->index(); // pending, processed, failed
-            $table->text('error')->nullable();
-            $table->timestamp('processed_at')->nullable();
             $table->timestamps();
         });
     }

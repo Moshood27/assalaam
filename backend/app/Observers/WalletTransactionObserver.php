@@ -15,9 +15,6 @@ class WalletTransactionObserver
      */
     public function created(WalletTransaction $tx): void
     {
-        // Invalidate user's withdrawable breakdown cache
-        \Illuminate\Support\Facades\Cache::forget("user_withdrawable_breakdown:{$tx->user_id}");
-
         try {
             $isCredit = strtolower((string) $tx->type) === 'credit';
 

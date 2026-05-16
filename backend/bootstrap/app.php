@@ -26,7 +26,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'inactivity' => \App\Http\Middleware\InactivityTimeout::class,
             'track_activity' => \App\Http\Middleware\TrackUserActivity::class,
-            'cache_response' => \App\Http\Middleware\CacheResponse::class,
         ]);
 
         // Append security headers to all web and API responses

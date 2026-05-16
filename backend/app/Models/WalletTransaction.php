@@ -41,8 +41,18 @@ class WalletTransaction extends Model
     protected static function booted(): void
     {
         static::created(function (WalletTransaction $tx) {
-            // Offload side-effects to background job
-            \App\Jobs\ProcessWalletTransactionSideEffects::dispatch($tx->id);
+            // Record in Ledger
+            if (!$tx->ledger_journal_id) {
+                try {
+                    $ledger = app(\App\Services\LedgerService::class);
+                    $journal = strtolower((string) $tx->type) === 'credit'
+                        ? $ledger->recordWalletCredit($tx)
+                        : $ledger->recordWalletDebit($tx);
+                    $tx->updateQuietly(['ledger_journal_id' => $journal->id]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record wallet transaction in ledger: " . $e->getMessage());
+                }
+            }
 
             // Trigger recoveries on any wallet credit after the surrounding DB transaction commits
             if (strtolower((string) $tx->type) === 'credit' && ! empty($tx->user_id)) {
