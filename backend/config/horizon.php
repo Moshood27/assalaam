@@ -200,7 +200,7 @@ return [
     'defaults' => [
         'supervisor-1' => [
             'connection' => 'redis',
-            'queue' => ['default', 'notifications', 'contributions', 'transactions', 'balances'],
+            'queue' => ['default'],
             'balance' => 'simple',
             'maxProcesses' => 1,
             'maxTime' => 0,
