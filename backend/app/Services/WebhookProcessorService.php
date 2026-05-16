@@ -525,25 +525,63 @@ class WebhookProcessorService
         if (WalletTransaction::where('reference', $reference)->exists()) return;
 
         $topupUser = null;
-        if ($provider === 'flutterwave') {
-            $email = $vd['customer']['email'] ?? null;
+
+        // 1. Try metadata first as it's most reliable if present
+        $meta = $vd['meta'] ?? ($vd['metadata'] ?? []);
+        if (is_string($meta)) $meta = json_decode($meta, true);
+        $userId = $meta['user_id'] ?? null;
+        if ($userId) $topupUser = User::find($userId);
+
+        // 2. Try Provider-Specific DVA lookup
+        if (!$topupUser) {
+            if ($provider === 'flutterwave') {
+                $accountNumber = $vd['bank_transfer_details']['account_number'] ?? ($vd['account_number'] ?? null);
+                if ($accountNumber) {
+                    $topupUser = User::whereHas('virtualAccount', function ($query) use ($accountNumber) {
+                        $query->where('flw_dva_data->account_number', $accountNumber);
+                    })->first();
+                }
+            } elseif ($provider === 'monnify') {
+                $accountNumber = $vd['destinationAccountNumber'] ?? ($vd['account_number'] ?? null);
+                if ($accountNumber) {
+                    $topupUser = User::whereHas('virtualAccount', function ($query) use ($accountNumber) {
+                        $query->where('monnify_dva_data->accountNumber', $accountNumber);
+                    })->first();
+                }
+            } elseif ($provider === 'opay') {
+                $accountNumber = $vd['accountNumber'] ?? ($vd['account_number'] ?? null);
+                if ($accountNumber) {
+                    $topupUser = User::whereHas('virtualAccount', function ($query) use ($accountNumber) {
+                        $query->where('opay_dva_data->accountNumber', $accountNumber);
+                    })->first();
+                }
+            }
+        }
+
+        // 3. Fallback to Paystack DVA lookup (common if users mix up account numbers)
+        if (!$topupUser) {
+            $accountNumber = $vd['bank_transfer_details']['account_number'] ??
+                            ($vd['destinationAccountNumber'] ??
+                            ($vd['accountNumber'] ??
+                            ($vd['account_number'] ?? null)));
+            if ($accountNumber) {
+                $topupUser = User::whereHas('virtualAccount', fn($q) => $q->where('dva_account_number', $accountNumber))->first();
+            }
+        }
+
+        // 4. Final Fallback to Email
+        if (!$topupUser) {
+            $email = $vd['customer']['email'] ?? ($vd['customer']['emailAddress'] ?? null);
             if ($email) $topupUser = User::where('email', $email)->first();
-        } elseif ($provider === 'monnify') {
-            $email = $vd['customer']['email'] ?? null;
-            if ($email) $topupUser = User::where('email', $email)->first();
-        } elseif ($provider === 'opay') {
-            // Opay logic usually has user info in metadata or reference
         }
 
         if (!$topupUser) {
-             // Fallback to meta if available
-             $meta = $vd['meta'] ?? ($vd['metadata'] ?? []);
-             if (is_string($meta)) $meta = json_decode($meta, true);
-             $userId = $meta['user_id'] ?? null;
-             if ($userId) $topupUser = User::find($userId);
+            Log::warning("Webhook wallet topup failed: User not found for reference {$reference}", [
+                'provider' => $provider,
+                'vd' => $vd
+            ]);
+            return;
         }
-
-        if (!$topupUser) return;
 
         $maintenanceCharge = $this->calculateMaintenanceCharge($amountNgn);
         $netAmount = round(max(0, $amountNgn - $maintenanceCharge), 2);
@@ -555,7 +593,7 @@ class WebhookProcessorService
             'type' => 'credit',
             'amount' => $netAmount,
             'reference' => $reference,
-            'source' => $provider,
+            'source' => "{$provider}_dva",
             'meta' => ['maintenance_charge' => $maintenanceCharge, 'gross_amount' => $amountNgn]
         ]);
 
