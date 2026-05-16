@@ -333,6 +333,8 @@
       <path value="$PROJECT_DIR$/backend/vendor/phpoffice/phpspreadsheet" />
       <path value="$PROJECT_DIR$/backend/vendor/snipe/banbuilder" />
       <path value="$PROJECT_DIR$/backend/vendor/laravel/pennant" />
+      <path value="$PROJECT_DIR$/backend/vendor/resend/resend-laravel" />
+      <path value="$PROJECT_DIR$/backend/vendor/resend/resend-php" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2">

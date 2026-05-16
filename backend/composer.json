@@ -23,6 +23,7 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
         "predis/predis": "^2.2",
+        "resend/resend-laravel": "^1.4",
         "sentry/sentry-laravel": "^4.25",
         "snipe/banbuilder": "^2.3",
         "spatie/laravel-activitylog": "^5.0",

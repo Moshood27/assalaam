@@ -325,6 +325,8 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/phpoffice/phpspreadsheet" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/snipe/banbuilder" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/laravel/pennant" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/resend/resend-laravel" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/vendor/resend/resend-php" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
