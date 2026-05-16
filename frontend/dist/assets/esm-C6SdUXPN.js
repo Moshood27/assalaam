@@ -1,0 +1,1 @@
+import{f as e}from"./index-CGJJxuDl.js";export{e as SplashScreen};

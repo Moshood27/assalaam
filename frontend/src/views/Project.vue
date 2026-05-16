@@ -181,6 +181,17 @@
           </div>
 
           <div class="pt-4 border-t">
+             <div v-if="enabledGateways.length" class="mb-4">
+                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Payment Gateway</label>
+                <div class="grid grid-cols-2 gap-2">
+                   <button v-for="gw in enabledGateways" :key="gw"
+                           @click="selectedGateway = gw"
+                           :class="selectedGateway === gw ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-600'"
+                           class="py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">
+                      {{ gw }}
+                   </button>
+                </div>
+             </div>
              <div class="flex justify-between items-center mb-4">
                 <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Total Investment</span>
                 <span class="text-2xl font-black text-slate-900">₦ {{ Number(unitsToBuy * project.unit_price).toLocaleString() }}</span>
@@ -198,13 +209,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import { useRoute } from 'vue-router'
 import axios from '../http.js'
+import { useAppStatusStore } from '../stores/appStatus'
 
 const route = useRoute()
+const appStatusStore = useAppStatusStore()
 const id = ref(Number(route.params.id))
 
 const loading = ref(true)
@@ -216,6 +229,15 @@ const investments = ref([])
 const profits = ref([])
 const totalInvested = ref(0)
 const totalUnits = ref(0)
+
+const enabledGateways = computed(() => {
+  const gws = appStatusStore.paymentGateways || {}
+  return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
+})
+const selectedGateway = ref(appStatusStore.paymentGateways?.primary || 'paystack')
+watch(() => appStatusStore.paymentGateways?.primary, (newVal) => {
+  if (newVal) selectedGateway.value = newVal
+})
 
 const fetchAll = async () => {
   loading.value = true
@@ -258,7 +280,8 @@ const initiateUnitPurchase = async () => {
           amount: unitsToBuy.value * project.value.unit_price
         }
       ],
-      callback_url: window.location.origin + '/payment-callback'
+      gateway: selectedGateway.value,
+      callback_url: window.location.origin + '/payment-callback?gateway=' + selectedGateway.value
     }
 
     const { data } = await axios.post('/api/initiate-payment', payload)

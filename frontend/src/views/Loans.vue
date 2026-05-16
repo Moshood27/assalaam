@@ -289,9 +289,9 @@
                 <select class="input w-full sm:w-36" v-model="paySource[loan.id]" :disabled="loan.is_completed || paying[loan.id]">
                   <option value="auto">Auto</option>
                   <option value="wallet">Wallet</option>
-                  <option value="paystack">Paystack</option>
-                  <option value="flutterwave">Flutterwave</option>
-                  <option value="monnify">Monnify</option>
+                  <option v-for="gw in enabledGateways" :key="gw" :value="gw">
+                    {{ gw.charAt(0).toUpperCase() + gw.slice(1) }}
+                  </option>
                 </select>
                 <button class="btn-primary w-full sm:w-auto" :disabled="loan.is_completed || paying[loan.id]" @click="pay(loan)">
                   <span v-if="!paying[loan.id]">Make payment</span>
@@ -300,10 +300,10 @@
               </div>
             </div>
             <p class="text-[10px] text-slate-500">
-              Auto uses your wallet if balance covers the amount, otherwise initializes Paystack.
+              Auto uses your wallet if balance covers the amount, otherwise initializes {{ primaryGatewayName }}.
             </p>
             <p class="text-[10px] text-slate-500" v-if="(paySource[loan.id] || 'auto') !== 'wallet'">
-              Note: Online gateway payments require a valid email address. If you see an "Invalid Email Address" error from Paystack, please update your profile email to a supported address and try again, or use Wallet if you have sufficient balance.
+              Note: Online gateway payments require a valid email address. If you see an "Invalid Email Address" error, please update your profile email to a supported address and try again, or use Wallet if you have sufficient balance.
             </p>
             <p v-if="payMsg[loan.id]" class="text-xs text-emerald-700">{{ payMsg[loan.id] }}</p>
             <p v-if="payErr[loan.id]" class="text-xs text-rose-700">{{ payErr[loan.id] }}</p>
@@ -377,6 +377,14 @@ const creating = ref(false)
 const createMsg = ref('')
 const createErr = ref('')
 
+const enabledGateways = computed(() => {
+  const gws = appStatusStore.paymentGateways || {}
+  return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
+})
+const primaryGatewayName = computed(() => {
+  const p = appStatusStore.paymentGateways?.primary || 'paystack'
+  return p.charAt(0).toUpperCase() + p.slice(1)
+})
 const hasAnyLoan = computed(() => (loans.value || []).length > 0)
 const hasOpenLoan = computed(() => (loans.value || []).some(l => ['pending', 'active', 'defaulted'].includes(l?.status) && !l?.is_completed))
 const hasCompletedLoan = computed(() => (loans.value || []).some(l => l?.is_completed || l?.status === 'completed'))

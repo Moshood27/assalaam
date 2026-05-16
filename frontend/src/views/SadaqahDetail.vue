@@ -137,25 +137,18 @@
                 Wallet
               </button>
               <button 
-                @click="initiateContribution('paystack')"
+                v-for="gw in enabledGateways" :key="gw"
+                @click="initiateContribution(gw)"
                 :disabled="submitting || !form.amount"
-                class="bg-emerald-600 text-white rounded-2xl py-4 font-black text-[9px] uppercase tracking-tighter hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50"
+                :class="[
+                    'rounded-2xl py-4 font-black text-[9px] uppercase tracking-tighter active:scale-95 transition-all disabled:opacity-50',
+                    gw === 'paystack' ? 'bg-emerald-600 text-white hover:bg-emerald-700' :
+                    gw === 'flutterwave' ? 'bg-teal-600 text-white hover:bg-teal-700' :
+                    gw === 'monnify' ? 'bg-sky-600 text-white hover:bg-sky-700' :
+                    'bg-slate-600 text-white hover:bg-slate-700'
+                ]"
               >
-                Paystack
-              </button>
-              <button 
-                @click="initiateContribution('flutterwave')"
-                :disabled="submitting || !form.amount"
-                class="bg-teal-600 text-white rounded-2xl py-4 font-black text-[9px] uppercase tracking-tighter hover:bg-teal-700 active:scale-95 transition-all disabled:opacity-50"
-              >
-                Flutterwave
-              </button>
-              <button 
-                @click="initiateContribution('monnify')"
-                :disabled="submitting || !form.amount"
-                class="bg-sky-600 text-white rounded-2xl py-4 font-black text-[9px] uppercase tracking-tighter hover:bg-sky-700 active:scale-95 transition-all disabled:opacity-50"
-              >
-                Monnify
+                {{ gw }}
               </button>
             </div>
             <p class="text-[9px] text-center text-slate-500 mt-4 px-4 uppercase tracking-tighter leading-tight">
@@ -177,17 +170,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http.js'
 import {useRoute} from "vue-router";
+import { useAppStatusStore } from '../stores/appStatus'
 
 const route = useRoute()
+const appStatusStore = useAppStatusStore()
 const project = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
 const balance = ref(null)
+
+const enabledGateways = computed(() => {
+  const gws = appStatusStore.paymentGateways || {}
+  return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
+})
 
 const form = ref({
   amount: '',
@@ -224,7 +224,7 @@ const initiateContribution = async (gateway) => {
       amount: form.value.amount,
       is_anonymous: form.value.is_anonymous,
       gateway: gateway,
-      callback_url: window.location.origin + '/payment-callback'
+      callback_url: window.location.origin + '/payment-callback?gateway=' + gateway
     })
     
     if (data.authorization_url) {

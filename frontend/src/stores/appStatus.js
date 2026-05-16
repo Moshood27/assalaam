@@ -10,6 +10,13 @@ export const useAppStatusStore = defineStore('appStatus', {
     isUpdateAvailable: false,
     currentVersion: '',
     playStoreUrl: '',
+    paymentGateways: {
+      paystack: true,
+      flutterwave: true,
+      monnify: true,
+      opay: true,
+      primary: 'paystack'
+    },
     features: {}
   }),
   actions: {
@@ -25,6 +32,9 @@ export const useAppStatusStore = defineStore('appStatus', {
       this.isUpdateAvailable = status.isUpdateAvailable
       this.currentVersion = status.currentVersion
       this.playStoreUrl = status.playStoreUrl
+      if (status.paymentGateways) {
+        this.paymentGateways = status.paymentGateways
+      }
     }
   }
 })

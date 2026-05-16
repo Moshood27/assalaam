@@ -276,8 +276,8 @@
           <div class="space-y-4">
             <div>
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Payment Gateway</label>
-              <div class="grid grid-cols-3 gap-2 mb-4">
-                <button v-for="gw in ['paystack', 'flutterwave', 'monnify']" :key="gw"
+              <div class="grid grid-cols-2 gap-2 mb-4">
+                <button v-for="gw in enabledGateways" :key="gw"
                         @click="selectedGateway = gw"
                         :class="selectedGateway === gw ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-slate-50 text-slate-600 border-slate-100'"
                         class="py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all">
@@ -618,7 +618,14 @@ const { notice, showNotice, closeNotice } = useNotice()
 const { hideBalances } = useBalanceVisibility()
 
 const activeTab = ref('overview')
-const selectedGateway = ref('paystack')
+const enabledGateways = computed(() => {
+  const gws = appStatusStore.paymentGateways || {}
+  return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
+})
+const selectedGateway = ref(appStatusStore.paymentGateways?.primary || 'paystack')
+watch(() => appStatusStore.paymentGateways?.primary, (newVal) => {
+  if (newVal) selectedGateway.value = newVal
+})
 const searchQuery = ref('')
 
 const wallet = ref({ balance: 0, virtual_account: {}, admin_charge_balance: 0 })
@@ -810,7 +817,10 @@ const initTopup = async () => {
   try {
     loading.value = true
         // Build callback URL only for web; on native apps, omit to avoid invalid localhost redirects
-    const cb = !isNative ? (new URL(router.resolve({ name: 'wallet.callback' }).href, window.location.origin).toString()) : null
+    let cb = !isNative ? (new URL(router.resolve({ name: 'wallet.callback' }).href, window.location.origin).toString()) : null
+    if (cb) {
+      cb += (cb.includes('?') ? '&' : '?') + 'gateway=' + selectedGateway.value
+    }
     const payload = { 
       amount: Number(topupAmount.value),
       gateway: selectedGateway.value

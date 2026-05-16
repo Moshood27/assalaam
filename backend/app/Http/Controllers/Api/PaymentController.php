@@ -315,7 +315,7 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'reference' => 'required|string',
-            'gateway' => 'nullable|in:paystack,flutterwave,monnify',
+            'gateway' => 'nullable|in:paystack,flutterwave,monnify,opay',
         ]);
 
         $user = $request->user();
@@ -332,7 +332,7 @@ class PaymentController extends Controller
             }
         }
 
-        if ($gateway === 'flutterwave' || $gateway === 'monnify') {
+        if ($gateway === 'flutterwave' || $gateway === 'monnify' || $gateway === 'opay') {
             // For now, rely on webhook (already implemented). Return pending status.
             return response()->json(['status' => 'pending', 'message' => 'Awaiting confirmation'], 202);
         }

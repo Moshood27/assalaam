@@ -29,6 +29,13 @@ class AuthController extends Controller
             'system_announcement' => Setting::get('system_announcement', config('cooperative.system_announcement')),
             'play_store_url' => Setting::get('play_store_url', config('cooperative.play_store_url')),
             'app_name' => config('app.name'),
+            'payment_gateways' => [
+                'paystack' => (bool) Setting::get('gateway_paystack_enabled', true),
+                'flutterwave' => (bool) Setting::get('gateway_flutterwave_enabled', true),
+                'monnify' => (bool) Setting::get('gateway_monnify_enabled', true),
+                'opay' => (bool) Setting::get('gateway_opay_enabled', true),
+                'primary' => Setting::get('primary_payment_gateway', 'paystack'),
+            ],
         ]);
     }
 

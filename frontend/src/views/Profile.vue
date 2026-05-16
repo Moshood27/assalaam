@@ -611,7 +611,10 @@ const uploading = ref(false)
 const fileInput = ref(null)
 
 // Bank details (verification & save)
-const bankForm = ref({ bank_code: '', account_number: '', gateway: 'paystack' })
+const bankForm = ref({ bank_code: '', account_number: '', gateway: appStatusStore.paymentGateways?.primary || 'paystack' })
+watch(() => appStatusStore.paymentGateways?.primary, (newVal) => {
+  if (newVal) bankForm.value.gateway = newVal
+})
 const bankErrors = ref({})
 const bankBusy = ref(false)
 const bankMessage = ref('')

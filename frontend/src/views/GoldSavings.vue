@@ -230,7 +230,13 @@
               <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Payment Method</label>
               <div class="grid grid-cols-2 gap-2">
                 <button 
-                  v-for="gw in ['wallet', 'paystack', 'flutterwave', 'monnify']" 
+                  @click="zakatForm.gateway = 'wallet'"
+                  :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === 'wallet' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-600']"
+                >
+                  WALLET
+                </button>
+                <button 
+                  v-for="gw in enabledGateways" 
                   :key="gw"
                   @click="zakatForm.gateway = gw"
                   :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === gw ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-600']"
@@ -428,7 +434,11 @@ const loading = ref(false)
 const activeTab = ref('buy')
 const showZakatReport = ref(false)
 const zakatHistory = ref([])
-const zakatForm = ref({ pin: '', gateway: 'wallet' })
+const enabledGateways = computed(() => {
+  const gws = appStatusStore.paymentGateways || {}
+  return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
+})
+const zakatForm = ref({ pin: '', gateway: appStatusStore.paymentGateways?.primary || 'wallet' })
 const goldData = ref({
   gold_balance: 0,
   base_price: 0,
@@ -591,9 +601,12 @@ const handlePayZakat = async () => {
   }
   if (!confirm(`Pay ₦${formatMoney(goldData.value.zakat.report.zakat_due)} Zakat?`)) return
   loading.value = true
+  const gateway = zakatForm.value.gateway
+  const callback_url = `${window.location.origin}/payment-callback?gateway=${gateway}`
   try {
     const res = await axios.post('/api/zakat/pay', {
-      gateway: zakatForm.value.gateway,
+      gateway,
+      callback_url,
       pin: zakatForm.value.pin
     })
 
@@ -620,9 +633,12 @@ const handlePayFitr = async () => {
   }
   if (!confirm(`Pay ₦${formatMoney(goldData.value.zakat.report.fitr_amount)} Zakat Al-Fitr?`)) return
   loading.value = true
+  const gateway = zakatForm.value.gateway
+  const callback_url = `${window.location.origin}/payment-callback?gateway=${gateway}`
   try {
     const res = await axios.post('/api/zakat/pay-fitr', {
-      gateway: zakatForm.value.gateway,
+      gateway,
+      callback_url,
       pin: zakatForm.value.pin
     })
 

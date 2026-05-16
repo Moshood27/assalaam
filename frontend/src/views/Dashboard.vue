@@ -999,7 +999,9 @@ const checkZakat = async () => {
     const ok = await modal.confirm(`Your Zakat for this year is ${currency} ${due}. Would you like to pay now?`, { confirmText: 'Pay Now' })
     if (!ok) return
 
-    const payResp = await axios.post('/api/zakat/pay', {}, { headers: { Authorization: `Bearer ${token}` } })
+    const gateway = appStatusStore.paymentGateways?.primary || 'paystack'
+    const callback_url = `${window.location.origin}${basePath}payment-callback?gateway=${gateway}`
+    const payResp = await axios.post('/api/zakat/pay', { gateway, callback_url }, { headers: { Authorization: `Bearer ${token}` } })
     const url = payResp.data?.checkout_url || payResp.data?.authorization_url
     if (url) {
       window.location.assign(url)
@@ -1022,7 +1024,9 @@ const payZakatFitr = async () => {
     if (!ok) return
 
     const token = localStorage.getItem('token')
-    const { data } = await axios.post('/api/zakat/pay-fitr', {}, { headers: { Authorization: `Bearer ${token}` } })
+    const gateway = appStatusStore.paymentGateways?.primary || 'paystack'
+    const callback_url = `${window.location.origin}${basePath}payment-callback?gateway=${gateway}`
+    const { data } = await axios.post('/api/zakat/pay-fitr', { gateway, callback_url }, { headers: { Authorization: `Bearer ${token}` } })
     const url = data?.checkout_url
     if (url) {
       window.location.assign(url)

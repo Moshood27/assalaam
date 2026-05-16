@@ -189,15 +189,16 @@
           </button>
 
           <button 
-            @click="payViaCard"
+            v-for="gw in enabledGateways" :key="gw"
+            @click="payViaGateway(gw)"
             :disabled="paying"
             class="w-full flex items-center justify-between bg-white border-2 border-slate-100 p-5 rounded-3xl active:scale-95 transition-all disabled:opacity-50"
           >
             <div class="flex items-center gap-3">
               <div class="text-xl">🏦</div>
               <div class="text-left">
-                <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Pay via Card/Bank</p>
-                <p class="text-[10px] text-slate-400">Paystack / Flutterwave</p>
+                <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Pay via {{ gw }}</p>
+                <p class="text-[10px] text-slate-400">Secure online payment</p>
               </div>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-slate-200"><path d="m9 18 6-6-6-6"/></svg>
@@ -246,14 +247,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from '../http.js'
+import { useAppStatusStore } from '../stores/appStatus'
 
 const route = useRoute()
 const router = useRouter()
+const appStatusStore = useAppStatusStore()
 const group = ref({})
 const stats = ref({})
 const recentContributions = ref([])
@@ -268,6 +271,11 @@ const userBalance = ref(0)
 const showContributeModal = ref(false)
 const showInviteModal = ref(false)
 const inviteIdentifier = ref('')
+
+const enabledGateways = computed(() => {
+  const gws = appStatusStore.paymentGateways || {}
+  return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
+})
 
 const fetchData = async () => {
   loading.value = true
@@ -387,7 +395,7 @@ const payViaWallet = async () => {
   }
 }
 
-const payViaCard = async () => {
+const payViaGateway = async (gateway) => {
   paying.value = true
   try {
     const { data: contribData } = await axios.get(`/api/savings-groups/${route.params.id}/contribution-data`)
@@ -404,11 +412,12 @@ const payViaCard = async () => {
 
     const { data } = await axios.post('/api/initiate-payment', {
       items: [item],
-      callback_url: window.location.origin + '/payment-callback'
+      gateway: gateway,
+      callback_url: window.location.origin + '/payment-callback?gateway=' + gateway
     })
     
-    if (data.authorization_url) {
-      window.location.href = data.authorization_url
+    if (data.authorization_url || data.checkout_url) {
+      window.location.href = data.authorization_url || data.checkout_url
     } else {
        alert('Failed to initiate payment')
     }
