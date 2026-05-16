@@ -15,11 +15,12 @@ class ProcessWebhookJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
-     * The name of the queue the job should be sent to.
-     *
-     * @var string|null
+     * Create a new job instance.
      */
-    public $queue = 'webhooks';
+    public function __construct(public WebhookCall $webhookCall)
+    {
+        $this->onQueue('webhooks');
+    }
 
     /**
      * The number of times the job may be attempted.
@@ -41,14 +42,6 @@ class ProcessWebhookJob implements ShouldQueue
      * @var int
      */
     public $timeout = 60;
-
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(public WebhookCall $webhookCall)
-    {
-        //
-    }
 
     /**
      * Execute the job.
