@@ -14,6 +14,7 @@ class WebhookCall extends Model
 
     protected $casts = [
         'payload' => 'array',
+        'headers' => 'array',
         'exception' => 'array',
         'processed_at' => 'datetime',
     ];
