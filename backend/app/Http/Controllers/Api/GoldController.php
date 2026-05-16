@@ -57,7 +57,7 @@ class GoldController extends Controller
             'zakat' => $performance['zakat'],
             'price_history' => $priceHistory,
             'features' => [
-                'gold-savings-beta' => Feature::active('gold-savings-beta'),
+                'gold-savings-beta' => Feature::for('global')->active('gold-savings-beta'),
             ]
         ]);
     }
@@ -132,7 +132,7 @@ class GoldController extends Controller
 
     public function buy(Request $request)
     {
-        if (Feature::inactive('gold-savings-beta')) {
+        if (Feature::for('global')->inactive('gold-savings-beta')) {
             return response()->json(['message' => 'Digital Gold Savings is currently in private beta and not available for your account.'], 403);
         }
 
@@ -218,7 +218,7 @@ class GoldController extends Controller
 
     public function sell(Request $request)
     {
-        if (Feature::inactive('gold-savings-beta')) {
+        if (Feature::for('global')->inactive('gold-savings-beta')) {
             return response()->json(['message' => 'Digital Gold Savings is currently in private beta and not available for your account.'], 403);
         }
 

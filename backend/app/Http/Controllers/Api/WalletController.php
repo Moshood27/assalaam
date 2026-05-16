@@ -176,8 +176,8 @@ class WalletController extends Controller
                 'max_amount' => (float) Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount', 500)),
             ],
             'features' => [
-                'withdrawals-enabled' => Feature::active('withdrawals-enabled'),
-                'payment-provider-failover' => Feature::active('payment-provider-failover'),
+                'withdrawals-enabled' => Feature::for('global')->active('withdrawals-enabled'),
+                'payment-provider-failover' => Feature::for('global')->active('payment-provider-failover'),
             ],
             'gateways' => [
                 'paystack' => (bool) Setting::get('gateway_paystack_enabled', true),

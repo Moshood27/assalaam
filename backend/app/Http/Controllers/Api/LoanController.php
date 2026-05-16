@@ -125,7 +125,7 @@ class LoanController extends Controller
             'meeting_attendance_count' => $currentMeetings,
             'required_loan_meetings' => $requiredMeetings,
             'features' => [
-                'apply-for-loan' => Feature::active('apply-for-loan'),
+                'apply-for-loan' => Feature::for('global')->active('apply-for-loan'),
             ]
         ]);
         return response()->json($resp);
@@ -136,7 +136,7 @@ class LoanController extends Controller
     {
         $user = $request->user();
 
-        if (Feature::inactive('apply-for-loan')) {
+        if (Feature::for('global')->inactive('apply-for-loan')) {
             return response()->json(['message' => 'Loan applications are currently restricted for your account level or system-wide.'], 403);
         }
 
