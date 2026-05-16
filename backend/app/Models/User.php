@@ -559,6 +559,20 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(ChatRoom::class, 'chat_room_members', 'user_id', 'chat_room_id');
     }
 
+    public function scopeStaff($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('is_admin', true)
+                ->orWhereHas('roles', fn ($rq) => $rq->whereIn('name', ['super_admin', 'Staff', 'Branch Manager', 'Clerk']));
+        });
+    }
+
+    public function scopeMember($query)
+    {
+        return $query->where('is_admin', false)
+            ->whereDoesntHave('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'Staff', 'Branch Manager', 'Clerk']));
+    }
+
     public function isAdmin(): bool
     {
         return $this->is_admin || $this->hasRole('super_admin');

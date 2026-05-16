@@ -294,14 +294,14 @@ class ChatService
 
         foreach ($supportRooms as $roomId) {
             $memberMsg = ChatMessage::where('chat_room_id', $roomId)
-                ->whereHas('user', fn($q) => $q->where('is_staff', false)->where('is_admin', false))
+                ->whereHas('user', fn($q) => $q->member())
                 ->oldest()
                 ->first();
 
             if ($memberMsg) {
                 $staffReply = ChatMessage::where('chat_room_id', $roomId)
                     ->where('created_at', '>', $memberMsg->created_at)
-                    ->whereHas('user', fn($q) => $q->where('is_staff', true)->orWhere('is_admin', true))
+                    ->whereHas('user', fn($q) => $q->staff())
                     ->oldest()
                     ->first();
 
