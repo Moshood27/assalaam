@@ -31,18 +31,20 @@ class Feature extends Model
     {
         if ($value === null) return null;
 
+        // Try JSON decode first as it's the standard for Pennant
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decoded;
+        }
+
+        // Fallback: try unserialize if it's not valid JSON (for legacy/corrupted data)
         try {
             $unserialized = @unserialize($value);
             if ($unserialized !== false || $value === serialize(false)) {
                 return $unserialized;
             }
         } catch (\Throwable $e) {
-            // Fallback to JSON if serialization fails
-        }
-
-        $decoded = json_decode($value, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $decoded;
+            // Fallback to raw value
         }
 
         return $value;
@@ -50,7 +52,7 @@ class Feature extends Model
 
     public function setValueAttribute($value)
     {
-        $this->attributes['value'] = serialize($value);
+        $this->attributes['value'] = json_encode($value);
     }
 
     public const KNOWN_FEATURES = [
