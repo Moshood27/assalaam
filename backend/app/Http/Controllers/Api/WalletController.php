@@ -179,6 +179,12 @@ class WalletController extends Controller
                 'withdrawals-enabled' => Feature::active('withdrawals-enabled'),
                 'payment-provider-failover' => Feature::active('payment-provider-failover'),
             ],
+            'gateways' => [
+                'paystack' => (bool) Setting::get('gateway_paystack_enabled', true),
+                'flutterwave' => (bool) Setting::get('gateway_flutterwave_enabled', true),
+                'monnify' => (bool) Setting::get('gateway_monnify_enabled', true),
+                'opay' => (bool) Setting::get('gateway_opay_enabled', true),
+            ],
         ]);
     }
 
@@ -215,6 +221,10 @@ class WalletController extends Controller
         }
 
         $gateway = strtolower($validated['gateway'] ?? 'paystack');
+
+        if (!Setting::get("gateway_{$gateway}_enabled", true)) {
+            return response()->json(['message' => "The selected payment gateway ($gateway) is currently disabled. Please try another method."], 422);
+        }
 
         // Payment provider failover: If Flutterwave is down, force Paystack
         if ($gateway === 'flutterwave' && Feature::for('global')->active('payment-provider-failover')) {

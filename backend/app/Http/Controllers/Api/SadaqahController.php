@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SadaqahProject;
 use App\Models\SadaqahContribution;
 use App\Models\WalletTransaction;
+use App\Models\Setting;
 use App\Services\MonnifyService;
 use App\Services\OpayService;
 use Illuminate\Http\Request;
@@ -50,6 +51,10 @@ class SadaqahController extends Controller
         $amount = round($validated['amount'], 2);
 
         $gateway = strtolower($request->input('gateway', 'paystack'));
+
+        if ($gateway !== 'wallet' && !Setting::get("gateway_{$gateway}_enabled", true)) {
+            return response()->json(['message' => "The selected payment gateway ($gateway) is currently disabled. Please try another method."], 422);
+        }
 
         if ($gateway === 'wallet') {
             return $this->processWalletContribution($user, $project, $amount, $validated['is_anonymous'] ?? false);

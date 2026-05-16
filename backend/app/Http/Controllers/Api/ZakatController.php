@@ -8,6 +8,7 @@ use App\Models\Scheme;
 use App\Models\SadaqahProject;
 use App\Models\SadaqahContribution;
 use App\Models\WalletTransaction;
+use App\Models\Setting;
 use App\Services\MonnifyService;
 use App\Services\OpayService;
 use App\Services\ZakatService;
@@ -74,6 +75,11 @@ class ZakatController extends Controller
 
         // Handle Internal Wallet Payment
         $gateway = strtolower($request->input('gateway', 'paystack'));
+
+        if ($gateway !== 'wallet' && !Setting::get("gateway_{$gateway}_enabled", true)) {
+            return response()->json(['message' => "The selected payment gateway ($gateway) is currently disabled. Please try another method."], 422);
+        }
+
         if ($gateway === 'wallet') {
             if (!$user->verifyTransactionPin($request->input('pin'))) {
                 return response()->json(['message' => 'Invalid transaction PIN'], 403);
@@ -239,6 +245,11 @@ class ZakatController extends Controller
 
         // Handle Internal Wallet Payment
         $gateway = strtolower($request->input('gateway', 'paystack'));
+
+        if ($gateway !== 'wallet' && !Setting::get("gateway_{$gateway}_enabled", true)) {
+            return response()->json(['message' => "The selected payment gateway ($gateway) is currently disabled. Please try another method."], 422);
+        }
+
         if ($gateway === 'wallet') {
             if (!$user->verifyTransactionPin($request->input('pin'))) {
                 return response()->json(['message' => 'Invalid transaction PIN'], 403);

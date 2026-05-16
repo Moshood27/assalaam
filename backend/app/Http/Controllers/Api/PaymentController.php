@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\Scheme;
 use App\Models\Project;
 use App\Models\Contribution;
@@ -145,8 +146,13 @@ class PaymentController extends Controller
             $user->contributions()->create($payloadData);
         }
 
-        // Choose payment gateway: paystack (default) or flutterwave
-        $gateway = strtolower($request->input('gateway', 'paystack'));
+        // Choose payment gateway: use primary if not provided
+        $defaultGateway = Setting::get('primary_payment_gateway', 'paystack');
+        $gateway = strtolower($request->input('gateway', $defaultGateway));
+
+        if (!Setting::get("gateway_{$gateway}_enabled", true)) {
+            return response()->json(['message' => "The selected payment gateway ($gateway) is currently disabled. Please try another method."], 422);
+        }
 
         try {
             if ($gateway === 'monnify') {

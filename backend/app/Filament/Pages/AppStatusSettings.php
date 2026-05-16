@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -37,6 +38,11 @@ class AppStatusSettings extends Page
             'nursing_mother_grace_period_months' => (int) Setting::get('nursing_mother_grace_period_months', 3),
             'wallet_maintenance_charge_percentage' => Setting::get('wallet_maintenance_charge_percentage', config('cooperative.wallet.maintenance_charge.percentage')),
             'wallet_maintenance_charge_max' => Setting::get('wallet_maintenance_charge_max', config('cooperative.wallet.maintenance_charge.max_amount')),
+            'gateway_paystack_enabled' => (bool) Setting::get('gateway_paystack_enabled', true),
+            'gateway_flutterwave_enabled' => (bool) Setting::get('gateway_flutterwave_enabled', true),
+            'gateway_monnify_enabled' => (bool) Setting::get('gateway_monnify_enabled', true),
+            'gateway_opay_enabled' => (bool) Setting::get('gateway_opay_enabled', true),
+            'primary_payment_gateway' => Setting::get('primary_payment_gateway', 'paystack'),
         ]);
     }
 
@@ -124,6 +130,27 @@ class AppStatusSettings extends Page
                             ->prefix('₦')
                             ->helperText('The maintenance charge will be capped at this amount.'),
                     ]),
+                Section::make('Payment Gateways')
+                    ->description('Enable or disable payment gateways globally and select the primary provider.')
+                    ->schema([
+                        Select::make('primary_payment_gateway')
+                            ->label('Primary Payment Gateway')
+                            ->options([
+                                'paystack' => 'Paystack',
+                                'flutterwave' => 'Flutterwave',
+                                'monnify' => 'Monnify',
+                                'opay' => 'Opay',
+                            ])
+                            ->required(),
+                        Toggle::make('gateway_paystack_enabled')
+                            ->label('Enable Paystack'),
+                        Toggle::make('gateway_flutterwave_enabled')
+                            ->label('Enable Flutterwave'),
+                        Toggle::make('gateway_monnify_enabled')
+                            ->label('Enable Monnify'),
+                        Toggle::make('gateway_opay_enabled')
+                            ->label('Enable Opay'),
+                    ])->columns(2),
             ])
             ->statePath('data');
     }
