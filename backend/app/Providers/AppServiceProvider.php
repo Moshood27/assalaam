@@ -28,42 +28,67 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Define Feature Flags
-        Feature::define('withdrawals-enabled', fn () => true);
-        Feature::define('payment-provider-failover', fn () => false);
-        Feature::define('maintenance-mode-wallets', fn () => false);
+        Feature::define('withdrawals-enabled', function ($scope) {
+            if ($scope instanceof User) {
+                return Feature::for('global')->active('withdrawals-enabled');
+            }
+            return true; // Default to enabled
+        });
+
+        Feature::define('payment-provider-failover', function ($scope) {
+            if ($scope instanceof User) {
+                return Feature::for('global')->active('payment-provider-failover');
+            }
+            return false; // Default to normal operation (no failover)
+        });
+
+        Feature::define('maintenance-mode-wallets', function ($scope) {
+            if ($scope instanceof User) {
+                return Feature::for('global')->active('maintenance-mode-wallets');
+            }
+            return false; // Default to normal operation (no maintenance)
+        });
+
         Feature::define('gold-savings-beta', function ($scope) {
             if ($scope instanceof User) {
-                if (Feature::for('global')->inactive('gold-savings-beta')) {
-                    return false;
-                }
-                return ($scope->attaqwa_score ?? 0) > 80;
+                return Feature::for('global')->active('gold-savings-beta');
             }
-            return true;
+            return true; // Default to enabled as requested
         });
+
         Feature::define('apply-for-loan', function ($scope) {
             if ($scope instanceof User) {
-                if (Feature::for('global')->inactive('apply-for-loan')) {
-                    return false;
-                }
-                return $scope->is_verified && ($scope->attaqwa_score ?? 0) > 40;
+                return Feature::for('global')->active('apply-for-loan');
             }
-            return true;
+            return true; // Default to enabled as requested
         });
-        Feature::define('shura-voting-active', fn () => false);
-        Feature::define('prayer-time-quiet-mode', fn () => false);
+
+        Feature::define('shura-voting-active', function ($scope) {
+            if ($scope instanceof User) {
+                return Feature::for('global')->active('shura-voting-active');
+            }
+            return false; // Event-based: default to off
+        });
+
+        Feature::define('prayer-time-quiet-mode', function ($scope) {
+            if ($scope instanceof User) {
+                return Feature::for('global')->active('prayer-time-quiet-mode');
+            }
+            return false; // Event-based: default to off
+        });
+
         Feature::define('gender-segregated-features', function ($scope) {
             if ($scope instanceof User) {
-                // Example: Only show if user gender matches or is not strictly segregated
-                return true;
+                return Feature::for('global')->active('gender-segregated-features');
             }
             return true;
         });
+
         Feature::define('show-flw-balance', function ($scope) {
             if ($scope instanceof User) {
-                if (Feature::for('global')->inactive('show-flw-balance')) {
-                    return false;
-                }
+                return Feature::for('global')->active('show-flw-balance');
             }
+            // Fallback to compliance status for global/other if not in DB
             return config('services.flutterwave.compliance_status') === 'approved';
         });
 

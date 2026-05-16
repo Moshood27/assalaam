@@ -27,11 +27,11 @@ class Feature extends Model
         ],
         'gold-savings-beta' => [
             'label' => 'Gold Savings Beta',
-            'description' => 'Enable the new Gold Savings feature for eligible members (Attaqwa Score > 80).',
+            'description' => 'Enable the new Gold Savings feature. When active, it is available to all members by default.',
         ],
         'apply-for-loan' => [
             'label' => 'Apply for Loan',
-            'description' => 'Enable loan application interface. Can be restricted to verified members with good scores.',
+            'description' => 'Enable loan application interface for all members by default.',
         ],
         'shura-voting-active' => [
             'label' => 'Shura Voting Active',

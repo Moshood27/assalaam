@@ -58,7 +58,7 @@ class FeatureToggleResource extends Resource
                             ->afterStateHydrated(function (Forms\Components\Toggle $component, $state) {
                                 $component->state((bool) $state);
                             })
-                            ->dehydrateStateUsing(fn ($state) => $state ? 'true' : 'false'),
+                            ->dehydrateStateUsing(fn ($state) => (bool) $state),
                     ])->columns(2),
             ]);
     }
@@ -79,7 +79,7 @@ class FeatureToggleResource extends Resource
                 ToggleColumn::make('value')
                     ->label('Status')
                     ->afterStateUpdated(function (Feature $record, $state) {
-                        $record->update(['value' => $state ? 'true' : 'false']);
+                        $record->update(['value' => (bool) $state]);
                     }),
                 TextColumn::make('updated_at')
                     ->dateTime()
