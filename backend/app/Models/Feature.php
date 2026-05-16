@@ -8,9 +8,31 @@ class Feature extends Model
 {
     protected $fillable = ['name', 'label', 'description', 'scope', 'value'];
 
-    protected $casts = [
-        'value' => 'json',
-    ];
+    public function getValueAttribute($value)
+    {
+        if ($value === null) return null;
+
+        try {
+            $unserialized = @unserialize($value);
+            if ($unserialized !== false || $value === serialize(false)) {
+                return $unserialized;
+            }
+        } catch (\Throwable $e) {
+            // Fallback to JSON if serialization fails
+        }
+
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decoded;
+        }
+
+        return $value;
+    }
+
+    public function setValueAttribute($value)
+    {
+        $this->attributes['value'] = serialize($value);
+    }
 
     public const KNOWN_FEATURES = [
         'withdrawals-enabled' => [

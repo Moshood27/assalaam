@@ -27,72 +27,38 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Define Feature Flags
-        Feature::define('withdrawals-enabled', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('withdrawals-enabled');
-            }
-            return true; // Default to enabled
-        });
+        // Define Feature Flags with robust permissive defaults and global overrides
+        $defineFeature = function ($name, $default = true) {
+            Feature::define($name, function ($scope) use ($name, $default) {
+                // If there's no record for the current scope, check for a global override
+                if ($scope !== 'global') {
+                    $global = \App\Models\Feature::where('name', $name)->where('scope', 'global')->first();
+                    if ($global !== null) {
+                        return (bool) $global->value;
+                    }
+                }
+                return $default;
+            });
+        };
 
-        Feature::define('payment-provider-failover', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('payment-provider-failover');
-            }
-            return false; // Default to normal operation (no failover)
-        });
-
-        Feature::define('maintenance-mode-wallets', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('maintenance-mode-wallets');
-            }
-            return false; // Default to normal operation (no maintenance)
-        });
-
-        Feature::define('gold-savings-beta', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('gold-savings-beta');
-            }
-            return true; // Default to enabled as requested
-        });
-
-        Feature::define('apply-for-loan', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('apply-for-loan');
-            }
-            return true; // Default to enabled as requested
-        });
-
-        Feature::define('shura-voting-active', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('shura-voting-active');
-            }
-            return false; // Event-based: default to off
-        });
-
-        Feature::define('prayer-time-quiet-mode', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('prayer-time-quiet-mode');
-            }
-            return false; // Event-based: default to off
-        });
-
-        Feature::define('gender-segregated-features', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('gender-segregated-features');
-            }
-            return true;
-        });
+        $defineFeature('withdrawals-enabled', true);
+        $defineFeature('payment-provider-failover', false);
+        $defineFeature('maintenance-mode-wallets', false);
+        $defineFeature('gold-savings-beta', true);
+        $defineFeature('apply-for-loan', true);
+        $defineFeature('shura-voting-active', false);
+        $defineFeature('prayer-time-quiet-mode', false);
+        $defineFeature('gender-segregated-features', true);
 
         Feature::define('show-flw-balance', function ($scope) {
-            if ($scope instanceof User) {
-                return Feature::for('global')->active('show-flw-balance');
+            if ($scope !== 'global') {
+                $global = \App\Models\Feature::where('name', 'show-flw-balance')->where('scope', 'global')->first();
+                if ($global !== null) return (bool) $global->value;
             }
-            // Fallback to compliance status for global/other if not in DB
             return config('services.flutterwave.compliance_status') === 'approved';
         });
 
-        // Register Filament Breezy components globally to avoid ComponentNotFoundException during Livewire updates
+        // Register Filament Breezy components globally
         \Livewire\Livewire::component('personal_info', \Jeffgreco13\FilamentBreezy\Livewire\PersonalInfo::class);
         \Livewire\Livewire::component('update_password', \Jeffgreco13\FilamentBreezy\Livewire\UpdatePassword::class);
         \Livewire\Livewire::component('two_factor_authentication', \Jeffgreco13\FilamentBreezy\Livewire\TwoFactorAuthentication::class);
