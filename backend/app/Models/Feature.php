@@ -34,6 +34,9 @@ class Feature extends Model
         // Try JSON decode first as it's the standard for Pennant
         $decoded = json_decode($value, true);
         if (json_last_error() === JSON_ERROR_NONE) {
+            // Handle cases where the JSON is just a string "false" or "0"
+            if (is_string($decoded) && (strtolower($decoded) === 'false' || $decoded === '0')) return false;
+            if (is_string($decoded) && (strtolower($decoded) === 'true' || $decoded === '1')) return true;
             return $decoded;
         }
 
@@ -45,6 +48,12 @@ class Feature extends Model
             }
         } catch (\Throwable $e) {
             // Fallback to raw value
+        }
+
+        // Final safety check for raw boolean-ish strings
+        if (is_string($value)) {
+            if (strtolower($value) === 'false' || $value === '0') return false;
+            if (strtolower($value) === 'true' || $value === '1') return true;
         }
 
         return $value;

@@ -30,14 +30,16 @@ class AppServiceProvider extends ServiceProvider
         // Define Feature Flags with robust permissive defaults and global overrides
         $defineFeature = function ($name, $default = true) {
             Feature::define($name, function ($scope) use ($name, $default) {
-                // If there's no record for the current scope, check for a global override
-                if ($scope !== 'global') {
-                    $global = \App\Models\Feature::where('name', $name)->where('scope', 'global')->first();
-                    if ($global !== null) {
-                        return (bool) $global->value;
-                    }
+                // Check for a global override in the database
+                $global = \App\Models\Feature::where('name', $name)->where('scope', 'global')->first();
+                if ($global !== null) {
+                    $val = $global->value;
+                    // Use filter_var to handle strings like "false", "0", etc. correctly
+                    return filter_var($val, FILTER_VALIDATE_BOOLEAN);
                 }
-                return $default;
+
+                // Fallback to default if no global toggle exists
+                return is_callable($default) ? $default($scope) : $default;
             });
         };
 
@@ -46,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
         $defineFeature('maintenance-mode-wallets', false);
         $defineFeature('gold-savings-beta', true);
         $defineFeature('apply-for-loan', true);
-        $defineFeature('shura-voting-active', false);
+        $defineFeature('shura-voting-active', fn() => \App\Models\AgmSession::where('status', 'open')->exists());
         $defineFeature('prayer-time-quiet-mode', false);
         $defineFeature('gender-segregated-features', true);
 
