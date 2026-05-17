@@ -592,6 +592,20 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasAnyRole(['Audit Committee', 'Investment Committee', 'Credit Committee']) || $this->isBoardMember();
     }
 
+    public function scopeStaff($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('is_admin', true)
+              ->orWhereHas('roles', fn ($rq) => $rq->whereIn('name', ['super_admin', 'Staff', 'Branch Manager', 'Clerk']));
+        });
+    }
+
+    public function scopeMember($query)
+    {
+        return $query->where('is_admin', false)
+            ->whereDoesntHave('roles', fn ($rq) => $rq->whereIn('name', ['super_admin', 'Staff', 'Branch Manager', 'Clerk']));
+    }
+
     public function supportMessages()
     {
         return $this->hasMany(SupportMessage::class);
