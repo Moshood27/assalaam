@@ -221,7 +221,7 @@ class AdminReportsController extends Controller
 
         $otherColumns = [
             'building_balance', 'development_fund_balance', 'agm_balance',
-            'loan_repayment_balance', 'fine_balance', 'welfare_balance',
+            'fine_balance', 'welfare_balance',
             'lateness_balance', 'stationery_balance', 'loan_form_balance',
             'others_balance', 'id_card_balance', 'emergency_balance',
             'entrance_balance', 'h_savings_balance', 'special_savings_balance', 'investment_balance',

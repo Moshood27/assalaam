@@ -209,7 +209,6 @@ class DashboardController extends Controller
                                   (float) $user->building_balance +
                                   (float) $user->development_fund_balance +
                                   (float) $user->agm_balance +
-                                  (float) $user->loan_repayment_balance +
                                   (float) $user->fine_balance +
                                   (float) $user->welfare_balance +
                                   (float) $user->lateness_balance +
@@ -231,7 +230,6 @@ class DashboardController extends Controller
                     'Building' => (float) $user->building_balance,
                     'Development' => (float) $user->development_fund_balance,
                     'AGM' => (float) $user->agm_balance,
-                    'Loan Repayment' => (float) $user->loan_repayment_balance,
                     'Fine' => (float) $user->fine_balance,
                     'Welfare' => (float) $user->welfare_balance,
                     'Lateness' => (float) $user->lateness_balance,

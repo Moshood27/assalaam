@@ -51,10 +51,44 @@ class Contribution extends Model
         static::created(function (self $model) {
             // Sync user scheme balance if successful
             try {
-                if ($model->status === 'success' && $model->scheme && $model->category !== 'fine') {
+                if ($model->status === 'success' && $model->scheme && $model->category !== 'fine' && $model->scheme->name !== 'Loan Repayment') {
                     $model->user->syncSchemeBalance($model->scheme->name);
                 }
             } catch (\Throwable $e) {}
+
+            // Special handling for Loan Repayment scheme
+            if ($model->status === 'success' && $model->scheme && $model->scheme->name === 'Loan Repayment') {
+                try {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($model) {
+                        $user = $model->user;
+                        $loan = QardHasan::where('user_id', $user->id)
+                            ->whereIn('status', ['active', 'defaulted'])
+                            ->orderBy('created_at', 'asc')
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($loan) {
+                            if (!QardHasanRepayment::where('reference', $model->reference)->exists()) {
+                                QardHasanRepayment::create([
+                                    'qard_hasan_id' => $loan->id,
+                                    'amount' => $model->amount,
+                                    'reference' => $model->reference,
+                                    'status' => 'success',
+                                    'paid_at' => $model->updated_at ?? now(),
+                                ]);
+
+                                $loan->paid_amount = (float) $loan->paid_amount + (float) $model->amount;
+                                if ($loan->paid_amount >= $loan->principal_amount) {
+                                    $loan->status = 'completed';
+                                }
+                                $loan->save();
+                            }
+                        }
+                    });
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to process loan repayment from contribution (created): " . $e->getMessage());
+                }
+            }
 
             // Special handling for Fine category
             if ($model->status === 'success' && $model->category === 'fine') {
@@ -77,7 +111,8 @@ class Contribution extends Model
             }
 
             // Record in Ledger if successful on creation (typical for migration)
-            if ($model->status === 'success' && !$model->ledger_journal_id) {
+            // Skip for Loan Repayment scheme as it's handled via QardHasanRepayment
+            if ($model->status === 'success' && !$model->ledger_journal_id && ($model->scheme?->name !== 'Loan Repayment')) {
                 try {
                     $ledger = app(\App\Services\LedgerService::class);
                     $journal = $model->category === 'fine'
@@ -120,9 +155,9 @@ class Contribution extends Model
             // When a contribution tied to a project is marked successful, create a ProjectInvestment once
             try {
                 if ($model->status === 'success' && ($model->wasChanged('status') || $model->wasChanged('amount'))) {
-                    // Sync user scheme balance if not a fine
+                    // Sync user scheme balance if not a fine or loan repayment
                     try {
-                        if ($model->scheme && $model->category !== 'fine') {
+                        if ($model->scheme && $model->category !== 'fine' && $model->scheme->name !== 'Loan Repayment') {
                             $model->user->syncSchemeBalance($model->scheme->name);
                         }
                     } catch (\Throwable $e) {}
@@ -147,6 +182,40 @@ class Contribution extends Model
                         } catch (\Throwable $e) {}
                     }
 
+                    // Special handling for Loan Repayment scheme when marked as success
+                    if ($model->scheme && $model->scheme->name === 'Loan Repayment') {
+                        try {
+                            \Illuminate\Support\Facades\DB::transaction(function () use ($model) {
+                                $user = $model->user;
+                                $loan = QardHasan::where('user_id', $user->id)
+                                    ->whereIn('status', ['active', 'defaulted'])
+                                    ->orderBy('created_at', 'asc')
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                if ($loan) {
+                                    if (!QardHasanRepayment::where('reference', $model->reference)->exists()) {
+                                        QardHasanRepayment::create([
+                                            'qard_hasan_id' => $loan->id,
+                                            'amount' => $model->amount,
+                                            'reference' => $model->reference,
+                                            'status' => 'success',
+                                            'paid_at' => $model->updated_at ?? now(),
+                                        ]);
+
+                                        $loan->paid_amount = (float) $loan->paid_amount + (float) $model->amount;
+                                        if ($loan->paid_amount >= $loan->principal_amount) {
+                                            $loan->status = 'completed';
+                                        }
+                                        $loan->save();
+                                    }
+                                }
+                            });
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error("Failed to process loan repayment from contribution (updated): " . $e->getMessage());
+                        }
+                    }
+
                     // Update Attaqwa Score
                     try {
                         app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
@@ -154,8 +223,9 @@ class Contribution extends Model
 
                     // Notify admins and user about successful contribution
                     try {
-                        // Record in Ledger if not already recorded
-                        if (!$model->ledger_journal_id) {
+                        // Record in Ledger if not already recorded and not a loan repayment
+                        // (Loan repayments are recorded separately via QardHasanRepayment hooks)
+                        if (!$model->ledger_journal_id && ($model->scheme?->name !== 'Loan Repayment')) {
                             $ledger = app(\App\Services\LedgerService::class);
                             $journal = $model->category === 'fine'
                                 ? $ledger->recordFine($model)
@@ -211,9 +281,9 @@ class Contribution extends Model
         });
 
         static::deleted(function (self $model) {
-            // Sync user scheme balance if it was successful
+            // Sync user scheme balance if it was successful and not a loan repayment
             try {
-                if ($model->status === 'success' && $model->scheme) {
+                if ($model->status === 'success' && $model->scheme && $model->scheme->name !== 'Loan Repayment') {
                     $model->user->syncSchemeBalance($model->scheme->name);
                 }
             } catch (\Throwable $e) {}
