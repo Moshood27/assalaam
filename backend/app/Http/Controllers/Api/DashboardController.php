@@ -100,17 +100,11 @@ class DashboardController extends Controller
         }
 
         $outstandingLoans = 0;
-        $totalDefaulted = 0;
         if (Schema::hasTable('qard_hasans')) {
-            $loans = $user->qardHasans()
+            $outstandingLoans = (float) $user->qardHasans()
                 ->whereIn('status', ['active', 'pending', 'defaulted'])
-                ->get();
-
-            $outstandingLoans = (float) $loans->where('paid_amount', '<', 'principal_amount')
-                ->sum(fn($l) => (float)$l->principal_amount - (float)$l->paid_amount);
-
-            $totalDefaulted = (float) $loans->whereIn('status', ['active', 'defaulted'])
-                ->sum(fn($l) => $l->getOverdueAmount());
+                ->whereColumn('paid_amount', '<', 'principal_amount')
+                ->sum(DB::raw('principal_amount - paid_amount'));
         }
 
         $goldBasePrice = $this->priceService->getGoldPrice();
@@ -163,7 +157,6 @@ class DashboardController extends Controller
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
-            'total_defaulted' => $totalDefaulted,
             'is_defaulted' => $isDefaulter,
             'wallet_balance' => (float) $user->balance,
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,
@@ -216,6 +209,7 @@ class DashboardController extends Controller
                                   (float) $user->building_balance +
                                   (float) $user->development_fund_balance +
                                   (float) $user->agm_balance +
+                                  (float) $user->loan_repayment_balance +
                                   (float) $user->fine_balance +
                                   (float) $user->welfare_balance +
                                   (float) $user->lateness_balance +
@@ -237,6 +231,7 @@ class DashboardController extends Controller
                     'Building' => (float) $user->building_balance,
                     'Development' => (float) $user->development_fund_balance,
                     'AGM' => (float) $user->agm_balance,
+                    'Loan Repayment' => (float) $user->loan_repayment_balance,
                     'Fine' => (float) $user->fine_balance,
                     'Welfare' => (float) $user->welfare_balance,
                     'Lateness' => (float) $user->lateness_balance,

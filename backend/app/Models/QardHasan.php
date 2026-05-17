@@ -240,7 +240,6 @@ class QardHasan extends Model
         'credited_amount',
         'next_due_at',
         'next_installment_amount',
-        'overdue_amount',
     ];
 
     public function user()
@@ -438,11 +437,6 @@ class QardHasan extends Model
         return min($per, $this->remaining_principal);
     }
 
-    public function getOverdueAmountAttribute(): float
-    {
-        return $this->getOverdueAmount();
-    }
-
     public function getDefaultStartDate(?Carbon $asAt = null): ?Carbon
     {
         $asAt = $asAt ?: now();
@@ -555,36 +549,5 @@ class QardHasan extends Model
     public function ledgerJournal()
     {
         return $this->belongsTo(LedgerJournal::class);
-    }
-
-    /**
-     * Recalculate the total paid amount from all successful repayments.
-     */
-    public function recalculatePaidAmount(): float
-    {
-        $total = (float) $this->repayments()
-            ->where('status', 'success')
-            ->sum('amount');
-
-        if ((float) $this->paid_amount !== $total) {
-            $this->paid_amount = $total;
-
-            // Auto-complete if fully paid
-            if ($this->paid_amount >= $this->principal_amount && $this->principal_amount > 0) {
-                if (!in_array($this->status, ['cancelled', 'rejected'])) {
-                    $this->status = 'completed';
-                }
-                if ($this->defaulted_at) {
-                    $this->defaulted_at = null;
-                }
-            } elseif ($this->status === 'completed' && $this->paid_amount < $this->principal_amount) {
-                // Re-activate if it was completed but now has balance (e.g. after deletion of repayment)
-                $this->status = 'active';
-            }
-
-            $this->save();
-        }
-
-        return $total;
     }
 }

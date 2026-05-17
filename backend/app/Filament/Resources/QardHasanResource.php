@@ -304,81 +304,6 @@ class QardHasanResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Action::make('recalculateBalance')
-                    ->label('Recalculate Balance')
-                    ->icon('heroicon-o-calculator')
-                    ->color('info')
-                    ->requiresConfirmation()
-                    ->action(function (QardHasan $record) {
-                        $old = (float) $record->paid_amount;
-                        $new = $record->recalculatePaidAmount();
-
-                        if ($old !== $new) {
-                            Notification::make()
-                                ->success()
-                                ->title('Balance recalculated')
-                                ->body("Paid amount updated from ₦" . number_format($old, 2) . " to ₦" . number_format($new, 2))
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->info()
-                                ->title('Balance is correct')
-                                ->body("Paid amount ₦" . number_format($new, 2) . " matches repayments.")
-                                ->send();
-                        }
-                    }),
-                Action::make('recordRepayment')
-                    ->label('Record Repayment')
-                    ->icon('heroicon-o-currency-dollar')
-                    ->color('success')
-                    ->visible(fn (QardHasan $record) => in_array($record->status, ['active', 'defaulted']))
-                    ->form([
-                        Forms\Components\TextInput::make('amount')
-                            ->label('Repayment Amount')
-                            ->numeric()
-                            ->required()
-                            ->prefix('₦')
-                            ->default(fn (QardHasan $record) => max(0, min($record->principal_amount - $record->paid_amount, $record->next_installment_amount)))
-                            ->rules([
-                                fn (QardHasan $record): \Closure => function (string $attribute, $value, \Closure $fail) use ($record) {
-                                    $remaining = $record->principal_amount - $record->paid_amount;
-                                    if ($value > $remaining + 0.01) {
-                                        $fail("The amount cannot exceed the remaining balance of ₦" . number_format($remaining, 2));
-                                    }
-                                },
-                            ]),
-                        Forms\Components\DateTimePicker::make('paid_at')
-                            ->label('Payment Date')
-                            ->default(now())
-                            ->required(),
-                        Forms\Components\TextInput::make('reference')
-                            ->label('Reference')
-                            ->default(fn () => 'MANUAL-PAY-' . strtoupper(Str::random(6)))
-                            ->placeholder('e.g., Cash, Bank Transfer Ref')
-                            ->required(),
-                    ])
-                    ->action(function (QardHasan $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
-                            $repayment = $record->repayments()->create([
-                                'amount' => $data['amount'],
-                                'paid_at' => $data['paid_at'],
-                                'reference' => $data['reference'],
-                                'status' => 'success',
-                            ]);
-
-                            ShariahAudit::log(auth()->user(), 'record_qard_hasan_repayment', [
-                                'qard_id' => $record->id,
-                                'repayment_id' => $repayment->id,
-                                'amount' => $data['amount'],
-                                'reference' => $data['reference'],
-                            ]);
-                        });
-
-                        Notification::make()
-                            ->success()
-                            ->title('Repayment recorded successfully')
-                            ->send();
-                    }),
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn (QardHasan $record) => auth()->user()->hasRole('super_admin')
                         && (float) $record->paid_amount <= 0
@@ -968,6 +893,42 @@ class QardHasanResource extends Resource
                         Notification::make()
                             ->title('Default status cleared')
                             ->body('The loan is no longer in default. Member status has been synced.')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('repay')
+                    ->label('Record Repayment')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->color('success')
+                    ->visible(fn (QardHasan $record) => in_array($record->status, ['active', 'defaulted']))
+                    ->form([
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()
+                            ->prefix('₦')
+                            ->required()
+                            ->default(fn (QardHasan $record) => max(0, $record->principal_amount - $record->paid_amount)),
+                        Forms\Components\DateTimePicker::make('paid_at')
+                            ->label('Payment Date')
+                            ->default(now())
+                            ->required(),
+                        Forms\Components\TextInput::make('reference')
+                            ->default(fn () => 'QH-REP-MAN-'.Str::upper(Str::random(10)))
+                            ->required()
+                            ->unique('qard_hasan_repayments', 'reference'),
+                    ])
+                    ->action(function (QardHasan $record, array $data) {
+                        $record->repayments()->create([
+                            'amount' => $data['amount'],
+                            'paid_at' => $data['paid_at'],
+                            'reference' => $data['reference'],
+                            'status' => 'success',
+                        ]);
+
+                        $record->paid_amount = (float) $record->paid_amount + (float) $data['amount'];
+                        $record->save();
+
+                        Notification::make()
+                            ->title('Repayment recorded successfully')
                             ->success()
                             ->send();
                     }),

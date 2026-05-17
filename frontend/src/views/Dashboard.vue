@@ -80,18 +80,6 @@
         <div class="text-rose-400">➡️</div>
       </div>
 
-      <!-- Outstanding Loan Default Warning -->
-      <div v-if="dashboardData.kpis && dashboardData.kpis.total_defaulted > 0"
-           class="mt-4 p-4 rounded-3xl bg-rose-900 text-white flex items-center gap-3 shadow-lg shadow-rose-200 cursor-pointer"
-           @click="$router.push('/loans')">
-        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-pulse">💸</div>
-        <div class="flex-1">
-          <p class="text-sm font-bold">Loan Payment Overdue: ₦{{ formatMoney(dashboardData.kpis.total_defaulted) }}</p>
-          <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Tap to view your loans and pay</p>
-        </div>
-        <div class="text-white/40">➡️</div>
-      </div>
-
       <!-- Tahkim Dispute Warning -->
       <div v-if="kpis.active_disputes_count > 0"
            class="mt-4 p-4 rounded-3xl bg-slate-900 text-white flex items-center gap-3 shadow-lg shadow-slate-200 cursor-pointer"

@@ -951,7 +951,6 @@ class LoanController extends Controller
 
         $totalBorrowed = (float) $loans->sum('principal_amount');
         $totalPaid = (float) $loans->sum('paid_amount');
-        $totalDefaulted = (float) $loans->sum(fn($l) => $l->getOverdueAmount());
         $outstanding = $totalBorrowed - $totalPaid;
         $loanCount = $loans->count();
         $activeLoansCount = $loans->whereIn('status', ['active', 'defaulted'])->count();
@@ -981,7 +980,6 @@ class LoanController extends Controller
             'summary' => [
                 'total_borrowed' => $totalBorrowed,
                 'total_paid' => $totalPaid,
-                'total_defaulted' => $totalDefaulted,
                 'outstanding' => $outstanding,
                 'loan_count' => $loanCount,
                 'active_loans_count' => $activeLoansCount,

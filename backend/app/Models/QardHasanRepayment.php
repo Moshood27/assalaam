@@ -32,6 +32,44 @@ class QardHasanRepayment extends Model
         'paid_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::updated(function (self $model) {
+            if ($model->status === 'success' && $model->wasChanged('status')) {
+                try {
+                    // Record in Ledger
+                    if (!$model->ledger_journal_id) {
+                        $journal = app(\App\Services\LedgerService::class)->recordLoanRepayment($model);
+                        $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                    }
+
+                    if ($model->qardHasan && $model->qardHasan->user) {
+                        app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record loan repayment in ledger: " . $e->getMessage());
+                }
+            }
+        });
+
+        static::created(function (self $model) {
+            if ($model->status === 'success') {
+                try {
+                    // Record in Ledger
+                    if (!$model->ledger_journal_id) {
+                        $journal = app(\App\Services\LedgerService::class)->recordLoanRepayment($model);
+                        $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                    }
+
+                    if ($model->qardHasan && $model->qardHasan->user) {
+                        app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to record loan repayment in ledger: " . $e->getMessage());
+                }
+            }
+        });
+    }
 
     public function qardHasan()
     {

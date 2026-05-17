@@ -960,6 +960,7 @@ class User extends Authenticatable implements FilamentUser
             'Development' => 'development_fund_balance',
             'Building' => 'building_balance',
             'AGM' => 'agm_balance',
+            'Loan Repayment' => 'loan_repayment_balance',
             'Fine' => 'fine_balance',
             'Welfare' => 'welfare_balance',
             'Lateness' => 'lateness_balance',

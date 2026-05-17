@@ -232,6 +232,7 @@ class AccountingReportService
                 SUM(building_balance) as total_building,
                 SUM(development_fund_balance) as total_development,
                 SUM(agm_balance) as total_agm,
+                SUM(loan_repayment_balance) as total_loan_repayment,
                 SUM(fine_balance) as total_fine,
                 SUM(welfare_balance) as total_welfare,
                 SUM(lateness_balance) as total_lateness,
@@ -255,6 +256,7 @@ class AccountingReportService
         $otherFundsTotal = (float) $memberStats->total_building +
                           (float) $memberStats->total_development +
                           (float) $memberStats->total_agm +
+                          (float) $memberStats->total_loan_repayment +
                           (float) $memberStats->total_fine +
                           (float) $memberStats->total_welfare +
                           (float) $memberStats->total_lateness +
@@ -1283,6 +1285,7 @@ class AccountingReportService
                 $otherTotal = (float)$user->building_balance +
                               (float)$user->development_fund_balance +
                               (float)$user->agm_balance +
+                              (float)$user->loan_repayment_balance +
                               (float)$user->fine_balance +
                               (float)$user->welfare_balance +
                               (float)$user->lateness_balance +

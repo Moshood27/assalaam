@@ -30,35 +30,6 @@ class ListQardHasans extends ListRecords
     {
         return [
             $this->getWipeHeaderAction(),
-            Actions\Action::make('syncRepayments')
-                ->label('Sync Repayments')
-                ->icon('heroicon-o-arrow-path')
-                ->color('warning')
-                ->requiresConfirmation()
-                ->modalHeading('Sync and Balance Repayments')
-                ->modalDescription('This will sync all "Loan Repayment" contributions with Qard Hasan loans and recalculate loan balances to ensure they match recorded repayments.')
-                ->action(function (\App\Services\QardHasanService $service): void {
-                    try {
-                        $results = $service->fullSyncAndBalance();
-                        $msg = sprintf(
-                            'Processed: %d | Skipped: %d | Recalculated: %d',
-                            $results['processed'],
-                            $results['skipped'],
-                            $results['recalculated']
-                        );
-                        Notification::make()
-                            ->success()
-                            ->title('Sync completed')
-                            ->body($msg)
-                            ->send();
-                    } catch (\Throwable $e) {
-                        Notification::make()
-                            ->danger()
-                            ->title('Sync failed')
-                            ->body($e->getMessage())
-                            ->send();
-                    }
-                }),
             Actions\CreateAction::make(),
             Actions\Action::make('branchReport')
                 ->label('Branch Outstanding Report')
