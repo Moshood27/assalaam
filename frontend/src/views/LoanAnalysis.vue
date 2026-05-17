@@ -14,6 +14,22 @@
       <div v-else-if="error" class="card p-4 text-rose-700 bg-rose-50 border-rose-200">{{ error }}</div>
 
       <div v-else class="space-y-6">
+        <!-- Defaulted Summary Card -->
+        <div v-if="analysis.summary.total_defaulted > 0" class="card p-5 bg-rose-50 border-rose-200">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+              ⚠️
+            </div>
+            <div>
+              <p class="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Total Defaulted Amount</p>
+              <p class="text-2xl font-black text-rose-700">₦ {{ n(analysis.summary.total_defaulted) }}</p>
+            </div>
+          </div>
+          <p class="text-[11px] text-rose-600 mt-3 font-medium leading-relaxed">
+            You have outstanding payments that are past due. Please make payments immediately to avoid further penalties and a decrease in your Attaqwa score.
+          </p>
+        </div>
+
         <!-- Detailed Loan List -->
         <div class="card overflow-hidden">
           <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
@@ -44,6 +60,10 @@
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Remaining</p>
                    <p class="text-sm font-bold text-rose-600">₦ {{ n(loan.remaining_principal) }}</p>
+                </div>
+                <div v-if="loan.overdue_amount > 0">
+                   <p class="text-[9px] text-rose-400 font-bold uppercase">Defaulted</p>
+                   <p class="text-sm font-bold text-rose-700">₦ {{ n(loan.overdue_amount) }}</p>
                 </div>
                 <div v-if="loan.next_due_at">
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Next Due</p>
@@ -127,7 +147,7 @@ import axios from '../http'
 const loading = ref(true)
 const error = ref('')
 const analysis = ref({
-  summary: { total_borrowed: 0, total_paid: 0, outstanding: 0, loan_count: 0, active_loans_count: 0 },
+  summary: { total_borrowed: 0, total_paid: 0, total_defaulted: 0, outstanding: 0, loan_count: 0, active_loans_count: 0 },
   repayment_trend: {},
   status_distribution: {},
   loans: [],

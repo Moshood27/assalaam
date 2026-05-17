@@ -100,11 +100,17 @@ class DashboardController extends Controller
         }
 
         $outstandingLoans = 0;
+        $totalDefaulted = 0;
         if (Schema::hasTable('qard_hasans')) {
-            $outstandingLoans = (float) $user->qardHasans()
+            $loans = $user->qardHasans()
                 ->whereIn('status', ['active', 'pending', 'defaulted'])
-                ->whereColumn('paid_amount', '<', 'principal_amount')
-                ->sum(DB::raw('principal_amount - paid_amount'));
+                ->get();
+
+            $outstandingLoans = (float) $loans->where('paid_amount', '<', 'principal_amount')
+                ->sum(fn($l) => (float)$l->principal_amount - (float)$l->paid_amount);
+
+            $totalDefaulted = (float) $loans->whereIn('status', ['active', 'defaulted'])
+                ->sum(fn($l) => $l->getOverdueAmount());
         }
 
         $goldBasePrice = $this->priceService->getGoldPrice();
@@ -157,6 +163,7 @@ class DashboardController extends Controller
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
+            'total_defaulted' => $totalDefaulted,
             'is_defaulted' => $isDefaulter,
             'wallet_balance' => (float) $user->balance,
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,

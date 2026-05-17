@@ -7,6 +7,20 @@
       <div v-else-if="error" class="card p-4 text-rose-700 bg-rose-50 border-rose-200">{{ error }}</div>
 
       <div v-else class="space-y-4">
+              <!-- Defaulted Summary -->
+              <div v-if="totalDefaulted > 0" class="card bg-rose-50 border-rose-200 p-6 rounded-[2rem] text-center space-y-3 shadow-sm mb-4">
+                <div class="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
+                  🚨
+                </div>
+                <div>
+                  <h3 class="text-lg font-black text-rose-800">Payment Overdue</h3>
+                  <p class="text-2xl font-black text-rose-700 mt-1">₦ {{ n(totalDefaulted) }}</p>
+                  <p class="text-[10px] text-rose-500 mt-2 leading-relaxed px-6 font-medium">
+                    You have defaulted on some of your loan installments. Please repay the overdue amount immediately to restore your standing.
+                  </p>
+                </div>
+              </div>
+
               <!-- Feature Disabled Alert -->
               <div v-if="appStatusStore.features['apply-for-loan'] === false" class="card bg-amber-50 border-amber-200 p-8 rounded-[2rem] text-center space-y-4 shadow-sm mb-6">
                 <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-inner">
@@ -219,6 +233,10 @@
               <p class="text-[10px] text-slate-400 font-bold uppercase text-right">Remaining Principal</p>
               <p class="font-black text-lg text-right" :class="loan.is_completed ? 'text-emerald-600' : 'text-rose-600'">₦ {{ n(loan.remaining_principal ?? (loan.principal_amount - loan.paid_amount)) }}</p>
             </div>
+            <div v-if="loan.overdue_amount > 0">
+              <p class="text-[10px] text-rose-400 font-bold uppercase">Defaulted Amount</p>
+              <p class="font-black text-lg text-rose-700">₦ {{ n(loan.overdue_amount) }}</p>
+            </div>
             <div class="col-span-2">
               <div class="h-2 bg-slate-200 rounded overflow-hidden">
                 <div class="h-2 bg-emerald-500" :style="{ width: (loan.progress_pct || ((loan.paid_amount/loan.principal_amount)*100)).toFixed(2) + '%' }"></div>
@@ -388,6 +406,7 @@ const primaryGatewayName = computed(() => {
 const hasAnyLoan = computed(() => (loans.value || []).length > 0)
 const hasOpenLoan = computed(() => (loans.value || []).some(l => ['pending', 'active', 'defaulted'].includes(l?.status) && !l?.is_completed))
 const hasCompletedLoan = computed(() => (loans.value || []).some(l => l?.is_completed || l?.status === 'completed'))
+const totalDefaulted = computed(() => (loans.value || []).reduce((acc, l) => acc + (Number(l.overdue_amount) || 0), 0))
 // Creation is allowed only if no open loan and backend policy allows request (6-month rule and first-loan cap)
 const canCreateLoanVisible = computed(() => !hasOpenLoan.value && !!eligibility.value?.can_request && appStatusStore.features['apply-for-loan'] !== false)
 

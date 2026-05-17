@@ -240,6 +240,7 @@ class QardHasan extends Model
         'credited_amount',
         'next_due_at',
         'next_installment_amount',
+        'overdue_amount',
     ];
 
     public function user()
@@ -435,6 +436,11 @@ class QardHasan extends Model
             $per = round(((float)$this->principal_amount) / max((int)$totalInstallments = $this->total_installments, 1), 2);
         }
         return min($per, $this->remaining_principal);
+    }
+
+    public function getOverdueAmountAttribute(): float
+    {
+        return $this->getOverdueAmount();
     }
 
     public function getDefaultStartDate(?Carbon $asAt = null): ?Carbon
