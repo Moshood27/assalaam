@@ -307,7 +307,7 @@ class Contribution extends Model
 
     public function scheme()
     {
-        return $this->belongsTo(Scheme::class);
+        return $this->belongsTo(Scheme::class)->withTrashed();
     }
 
     public function project()

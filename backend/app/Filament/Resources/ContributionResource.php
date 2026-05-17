@@ -73,7 +73,7 @@ class ContributionResource extends Resource
                 // For edit: keep single scheme and amount fields
                 Forms\Components\Select::make('scheme_id')
                     ->label('Scheme')
-                    ->options(Scheme::query()->pluck('name', 'id'))
+                    ->options(Scheme::withTrashed()->pluck('name', 'id'))
                     ->searchable()
                     ->required()
                     ->hiddenOn('create'),
@@ -144,6 +144,10 @@ class ContributionResource extends Resource
                 TextColumn::make('reference')->label('Ref')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('scheme_id')
+                    ->label('Scheme')
+                    ->options(Scheme::withTrashed()->pluck('name', 'id'))
+                    ->searchable(),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'success' => 'Success',
