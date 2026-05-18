@@ -124,36 +124,40 @@ class VirtualAccountController extends Controller
                 }
             }
 
-            // Step B: If no code or update failed, try fetching by email
+            // Step B: If not synced, try fetching by email
             if (!$syncSuccess) {
                 $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
                 if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
                     $customerCode = $fetchResp->json('data.customer_code');
-                    // Now update it to sync phone/names
+                    // Verify it with a PUT to ensure it's valid for this environment
                     $lastResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$customerCode}", $customerPayload);
-                    $syncSuccess = $lastResp->successful();
-                    if ($syncSuccess) {
+                    if ($lastResp->successful()) {
+                        $syncSuccess = true;
                         $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
-                    } elseif ($lastResp->json('code') === 'invalid_customer_code') {
-                        // If the code from GET is somehow invalid (environment mismatch), clear it to try Step C
+                    } else {
+                        // If the code from GET is not working for PUT, clear it to try Step C
                         $customerCode = null;
                     }
                 }
+            }
 
-                // Step C: If still no code or sync failed, try creating fresh or handling existing
-                if (!$syncSuccess && empty($customerCode)) {
-                    $lastResp = Http::withToken($secret)->post('https://api.paystack.co/customer', array_merge($customerPayload, [
-                        'email' => $user->email,
-                    ]));
-                    if ($lastResp->successful()) {
-                        $customerCode = $lastResp->json('data.customer_code');
-                        $syncSuccess = true;
-                    } elseif ($lastResp->json('message') === 'Customer already exists' || $lastResp->json('code') === 'duplicate_email') {
-                        // If it exists but we couldn't fetch/sync it properly, try one last GET to be sure
-                        $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
-                        if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
-                            $customerCode = $fetchResp->json('data.customer_code');
-                            $syncSuccess = true;
+            // Step C: If still not synced, try creating fresh
+            if (!$syncSuccess) {
+                $lastResp = Http::withToken($secret)->post('https://api.paystack.co/customer', array_merge($customerPayload, [
+                    'email' => $user->email,
+                ]));
+                if ($lastResp->successful()) {
+                    $customerCode = $lastResp->json('data.customer_code');
+                    $syncSuccess = true;
+                } elseif ($lastResp->json('message') === 'Customer already exists' || $lastResp->json('code') === 'duplicate_email') {
+                    // If it exists but we couldn't create it, try one last GET + PUT to be sure
+                    $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
+                    if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
+                        $customerCode = $fetchResp->json('data.customer_code');
+                        $lastResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$customerCode}", $customerPayload);
+                        $syncSuccess = $lastResp->successful();
+                        if ($syncSuccess) {
+                            $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
                         }
                     }
                 }
@@ -201,7 +205,17 @@ class VirtualAccountController extends Controller
                 return $this->show($request);
             }
 
-            // If assignment fails, log why
+            // If assignment fails, handle specific errors
+            if ($assignResp->json('code') === 'invalid_customer_code') {
+                $user->virtualAccount?->update(['paystack_customer_code' => null]);
+                Log::warning('Paystack rejected customer code during assignment', [
+                    'user_id' => $user->id,
+                    'customer_code' => $customerCode,
+                    'mode' => config('services.paystack.mode')
+                ]);
+                return response()->json(['message' => 'Identity verification issue. We have reset your record, please try again.'], 422);
+            }
+
             Log::error('DVA Assignment failed', [
                 'mode' => config('services.paystack.mode'),
                 'body' => $assignResp->body()
