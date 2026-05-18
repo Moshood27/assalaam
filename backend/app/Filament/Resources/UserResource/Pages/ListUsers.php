@@ -30,6 +30,36 @@ class ListUsers extends ListRecords
     {
         return [
             $this->getWipeHeaderAction(),
+            Actions\Action::make('clearAllPaystackDVAs')
+                ->label('Clear ALL Paystack DVAs')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Clear ALL Paystack Virtual Accounts')
+                ->modalDescription('Are you sure you want to clear Paystack virtual accounts for ALL users in the database? This action cannot be undone.')
+                ->action(function () {
+                    $count = \App\Models\UserVirtualAccount::where(function ($query) {
+                        $query->whereNotNull('paystack_customer_code')
+                            ->orWhereNotNull('dva_account_number');
+                    })->update([
+                        'paystack_customer_code' => null,
+                        'paystack_authorization_code' => null,
+                        'dva_account_number' => null,
+                        'dva_bank_name' => null,
+                        'dva_account_name' => null,
+                        'dva_verification_meta' => null,
+                    ]);
+
+                    \App\Models\ShariahAuditLog::log(auth()->user(), 'all_paystack_dvas_cleared', [
+                        'count' => $count,
+                    ]);
+
+                    Notification::make()
+                        ->title("Successfully cleared Paystack DVA for {$count} records.")
+                        ->success()
+                        ->send();
+                })
+                ->visible(fn () => auth()->user()->hasRole('super_admin')),
             Actions\Action::make('printByBranch')
                 ->label('Print Users by Branch')
                 ->icon('heroicon-o-printer')

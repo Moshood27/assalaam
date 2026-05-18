@@ -106,6 +106,36 @@ class EditUser extends EditRecord
                         ->send();
                 })
                 ->requiresConfirmation(),
+            Actions\Action::make('clearPaystackDVA')
+                ->label('Clear Paystack DVA')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Clear Paystack Virtual Account')
+                ->modalDescription('Are you sure you want to clear the Paystack virtual account for this user? They will need to re-generate it if needed.')
+                ->visible(fn () => $this->getRecord()->virtualAccount?->paystack_customer_code !== null || $this->getRecord()->virtualAccount?->dva_account_number !== null)
+                ->action(function () {
+                    $record = $this->getRecord();
+                    if ($record->virtualAccount) {
+                        $record->virtualAccount->update([
+                            'paystack_customer_code' => null,
+                            'paystack_authorization_code' => null,
+                            'dva_account_number' => null,
+                            'dva_bank_name' => null,
+                            'dva_account_name' => null,
+                            'dva_verification_meta' => null,
+                        ]);
+
+                        \App\Models\ShariahAuditLog::log(auth()->user(), 'paystack_dva_cleared', [
+                            'user_id' => $record->id,
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Paystack DVA cleared')
+                            ->success()
+                            ->send();
+                    }
+                }),
             Actions\DeleteAction::make(),
         ];
     }
