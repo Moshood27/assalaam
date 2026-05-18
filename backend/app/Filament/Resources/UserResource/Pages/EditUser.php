@@ -115,15 +115,26 @@ class EditUser extends EditRecord
 
             Actions\ActionGroup::make([
                 Actions\Action::make('clearPaystackDVA')
-                    ->label('Clear Paystack DVA')
+                    ->label('Clear Paystack Record')
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading('Clear Paystack Virtual Account')
-                    ->modalDescription('Are you sure you want to clear the Paystack virtual account for this user? They will need to re-generate it if needed.')
-                    ->visible(fn () => $this->getRecord()->virtualAccount?->paystack_customer_code !== null || $this->getRecord()->virtualAccount?->dva_account_number !== null)
+                    ->modalHeading('Clear Paystack Record')
+                    ->modalDescription('Are you sure you want to clear the Paystack record and disable Autosave for this user? They will need to re-generate it if needed.')
+                    ->visible(fn () => $this->getRecord()->virtualAccount?->paystack_customer_code !== null || $this->getRecord()->virtualAccount?->dva_account_number !== null || $this->getRecord()->autosave_enabled)
                     ->action(function () {
                         $record = $this->getRecord();
+
+                        // Clear User fields
+                        $userUpdate = ['autosave_enabled' => false];
+                        foreach (['paystack_customer_code', 'paystack_authorization_code', 'dva_account_number', 'dva_bank_name', 'dva_account_name'] as $col) {
+                            if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                                $userUpdate[$col] = null;
+                            }
+                        }
+                        $record->update($userUpdate);
+
+                        // Clear Virtual Account fields
                         if ($record->virtualAccount) {
                             $record->virtualAccount->update([
                                 'paystack_customer_code' => null,
@@ -133,16 +144,17 @@ class EditUser extends EditRecord
                                 'dva_account_name' => null,
                                 'dva_verification_meta' => null,
                             ]);
-
-                            \App\Models\ShariahAuditLog::log(auth()->user(), 'paystack_dva_cleared', [
-                                'user_id' => $record->id,
-                            ]);
-
-                            \Filament\Notifications\Notification::make()
-                                ->title('Paystack DVA cleared')
-                                ->success()
-                                ->send();
                         }
+
+                        \App\Models\ShariahAuditLog::log(auth()->user(), 'paystack_dva_cleared', [
+                            'user_id' => $record->id,
+                            'details' => 'Paystack record and autosave cleared',
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Paystack record cleared')
+                            ->success()
+                            ->send();
                     }),
             ])
                 ->label('Account Settings')

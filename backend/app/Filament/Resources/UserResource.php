@@ -1231,9 +1231,19 @@ class UserResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->modalHeading('Clear Paystack Virtual Account')
-                    ->modalDescription('Are you sure you want to clear the Paystack virtual account for this user? They will need to re-generate it if needed.')
-                    ->visible(fn (User $record) => $record->virtualAccount?->paystack_customer_code !== null || $record->virtualAccount?->dva_account_number !== null)
+                    ->modalDescription('Are you sure you want to clear the Paystack virtual account and all related records (including Autosave) for this user?')
+                    ->visible(fn (User $record) => $record->virtualAccount?->paystack_customer_code !== null || $record->virtualAccount?->dva_account_number !== null || $record->autosave_enabled)
                     ->action(function (User $record) {
+                        // Clear User fields
+                        $userUpdate = ['autosave_enabled' => false];
+                        foreach (['paystack_customer_code', 'paystack_authorization_code', 'dva_account_number', 'dva_bank_name', 'dva_account_name'] as $col) {
+                            if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                                $userUpdate[$col] = null;
+                            }
+                        }
+                        $record->update($userUpdate);
+
+                        // Clear Virtual Account fields
                         if ($record->virtualAccount) {
                             $record->virtualAccount->update([
                                 'paystack_customer_code' => null,
@@ -1243,16 +1253,17 @@ class UserResource extends Resource
                                 'dva_account_name' => null,
                                 'dva_verification_meta' => null,
                             ]);
-
-                            ShariahAudit::log(auth()->user(), 'paystack_dva_cleared', [
-                                'user_id' => $record->id,
-                            ]);
-
-                            Notification::make()
-                                ->title('Paystack DVA cleared')
-                                ->success()
-                                ->send();
                         }
+
+                        ShariahAudit::log(auth()->user(), 'paystack_dva_cleared', [
+                            'user_id' => $record->id,
+                            'details' => 'Paystack record and autosave cleared',
+                        ]);
+
+                        Notification::make()
+                            ->title('Paystack record cleared')
+                            ->success()
+                            ->send();
                     }),
             ])
             ->bulkActions([
@@ -1295,10 +1306,20 @@ class UserResource extends Resource
                         ->color('danger')
                         ->requiresConfirmation()
                         ->modalHeading('Clear Paystack Virtual Accounts')
-                        ->modalDescription('Are you sure you want to clear the Paystack virtual accounts for the selected users?')
+                        ->modalDescription('Are you sure you want to clear the Paystack virtual accounts and all related records (including Autosave) for the selected users?')
                         ->action(function (\Illuminate\Support\Collection $records) {
                             $count = 0;
                             foreach ($records as $record) {
+                                // Clear User fields
+                                $userUpdate = ['autosave_enabled' => false];
+                                foreach (['paystack_customer_code', 'paystack_authorization_code', 'dva_account_number', 'dva_bank_name', 'dva_account_name'] as $col) {
+                                    if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                                        $userUpdate[$col] = null;
+                                    }
+                                }
+                                $record->update($userUpdate);
+
+                                // Clear Virtual Account fields
                                 if ($record->virtualAccount) {
                                     $record->virtualAccount->update([
                                         'paystack_customer_code' => null,
@@ -1308,16 +1329,17 @@ class UserResource extends Resource
                                         'dva_account_name' => null,
                                         'dva_verification_meta' => null,
                                     ]);
-
-                                    ShariahAudit::log(auth()->user(), 'bulk_paystack_dva_cleared', [
-                                        'user_id' => $record->id,
-                                    ]);
-                                    $count++;
                                 }
+
+                                ShariahAudit::log(auth()->user(), 'bulk_paystack_dva_cleared', [
+                                    'user_id' => $record->id,
+                                    'details' => 'Paystack record and autosave cleared bulk',
+                                ]);
+                                $count++;
                             }
 
                             Notification::make()
-                                ->title("Paystack DVA cleared for {$count} members")
+                                ->title("Paystack records cleared for {$count} members")
                                 ->success()
                                 ->send();
                         }),

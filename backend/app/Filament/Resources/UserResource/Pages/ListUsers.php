@@ -32,17 +32,24 @@ class ListUsers extends ListRecords
             Actions\ActionGroup::make([
                 $this->getWipeHeaderAction(),
                 Actions\Action::make('clearAllPaystackDVAs')
-                    ->label('Clear ALL Paystack DVAs')
+                    ->label('Clear ALL Paystack Records')
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading('Clear ALL Paystack Virtual Accounts')
-                    ->modalDescription('Are you sure you want to clear Paystack virtual accounts for ALL users in the database? This action cannot be undone.')
+                    ->modalHeading('Clear ALL Paystack Data')
+                    ->modalDescription('Are you sure you want to clear Paystack records and disable Autosave for ALL users in the database? This action cannot be undone.')
                     ->action(function () {
-                        $count = \App\Models\UserVirtualAccount::where(function ($query) {
-                            $query->whereNotNull('paystack_customer_code')
-                                ->orWhereNotNull('dva_account_number');
-                        })->update([
+                        // Clear User fields
+                        $userUpdate = ['autosave_enabled' => false];
+                        foreach (['paystack_customer_code', 'paystack_authorization_code', 'dva_account_number', 'dva_bank_name', 'dva_account_name'] as $col) {
+                            if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                                $userUpdate[$col] = null;
+                            }
+                        }
+                        \App\Models\User::query()->update($userUpdate);
+
+                        // Clear Virtual Account fields
+                        $count = \App\Models\UserVirtualAccount::query()->update([
                             'paystack_customer_code' => null,
                             'paystack_authorization_code' => null,
                             'dva_account_number' => null,
@@ -51,12 +58,13 @@ class ListUsers extends ListRecords
                             'dva_verification_meta' => null,
                         ]);
 
-                        \App\Models\ShariahAuditLog::log(auth()->user(), 'all_paystack_dvas_cleared', [
+                        \App\Models\ShariahAuditLog::log(auth()->user(), 'all_paystack_records_cleared', [
                             'count' => $count,
+                            'details' => 'All Paystack records and autosave cleared for all users',
                         ]);
 
                         Notification::make()
-                            ->title("Successfully cleared Paystack DVA for {$count} records.")
+                            ->title("Successfully cleared Paystack records and disabled Autosave for all members.")
                             ->success()
                             ->send();
                     })

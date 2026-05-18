@@ -27,28 +27,65 @@ class ClearPaystackDVAs extends Command
     {
         $userId = $this->argument('user_id');
 
-        $query = \App\Models\UserVirtualAccount::query();
-
         if ($userId) {
-            $query->where('user_id', $userId);
-            $this->info("Clearing Paystack DVA for user ID: {$userId}");
-        } else {
-            $this->info("Clearing Paystack DVA for ALL users");
-            if (!$this->confirm('Are you sure you want to clear Paystack DVA fields for ALL users?', false)) {
-                $this->warn('Operation cancelled.');
-                return;
+            $user = \App\Models\User::find($userId);
+            if (!$user) {
+                $this->error("User not found: {$userId}");
+                return self::FAILURE;
             }
+            $this->info("Clearing Paystack records for user: {$user->email} (ID: {$userId})");
+
+            // Clear User fields
+            $userUpdate = ['autosave_enabled' => false];
+            foreach (['paystack_customer_code', 'paystack_authorization_code', 'dva_account_number', 'dva_bank_name', 'dva_account_name'] as $col) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                    $userUpdate[$col] = null;
+                }
+            }
+            $user->update($userUpdate);
+
+            // Clear Virtual Account fields
+            if ($user->virtualAccount) {
+                $user->virtualAccount->update([
+                    'paystack_customer_code' => null,
+                    'paystack_authorization_code' => null,
+                    'dva_account_number' => null,
+                    'dva_bank_name' => null,
+                    'dva_account_name' => null,
+                    'dva_verification_meta' => null,
+                ]);
+            }
+
+            $this->info("Successfully cleared Paystack records for user ID: {$userId}");
+        } else {
+            $this->info("Clearing Paystack records for ALL users");
+            if (!$this->confirm('Are you sure you want to clear Paystack records and disable Autosave for ALL users?', false)) {
+                $this->warn('Operation cancelled.');
+                return self::SUCCESS;
+            }
+
+            // Clear User fields for all
+            $userUpdate = ['autosave_enabled' => false];
+            foreach (['paystack_customer_code', 'paystack_authorization_code', 'dva_account_number', 'dva_bank_name', 'dva_account_name'] as $col) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                    $userUpdate[$col] = null;
+                }
+            }
+            \App\Models\User::query()->update($userUpdate);
+
+            // Clear Virtual Account fields for all
+            $count = \App\Models\UserVirtualAccount::query()->update([
+                'paystack_customer_code' => null,
+                'paystack_authorization_code' => null,
+                'dva_account_number' => null,
+                'dva_bank_name' => null,
+                'dva_account_name' => null,
+                'dva_verification_meta' => null,
+            ]);
+
+            $this->info("Successfully cleared Paystack records for {$count} record(s).");
         }
 
-        $count = $query->update([
-            'paystack_customer_code' => null,
-            'paystack_authorization_code' => null,
-            'dva_account_number' => null,
-            'dva_bank_name' => null,
-            'dva_account_name' => null,
-            'dva_verification_meta' => null,
-        ]);
-
-        $this->info("Successfully cleared Paystack DVA fields for {$count} record(s).");
+        return self::SUCCESS;
     }
 }

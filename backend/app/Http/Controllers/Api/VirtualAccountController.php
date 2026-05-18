@@ -250,12 +250,22 @@ class VirtualAccountController extends Controller
     }
 
     /**
-     * Delete the Paystack DVA for the authenticated user.
+     * Delete the Paystack record for the authenticated user.
      */
     public function deletePaystack(Request $request)
     {
         $user = $request->user();
 
+        // Clear User fields
+        $userUpdate = ['autosave_enabled' => false];
+        foreach (['paystack_customer_code', 'paystack_authorization_code', 'dva_account_number', 'dva_bank_name', 'dva_account_name'] as $col) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                $userUpdate[$col] = null;
+            }
+        }
+        $user->update($userUpdate);
+
+        // Clear Virtual Account fields
         if ($user->virtualAccount) {
             $user->virtualAccount->update([
                 'paystack_customer_code' => null,
@@ -267,6 +277,6 @@ class VirtualAccountController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Paystack DVA cleared successfully']);
+        return response()->json(['message' => 'Paystack record and Autosave cleared successfully']);
     }
 }
