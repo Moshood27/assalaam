@@ -96,9 +96,18 @@ class VirtualAccountController extends Controller
         }
 
         // 2. Prepare Name Data (Paystack requires First and Last name)
-        $parts = preg_split('/\s+/', trim((string)$user->name));
-        $firstName = $parts[0] ?? 'Member';
-        $lastName = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : 'Coop';
+        $firstName = $user->name;
+        $lastName = $user->surname;
+
+        if (empty($lastName)) {
+            $parts = preg_split('/\s+/', trim((string)$user->name));
+            $firstName = $parts[0] ?? 'Member';
+            $lastName = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : 'Coop';
+        }
+
+        if (!empty($validated['bvn']) && $validated['bvn'] !== $user->bvn) {
+            $user->update(['bvn' => $validated['bvn']]);
+        }
 
         try {
             // 3. Sync/Upsert Customer on Paystack
@@ -192,6 +201,37 @@ class VirtualAccountController extends Controller
 
             // Save/Update the customer code locally
             $user->virtualAccount()->updateOrCreate([], ['paystack_customer_code' => $customerCode]);
+
+            // 3.5 Customer Identification (Required for some banks like Titan Trust)
+            $bvn = $validated['bvn'] ?? $user->bvn;
+            if ($bvn) {
+                Log::info('Paystack Sync: Identification step', ['code' => $customerCode]);
+                $identResp = Http::withToken($secret)->post("https://api.paystack.co/customer/{$customerCode}/identification", [
+                    'country'    => 'NG',
+                    'type'       => 'bvn',
+                    'value'      => $bvn,
+                    'first_name' => $firstName,
+                    'last_name'  => $lastName,
+                ]);
+
+                if (!$identResp->successful()) {
+                    $identData = $identResp->json();
+                    Log::warning('Paystack Identification failed', ['code' => $customerCode, 'resp' => $identData]);
+
+                    // If it's not already identified, and it's a Titan Trust request, we might want to stop here
+                    if (($identData['message'] ?? '') !== 'Customer already identified') {
+                        // Some errors (like name mismatch) are fatal for DVA
+                        if ($identResp->status() === 400 || $identResp->status() === 422) {
+                             return response()->json([
+                                 'message' => $identData['message'] ?? 'Identity verification failed',
+                                 'details' => $identData['meta'] ?? null
+                             ], 422);
+                        }
+                    }
+                } else {
+                    Log::info('Paystack Identification successful', ['code' => $customerCode]);
+                }
+            }
 
             // 4. Assign the Dedicated Virtual Account
             $assignPayload = [
