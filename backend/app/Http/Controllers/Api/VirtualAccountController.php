@@ -50,10 +50,10 @@ class VirtualAccountController extends Controller
         }
 
         return response()->json([
-            'paystack_customer_code' => $virtualAccount->paystack_customer_code ?? null,
-            'account_number' => $virtualAccount->dva_account_number ?? null,
-            'account_name' => $virtualAccount->dva_account_name ?? null,
-            'bank_name' => $virtualAccount->dva_bank_name ?? null,
+            'paystack_customer_code' => $virtualAccount?->paystack_customer_code,
+            'account_number' => $virtualAccount?->dva_account_number,
+            'account_name' => $virtualAccount?->dva_account_name,
+            'bank_name' => $virtualAccount?->dva_bank_name,
             'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($virtualAccount && $virtualAccount->dva_account_number && $virtualAccount->dva_bank_name)),
             'verification_details' => $verificationDetails,
             // Flutterwave DVA
@@ -134,15 +134,27 @@ class VirtualAccountController extends Controller
                     $syncSuccess = $lastResp->successful();
                     if ($syncSuccess) {
                         $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
+                    } elseif ($lastResp->json('code') === 'invalid_customer_code') {
+                        // If the code from GET is somehow invalid (environment mismatch), clear it to try Step C
+                        $customerCode = null;
                     }
-                } else {
-                    // Step C: If not found on Paystack, create the customer
+                }
+
+                // Step C: If still no code or sync failed, try creating fresh or handling existing
+                if (!$syncSuccess && empty($customerCode)) {
                     $lastResp = Http::withToken($secret)->post('https://api.paystack.co/customer', array_merge($customerPayload, [
                         'email' => $user->email,
                     ]));
                     if ($lastResp->successful()) {
                         $customerCode = $lastResp->json('data.customer_code');
                         $syncSuccess = true;
+                    } elseif ($lastResp->json('message') === 'Customer already exists' || $lastResp->json('code') === 'duplicate_email') {
+                        // If it exists but we couldn't fetch/sync it properly, try one last GET to be sure
+                        $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
+                        if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
+                            $customerCode = $fetchResp->json('data.customer_code');
+                            $syncSuccess = true;
+                        }
                     }
                 }
             }
@@ -151,6 +163,7 @@ class VirtualAccountController extends Controller
                 $errorMsg = ($lastResp) ? ($lastResp->json('message') ?? 'Identity sync failed') : 'Identity sync failed';
                 Log::error('Paystack Customer sync failed', [
                     'user_id' => $user->id,
+                    'mode' => config('services.paystack.mode'),
                     'body' => $lastResp?->body() ?? 'No response'
                 ]);
                 return response()->json(['message' => $errorMsg], 502);
@@ -189,7 +202,10 @@ class VirtualAccountController extends Controller
             }
 
             // If assignment fails, log why
-            Log::error('DVA Assignment failed', ['body' => $assignResp->body()]);
+            Log::error('DVA Assignment failed', [
+                'mode' => config('services.paystack.mode'),
+                'body' => $assignResp->body()
+            ]);
             $errorMessage = $assignResp->json('message') ?? 'Could not assign virtual account';
             return response()->json(['message' => $errorMessage], 502);
 
