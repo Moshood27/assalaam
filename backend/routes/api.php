@@ -208,6 +208,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/virtual-account/assign-monnify', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assignMonnify']);
     // Virtual Account (Opay DVA)
     Route::post('/virtual-account/assign-opay', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assignOpay']);
+    Route::delete('/virtual-account/paystack', [\App\Http\Controllers\Api\VirtualAccountController::class, 'deletePaystack']);
 
     // Attendance
     Route::get('/attendance/current', [AttendanceController::class, 'current']);

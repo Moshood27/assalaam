@@ -248,4 +248,25 @@ class VirtualAccountController extends Controller
 
         return $this->show($request);
     }
+
+    /**
+     * Delete the Paystack DVA for the authenticated user.
+     */
+    public function deletePaystack(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->virtualAccount) {
+            $user->virtualAccount->update([
+                'paystack_customer_code' => null,
+                'paystack_authorization_code' => null,
+                'dva_account_number' => null,
+                'dva_bank_name' => null,
+                'dva_account_name' => null,
+                'dva_verification_meta' => null,
+            ]);
+        }
+
+        return response()->json(['message' => 'Paystack DVA cleared successfully']);
+    }
 }

@@ -1225,6 +1225,35 @@ class UserResource extends Resource
                             ->send();
                     })
                     ->requiresConfirmation(),
+                Action::make('clearPaystackDVA')
+                    ->label('Clear Paystack DVA')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Clear Paystack Virtual Account')
+                    ->modalDescription('Are you sure you want to clear the Paystack virtual account for this user? They will need to re-generate it if needed.')
+                    ->visible(fn (User $record) => $record->virtualAccount?->paystack_customer_code !== null || $record->virtualAccount?->dva_account_number !== null)
+                    ->action(function (User $record) {
+                        if ($record->virtualAccount) {
+                            $record->virtualAccount->update([
+                                'paystack_customer_code' => null,
+                                'paystack_authorization_code' => null,
+                                'dva_account_number' => null,
+                                'dva_bank_name' => null,
+                                'dva_account_name' => null,
+                                'dva_verification_meta' => null,
+                            ]);
+
+                            ShariahAudit::log(auth()->user(), 'paystack_dva_cleared', [
+                                'user_id' => $record->id,
+                            ]);
+
+                            Notification::make()
+                                ->title('Paystack DVA cleared')
+                                ->success()
+                                ->send();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -1257,6 +1286,38 @@ class UserResource extends Resource
 
                             Notification::make()
                                 ->title("Fines waived for {$count} members")
+                                ->success()
+                                ->send();
+                        }),
+                    Tables\Actions\BulkAction::make('clearPaystackDVABulk')
+                        ->label('Clear Paystack DVA')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Clear Paystack Virtual Accounts')
+                        ->modalDescription('Are you sure you want to clear the Paystack virtual accounts for the selected users?')
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $count = 0;
+                            foreach ($records as $record) {
+                                if ($record->virtualAccount) {
+                                    $record->virtualAccount->update([
+                                        'paystack_customer_code' => null,
+                                        'paystack_authorization_code' => null,
+                                        'dva_account_number' => null,
+                                        'dva_bank_name' => null,
+                                        'dva_account_name' => null,
+                                        'dva_verification_meta' => null,
+                                    ]);
+
+                                    ShariahAudit::log(auth()->user(), 'bulk_paystack_dva_cleared', [
+                                        'user_id' => $record->id,
+                                    ]);
+                                    $count++;
+                                }
+                            }
+
+                            Notification::make()
+                                ->title("Paystack DVA cleared for {$count} members")
                                 ->success()
                                 ->send();
                         }),
