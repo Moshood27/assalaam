@@ -229,7 +229,7 @@ class VirtualAccountController extends Controller
                         }
                     }
                 } else {
-                    Log::info('Paystack Identification successful', ['code' => $customerCode, 'resp' => $identResp->json()]);
+                    Log::info('Paystack Identification successful', ['code' => $customerCode]);
                 }
             }
 
@@ -239,71 +239,21 @@ class VirtualAccountController extends Controller
                 'preferred_bank' => $validated['preferred_bank'] ?? 'titan-paystack',
             ];
 
-            // Note: For /dedicated_account, bvn is not a documented parameter.
-            // We've already done identification above if bvn was provided.
-            // However, for some banks/categories, identification is async and
-            // /dedicated_account might fail if called too soon.
+            if (!empty($validated['bvn'])) {
+                $assignPayload['bvn'] = $validated['bvn'];
+            }
 
             $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', $assignPayload);
-
-            // 4.5 Fallback to /assign if /dedicated_account fails (e.g. identification pending)
-            // But skip fallback if it's just "not identified" and we don't have bank details to fulfill the /assign requirements
-            $canFallback = true;
-            if ($assignResp->json('message') === 'Customer has not been identified' && empty($user->account_number)) {
-                $canFallback = false;
-            }
-
-            if (!$assignResp->successful() && $canFallback && ($assignResp->json('code') === 'invalid_customer_code' || $assignResp->status() === 400)) {
-                Log::info('Paystack DVA: Primary assignment failed, trying /assign fallback', [
-                    'user_id' => $user->id,
-                    'customer_code' => $customerCode,
-                    'resp' => $assignResp->json()
-                ]);
-
-                $fallbackPayload = [
-                    'email'          => $user->email,
-                    'first_name'     => $firstName,
-                    'last_name'      => $lastName,
-                    'phone'          => $phone,
-                    'preferred_bank' => $validated['preferred_bank'] ?? 'titan-paystack',
-                    'country'        => 'NG',
-                ];
-                $fallbackBvn = $validated['bvn'] ?? $user->bvn;
-                if (!empty($fallbackBvn)) {
-                    $fallbackPayload['bvn'] = $fallbackBvn;
-                    // If we have bank details, include them as they are often required for /assign with BVN
-                    if ($user->account_number && $user->bank_code) {
-                        $fallbackPayload['account_number'] = $user->account_number;
-                        $fallbackPayload['bank_code'] = $user->bank_code;
-                    }
-                }
-
-                $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account/assign', $fallbackPayload);
-
-                Log::info('Paystack DVA: Fallback /assign result', [
-                    'user_id' => $user->id,
-                    'status' => $assignResp->status(),
-                    'body' => $assignResp->json()
-                ]);
-            }
 
             // 5. Handle the Response
             if ($assignResp->successful()) {
                 $accData = $assignResp->json('data');
 
-                if ($accData && isset($accData['account_number'])) {
-                    $user->virtualAccount()->updateOrCreate([], [
-                        'dva_account_number' => $accData['account_number'],
-                        'dva_account_name'   => $accData['account_name'],
-                        'dva_bank_name'      => $accData['bank']['name'],
-                    ]);
-                } elseif (!$user->virtualAccount?->dva_account_number) {
-                    // If no account number in response and none in DB, it's likely async processing
-                    return response()->json([
-                        'message' => 'Paystack is setting up your virtual account. We will notify you once it is ready.',
-                        'status' => 'processing'
-                    ], 202);
-                }
+                $user->virtualAccount()->updateOrCreate([], [
+                    'dva_account_number' => $accData['account_number'],
+                    'dva_account_name'   => $accData['account_name'],
+                    'dva_bank_name'      => $accData['bank']['name'],
+                ]);
 
                 $user->update([
                     'bvn' => $validated['bvn'] ?? $user->bvn
@@ -314,16 +264,10 @@ class VirtualAccountController extends Controller
 
             // If assignment fails, handle specific errors
             if ($assignResp->json('code') === 'invalid_customer_code') {
-                if ($assignResp->json('message') === 'Customer has not been identified') {
-                    return response()->json(['message' => 'Paystack is still verifying your identity. Please wait a minute and try again.'], 202);
-                }
-
-                // Only clear if it's truly an invalid code (e.g. not found)
                 $user->virtualAccount()->update(['paystack_customer_code' => null]);
-                Log::warning('Paystack rejected customer during assignment - cleared locally', [
+                Log::warning('Paystack rejected customer code during assignment - cleared locally', [
                     'user_id' => $user->id,
                     'customer_code' => $customerCode,
-                    'resp' => $assignResp->json(),
                     'mode' => config('services.paystack.mode')
                 ]);
                 return response()->json(['message' => 'Identity verification issue. We have reset your record, please try again.'], 422);
