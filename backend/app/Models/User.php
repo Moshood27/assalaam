@@ -327,22 +327,30 @@ class User extends Authenticatable implements FilamentUser
 
     public function getMonnifyDvaAccountNumberAttribute(): ?string
     {
-        return $this->virtualAccount?->monnify_dva_data['accountNumber'] ?? null;
+        return $this->virtualAccount?->monnify_dva_data['accountNumber']
+            ?? $this->virtualAccount?->monnify_dva_data['accounts'][0]['accountNumber']
+            ?? null;
     }
 
     public function getMonnifyDvaAccountNameAttribute(): ?string
     {
-        return $this->virtualAccount?->monnify_dva_data['accountName'] ?? null;
+        return $this->virtualAccount?->monnify_dva_data['accountName']
+            ?? $this->virtualAccount?->monnify_dva_data['accounts'][0]['accountName']
+            ?? null;
     }
 
     public function getMonnifyDvaBankNameAttribute(): ?string
     {
-        return $this->virtualAccount?->monnify_dva_data['bankName'] ?? null;
+        return $this->virtualAccount?->monnify_dva_data['bankName']
+            ?? $this->virtualAccount?->monnify_dva_data['accounts'][0]['bankName']
+            ?? null;
     }
 
     public function getMonnifyDvaBankCodeAttribute(): ?string
     {
-        return $this->virtualAccount?->monnify_dva_data['bankCode'] ?? null;
+        return $this->virtualAccount?->monnify_dva_data['bankCode']
+            ?? $this->virtualAccount?->monnify_dva_data['accounts'][0]['bankCode']
+            ?? null;
     }
 
     public function getOpayUserReferenceAttribute(): ?string

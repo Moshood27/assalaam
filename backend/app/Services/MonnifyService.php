@@ -118,7 +118,22 @@ class MonnifyService
         $lastName = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : 'Coop';
 
         $virtualAccount = $user->virtualAccount;
-        $customerReference = $virtualAccount->monnify_customer_reference ?? 'MON_' . $user->id . '_' . time();
+        $customerReference = $virtualAccount?->monnify_customer_reference ?? 'MON_' . $user->id;
+
+        // Try to fetch existing reserved account first
+        try {
+            $fetchResponse = Http::withToken($token)->get("{$this->baseUrl}/api/v2/bank-transfer/reserved-accounts/customer-reference/" . urlencode($customerReference));
+            if ($fetchResponse->successful() && !empty($fetchResponse->json('responseBody.accounts'))) {
+                $data = $fetchResponse->json('responseBody');
+                $user->virtualAccount()->updateOrCreate([], [
+                    'monnify_customer_reference' => $customerReference,
+                    'monnify_dva_data' => $data
+                ]);
+                return ['success' => true, 'data' => $data];
+            }
+        } catch (\Exception $e) {
+            Log::warning('Monnify existing account fetch failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        }
 
         $payload = [
             'accountReference' => 'REF_' . $user->id . '_' . time(),

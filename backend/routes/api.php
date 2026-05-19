@@ -201,6 +201,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     // Virtual Account (Paystack DVA)
     Route::get('/virtual-account', [\App\Http\Controllers\Api\VirtualAccountController::class, 'show']);
     Route::post('/virtual-account/assign', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assign']);
+    Route::post('/virtual-account/requery', [\App\Http\Controllers\Api\VirtualAccountController::class, 'requeryPaystack']);
     // Virtual Account (Flutterwave DVA)
     Route::post('/virtual-account/assign-flutterwave', [\App\Http\Controllers\Api\VirtualAccountController::class, 'assignFlutterwave']);
     Route::post('/virtual-account/regenerate-flutterwave', [\App\Http\Controllers\Api\VirtualAccountController::class, 'regenerateFlutterwave']);

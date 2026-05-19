@@ -125,11 +125,24 @@
                   <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Account Number</p>
                   <p class="font-black text-emerald-700 text-xl tracking-wider">{{ wallet.virtual_account.account_number }}</p>
                 </div>
-                <button @click="copy(wallet.virtual_account.account_number)" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg hover:bg-emerald-100 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                  </svg>
-                </button>
+                <div class="flex gap-2">
+                  <button @click="requeryPaystack" :disabled="requerying" 
+                          title="Sync transactions"
+                          class="bg-blue-50 text-blue-700 p-2 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50">
+                    <svg v-if="!requerying" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <svg v-else class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </button>
+                  <button @click="copy(wallet.virtual_account.account_number)" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg hover:bg-emerald-100 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             <p class="text-[11px] text-slate-500 text-center px-4">Transfer funds to this account to top up your wallet instantly.</p>
@@ -738,6 +751,7 @@ const assigning = ref(false)
 const assigningFlw = ref(false)
 const assigningMonnify = ref(false)
 const assigningOpay = ref(false)
+const requerying = ref(false)
 const flwBvn = ref('')
 const flwBvnDigits = computed(() => String(flwBvn.value || '').replace(/\D/g, ''))
 const flwBvnValid = computed(() => flwBvnDigits.value.length === 11)
@@ -837,9 +851,9 @@ const assignOpayDva = async () => {
     assigningOpay.value = true
     await axios.post('/api/virtual-account/assign-opay')
     await loadWallet()
-    alert('Opay virtual account generated!')
+    showNotice('Success', 'Opay virtual account generated!', 'success')
   } catch (e) {
-    alert(e?.response?.data?.message || 'Failed to generate Opay virtual account')
+    showNotice('Error', e?.response?.data?.message || 'Failed to generate Opay virtual account', 'error')
   } finally {
     assigningOpay.value = false
   }
@@ -884,7 +898,7 @@ const initTopup = async () => {
     const { data } = await axios.post('/api/wallet/topup/initiate', payload)
     window.location.href = data.checkout_url
   } catch (e) {
-    alert(e?.response?.data?.message || 'Failed to start top-up')
+    showNotice('Error', e?.response?.data?.message || 'Failed to start top-up', 'error')
   } finally {
     loading.value = false
   }
@@ -895,16 +909,36 @@ const assignVirtualAccount = async () => {
     assigning.value = true
     const payload = {}
     if (bvnDigits.value.length === 11) payload.bvn = bvnDigits.value
-    const { data } = await axios.post('/api/virtual-account/assign', payload)
+    const resp = await axios.post('/api/virtual-account/assign', payload)
+    const data = resp.data
+    const status = resp.status
+    
     const assigned = Boolean(data?.bvn_assigned ?? true)
     try { localStorage.setItem('bvn_assigned', JSON.stringify(assigned)) } catch (_) {}
     await loadWallet()
     bvn.value = ''
-    alert('Virtual account generated!')
+    
+    if (status === 202) {
+      showNotice('In Progress', data.message || 'Virtual account creation is in progress. You will be notified once it is ready.', 'info')
+    } else {
+      showNotice('Success', 'Virtual account generated!', 'success')
+    }
   } catch (e) {
-    alert(e?.response?.data?.message || 'Failed to generate virtual account')
+    showNotice('Error', e?.response?.data?.message || 'Failed to generate virtual account', 'error')
   } finally {
     assigning.value = false
+  }
+}
+
+const requeryPaystack = async () => {
+  try {
+    requerying.value = true
+    const { data } = await axios.post('/api/virtual-account/requery')
+    showNotice('Sync Successful', data.message || 'Requery successful. Any pending transactions will be processed shortly.', 'success')
+  } catch (e) {
+    showNotice('Sync Failed', e?.response?.data?.message || 'Requery failed', 'error')
+  } finally {
+    requerying.value = false
   }
 }
 
@@ -915,9 +949,9 @@ const assignFlutterwaveDva = async () => {
     await axios.post('/api/virtual-account/assign-flutterwave', payload)
     await loadWallet()
     flwBvn.value = ''
-    alert('Flutterwave virtual account generated!')
+    showNotice('Success', 'Flutterwave virtual account generated!', 'success')
   } catch (e) {
-    alert(e?.response?.data?.message || 'Failed to generate Flutterwave virtual account')
+    showNotice('Error', e?.response?.data?.message || 'Failed to generate Flutterwave virtual account', 'error')
   } finally {
     assigningFlw.value = false
   }
@@ -928,16 +962,16 @@ const assignMonnifyDva = async () => {
     assigningMonnify.value = true
     await axios.post('/api/virtual-account/assign-monnify')
     await loadWallet()
-    alert('Monnify virtual account generated!')
+    showNotice('Success', 'Monnify virtual account generated!', 'success')
   } catch (e) {
-    alert(e?.response?.data?.message || 'Failed to generate Monnify virtual account')
+    showNotice('Error', e?.response?.data?.message || 'Failed to generate Monnify virtual account', 'error')
   } finally {
     assigningMonnify.value = false
   }
 }
 
 const copy = async (text) => {
-  try { await navigator.clipboard.writeText(String(text || '')); alert('Copied'); } catch (_) {}
+  try { await navigator.clipboard.writeText(String(text || '')); showNotice('Copied to clipboard', '', 'success'); } catch (_) {}
 }
 
 const goAllocate = () => {
