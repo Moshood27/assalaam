@@ -234,7 +234,24 @@ class VirtualAccountController extends Controller
                 } else {
                     Log::info('Paystack Identification successful', ['code' => $customerCode, 'resp' => $identResp->json()]);
                 }
-                usleep(3000000); // 3s delay to allow identification/customer propagation
+
+                // Poll for identification status (max 5 attempts, every 2s = 10s total)
+                // This is crucial for Titan Trust which requires confirmed identification
+                $isIdentified = false;
+                for ($i = 0; $i < 5; $i++) {
+                    usleep(2000000);
+                    $checkResp = Http::withToken($secret)->get("https://api.paystack.co/customer/{$customerCode}");
+                    if ($checkResp->successful() && $checkResp->json('data.identified')) {
+                        $isIdentified = true;
+                        Log::info('Paystack Customer verified as identified via polling', ['code' => $customerCode, 'attempt' => $i + 1]);
+                        break;
+                    }
+                    Log::info('Paystack Customer still not identified, waiting...', ['code' => $customerCode, 'attempt' => $i + 1]);
+                }
+
+                if (!$isIdentified) {
+                    Log::warning('Paystack Customer not identified after polling, proceeding with assignment attempt anyway', ['code' => $customerCode]);
+                }
             }
 
             // 4. Assign the Dedicated Virtual Account
@@ -255,8 +272,8 @@ class VirtualAccountController extends Controller
 
             // If it failed with identification issue, wait and retry once
             if (!$assignResp->successful() && str_contains(strtolower($assignResp->json('message') ?? ''), 'identif')) {
-                Log::info('Paystack DVA assignment: detected identification issue, retrying in 3s...', ['code' => $customerCode]);
-                usleep(3000000);
+                Log::info('Paystack DVA assignment: detected identification issue, retrying in 5s...', ['code' => $customerCode]);
+                sleep(5);
                 $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', $assignPayload);
             }
 
