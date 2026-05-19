@@ -149,21 +149,42 @@
               <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
             </div>
 
-            <div v-else class="space-y-3">
-              <p class="text-sm text-slate-500">No virtual account yet. Generate one to fund via bank transfer.</p>
-              <div class="space-y-2">
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">BVN (optional)</label>
-                <div class="relative group">
-                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-emerald-600 text-slate-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
-                    </svg>
+            <div v-else class="space-y-4">
+              <p class="text-[11px] text-slate-500 bg-emerald-50 p-3 rounded-xl border border-emerald-100/50">To comply with regulations, we need to verify your identity before generating a dedicated bank account for you.</p>
+              
+              <div class="space-y-4">
+                <div class="space-y-1.5">
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">BVN (optional)</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5" />
+                      </svg>
+                    </div>
+                    <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
+                           class="w-full bg-slate-50 pl-11 p-3.5 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
                   </div>
-                  <input v-model="bvn" type="tel" inputmode="numeric" maxlength="11" placeholder="11-digit BVN"
-                         class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                  <p v-if="bvn && !bvnValid" class="text-rose-600 text-[10px] font-bold px-1">Please enter a valid 11-digit BVN.</p>
                 </div>
-                <p v-if="bvn && !bvnValid" class="text-rose-600 text-[10px] font-bold">Please enter a valid 11-digit BVN.</p>
-                <p class="text-[10px] text-slate-400 leading-tight">Providing your BVN helps us verify your dedicated account faster.</p>
+
+                <div class="grid grid-cols-1 gap-4">
+                  <div class="space-y-1.5">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Personal Bank</label>
+                    <select v-model="userBankCode" @focus="loadBanks"
+                            class="w-full bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none">
+                      <option value="">Select your bank</option>
+                      <option v-for="bank in banks" :key="bank.code" :value="bank.code">{{ bank.name }}</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Account Number</label>
+                    <input v-model="userAccountNumber" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit Account Number"
+                           class="w-full bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                  </div>
+                </div>
+
+                <p class="text-[10px] text-slate-400 leading-tight px-1">Your details are sent securely to Paystack for identity verification only.</p>
               </div>
             </div>
           </div>
@@ -756,6 +777,12 @@ const flwBvn = ref('')
 const flwBvnDigits = computed(() => String(flwBvn.value || '').replace(/\D/g, ''))
 const flwBvnValid = computed(() => flwBvnDigits.value.length === 11)
 
+// Bank details for KYC (Paystack)
+const userBankCode = ref('')
+const userAccountNumber = ref('')
+const banks = ref([])
+const fetchingBanks = ref(false)
+
 // Withdraw to bank form state
 const withdrawAmount = ref('')
 const withdrawNote = ref('')
@@ -838,6 +865,12 @@ const loadWallet = async () => {
   }
   // Prefer server-provided recent list
   transactions.value = data.recent_transactions || []
+
+  // Pre-fill KYC details if available
+  if (data.virtual_account) {
+    if (data.virtual_account.user_bank_code) userBankCode.value = data.virtual_account.user_bank_code
+    if (data.virtual_account.user_account_number) userAccountNumber.value = data.virtual_account.user_account_number
+  }
 }
 
 const resetWithdrawals = async () => {
@@ -909,6 +942,9 @@ const assignVirtualAccount = async () => {
     assigning.value = true
     const payload = {}
     if (bvnDigits.value.length === 11) payload.bvn = bvnDigits.value
+    if (userBankCode.value) payload.bank_code = userBankCode.value
+    if (userAccountNumber.value) payload.account_number = userAccountNumber.value
+
     const resp = await axios.post('/api/virtual-account/assign', payload)
     const data = resp.data
     const status = resp.status
@@ -927,6 +963,19 @@ const assignVirtualAccount = async () => {
     showNotice('Error', e?.response?.data?.message || 'Failed to generate virtual account', 'error')
   } finally {
     assigning.value = false
+  }
+}
+
+const loadBanks = async () => {
+  if (banks.value.length) return
+  try {
+    fetchingBanks.value = true
+    const { data } = await axios.get('/api/banks?gateway=paystack')
+    banks.value = data.banks || []
+  } catch (e) {
+    console.error('Failed to load banks', e)
+  } finally {
+    fetchingBanks.value = false
   }
 }
 

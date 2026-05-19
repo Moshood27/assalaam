@@ -88,6 +88,8 @@ class VirtualAccountController extends Controller
             'preferred_bank' => 'nullable|string',
             'phone' => 'nullable|string',
             'bvn' => 'nullable|string|digits:11',
+            'account_number' => 'nullable|string',
+            'bank_code' => 'nullable|string',
         ]);
 
         $phone = $validated['phone'] ?? $user->phone;
@@ -107,6 +109,14 @@ class VirtualAccountController extends Controller
 
         if (!empty($validated['bvn']) && $validated['bvn'] !== $user->bvn) {
             $user->update(['bvn' => $validated['bvn']]);
+        }
+
+        if (!empty($validated['account_number']) && $validated['account_number'] !== $user->account_number) {
+            $user->update(['account_number' => $validated['account_number']]);
+        }
+
+        if (!empty($validated['bank_code']) && $validated['bank_code'] !== $user->bank_code) {
+            $user->update(['bank_code' => $validated['bank_code']]);
         }
 
         try {
@@ -223,7 +233,7 @@ class VirtualAccountController extends Controller
                     'mode' => config('services.paystack.mode'),
                     'body' => $lastResp?->body() ?? 'No response'
                 ]);
-                return response()->json(['message' => $errorMsg], 502);
+                return response()->json(['message' => $errorMsg], 422);
             }
 
             // Save/Update the customer code locally
@@ -285,15 +295,15 @@ class VirtualAccountController extends Controller
                 return $this->show($request);
             }
 
-            // If assignment fails, try single-step fallback (especially if it was a customer code issue)
-            if ($assignResp->json('code') === 'invalid_customer_code' || $assignResp->status() === 422) {
+            // If assignment fails, try single-step fallback (especially if it was a customer code issue or identification required)
+            if ($assignResp->json('code') === 'invalid_customer_code' || $assignResp->status() === 422 || str_contains($assignResp->body(), 'identified')) {
                 Log::info('Paystack Sync: Multi-step failed, trying single-step fallback', [
                     'user_id' => $user->id,
                     'code' => $customerCode,
                     'resp' => $assignResp->json()
                 ]);
 
-                $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account/assign', [
+                $fallbackData = [
                     'email'          => $user->email,
                     'first_name'     => $firstName,
                     'last_name'      => $lastName,
@@ -301,7 +311,21 @@ class VirtualAccountController extends Controller
                     'preferred_bank' => $validated['preferred_bank'] ?? (config('services.paystack.mode') === 'live' ? 'titan-paystack' : 'test-bank'),
                     'country'        => 'NG',
                     'bvn'            => $bvn,
-                ]);
+                ];
+
+                if ($user->other_names) {
+                    $fallbackData['middle_name'] = $user->other_names;
+                }
+
+                if ($user->account_number) {
+                    $fallbackData['account_number'] = $user->account_number;
+                }
+
+                if ($user->bank_code) {
+                    $fallbackData['bank_code'] = $user->bank_code;
+                }
+
+                $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account/assign', $fallbackData);
 
                 if ($assignResp->successful()) {
                     $accData = $assignResp->json('data');
@@ -328,7 +352,8 @@ class VirtualAccountController extends Controller
                 'body' => $assignResp->body()
             ]);
             $errorMessage = $assignResp->json('message') ?? 'Could not assign virtual account';
-            return response()->json(['message' => $errorMessage], 502);
+            $statusCode = $assignResp->status() === 422 ? 422 : 503;
+            return response()->json(['message' => $errorMessage], $statusCode);
 
         } catch (\Throwable $e) {
             Log::error('DVA Exception', ['msg' => $e->getMessage()]);
