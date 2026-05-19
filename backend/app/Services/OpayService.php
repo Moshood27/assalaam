@@ -101,36 +101,12 @@ class OpayService
     public function createVirtualAccount(User $user)
     {
         $virtualAccount = $user->virtualAccount;
+        // Ensure user has a virtual account record
         if (!$virtualAccount) {
             $virtualAccount = $user->virtualAccount()->create([]);
         }
 
-        $userReference = $virtualAccount->opay_user_reference ?? 'OPY_' . $user->id;
-
-        // Try to query existing first
-        try {
-            $queryPayload = [
-                'merchantId' => $this->merchantId,
-                'userReference' => $userReference,
-            ];
-            $querySignature = hash_hmac('sha512', json_encode($queryPayload), $this->secretKey);
-            $queryResponse = Http::withHeaders([
-                'Authorization' => "Bearer {$querySignature}",
-                'MerchantId' => $this->merchantId,
-                'Content-Type' => 'application/json',
-            ])->post("{$this->baseUrl}/merchant/v1/user/account/query", $queryPayload);
-
-            if ($queryResponse->successful() && !empty($queryResponse->json('data.accountNumber'))) {
-                $data = $queryResponse->json('data');
-                $user->virtualAccount()->updateOrCreate([], [
-                    'opay_user_reference' => $userReference,
-                    'opay_dva_data' => $data
-                ]);
-                return ['success' => true, 'data' => $data];
-            }
-        } catch (\Exception $e) {
-            Log::warning('Opay existing account query failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-        }
+        $userReference = $virtualAccount->opay_user_reference ?? 'OPY_' . $user->id . '_' . bin2hex(random_bytes(4));
 
         $payload = [
             'merchantId' => $this->merchantId,

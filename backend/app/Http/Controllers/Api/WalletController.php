@@ -130,10 +130,6 @@ class WalletController extends Controller
                 'account_number' => $user->dva_account_number,
                 'account_name' => $user->dva_account_name,
                 'bank_name' => $user->dva_bank_name,
-                'user_bank_name' => $user->bank_name,
-                'user_bank_code' => $user->bank_code,
-                'user_account_number' => $user->account_number,
-                'user_account_name' => $user->account_name,
                 'bvn_assigned' => (bool) ($user->bvn || $user->bvn_verified_at || ($user->dva_account_number && $user->dva_bank_name)),
                 'verification_details' => ($user->dva_bank_name && $user->dva_account_number)
                     ? ($user->dva_bank_name . ' - ' . $user->dva_account_number . (

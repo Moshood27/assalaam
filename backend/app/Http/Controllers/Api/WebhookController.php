@@ -550,47 +550,6 @@ class WebhookController extends Controller
             }
         }
 
-        // Handle Dedicated Account & Identification events
-        if (in_array($event, [
-            'dedicatedaccount.assign.success',
-            'dedicatedaccount.assign.failed',
-            'customeridentification.success',
-            'customeridentification.failed'
-        ])) {
-            $customerCode = $data['customer']['customer_code'] ?? ($data['customer_code'] ?? null);
-            $user = null;
-
-            if ($customerCode) {
-                $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
-            }
-
-            if (!$user) {
-                $email = $data['customer']['email'] ?? ($data['email'] ?? null);
-                if ($email) {
-                    $user = User::where('email', $email)->first();
-                }
-            }
-
-            if ($user) {
-                if ($event === 'dedicatedaccount.assign.success' && !empty($data['dedicated_account'])) {
-                    $user->virtualAccount()->updateOrCreate([], [
-                        'dva_account_number' => $data['dedicated_account']['account_number'],
-                        'dva_account_name'   => $data['dedicated_account']['account_name'],
-                        'dva_bank_name'      => $data['dedicated_account']['bank']['name'] ?? 'Paystack',
-                        'paystack_customer_code' => $customerCode,
-                    ]);
-                    $user->notifyMember('Virtual Account Created', 'Your dedicated virtual account has been successfully created.', ['type' => 'dva_created']);
-                } elseif ($event === 'customeridentification.failed') {
-                    $reason = $data['reason'] ?? 'Identity verification failed';
-                    Log::warning('Paystack identification failed via webhook', ['user_id' => $user->id, 'reason' => $reason]);
-                    $user->notifyMember('Virtual Account Verification Failed', "We couldn't verify your identity: {$reason}. Please check your BVN and name.", ['type' => 'dva_failed']);
-                } elseif ($event === 'dedicatedaccount.assign.failed' || $event === 'customeridentification.failed') {
-                    Log::error('Paystack DVA assignment failed via webhook', ['user_id' => $user->id, 'data' => $data]);
-                    $user->notifyMember('Virtual Account Creation Failed', 'We encountered an issue creating your virtual account. Please contact support.', ['type' => 'dva_failed']);
-                }
-            }
-        }
-
         return response()->json(['status' => 'success']);
     }
 

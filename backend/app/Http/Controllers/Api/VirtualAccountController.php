@@ -88,8 +88,6 @@ class VirtualAccountController extends Controller
             'preferred_bank' => 'nullable|string',
             'phone' => 'nullable|string',
             'bvn' => 'nullable|string|digits:11',
-            'account_number' => 'nullable|string',
-            'bank_code' => 'nullable|string',
         ]);
 
         $phone = $validated['phone'] ?? $user->phone;
@@ -109,14 +107,6 @@ class VirtualAccountController extends Controller
 
         if (!empty($validated['bvn']) && $validated['bvn'] !== $user->bvn) {
             $user->update(['bvn' => $validated['bvn']]);
-        }
-
-        if (!empty($validated['account_number']) && $validated['account_number'] !== $user->account_number) {
-            $user->update(['account_number' => $validated['account_number']]);
-        }
-
-        if (!empty($validated['bank_code']) && $validated['bank_code'] !== $user->bank_code) {
-            $user->update(['bank_code' => $validated['bank_code']]);
         }
 
         try {
@@ -153,20 +143,6 @@ class VirtualAccountController extends Controller
                 if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
                     $customerCode = $fetchResp->json('data.customer_code');
                     Log::info('Paystack Sync: Step B Found', ['code' => $customerCode]);
-
-                    // If they already have a dedicated account, save it and we're done
-                    $dva = $fetchResp->json('data.dedicated_account');
-                    if ($dva && !empty($dva['account_number'])) {
-                        $user->virtualAccount()->updateOrCreate([], [
-                            'paystack_customer_code' => $customerCode,
-                            'dva_account_number' => $dva['account_number'],
-                            'dva_account_name'   => $dva['account_name'],
-                            'dva_bank_name'      => $dva['bank']['name'],
-                        ]);
-                        Log::info('Paystack Sync: Step B - Existing DVA recovered', ['acc' => $dva['account_number']]);
-                        return $this->show($request);
-                    }
-
                     // Verify it with a PUT to ensure it's valid for this environment
                     $lastResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$customerCode}", $customerPayload);
                     if ($lastResp->successful()) {
@@ -199,19 +175,6 @@ class VirtualAccountController extends Controller
                     $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
                     if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
                         $customerCode = $fetchResp->json('data.customer_code');
-
-                        // Check for DVA here too
-                        $dva = $fetchResp->json('data.dedicated_account');
-                        if ($dva && !empty($dva['account_number'])) {
-                            $user->virtualAccount()->updateOrCreate([], [
-                                'paystack_customer_code' => $customerCode,
-                                'dva_account_number' => $dva['account_number'],
-                                'dva_account_name'   => $dva['account_name'],
-                                'dva_bank_name'      => $dva['bank']['name'],
-                            ]);
-                            return $this->show($request);
-                        }
-
                         $lastResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$customerCode}", $customerPayload);
                         $syncSuccess = $lastResp->successful();
                         if ($syncSuccess) {
@@ -233,7 +196,7 @@ class VirtualAccountController extends Controller
                     'mode' => config('services.paystack.mode'),
                     'body' => $lastResp?->body() ?? 'No response'
                 ]);
-                return response()->json(['message' => $errorMsg], 422);
+                return response()->json(['message' => $errorMsg], 502);
             }
 
             // Save/Update the customer code locally
@@ -273,8 +236,12 @@ class VirtualAccountController extends Controller
             // 4. Assign the Dedicated Virtual Account
             $assignPayload = [
                 'customer'       => $customerCode,
-                'preferred_bank' => $validated['preferred_bank'] ?? (config('services.paystack.mode') === 'live' ? 'titan-paystack' : 'test-bank'),
+                'preferred_bank' => $validated['preferred_bank'] ?? 'titan-paystack',
             ];
+
+            if (!empty($validated['bvn'])) {
+                $assignPayload['bvn'] = $validated['bvn'];
+            }
 
             $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', $assignPayload);
 
@@ -295,119 +262,27 @@ class VirtualAccountController extends Controller
                 return $this->show($request);
             }
 
-            // If assignment fails, try single-step fallback (especially if it was a customer code issue or identification required)
-            if ($assignResp->json('code') === 'invalid_customer_code' || $assignResp->status() === 422 || str_contains($assignResp->body(), 'identified')) {
-                Log::info('Paystack Sync: Multi-step failed, trying single-step fallback', [
+            // If assignment fails, handle specific errors
+            if ($assignResp->json('code') === 'invalid_customer_code') {
+                $user->virtualAccount()->update(['paystack_customer_code' => null]);
+                Log::warning('Paystack rejected customer code during assignment - cleared locally', [
                     'user_id' => $user->id,
-                    'code' => $customerCode,
-                    'resp' => $assignResp->json()
+                    'customer_code' => $customerCode,
+                    'mode' => config('services.paystack.mode')
                 ]);
-
-                $fallbackData = [
-                    'email'          => $user->email,
-                    'first_name'     => $firstName,
-                    'last_name'      => $lastName,
-                    'phone'          => $phone,
-                    'preferred_bank' => $validated['preferred_bank'] ?? (config('services.paystack.mode') === 'live' ? 'titan-paystack' : 'test-bank'),
-                    'country'        => 'NG',
-                    'bvn'            => $bvn,
-                ];
-
-                if ($user->other_names) {
-                    $fallbackData['middle_name'] = $user->other_names;
-                }
-
-                if ($user->account_number) {
-                    $fallbackData['account_number'] = $user->account_number;
-                }
-
-                if ($user->bank_code) {
-                    $fallbackData['bank_code'] = $user->bank_code;
-                }
-
-                $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account/assign', $fallbackData);
-
-                if ($assignResp->successful()) {
-                    $accData = $assignResp->json('data');
-                    if (!empty($accData['account_number'])) {
-                        $user->virtualAccount()->updateOrCreate([], [
-                            'dva_account_number' => $accData['account_number'],
-                            'dva_account_name'   => $accData['account_name'],
-                            'dva_bank_name'      => $accData['bank']['name'],
-                            'paystack_customer_code' => $accData['customer']['customer_code'] ?? $customerCode,
-                        ]);
-                        return $this->show($request);
-                    }
-
-                    return response()->json([
-                        'message' => 'Virtual account creation is in progress. You will be notified once it is ready.',
-                        'status' => 'processing'
-                    ], 202);
-                }
+                return response()->json(['message' => 'Identity verification issue. We have reset your record, please try again.'], 422);
             }
 
-            // If still failed, log and return error
             Log::error('DVA Assignment failed', [
                 'mode' => config('services.paystack.mode'),
                 'body' => $assignResp->body()
             ]);
             $errorMessage = $assignResp->json('message') ?? 'Could not assign virtual account';
-            $statusCode = $assignResp->status() === 422 ? 422 : 503;
-            return response()->json(['message' => $errorMessage], $statusCode);
+            return response()->json(['message' => $errorMessage], 502);
 
         } catch (\Throwable $e) {
             Log::error('DVA Exception', ['msg' => $e->getMessage()]);
             return response()->json(['message' => 'An unexpected error occurred.'], 500);
-        }
-    }
-
-    /**
-     * Requery the Paystack Dedicated Virtual Account for missed transactions.
-     */
-    public function requeryPaystack(Request $request)
-    {
-        $user = $request->user();
-        $virtualAccount = $user->virtualAccount;
-
-        if (!$virtualAccount || !$virtualAccount->dva_account_number) {
-            return response()->json(['message' => 'No virtual account found to requery'], 404);
-        }
-
-        $secret = config('services.paystack.secret_key');
-        if (!$secret) {
-            return response()->json(['message' => 'Paystack not configured'], 500);
-        }
-
-        // Determine provider slug from bank name
-        $bankName = strtolower($virtualAccount->dva_bank_name);
-        $providerSlug = 'wema-bank'; // default
-        if (str_contains($bankName, 'titan')) {
-            $providerSlug = 'titan-paystack';
-        }
-
-        $accountNumber = $virtualAccount->dva_account_number;
-
-        try {
-            $resp = Http::withToken($secret)->get("https://api.paystack.co/dedicated_account/requery", [
-                'account_number' => $accountNumber,
-                'provider_slug'  => $providerSlug,
-            ]);
-
-            if ($resp->successful()) {
-                return response()->json([
-                    'message' => 'Requery successful. Any pending transactions will be processed via webhook shortly.',
-                    'data' => $resp->json('data')
-                ]);
-            }
-
-            return response()->json([
-                'message' => $resp->json('message') ?? 'Requery failed',
-                'details' => $resp->json('data')
-            ], $resp->status());
-
-        } catch (\Throwable $e) {
-            Log::error('Paystack Requery Exception', ['msg' => $e->getMessage()]);
-            return response()->json(['message' => 'Could not connect to Paystack'], 503);
         }
     }
 
@@ -475,11 +350,6 @@ class VirtualAccountController extends Controller
     public function assignOpay(Request $request)
     {
         $user = $request->user();
-
-        if (empty($user->phone)) {
-            return response()->json(['message' => 'Phone number is required. Please update your profile.'], 422);
-        }
-
         $service = app(OpayService::class);
         $result = $service->createVirtualAccount($user);
 
