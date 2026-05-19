@@ -571,10 +571,12 @@ import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAppStatusStore } from '../stores/appStatus'
 import axios from '../http'
 import getImageUrl from '../utils/image'
 
 const router = useRouter()
+const appStatusStore = useAppStatusStore()
 
 const activeTab = ref('account')
 const searchQuery = ref('')

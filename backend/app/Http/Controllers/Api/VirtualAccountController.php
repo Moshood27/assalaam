@@ -111,7 +111,8 @@ class VirtualAccountController extends Controller
 
         try {
             // 3. Sync/Upsert Customer on Paystack
-            $customerCode = $user->virtualAccount?->paystack_customer_code;
+            $customerCode = trim((string)($user->virtualAccount?->paystack_customer_code));
+            if (empty($customerCode)) $customerCode = null;
             $customerPayload = [
                 'first_name' => $firstName,
                 'last_name'  => $lastName,
@@ -169,7 +170,7 @@ class VirtualAccountController extends Controller
                     $customerCode = $lastResp->json('data.customer_code');
                     $syncSuccess = true;
                     Log::info('Paystack Sync: Step C Success', ['code' => $customerCode]);
-                    usleep(500000); // 0.5s delay to allow propagation
+                    usleep(1000000); // 1s delay to allow propagation
                 } elseif ($lastResp->json('message') === 'Customer already exists' || $lastResp->json('code') === 'duplicate_email') {
                     Log::info('Paystack Sync: Step C - Already exists, final attempt to fetch');
                     // If it exists but we couldn't create it, try one last GET + PUT to be sure
@@ -231,19 +232,18 @@ class VirtualAccountController extends Controller
                     }
                 } else {
                     Log::info('Paystack Identification successful', ['code' => $customerCode]);
-                    usleep(500000); // 0.5s delay
                 }
+                usleep(1000000); // 1s delay to allow identification/customer propagation
             }
 
             // 4. Assign the Dedicated Virtual Account
             $assignPayload = [
                 'customer'       => $customerCode,
                 'preferred_bank' => $validated['preferred_bank'] ?? 'titan-paystack',
+                'first_name'     => $firstName,
+                'last_name'      => $lastName,
+                'phone'          => $phone,
             ];
-
-            if ($bvn) {
-                $assignPayload['bvn'] = $bvn;
-            }
 
             $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', $assignPayload);
 
@@ -301,7 +301,8 @@ class VirtualAccountController extends Controller
                 Log::warning('Paystack rejected customer code during assignment - cleared locally', [
                     'user_id' => $user->id,
                     'customer_code' => $customerCode,
-                    'mode' => config('services.paystack.mode')
+                    'mode' => config('services.paystack.mode'),
+                    'response' => $assignResp->json()
                 ]);
                 return response()->json(['message' => 'Identity verification issue. We have reset your record, please try again.'], 422);
             }
