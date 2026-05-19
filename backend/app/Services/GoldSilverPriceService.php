@@ -196,6 +196,10 @@ class GoldSilverPriceService
                 Log::error("GoldAPI Error: Invalid API Key. Please check GOLDAPI_KEY in .env. Falling back to mock prices.");
                 // Cache the invalid status for 24 hours to avoid repeated failed calls
                 Cache::put('gold_api_key_v1_invalid', true, now()->addDay());
+            } elseif (str_contains($body, 'quota exceeded')) {
+                Log::warning("GoldAPI Quota Exceeded. Falling back to mock prices.");
+                // Cache the invalid status for 6 hours
+                Cache::put('gold_api_key_v1_invalid', true, now()->addHours(6));
             } else {
                 Log::warning("Failed to fetch price for {$symbol}: " . $body);
             }
