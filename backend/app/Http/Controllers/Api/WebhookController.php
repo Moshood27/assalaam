@@ -533,6 +533,9 @@ class WebhookController extends Controller
                     }
                 } else {
                     Log::warning('Paystack DVA assignment failed via webhook', ['user_id' => $user->id, 'data' => $data]);
+                    // Clear the code so they can try again fresh
+                    $user->virtualAccount()->update(['paystack_customer_code' => null]);
+
                     $user->notifyMember('Virtual Account Failed', "We couldn't set up your virtual account. Please contact support.", [
                         'type' => 'dva_failed',
                         'route' => '/wallet'
@@ -558,7 +561,10 @@ class WebhookController extends Controller
                     Log::info('Paystack Customer Identification successful via webhook', ['user_id' => $user->id]);
                 } else {
                     $reason = $data['reason'] ?? 'Verification failed';
-                    Log::warning('Paystack Customer Identification failed via webhook', ['user_id' => $user->id, 'reason' => $reason]);
+                    Log::warning('Paystack Customer Identification failed via webhook', ['user_id' => $user->id, 'reason' => $reason, 'data' => $data]);
+                    // Clear the code so they can try again fresh
+                    $user->virtualAccount()->update(['paystack_customer_code' => null]);
+
                     $user->notifyMember('Identity Verification Failed', "Paystack identity verification failed: {$reason}. Please check your BVN details.", [
                         'type' => 'identity_failed',
                         'reason' => $reason,
