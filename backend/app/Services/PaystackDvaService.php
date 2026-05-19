@@ -110,6 +110,12 @@ class PaystackDvaService
             'last_name'  => $names['last_name'],
         ]);
 
+        Log::info('Paystack Service: Identification response', [
+            'code' => $customerCode,
+            'status' => $resp->status(),
+            'resp' => $resp->json()
+        ]);
+
         return [
             'success' => $resp->successful(),
             'already_identified' => ($resp->json('message') === 'Customer already identified'),

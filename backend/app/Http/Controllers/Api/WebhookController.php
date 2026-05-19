@@ -47,8 +47,14 @@ class WebhookController extends Controller
             $customerCode = $data['customer_code'] ?? null;
             if (!$customerCode) return response()->json(['status' => 'ok']);
 
+            Log::info('Paystack Webhook: Customer identification successful', [
+                'customer_code' => $customerCode,
+                'full_data' => $data
+            ]);
+
             $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
             if ($user) {
+                $user->update(['bvn_verified_at' => now()]);
                 Log::info('Paystack Webhook: Customer identification successful, triggering DVA assignment', ['user_id' => $user->id, 'customer_code' => $customerCode]);
 
                 // Prepare common payload for assignment
@@ -87,7 +93,11 @@ class WebhookController extends Controller
 
         if ($event === 'customeridentification.failed') {
             $customerCode = $data['customer_code'] ?? null;
-            Log::warning('Paystack Webhook: Customer identification failed', ['customer_code' => $customerCode, 'reason' => $data['reason'] ?? 'unknown']);
+            Log::warning('Paystack Webhook: Customer identification failed', [
+                'customer_code' => $customerCode,
+                'reason' => $data['reason'] ?? 'unknown',
+                'full_data' => $data
+            ]);
 
             if ($customerCode) {
                 $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();

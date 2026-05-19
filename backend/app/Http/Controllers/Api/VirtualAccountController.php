@@ -90,6 +90,8 @@ class VirtualAccountController extends Controller
             'preferred_bank' => 'nullable|string',
             'phone' => 'nullable|string',
             'bvn' => 'nullable|string|digits:11',
+            'first_name' => 'nullable|string|max:100',
+            'last_name' => 'nullable|string|max:100',
         ]);
 
         $phone = $validated['phone'] ?? $user->phone;
@@ -98,9 +100,9 @@ class VirtualAccountController extends Controller
         }
 
         // 2. Prepare Name Data
-        $firstName = $user->name;
-        $lastName = $user->surname;
-        if (empty($lastName)) {
+        $firstName = $validated['first_name'] ?? $user->name;
+        $lastName = $validated['last_name'] ?? $user->surname;
+        if (empty($lastName) && empty($validated['last_name'])) {
             $parts = preg_split('/\s+/', trim((string)$user->name));
             $firstName = $parts[0] ?? 'Member';
             $lastName = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : 'Coop';
