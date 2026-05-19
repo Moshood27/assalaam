@@ -279,6 +279,12 @@ class VirtualAccountController extends Controller
                 }
 
                 $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account/assign', $fallbackPayload);
+
+                Log::info('Paystack DVA: Fallback /assign result', [
+                    'user_id' => $user->id,
+                    'status' => $assignResp->status(),
+                    'body' => $assignResp->json()
+                ]);
             }
 
             // 5. Handle the Response
@@ -291,6 +297,12 @@ class VirtualAccountController extends Controller
                         'dva_account_name'   => $accData['account_name'],
                         'dva_bank_name'      => $accData['bank']['name'],
                     ]);
+                } elseif (!$user->virtualAccount?->dva_account_number) {
+                    // If no account number in response and none in DB, it's likely async processing
+                    return response()->json([
+                        'message' => 'Paystack is setting up your virtual account. We will notify you once it is ready.',
+                        'status' => 'processing'
+                    ], 202);
                 }
 
                 $user->update([
