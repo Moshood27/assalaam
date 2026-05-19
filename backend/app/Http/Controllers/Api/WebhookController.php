@@ -15,7 +15,6 @@ use App\Models\QardHasanRepayment;
 use App\Models\ProjectInvestment;
 use App\Models\SadaqahProject;
 use App\Models\SadaqahContribution;
-use App\Services\PaystackDvaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -31,7 +30,7 @@ use App\Services\MonnifyService;
 
 class WebhookController extends Controller
 {
-    public function handlePaystack(Request $request, PaystackDvaService $paystackDvaService)
+    public function handlePaystack(Request $request)
     {
         $signature = $request->header('x-paystack-signature');
         $secret = config('services.paystack.secret_key');
@@ -42,73 +41,6 @@ class WebhookController extends Controller
 
         $event = $request->input('event');
         $data = $request->input('data');
-
-        if ($event === 'customeridentification.success') {
-            $customerCode = $data['customer_code'] ?? null;
-            if (!$customerCode) return response()->json(['status' => 'ok']);
-
-            Log::info('Paystack Webhook: Customer identification successful', [
-                'customer_code' => $customerCode,
-                'full_data' => $data
-            ]);
-
-            $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
-            if ($user) {
-                $user->update(['bvn_verified_at' => now()]);
-                Log::info('Paystack Webhook: Customer identification successful, triggering DVA assignment', ['user_id' => $user->id, 'customer_code' => $customerCode]);
-
-                // Prepare common payload for assignment
-                $firstName = $user->name;
-                $lastName = $user->surname;
-                if (empty($lastName)) {
-                    $parts = preg_split('/\s+/', trim((string)$user->name));
-                    $firstName = $parts[0] ?? 'Member';
-                    $lastName = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : 'Coop';
-                }
-
-                $assignPayload = [
-                    'preferred_bank' => 'titan-paystack',
-                    'first_name'     => $firstName,
-                    'last_name'      => $lastName,
-                    'phone'          => $user->phone,
-                    'email'          => $user->email,
-                    'bvn'            => $user->bvn,
-                ];
-
-                $assignResp = $paystackDvaService->assignDva($user, $customerCode, $assignPayload);
-
-                if ($assignResp['success']) {
-                    $user->notifyMember('Virtual Account Ready', 'Your Paystack dedicated virtual account has been created successfully.', [
-                        'type' => 'dva_assigned',
-                    ], ['push', 'database']);
-                } else {
-                    Log::error('Paystack Webhook: DVA assignment failed after successful identification', [
-                        'user_id' => $user->id,
-                        'resp' => $assignResp['response']
-                    ]);
-                }
-            }
-            return response()->json(['status' => 'ok']);
-        }
-
-        if ($event === 'customeridentification.failed') {
-            $customerCode = $data['customer_code'] ?? null;
-            Log::warning('Paystack Webhook: Customer identification failed', [
-                'customer_code' => $customerCode,
-                'reason' => $data['reason'] ?? 'unknown',
-                'full_data' => $data
-            ]);
-
-            if ($customerCode) {
-                $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
-                if ($user) {
-                    $user->notifyMember('Verification Failed', 'Paystack could not verify your identity: ' . ($data['reason'] ?? 'Please check your BVN and name.'), [
-                        'type' => 'identity_verification_failed',
-                    ], ['push', 'database']);
-                }
-            }
-            return response()->json(['status' => 'ok']);
-        }
 
         // Handle immediate failure notifications
         if ($event === 'charge.failed') {
