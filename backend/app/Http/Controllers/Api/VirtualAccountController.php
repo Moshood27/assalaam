@@ -76,6 +76,7 @@ class VirtualAccountController extends Controller
 
     public function assign(Request $request)
     {
+        set_time_limit(60);
         $user = $request->user();
         $email = trim((string)$user->email);
         $secret = config('services.paystack.secret_key');
@@ -122,6 +123,7 @@ class VirtualAccountController extends Controller
 
             $syncSuccess = false;
             $lastResp = null;
+            $isIdentified = false;
 
             // Step A: If we have a local code, try updating it
             if ($customerCode) {
@@ -130,7 +132,8 @@ class VirtualAccountController extends Controller
                 if ($lastResp->successful()) {
                     $syncSuccess = true;
                     $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
-                    Log::info('Paystack Sync: Step A Success', ['code' => $customerCode]);
+                    $isIdentified = (bool) $lastResp->json('data.identified');
+                    Log::info('Paystack Sync: Step A Success', ['code' => $customerCode, 'identified' => $isIdentified]);
                 } else {
                     Log::warning('Paystack Sync: Step A Failed', ['code' => $customerCode, 'resp' => $lastResp->json()]);
                     // If update failed (e.g. invalid code/environment mismatch), clear it and try email lookup
@@ -150,7 +153,8 @@ class VirtualAccountController extends Controller
                     if ($lastResp->successful()) {
                         $syncSuccess = true;
                         $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
-                        Log::info('Paystack Sync: Step B Verified', ['code' => $customerCode]);
+                        $isIdentified = (bool) $lastResp->json('data.identified');
+                        Log::info('Paystack Sync: Step B Verified', ['code' => $customerCode, 'identified' => $isIdentified]);
                     } else {
                         Log::warning('Paystack Sync: Step B Verification Failed', ['code' => $customerCode, 'resp' => $lastResp->json()]);
                         // If the code from GET is not working for PUT, clear it to try Step C
@@ -170,7 +174,8 @@ class VirtualAccountController extends Controller
                 if ($lastResp->successful()) {
                     $customerCode = $lastResp->json('data.customer_code');
                     $syncSuccess = true;
-                    Log::info('Paystack Sync: Step C Success', ['code' => $customerCode]);
+                    $isIdentified = (bool) $lastResp->json('data.identified');
+                    Log::info('Paystack Sync: Step C Success', ['code' => $customerCode, 'identified' => $isIdentified]);
                     usleep(3000000); // 3s delay to allow propagation
                 } elseif ($lastResp->json('message') === 'Customer already exists' || $lastResp->json('code') === 'duplicate_email') {
                     Log::info('Paystack Sync: Step C - Already exists, final attempt to fetch');
@@ -182,7 +187,8 @@ class VirtualAccountController extends Controller
                         $syncSuccess = $lastResp->successful();
                         if ($syncSuccess) {
                             $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
-                            Log::info('Paystack Sync: Step C Final Sync Success', ['code' => $customerCode]);
+                            $isIdentified = (bool) $lastResp->json('data.identified');
+                            Log::info('Paystack Sync: Step C Final Sync Success', ['code' => $customerCode, 'identified' => $isIdentified]);
                         } else {
                             Log::error('Paystack Sync: Step C Final Sync Failed', ['code' => $customerCode, 'resp' => $lastResp->json()]);
                         }
@@ -208,45 +214,54 @@ class VirtualAccountController extends Controller
             // 3.5 Customer Identification (Required for some banks like Titan Trust)
             $bvn = $validated['bvn'] ?? $user->bvn;
             if ($bvn) {
-                Log::info('Paystack Sync: Identification step', ['code' => $customerCode]);
-                $identResp = Http::withToken($secret)->post("https://api.paystack.co/customer/{$customerCode}/identification", [
-                    'country'    => 'NG',
-                    'type'       => 'bvn',
-                    'value'      => $bvn,
-                    'first_name' => $firstName,
-                    'last_name'  => $lastName,
-                ]);
+                if (!$isIdentified) {
+                    Log::info('Paystack Sync: Identification step', ['code' => $customerCode]);
+                    $identResp = Http::withToken($secret)->post("https://api.paystack.co/customer/{$customerCode}/identification", [
+                        'country'    => 'NG',
+                        'type'       => 'bvn',
+                        'value'      => $bvn,
+                        'first_name' => $firstName,
+                        'last_name'  => $lastName,
+                    ]);
 
-                if (!$identResp->successful()) {
-                    $identData = $identResp->json();
-                    Log::warning('Paystack Identification failed', ['code' => $customerCode, 'resp' => $identData]);
+                    if (!$identResp->successful()) {
+                        $identData = $identResp->json();
+                        Log::warning('Paystack Identification failed', ['code' => $customerCode, 'resp' => $identData]);
 
-                    // If it's not already identified, and it's a Titan Trust request, we might want to stop here
-                    if (($identData['message'] ?? '') !== 'Customer already identified') {
-                        // Some errors (like name mismatch) are fatal for DVA
-                        if ($identResp->status() === 400 || $identResp->status() === 422) {
+                        // If it's not already identified, and it's a Titan Trust request, we might want to stop here
+                        if (($identData['message'] ?? '') === 'Customer already identified') {
+                            $isIdentified = true;
+                        } elseif ($identResp->status() === 400 || $identResp->status() === 422) {
+                            // Some errors (like name mismatch) are fatal for DVA
                              return response()->json([
                                  'message' => $identData['message'] ?? 'Identity verification failed',
                                  'details' => $identData['meta'] ?? null
                              ], 422);
                         }
+                    } else {
+                        Log::info('Paystack Identification successful', ['code' => $customerCode, 'resp' => $identResp->json()]);
                     }
                 } else {
-                    Log::info('Paystack Identification successful', ['code' => $customerCode, 'resp' => $identResp->json()]);
+                    Log::info('Paystack Sync: Skipping Identification step (already identified)', ['code' => $customerCode]);
                 }
 
-                // Poll for identification status (max 5 attempts, every 2s = 10s total)
+                // Poll for identification status (max 10 attempts, every 2s = 20s total)
                 // This is crucial for Titan Trust which requires confirmed identification
-                $isIdentified = false;
-                for ($i = 0; $i < 5; $i++) {
-                    usleep(2000000);
-                    $checkResp = Http::withToken($secret)->get("https://api.paystack.co/customer/{$customerCode}");
-                    if ($checkResp->successful() && $checkResp->json('data.identified')) {
-                        $isIdentified = true;
-                        Log::info('Paystack Customer verified as identified via polling', ['code' => $customerCode, 'attempt' => $i + 1]);
-                        break;
+                if (!$isIdentified) {
+                    for ($i = 0; $i < 10; $i++) {
+                        // Check status before waiting
+                        $checkResp = Http::withToken($secret)->get("https://api.paystack.co/customer/{$customerCode}");
+                        if ($checkResp->successful() && $checkResp->json('data.identified')) {
+                            $isIdentified = true;
+                            Log::info('Paystack Customer verified as identified via polling', ['code' => $customerCode, 'attempt' => $i + 1]);
+                            break;
+                        }
+
+                        if ($i < 9) { // Don't wait after the last attempt
+                            Log::info('Paystack Customer still not identified, waiting...', ['code' => $customerCode, 'attempt' => $i + 1]);
+                            usleep(2000000); // 2s
+                        }
                     }
-                    Log::info('Paystack Customer still not identified, waiting...', ['code' => $customerCode, 'attempt' => $i + 1]);
                 }
 
                 if (!$isIdentified) {
@@ -272,8 +287,8 @@ class VirtualAccountController extends Controller
 
             // If it failed with identification issue, wait and retry once
             if (!$assignResp->successful() && str_contains(strtolower($assignResp->json('message') ?? ''), 'identif')) {
-                Log::info('Paystack DVA assignment: detected identification issue, retrying in 5s...', ['code' => $customerCode]);
-                sleep(5);
+                Log::info('Paystack DVA assignment: detected identification issue, retrying in 8s...', ['code' => $customerCode]);
+                sleep(8);
                 $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', $assignPayload);
             }
 
