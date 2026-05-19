@@ -169,6 +169,7 @@ class VirtualAccountController extends Controller
                     $customerCode = $lastResp->json('data.customer_code');
                     $syncSuccess = true;
                     Log::info('Paystack Sync: Step C Success', ['code' => $customerCode]);
+                    usleep(500000); // 0.5s delay to allow propagation
                 } elseif ($lastResp->json('message') === 'Customer already exists' || $lastResp->json('code') === 'duplicate_email') {
                     Log::info('Paystack Sync: Step C - Already exists, final attempt to fetch');
                     // If it exists but we couldn't create it, try one last GET + PUT to be sure
@@ -230,6 +231,7 @@ class VirtualAccountController extends Controller
                     }
                 } else {
                     Log::info('Paystack Identification successful', ['code' => $customerCode]);
+                    usleep(500000); // 0.5s delay
                 }
             }
 
@@ -239,8 +241,8 @@ class VirtualAccountController extends Controller
                 'preferred_bank' => $validated['preferred_bank'] ?? 'titan-paystack',
             ];
 
-            if (!empty($validated['bvn'])) {
-                $assignPayload['bvn'] = $validated['bvn'];
+            if ($bvn) {
+                $assignPayload['bvn'] = $bvn;
             }
 
             $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', $assignPayload);
@@ -256,10 +258,41 @@ class VirtualAccountController extends Controller
                 ]);
 
                 $user->update([
-                    'bvn' => $validated['bvn'] ?? $user->bvn
+                    'bvn' => $bvn
                 ]);
 
                 return $this->show($request);
+            }
+
+            // Fallback: If assignment failed, check if they already have one (assignment might have been triggered by identification)
+            Log::info('Paystack assignment failed, checking for existing dedicated accounts', [
+                'user_id' => $user->id,
+                'code' => $customerCode,
+                'resp' => $assignResp->json()
+            ]);
+
+            $queryResp = Http::withToken($secret)->get('https://api.paystack.co/dedicated_account', [
+                'customer' => $customerCode
+            ]);
+
+            if ($queryResp->successful() && !empty($queryResp->json('data'))) {
+                $accounts = $queryResp->json('data');
+                $accData = is_array($accounts) ? ($accounts[0] ?? null) : null;
+
+                if ($accData && isset($accData['account_number'])) {
+                    Log::info('Paystack: Found existing dedicated account during fallback', ['account' => $accData['account_number']]);
+                    $user->virtualAccount()->updateOrCreate([], [
+                        'dva_account_number' => $accData['account_number'],
+                        'dva_account_name'   => $accData['account_name'],
+                        'dva_bank_name'      => $accData['bank']['name'],
+                    ]);
+
+                    $user->update([
+                        'bvn' => $bvn
+                    ]);
+
+                    return $this->show($request);
+                }
             }
 
             // If assignment fails, handle specific errors
