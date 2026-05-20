@@ -279,8 +279,8 @@
           <!-- Card Header -->
           <div class="p-5 flex items-center justify-between bg-slate-50/50 border-b border-slate-100">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner border transition-transform group-hover:scale-110" :class="loan.is_completed ? 'bg-emerald-50 border-emerald-100' : 'bg-white border-slate-200'">
-                {{ loan.is_completed ? '✅' : (loan.status === 'defaulted' ? '⚠️' : '💳') }}
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner border transition-transform group-hover:scale-110" :class="loan.is_completed ? 'bg-emerald-50 border-emerald-100' : (['defaulted', 'rejected'].includes(loan.status) ? 'bg-rose-50 border-rose-100' : 'bg-white border-slate-200')">
+                {{ loan.is_completed ? '✅' : (loan.status === 'defaulted' ? '⚠️' : (loan.status === 'rejected' ? '❌' : '💳')) }}
               </div>
               <div>
                 <h3 class="font-black text-slate-800">Qard Hasan Loan</h3>
@@ -288,7 +288,7 @@
               </div>
             </div>
             <div class="text-right">
-              <span :class="loan.is_completed || loan.status === 'active' ? 'bg-emerald-100 text-emerald-700' : (['pending', 'defaulted'].includes(loan.status) ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600')" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+              <span :class="getStatusBadgeClass(loan)" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                 {{ loan.is_completed ? 'Completed' : loan.status }}
               </span>
             </div>
@@ -321,7 +321,7 @@
                 <p class="text-lg font-black text-slate-800">₦ {{ n(loan.per_installment) }}</p>
                 <p class="text-[10px] text-slate-500 font-bold uppercase mt-1">{{ loan.total_installments }} × {{ loan.interval }}</p>
               </div>
-              <div class="text-right border-l border-slate-200 pl-6">
+              <div class="text-right border-l border-slate-200 pl-6" v-if="loan.status !== 'rejected'">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Next Action</p>
                 <a :href="getScheduleDownloadUrl(loan)" target="_blank" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-2 inline-flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors">
                   Schedule <span class="text-xs">➜</span>
@@ -345,8 +345,19 @@
               </div>
             </div>
 
+            <!-- Rejection Notice -->
+            <div v-if="loan.status === 'rejected'" class="p-4 rounded-[2rem] bg-rose-50 border border-rose-100 space-y-2">
+              <div class="flex items-center gap-2 text-rose-700">
+                <span class="text-lg">❌</span>
+                <h4 class="text-xs font-black uppercase tracking-widest">Application Rejected</h4>
+              </div>
+              <p class="text-[11px] text-rose-600 font-bold leading-relaxed italic">
+                {{ loan.rejection_reason || 'Unfortunately, your loan application was not approved by the committee at this time. Please contact your branch administrator for more details.' }}
+              </p>
+            </div>
+
             <!-- Agreement Section -->
-            <div class="p-4 rounded-[2rem] border border-amber-100 bg-gradient-to-br from-amber-50 to-orange-50 space-y-4" v-if="loan.status === 'pending' || loan.signed_agreement">
+            <div class="p-4 rounded-[2rem] border border-amber-100 bg-gradient-to-br from-amber-50 to-orange-50 space-y-4" v-if="(loan.status === 'pending' || loan.signed_agreement) && loan.status !== 'rejected'">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm border border-amber-100">
                   📜
@@ -393,7 +404,7 @@
             </div>
 
             <!-- Repayment Section -->
-            <div class="pt-6 border-t border-slate-100 space-y-4" v-if="!loan.is_completed">
+            <div class="pt-6 border-t border-slate-100 space-y-4" v-if="!loan.is_completed && ['active', 'defaulted'].includes(loan.status)">
               <div class="flex items-center justify-between">
                 <h4 class="text-[11px] font-black text-slate-800 uppercase tracking-widest">Make a Repayment</h4>
                 <span class="text-[10px] text-emerald-600 font-bold">Auto-source enabled</span>
@@ -610,6 +621,13 @@ const grAction = ref({})
 const grMsg = ref({})
 
 const n = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const getStatusBadgeClass = (loan) => {
+  if (loan.is_completed || loan.status === 'active') return 'bg-emerald-100 text-emerald-700'
+  if (loan.status === 'pending') return 'bg-amber-100 text-amber-700'
+  if (loan.status === 'defaulted' || loan.status === 'rejected') return 'bg-rose-100 text-rose-700'
+  return 'bg-slate-100 text-slate-600'
+}
 const bandLabel = (band) => {
   const map = {
     excellent: 'Excellent',
