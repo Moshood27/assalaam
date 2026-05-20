@@ -285,6 +285,7 @@ Route::middleware(['auth:sanctum', 'inactivity', 'throttle:api'])->group(functio
     Route::post('/project-proposals/{id}/comments', [ProjectProposalController::class, 'storeComment']);
 
     // Guarantor digital approvals
+    Route::get('/guarantor/search', [GuarantorController::class, 'search']);
     Route::get('/guarantor/requests', [GuarantorController::class, 'listRequests']);
     Route::post('/guarantor/requests/{id}/accept', [GuarantorController::class, 'accept']);
     Route::post('/guarantor/requests/{id}/decline', [GuarantorController::class, 'decline']);

@@ -12,6 +12,43 @@ use Illuminate\Support\Facades\Log;
 class GuarantorController extends Controller
 {
     /**
+     * Search for members to be guarantors.
+     */
+    public function search(Request $request)
+    {
+        $query = $request->get('q');
+        if (!$query || strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $user = $request->user();
+
+        $members = \App\Models\User::query()
+            ->where('id', '!=', $user->id)
+            ->where('is_defaulter', false)
+            ->whereNotNull('membership_number')
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('surname', 'like', "%{$query}%")
+                    ->orWhere('other_names', 'like', "%{$query}%")
+                    ->orWhere('membership_number', 'like', "%{$query}%");
+            })
+            ->with('branch')
+            ->limit(10)
+            ->get(['id', 'name', 'surname', 'other_names', 'membership_number', 'branch_id'])
+            ->map(function ($member) {
+                return [
+                    'id' => $member->id,
+                    'name' => $member->full_name,
+                    'membership_number' => $member->membership_number,
+                    'branch' => $member->branch?->name,
+                ];
+            });
+
+        return response()->json($members);
+    }
+
+    /**
      * List guarantor requests for the authenticated user.
      */
     public function listRequests(Request $request)
