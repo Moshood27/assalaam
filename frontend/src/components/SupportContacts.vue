@@ -37,10 +37,10 @@
 
 <script setup>
 const phones = [
-  { label: 'Support 1', number: '2348012345678' },
-  { label: 'Support 2', number: '2348098765432' },
-  { label: 'Support 3', number: '2348076543210' },
+  { label: 'Support 1', number: '2348037282495' },
+  { label: 'Support 2', number: '2348066067163' },
+  { label: 'Support 3', number: '2347084136651' },
 ]
-const email = 'admin@attaqwa.com'
+const email = 'attaqwaosogbo@gmail.com'
 const wa = (phone) => `https://wa.me/${phone}`
 </script>

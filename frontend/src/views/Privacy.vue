@@ -127,7 +127,7 @@
           <p class="text-sm text-slate-600 leading-relaxed">
             Questions about this Privacy Policy? Reach us via the Support page or email
             <a href="mailto:attaqwaosogbo@gmail.com" class="text-emerald-700 font-bold hover:underline">attaqwaosogbo@gmail.com
-            </a>.
+            </a>
           </p>
         </section>
 
