@@ -103,13 +103,14 @@ class WebhookController extends Controller
                 $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
 
                 if ($user) {
+                    $reason = $data['message'] ?? ($data['reason'] ?? 'Name mismatch or invalid BVN');
                     // 1. Log the failure reason for admin
-                    Log::error("Paystack KYC Failed for Member ID: {$user->id} ({$user->email}). Reason: Name mismatch or invalid BVN.");
+                    Log::error("Paystack KYC Failed for Member ID: {$user->id} ({$user->email}). Reason: {$reason}");
 
                     // 2. Notify the user so they stop waiting
                     $user->notifyMember(
                         'Action Required: KYC Failed',
-                        'Your bank rejected the BVN identification. Please ensure your profile name matches the name on your BVN exactly.',
+                        "Your bank rejected the BVN identification. Reason: {$reason}. Please ensure your profile name matches the name on your BVN exactly.",
                         ['type' => 'kyc_failed', 'route' => '/profile']
                     );
                 }
@@ -157,10 +158,11 @@ class WebhookController extends Controller
             if ($customerCode) {
                 $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
                 if ($user) {
-                    Log::warning("Paystack DVA Assignment Failed for Member ID: {$user->id}");
+                    $reason = $data['message'] ?? 'We encountered an issue assigning your Virtual Account.';
+                    Log::warning("Paystack DVA Assignment Failed for Member ID: {$user->id}. Reason: {$reason}");
                     $user->notifyMember(
                         'Virtual Account Failed',
-                        "We encountered an issue assigning your Virtual Account. Please try again later or contact support.",
+                        "{$reason} Please try again later or contact support.",
                         ['type' => 'dva_failed', 'route' => '/wallet']
                     );
                 }

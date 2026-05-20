@@ -119,41 +119,60 @@ class PaystackService
      */
     public function assignDva(User $user, string $customerCode, ?string $preferredBank = 'wema-bank'): array
     {
-        try {
-            $assignResp = Http::withToken($this->secret)->post('https://api.paystack.co/dedicated_account', [
-                'customer' => $customerCode,
-                'preferred_bank' => $preferredBank ?? 'wema-bank',
-            ]);
+        $maxRetries = 3;
+        $attempt = 0;
 
-            if ($assignResp->successful()) {
-                $accData = $assignResp->json('data');
+        while ($attempt < $maxRetries) {
+            $attempt++;
 
-                $user->virtualAccount()->updateOrCreate([], [
-                    'dva_account_number' => $accData['account_number'],
-                    'dva_account_name'   => $accData['account_name'],
-                    'dva_bank_name'      => $accData['bank']['name'],
+            try {
+                $assignResp = Http::withToken($this->secret)->post('https://api.paystack.co/dedicated_account', [
+                    'customer' => $customerCode,
+                    'preferred_bank' => $preferredBank ?? 'wema-bank',
                 ]);
 
-                return ['success' => true, 'data' => $accData];
+                if ($assignResp->successful()) {
+                    $accData = $assignResp->json('data');
+
+                    $user->virtualAccount()->updateOrCreate([], [
+                        'dva_account_number' => $accData['account_number'],
+                        'dva_account_name'   => $accData['account_name'],
+                        'dva_bank_name'      => $accData['bank']['name'] ?? ($accData['provider']['name'] ?? 'Bank'),
+                    ]);
+
+                    return ['success' => true, 'data' => $accData];
+                }
+
+                $message = $assignResp->json('message') ?? 'Could not assign virtual account';
+
+                // Handle specific case where Paystack says "not identified" even if we just did it
+                // We retry a few times because of Paystack's internal propagation delay
+                if (str_contains(strtolower($message), 'identified') && $attempt < $maxRetries) {
+                    Log::info("Paystack DVA Assignment: Customer not yet identified. Retry attempt $attempt/3.", ['user_id' => $user->id]);
+                    sleep(3 * $attempt); // Increasing sleep: 3s, 6s
+                    continue;
+                }
+
+                if ($attempt >= $maxRetries && str_contains(strtolower($message), 'identified')) {
+                    return [
+                        'success' => false,
+                        'pending_kyc' => true,
+                        'message' => 'Paystack is still processing your KYC. Please try again in a few minutes.'
+                    ];
+                }
+
+                return ['success' => false, 'message' => $message];
+
+            } catch (\Throwable $e) {
+                Log::error('Paystack assignDva exception', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+                if ($attempt >= $maxRetries) {
+                    return ['success' => false, 'message' => 'An unexpected error occurred during DVA assignment.'];
+                }
+                sleep(2);
             }
-
-            $message = $assignResp->json('message') ?? 'Could not assign virtual account';
-
-            // Handle specific case where Paystack says "not identified"
-            if (str_contains($message, 'identified')) {
-                return [
-                    'success' => false,
-                    'pending_kyc' => true,
-                    'message' => 'Paystack is still processing your KYC. Please try again in 1 minute.'
-                ];
-            }
-
-            return ['success' => false, 'message' => $message];
-
-        } catch (\Throwable $e) {
-            Log::error('Paystack assignDva exception', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            return ['success' => false, 'message' => 'An unexpected error occurred during DVA assignment.'];
         }
+
+        return ['success' => false, 'message' => 'DVA assignment failed after multiple attempts.'];
     }
 
     /**

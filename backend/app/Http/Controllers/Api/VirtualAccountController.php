@@ -106,13 +106,23 @@ class VirtualAccountController extends Controller
         // Check if there is an identification record for failed status
         if (!empty($paystackData['identifications'])) {
             $lastId = collect($paystackData['identifications'])->last();
-            if (($lastId['status'] ?? null) === 'failed') {
+            $status = $lastId['status'] ?? null;
+
+            if ($status === 'failed') {
+                $reason = $lastId['message'] ?? 'Your identification was rejected by the bank. Please update your profile name to match your BVN and try again.';
                 return response()->json([
-                    'message' => 'Your identification was rejected by the bank. Please update your profile name to match your BVN and try again.'
+                    'message' => $reason
                 ], 422);
             }
-            if (($lastId['status'] ?? null) === 'success') {
+
+            if ($status === 'success') {
                 $isIdentified = true;
+            }
+
+            if ($status === 'pending' || $status === 'processing') {
+                return response()->json([
+                    'message' => 'Paystack is still processing your KYC. Please try again in a few minutes.'
+                ], 422);
             }
         }
 
@@ -123,8 +133,9 @@ class VirtualAccountController extends Controller
                 return response()->json(['message' => $ident['message']], 422);
             }
 
-            // CRITICAL: Give Paystack's system 2 seconds to propagate the identification
-            sleep(2);
+            // CRITICAL: Give Paystack's system 3 seconds to propagate the identification
+            // The assignDva method also has internal retries.
+            sleep(3);
         }
 
         // STEP 3: Assign DVA
