@@ -92,9 +92,16 @@ class VirtualAccountController extends Controller
         if (empty($bvn)) return response()->json(['message' => 'BVN is required.'], 422);
         if (empty($phone)) return response()->json(['message' => 'Phone number is required.'], 422);
 
-        // 2. Prepare Name Data
-        $firstName = $user->name;
-        $lastName = $user->surname ?? 'Member';
+        // 2. Prepare Name Data (Standardize: Uppercase and trimmed)
+        $firstName = trim(strtoupper((string)($user->name ?? '')));
+        $lastName = trim(strtoupper((string)($user->surname ?? '')));
+
+        // If surname is empty, try to split the name field
+        if (empty($lastName)) {
+            $parts = explode(' ', $firstName);
+            $firstName = $parts[0] ?? 'MEMBER';
+            $lastName = $parts[1] ?? 'COOP';
+        }
 
         try {
             // STEP 1: Get Customer and Check "Identified" status
@@ -105,8 +112,22 @@ class VirtualAccountController extends Controller
             $isIdentified = false;
 
             if ($fetchResp->successful() && $fetchResp->json('data')) {
-                $customerCode = $fetchResp->json('data.customer_code');
-                $isIdentified = $fetchResp->json('data.identified');
+                $paystackData = $fetchResp->json('data');
+                $customerCode = $paystackData['customer_code'];
+                $isIdentified = $paystackData['identified'] ?? false;
+
+                // Check if there is an identification record for failed status
+                if (!empty($paystackData['identifications'])) {
+                    $lastId = collect($paystackData['identifications'])->last();
+                    if (($lastId['status'] ?? null) === 'failed') {
+                        return response()->json([
+                            'message' => 'Your identification was rejected by the bank. Please update your profile name to match your BVN and try again.'
+                        ], 422);
+                    }
+                    if (($lastId['status'] ?? null) === 'success') {
+                        $isIdentified = true;
+                    }
+                }
             } else {
                 // Create customer if they don't exist on this new Paystack account
                 $createResp = Http::withToken($secret)->post('https://api.paystack.co/customer', [

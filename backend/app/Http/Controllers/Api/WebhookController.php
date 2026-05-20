@@ -95,6 +95,27 @@ class WebhookController extends Controller
             return response()->json(['status' => 'ok']);
         }
 
+        if ($event === 'customeridentification.failed') {
+            $customerCode = $data['customer_code'] ?? null;
+            if ($customerCode) {
+                // Find the user linked to this customer code
+                $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
+
+                if ($user) {
+                    // 1. Log the failure reason for admin
+                    Log::error("Paystack KYC Failed for Member ID: {$user->id} ({$user->email}). Reason: Name mismatch or invalid BVN.");
+
+                    // 2. Notify the user so they stop waiting
+                    $user->notifyMember(
+                        'Action Required: KYC Failed',
+                        'Your bank rejected the BVN identification. Please ensure your profile name matches the name on your BVN exactly.',
+                        ['type' => 'kyc_failed', 'route' => '/profile']
+                    );
+                }
+            }
+            return response()->json(['status' => 'success']);
+        }
+
         if ($event === 'charge.success') {
             $reference = $data['reference'] ?? null;
             if (! $reference) {
