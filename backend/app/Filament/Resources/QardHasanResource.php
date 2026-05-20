@@ -42,6 +42,8 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class QardHasanResource extends Resource
 {
@@ -343,12 +345,37 @@ class QardHasanResource extends Resource
                             ->visibility('public')
                             ->helperText('Upload the agreement document for the member to download and sign.')
                             ->default(fn (QardHasan $record) => $record->agreement_template),
+                        Forms\Components\Toggle::make('auto_generate_agreement')
+                            ->label('Auto-generate from template')
+                            ->default(true)
+                            ->helperText('Generate the agreement PDF using the system standard template if no file is uploaded.'),
                     ])
                     ->action(function (QardHasan $record, array $data) {
+                        $template = $data['agreement_template'] ?? $record->agreement_template;
+
+                        if (empty($template) && !empty($data['auto_generate_agreement'])) {
+                            try {
+                                set_time_limit(120);
+                                $borrower = $record->user;
+                                $schedule = $record->generateInstallmentSchedule();
+                                $pdfData = [
+                                    'user' => $borrower,
+                                    'loan' => $record,
+                                    'schedule' => $schedule,
+                                ];
+                                $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $pdfData);
+                                $filename = 'loan-templates/Loan_Agreement_' . $record->qard_id_string . '_' . time() . '.pdf';
+                                Storage::disk('public')->put($filename, $pdf->output());
+                                $template = $filename;
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to auto-generate agreement during approval: " . $e->getMessage());
+                            }
+                        }
+
                         $record->update([
                             'approved_by' => auth()->id(),
                             'approved_at' => now(),
-                            'agreement_template' => $data['agreement_template'] ?? $record->agreement_template,
+                            'agreement_template' => $template,
                         ]);
 
                         ShariahAudit::log(auth()->user(), 'approve_qard_hasan', [
@@ -396,6 +423,51 @@ class QardHasanResource extends Resource
                             ->body('Loan has been approved. Member will be notified to sign the agreement.')
                             ->success()
                             ->send();
+                    }),
+                Action::make('generate_agreement')
+                    ->label('Generate Agreement')
+                    ->icon('heroicon-o-document-text')
+                    ->color('info')
+                    ->visible(fn (QardHasan $record) => auth()->user()->can('approve_loans'))
+                    ->requiresConfirmation()
+                    ->modalHeading('Generate Loan Agreement')
+                    ->modalDescription('This will generate a PDF agreement based on the current loan details and attach it as the template for the member to download and sign. Any existing template will be overwritten.')
+                    ->action(function (QardHasan $record) {
+                        set_time_limit(120);
+
+                        $borrower = $record->user;
+
+                        // Generate schedule using model method
+                        $schedule = $record->generateInstallmentSchedule();
+
+                        $data = [
+                            'user' => $borrower,
+                            'loan' => $record,
+                            'schedule' => $schedule,
+                        ];
+
+                        try {
+                            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $data);
+
+                            $filename = 'loan-templates/Loan_Agreement_' . $record->qard_id_string . '_' . time() . '.pdf';
+                            Storage::disk('public')->put($filename, $pdf->output());
+
+                            $record->update([
+                                'agreement_template' => $filename,
+                            ]);
+
+                            Notification::make()
+                                ->title('Agreement Generated')
+                                ->body('The loan agreement has been generated and attached to this record.')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Generation Failed')
+                                ->body('Failed to generate agreement: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
                 Action::make('reject')
                     ->label('Reject')
