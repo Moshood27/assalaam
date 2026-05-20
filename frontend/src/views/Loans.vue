@@ -323,9 +323,9 @@
               </div>
               <div class="text-right border-l border-slate-200 pl-6" v-if="loan.status !== 'rejected'">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Next Action</p>
-                <a :href="getScheduleDownloadUrl(loan)" target="_blank" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-2 inline-flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors">
+                <button @click="openSchedule(loan)" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-2 inline-flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors">
                   Schedule <span class="text-xs">➜</span>
-                </a>
+                </button>
               </div>
             </div>
 
@@ -476,6 +476,12 @@
           @close="closeNotice"
         />
 
+        <LoanScheduleModal
+          :isOpen="scheduleModalOpen"
+          :loan="selectedLoanForSchedule"
+          @close="scheduleModalOpen = false"
+        />
+
         <AppBottomNav />
   </div>
 </template>
@@ -488,6 +494,7 @@ import axios from '../http'
 import { useAppStatusStore } from '../stores/appStatus'
 import getImageUrl from '../utils/image'
 import CustomNotice from '../components/CustomNotice.vue'
+import LoanScheduleModal from '../components/LoanScheduleModal.vue'
 import { useNotice } from '../composables/useNotice'
 import { verifyBiometricIdentity, isBiometricAvailable } from '../services/biometric'
 import { getEcho } from '../realtime/echo'
@@ -501,6 +508,15 @@ const DEFAULT_ADMIN_FEE_PCT = Number(import.meta.env.VITE_DEFAULT_ADMIN_FEE_PCT 
 const loans = ref([])
 const loading = ref(false)
 const error = ref('')
+
+// Schedule Modal
+const scheduleModalOpen = ref(false)
+const selectedLoanForSchedule = ref(null)
+
+const openSchedule = (loan) => {
+  selectedLoanForSchedule.value = loan
+  scheduleModalOpen.value = true
+}
 
 // Notice modal (shared VTU-style)
 const { notice, showNotice, closeNotice } = useNotice()

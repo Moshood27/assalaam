@@ -586,7 +586,7 @@ class UserResource extends Resource
                 Tables\Filters\Filter::make('needs_wellness_check')
                     ->label('Needs Wellness Check')
                     ->query(function (Builder $query) {
-                        $months = config('cooperative.legacy.inactivity_months', 6);
+                        $months = \App\Models\Setting::get('wellness_check_inactivity_months', config('cooperative.legacy.inactivity_months', 6));
                         $threshold = now()->subMonths($months);
                         return $query->whereNull('deceased_at')
                             ->where(function($q) use ($threshold) {

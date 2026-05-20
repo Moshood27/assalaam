@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 
 use App\Models\User;
+use App\Models\Setting;
 use App\Notifications\WellnessCheckNotification;
 use App\Notifications\GeneralNotification;
 use Illuminate\Support\Facades\Notification;
@@ -30,7 +31,12 @@ class SendWellnessCheck extends Command
      */
     public function handle()
     {
-        $months = config('cooperative.legacy.inactivity_months', 6);
+        if (!Setting::get('wellness_check_enabled', true)) {
+            $this->info('Wellness check is disabled.');
+            return 0;
+        }
+
+        $months = Setting::get('wellness_check_inactivity_months', config('cooperative.legacy.inactivity_months', 6));
         $threshold = now()->subMonths($months);
 
         // 1. Find users inactive for more than X months who haven't been notified yet
@@ -53,7 +59,7 @@ class SendWellnessCheck extends Command
         }
 
         // 2. Find users who were notified more than config('check_period_days') ago and still haven't logged in
-        $alertPeriodDays = config('cooperative.legacy.check_period_days', 30);
+        $alertPeriodDays = Setting::get('wellness_check_period_days', config('cooperative.legacy.check_period_days', 30));
         $alertThreshold = now()->subDays($alertPeriodDays);
 
         $suspectedDeceased = User::whereNull('deceased_at')

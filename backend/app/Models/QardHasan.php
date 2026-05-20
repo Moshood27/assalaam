@@ -111,6 +111,8 @@ class QardHasan extends Model
         return match ($key) {
             'daily' => $d->addDay(),
             'weekly' => $d->addWeek(),
+            'quarterly' => $d->addQuarter(),
+            'yearly' => $d->addYear(),
             default => $d->addMonth(), // monthly fallback
         };
     }

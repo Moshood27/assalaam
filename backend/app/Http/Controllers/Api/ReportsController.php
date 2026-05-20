@@ -57,30 +57,15 @@ class ReportsController extends Controller
         $paidTotal = (float) $repayments->sum('amount');
         $remaining = max(0.0, (float)$loan->principal_amount - $paidTotal);
 
-        // Build schedule based on interval and per_installment
-        $interval = strtolower((string) $loan->interval);
-        $cursor = $loan->created_at ? $loan->created_at->copy() : now();
-        $add = function($date) use ($interval) {
-            return match ($interval) {
-                'weekly' => $date->copy()->addWeek(),
-                'daily' => $date->copy()->addDay(),
-                'quarterly' => $date->copy()->addQuarter(),
-                'yearly' => $date->copy()->addYear(),
-                default => $date->copy()->addMonth(),
-            };
-        };
-
+        $baseSchedule = $loan->generateInstallmentSchedule();
         $schedule = [];
         $balance = (float) $loan->principal_amount;
-        $installment = (float) $loan->per_installment;
-        $totalInstallments = (int) $loan->total_installments;
 
-        for ($i = 1; $i <= $totalInstallments; $i++) {
-            $cursor = $add($cursor);
-            $applied = min($installment, $balance);
+        foreach ($baseSchedule as $item) {
+            $applied = min((float)$item['amount'], $balance);
             $schedule[] = [
-                'sequence' => $i,
-                'due_date' => $cursor->toDateString(),
+                'sequence' => $item['index'],
+                'due_date' => $item['due_date'],
                 'installment_amount' => round($applied, 2),
                 'balance_after' => round(max(0.0, $balance - $applied), 2),
             ];
@@ -92,6 +77,7 @@ class ReportsController extends Controller
         foreach ($schedule as &$item) {
             if ($remainingToApply <= 0) {
                 $item['status'] = 'pending';
+                $item['paid_amount'] = 0.0;
                 continue;
             }
             $apply = min($item['installment_amount'], $remainingToApply);

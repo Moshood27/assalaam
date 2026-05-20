@@ -54,6 +54,9 @@ class AppStatusSettings extends Page
             'projects_enabled' => Feature::for('global')->active('projects-enabled'),
             'chat_help_enabled' => Feature::for('global')->active('chat-help-enabled'),
             'withdrawals_enabled' => Feature::for('global')->active('withdrawals-enabled'),
+            'wellness_check_enabled' => (bool) Setting::get('wellness_check_enabled', true),
+            'wellness_check_inactivity_months' => (int) Setting::get('wellness_check_inactivity_months', config('cooperative.legacy.inactivity_months', 6)),
+            'wellness_check_period_days' => (int) Setting::get('wellness_check_period_days', config('cooperative.legacy.check_period_days', 30)),
         ]);
     }
 
@@ -121,6 +124,25 @@ class AppStatusSettings extends Page
                             ->minValue(1)
                             ->helperText('The number of months a nursing mother is exempt from attendance fines after childbirth or approval.'),
                     ]),
+                Section::make('Wellness Check Settings')
+                    ->description('Manage wellness check notifications for inactive members.')
+                    ->schema([
+                        Toggle::make('wellness_check_enabled')
+                            ->label('Enable Wellness Check')
+                            ->helperText('If enabled, inactive members will receive wellness check notifications.'),
+                        TextInput::make('wellness_check_inactivity_months')
+                            ->label('Inactivity Threshold (Months)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1)
+                            ->helperText('Number of months of inactivity before sending a wellness check.'),
+                        TextInput::make('wellness_check_period_days')
+                            ->label('Admin Alert Period (Days)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1)
+                            ->helperText('Number of days to wait after notification before alerting admins if the member remains inactive.'),
+                    ])->columns(3),
                 Section::make('Wallet Settings')
                     ->description('Manage wallet maintenance and transaction charges.')
                     ->schema([
