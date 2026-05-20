@@ -838,26 +838,29 @@ class QardHasanResource extends Resource
 
                         // Disburse within transaction
                         DB::transaction(function () use ($record, $credit, $withdrawable, $reference, $mode, $data) {
-                            // Credit member wallet
-                            $record->user->increment('balance', $credit);
+                            // Only credit member wallet if NOT manual disbursement
+                            if ($mode !== 'manual') {
+                                $record->user->increment('balance', $credit);
 
-                            // Record wallet transaction with loan_disbursement source and withdrawable flag
-                            WalletTransaction::create([
-                                'user_id' => $record->user_id,
-                                'type' => 'credit',
-                                'amount' => $credit,
-                                'reference' => $reference,
-                                'source' => 'loan_disbursement',
-                                'withdrawable' => $withdrawable,
-                                'meta' => [
-                                    'qard_hasan_id' => $record->id,
-                                    'qard_id_string' => $record->qard_id_string,
-                                    'mode' => $mode,
-                                    'note' => trim((string) ($data['note'] ?? '')) ?: null,
-                                ],
-                            ]);
+                                // Record wallet transaction with loan_disbursement source and withdrawable flag
+                                WalletTransaction::create([
+                                    'user_id' => $record->user_id,
+                                    'type' => 'credit',
+                                    'amount' => $credit,
+                                    'reference' => $reference,
+                                    'source' => 'loan_disbursement',
+                                    'withdrawable' => $withdrawable,
+                                    'meta' => [
+                                        'qard_hasan_id' => $record->id,
+                                        'qard_id_string' => $record->qard_id_string,
+                                        'mode' => $mode,
+                                        'note' => trim((string) ($data['note'] ?? '')) ?: null,
+                                    ],
+                                ]);
+                            }
 
                             // Mark loan as active (disbursed)
+                            // Note: QardHasan model observer will automatically record ledger entries for loan disbursement
                             $record->update(['status' => 'active']);
                         });
 
@@ -896,7 +899,8 @@ class QardHasanResource extends Resource
                             } elseif ($mode === 'manual') {
                                 $modeText = 'Manual Bank Transfer';
                             }
-                            $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($record->user->balance ?? 0), 2);
+                            $locationText = ($mode === 'manual') ? 'your bank account' : 'your wallet';
+                            $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to '.$locationText.' ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($record->user->balance ?? 0), 2);
                             $record->user->notifyMember('Loan Disbursed', $msg, [
                                 'type' => 'loan_disbursed',
                                 'loan_id' => $record->id,
@@ -907,9 +911,13 @@ class QardHasanResource extends Resource
                             ]);
                         }
 
+                        $notifBody = ($mode === 'manual')
+                            ? 'The loan has been disbursed (manual bank transfer recorded). Emails sent to member and admins (if configured).'
+                            : 'The loan has been disbursed and member wallet credited. Emails sent to member and admins (if configured).';
+
                         Notification::make()
                             ->title('Loan disbursed')
-                            ->body('The loan has been disbursed and member wallet credited. Emails sent to member and admins (if configured).')
+                            ->body($notifBody)
                             ->success()
                             ->send();
                     }),
