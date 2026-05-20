@@ -280,7 +280,7 @@
             </svg>
           </button>
           
-          <button @click="$router.push('/junior-cooperative')" class="w-full flex items-center gap-4 text-left group pt-4 border-t border-slate-50">
+          <button v-if="appStatusStore.features['junior-coop-enabled']" @click="$router.push('/junior-cooperative')" class="w-full flex items-center gap-4 text-left group pt-4 border-t border-slate-50">
             <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg group-active:scale-90 transition-transform">👶</div>
             <div class="flex-1">
               <h3 class="text-sm font-bold text-slate-800">Junior Cooperative</h3>

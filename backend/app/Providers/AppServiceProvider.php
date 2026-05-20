@@ -67,6 +67,16 @@ class AppServiceProvider extends ServiceProvider
             return config('services.flutterwave.compliance_status') === 'approved';
         });
 
+        Feature::define('takaful-enabled', fn () => true);
+        Feature::define('gold-savings-enabled', fn () => true);
+        Feature::define('group-savings-enabled', fn () => true);
+        Feature::define('receive-qr-enabled', fn () => true);
+        Feature::define('merchant-pay-enabled', fn () => true);
+        Feature::define('zakat-enabled', fn () => true);
+        Feature::define('junior-coop-enabled', fn () => true);
+        Feature::define('projects-enabled', fn () => true);
+        Feature::define('chat-help-enabled', fn () => true);
+
         // Register Filament Breezy components globally to avoid ComponentNotFoundException during Livewire updates
         \Livewire\Livewire::component('personal_info', \Jeffgreco13\FilamentBreezy\Livewire\PersonalInfo::class);
         \Livewire\Livewire::component('update_password', \Jeffgreco13\FilamentBreezy\Livewire\UpdatePassword::class);

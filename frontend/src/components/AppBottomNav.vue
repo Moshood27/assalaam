@@ -20,17 +20,27 @@
 
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
+import { useAppStatusStore } from '../stores/appStatus'
+import { computed } from 'vue'
 
 const router = useRouter()
 const route = useRoute()
+const appStatusStore = useAppStatusStore()
 
-const navItems = [
-  { label: 'Home', path: '/dashboard', icon: 'i-mdi-home-outline', activeIcon: 'i-mdi-home' },
-  { label: 'Wallet', path: '/wallet', icon: 'i-mdi-wallet-outline', activeIcon: 'i-mdi-wallet' },
-  { label: 'Passbook', path: '/passbook', icon: 'i-mdi-book-open-variant', activeIcon: 'i-mdi-book-open-variant' },
-  { label: 'Chat', path: '/chat', icon: 'i-mdi-chat-processing-outline', activeIcon: 'i-mdi-chat-processing' },
-  { label: 'Profile', path: '/profile', icon: 'i-mdi-account-outline', activeIcon: 'i-mdi-account' },
-]
+const navItems = computed(() => {
+  const items = [
+    { label: 'Home', path: '/dashboard', icon: 'i-mdi-home-outline', activeIcon: 'i-mdi-home' },
+    { label: 'Wallet', path: '/wallet', icon: 'i-mdi-wallet-outline', activeIcon: 'i-mdi-wallet' },
+    { label: 'Passbook', path: '/passbook', icon: 'i-mdi-book-open-variant', activeIcon: 'i-mdi-book-open-variant' },
+    { label: 'Chat', path: '/chat', icon: 'i-mdi-chat-processing-outline', activeIcon: 'i-mdi-chat-processing' },
+    { label: 'Profile', path: '/profile', icon: 'i-mdi-account-outline', activeIcon: 'i-mdi-account' },
+  ]
+
+  return items.filter(item => {
+    if (item.path === '/chat') return appStatusStore.features['chat-help-enabled']
+    return true
+  })
+})
 
 const isActive = (path) => {
   if (path === '/dashboard') return route.path === '/dashboard'

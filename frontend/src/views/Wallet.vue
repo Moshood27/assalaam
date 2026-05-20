@@ -44,7 +44,11 @@
       <!-- Tabs Navigation -->
       <div class="flex p-1.5 bg-slate-200/50 rounded-[1.5rem] gap-1 shadow-inner overflow-x-auto no-scrollbar">
         <button 
-          v-for="tab in ['overview', 'fund', 'transfer', 'withdraw', 'merchant', 'transactions', 'requests'].filter(t => t !== 'withdraw' || appStatusStore.features['withdrawals-enabled'])" 
+          v-for="tab in ['overview', 'fund', 'transfer', 'withdraw', 'merchant', 'transactions', 'requests'].filter(t => {
+            if (t === 'withdraw') return appStatusStore.features['withdrawals-enabled'];
+            if (t === 'merchant') return appStatusStore.features['merchant-pay-enabled'] || appStatusStore.features['receive-qr-enabled'];
+            return true;
+          })" 
           :key="tab"
           @click="activeTab = tab; searchQuery = ''"
           :class="activeTab === tab ? 'bg-white text-emerald-700 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/30'"
@@ -67,11 +71,11 @@
               <p class="text-sm text-slate-500 mt-2 leading-relaxed px-4">Scan to pay at any Attaqwa Merchant or generate your own QR to receive payments instantly.</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
-              <button @click="$router.push('/merchant/pay')" class="bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 active:scale-95 transition-all flex flex-col items-center gap-2">
+              <button v-if="appStatusStore.features['merchant-pay-enabled']" @click="$router.push('/merchant/pay')" class="bg-emerald-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-emerald-700/20 active:scale-95 transition-all flex flex-col items-center gap-2">
                 <span class="text-xl">🔍</span>
                 <span class="text-xs uppercase tracking-widest">Scan & Pay</span>
               </button>
-              <button @click="$router.push('/merchant/receive')" class="bg-white text-emerald-700 border-2 border-emerald-100 p-4 rounded-2xl font-bold active:scale-95 transition-all flex flex-col items-center gap-2">
+              <button v-if="appStatusStore.features['receive-qr-enabled']" @click="$router.push('/merchant/receive')" class="bg-white text-emerald-700 border-2 border-emerald-100 p-4 rounded-2xl font-bold active:scale-95 transition-all flex flex-col items-center gap-2">
                 <span class="text-xl">📥</span>
                 <span class="text-xs uppercase tracking-widest">Receive</span>
               </button>

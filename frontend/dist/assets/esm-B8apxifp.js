@@ -1,1 +1,0 @@
-import{f as e}from"./index-ByMCg6rt.js";export{e as SplashScreen};

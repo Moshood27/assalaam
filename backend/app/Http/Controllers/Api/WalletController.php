@@ -178,6 +178,8 @@ class WalletController extends Controller
             'features' => [
                 'withdrawals-enabled' => Feature::for('global')->active('withdrawals-enabled'),
                 'payment-provider-failover' => Feature::for('global')->active('payment-provider-failover'),
+                'receive-qr-enabled' => Feature::for('global')->active('receive-qr-enabled'),
+                'merchant-pay-enabled' => Feature::for('global')->active('merchant-pay-enabled'),
             ],
             'gateways' => [
                 'paystack' => (bool) Setting::get('gateway_paystack_enabled', true),

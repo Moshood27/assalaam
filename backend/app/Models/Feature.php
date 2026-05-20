@@ -101,5 +101,41 @@ class Feature extends Model
             'label' => 'Show Flutterwave Balance',
             'description' => 'Only show Flutterwave balance for Admin if compliance status is approved.',
         ],
+        'takaful-enabled' => [
+            'label' => 'Takaful Enabled',
+            'description' => 'Enable Takaful (Insurance) features on the member dashboard.',
+        ],
+        'gold-savings-enabled' => [
+            'label' => 'Gold Savings Enabled',
+            'description' => 'Enable Gold Savings features on the member dashboard.',
+        ],
+        'group-savings-enabled' => [
+            'label' => 'Group Savings Enabled',
+            'description' => 'Enable Group Savings features on the member dashboard.',
+        ],
+        'receive-qr-enabled' => [
+            'label' => 'Receive QR Enabled',
+            'description' => 'Enable Receive QR features on the member dashboard.',
+        ],
+        'merchant-pay-enabled' => [
+            'label' => 'Merchant Pay Enabled',
+            'description' => 'Enable Merchant Pay features on the member dashboard.',
+        ],
+        'zakat-enabled' => [
+            'label' => 'Zakat Enabled',
+            'description' => 'Enable Zakat features on the member dashboard.',
+        ],
+        'junior-coop-enabled' => [
+            'label' => 'Junior Coop Enabled',
+            'description' => 'Enable Junior Coop features on the member dashboard.',
+        ],
+        'projects-enabled' => [
+            'label' => 'Projects Enabled',
+            'description' => 'Enable Projects features on the member dashboard.',
+        ],
+        'chat-help-enabled' => [
+            'label' => 'Chat & Help Enabled',
+            'description' => 'Enable Chat & Help features on the member dashboard.',
+        ],
     ];
 }
