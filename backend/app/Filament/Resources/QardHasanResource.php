@@ -323,6 +323,34 @@ class QardHasanResource extends Resource
                     })
                     ->requiresConfirmation()
                     ->successNotificationTitle('Loan deleted successfully'),
+                Action::make('download_review')
+                    ->label('Office Review Form')
+                    ->icon('heroicon-o-document-magnifying-glass')
+                    ->color('info')
+                    ->visible(fn (QardHasan $record) => auth()->user()->can('approve_loans'))
+                    ->tooltip('Download the system-generated agreement form for office review and committee signatures.')
+                    ->action(function (QardHasan $record) {
+                        try {
+                            set_time_limit(120);
+                            $borrower = $record->user;
+                            $schedule = $record->generateInstallmentSchedule();
+                            $pdfData = [
+                                'user' => $borrower,
+                                'loan' => $record,
+                                'schedule' => $schedule,
+                            ];
+                            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $pdfData);
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'Office_Review_Form_' . $record->qard_id_string . '.pdf');
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Generation Failed')
+                                ->body('Failed to generate review form: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
@@ -1067,6 +1095,32 @@ class QardHasanResource extends Resource
                             ->badge()
                             ->color(fn ($state) => $state ? 'info' : 'gray')
                             ->hintAction(
+                                InfolistAction::make('download_review')
+                                    ->label('Download Review Form')
+                                    ->icon('heroicon-o-document-magnifying-glass')
+                                    ->color('info')
+                                    ->action(function (QardHasan $record) {
+                                        try {
+                                            set_time_limit(120);
+                                            $borrower = $record->user;
+                                            $schedule = $record->generateInstallmentSchedule();
+                                            $pdfData = [
+                                                'user' => $borrower,
+                                                'loan' => $record,
+                                                'schedule' => $schedule,
+                                            ];
+                                            $pdf = Pdf::setOptions(['isHtml5ParserEnabled' => false])->loadView('pdfs.loan_agreement', $pdfData);
+                                            return response()->streamDownload(function () use ($pdf) {
+                                                echo $pdf->output();
+                                            }, 'Office_Review_Form_' . $record->qard_id_string . '.pdf');
+                                        } catch (\Exception $e) {
+                                            Notification::make()
+                                                ->title('Generation Failed')
+                                                ->body('Failed to generate review form: ' . $e->getMessage())
+                                                ->danger()
+                                                ->send();
+                                        }
+                                    }),
                                 InfolistAction::make('download_template')
                                     ->label('Download')
                                     ->icon('heroicon-o-arrow-down-tray')
