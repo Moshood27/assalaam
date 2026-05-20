@@ -115,7 +115,7 @@
           </h2>
           <p class="text-sm text-slate-600 leading-relaxed">
             For questions or concerns, visit the <router-link to="/support" class="text-emerald-700 font-bold hover:underline">Support</router-link>
-            page or email <a href="mailto:support@example.com" class="text-emerald-700 font-bold hover:underline">support@example.com</a>.
+            page or email <a href="mailto:attaqwaosogbo@gmail.com" class="text-emerald-700 font-bold hover:underline"></a>.attaqwaosogbo@gmail.com
           </p>
         </section>
       </div>
