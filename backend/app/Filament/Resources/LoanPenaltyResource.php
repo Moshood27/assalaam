@@ -21,7 +21,7 @@ class LoanPenaltyResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
 
-    protected static ?string $navigationGroup = 'Loans';
+    protected static ?string $navigationGroup = 'Loan Management';
 
     protected static ?string $navigationLabel = 'Loan Penalties';
 

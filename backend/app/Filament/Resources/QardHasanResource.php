@@ -51,7 +51,9 @@ class QardHasanResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationLabel = 'Loans';
+    protected static ?string $navigationGroup = 'Loan Management';
+
+    protected static ?string $navigationLabel = 'Manage Loans';
 
     public static function form(Form $form): Form
     {
@@ -280,7 +282,6 @@ class QardHasanResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending',
                         'active' => 'Active',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
@@ -1197,7 +1198,9 @@ class QardHasanResource extends Resource
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_qard_hasan');
+        // Disable creation from the management resource.
+        // Use LoanRequestResource to create new loan applications.
+        return false;
     }
 
     public static function canEdit($record): bool
@@ -1212,15 +1215,22 @@ class QardHasanResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
+        // Exclude pending loans as they are handled in LoanRequestResource
+        return static::getBaseFilteredQuery()->where('status', '!=', 'pending');
+    }
 
-        // If the user is a Super Admin, let them see everything
+    public static function getBaseFilteredQuery(): Builder
+    {
+        $user = auth()->user();
+        $query = parent::getEloquentQuery();
+
+        // If the user is a Super Admin, let them see everything (within their scope if any)
         if ($user->hasRole('super_admin')) {
-            return parent::getEloquentQuery();
+            return $query;
         }
 
         // Otherwise, only show records belonging to the user's branch
-        return parent::getEloquentQuery()->whereHas('user', function ($query) use ($user) {
+        return $query->whereHas('user', function ($query) use ($user) {
             $query->where('branch_id', $user->branch_id);
         });
     }
