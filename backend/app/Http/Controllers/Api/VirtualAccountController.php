@@ -79,206 +79,94 @@ class VirtualAccountController extends Controller
         $user = $request->user();
         $secret = config('services.paystack.secret_key');
 
-        if (!$secret) {
-            return response()->json(['message' => 'Payment provider not configured'], 500);
-        }
-
-        // 1. Validate Basic Requirements
+        // 1. Validate Requirements
         $validated = $request->validate([
             'preferred_bank' => 'nullable|string',
             'phone' => 'nullable|string',
             'bvn' => 'nullable|string|digits:11',
         ]);
 
+        $bvn = $validated['bvn'] ?? $user->bvn;
         $phone = $validated['phone'] ?? $user->phone;
-        if (empty($phone)) {
-            return response()->json(['message' => 'Phone number is required. Please update your profile.'], 422);
-        }
 
-        // 2. Prepare Name Data (Paystack requires First and Last name)
+        if (empty($bvn)) return response()->json(['message' => 'BVN is required.'], 422);
+        if (empty($phone)) return response()->json(['message' => 'Phone number is required.'], 422);
+
+        // 2. Prepare Name Data
         $firstName = $user->name;
-        $lastName = $user->surname;
-
-        if (empty($lastName)) {
-            $parts = preg_split('/\s+/', trim((string)$user->name));
-            $firstName = $parts[0] ?? 'Member';
-            $lastName = (count($parts) > 1) ? implode(' ', array_slice($parts, 1)) : 'Coop';
-        }
-
-        if (!empty($validated['bvn']) && $validated['bvn'] !== $user->bvn) {
-            $user->update(['bvn' => $validated['bvn']]);
-        }
+        $lastName = $user->surname ?? 'Member';
 
         try {
-            // 3. Sync/Upsert Customer on Paystack
-            $customerCode = $user->virtualAccount?->paystack_customer_code;
-            $customerPayload = [
-                'first_name' => $firstName,
-                'last_name'  => $lastName,
-                'phone'      => $phone,
-            ];
+            // STEP 1: Get Customer and Check "Identified" status
+            // This prevents calling identification if they are already verified
+            $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
 
-            $syncSuccess = false;
-            $lastResp = null;
+            $customerCode = null;
+            $isIdentified = false;
 
-            // Step A: If we have a local code, try updating it
-            if ($customerCode) {
-                Log::info('Paystack Sync: Step A - Updating existing code', ['code' => $customerCode]);
-                $lastResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$customerCode}", $customerPayload);
-                if ($lastResp->successful()) {
-                    $syncSuccess = true;
-                    $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
-                    Log::info('Paystack Sync: Step A Success', ['code' => $customerCode]);
-                } else {
-                    Log::warning('Paystack Sync: Step A Failed', ['code' => $customerCode, 'resp' => $lastResp->json()]);
-                    // If update failed (e.g. invalid code/environment mismatch), clear it and try email lookup
-                    $customerCode = null;
-                }
-            }
-
-            // Step B: If not synced, try fetching by email
-            if (!$syncSuccess) {
-                Log::info('Paystack Sync: Step B - Fetching by email', ['email' => $user->email]);
-                $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
-                if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
-                    $customerCode = $fetchResp->json('data.customer_code');
-                    Log::info('Paystack Sync: Step B Found', ['code' => $customerCode]);
-                    // Verify it with a PUT to ensure it's valid for this environment
-                    $lastResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$customerCode}", $customerPayload);
-                    if ($lastResp->successful()) {
-                        $syncSuccess = true;
-                        $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
-                        Log::info('Paystack Sync: Step B Verified', ['code' => $customerCode]);
-                    } else {
-                        Log::warning('Paystack Sync: Step B Verification Failed', ['code' => $customerCode, 'resp' => $lastResp->json()]);
-                        // If the code from GET is not working for PUT, clear it to try Step C
-                        $customerCode = null;
-                    }
-                } else {
-                    Log::info('Paystack Sync: Step B Not Found', ['email' => $user->email]);
-                }
-            }
-
-            // Step C: If still not synced, try creating fresh
-            if (!$syncSuccess) {
-                Log::info('Paystack Sync: Step C - Creating fresh customer', ['email' => $user->email]);
-                $lastResp = Http::withToken($secret)->post('https://api.paystack.co/customer', array_merge($customerPayload, [
+            if ($fetchResp->successful() && $fetchResp->json('data')) {
+                $customerCode = $fetchResp->json('data.customer_code');
+                $isIdentified = $fetchResp->json('data.identified');
+            } else {
+                // Create customer if they don't exist on this new Paystack account
+                $createResp = Http::withToken($secret)->post('https://api.paystack.co/customer', [
                     'email' => $user->email,
-                ]));
-                if ($lastResp->successful()) {
-                    $customerCode = $lastResp->json('data.customer_code');
-                    $syncSuccess = true;
-                    Log::info('Paystack Sync: Step C Success', ['code' => $customerCode]);
-                } elseif ($lastResp->json('message') === 'Customer already exists' || $lastResp->json('code') === 'duplicate_email') {
-                    Log::info('Paystack Sync: Step C - Already exists, final attempt to fetch');
-                    // If it exists but we couldn't create it, try one last GET + PUT to be sure
-                    $fetchResp = Http::withToken($secret)->get("https://api.paystack.co/customer/" . urlencode($user->email));
-                    if ($fetchResp->successful() && $fetchResp->json('data.customer_code')) {
-                        $customerCode = $fetchResp->json('data.customer_code');
-                        $lastResp = Http::withToken($secret)->put("https://api.paystack.co/customer/{$customerCode}", $customerPayload);
-                        $syncSuccess = $lastResp->successful();
-                        if ($syncSuccess) {
-                            $customerCode = $lastResp->json('data.customer_code') ?? $customerCode;
-                            Log::info('Paystack Sync: Step C Final Sync Success', ['code' => $customerCode]);
-                        } else {
-                            Log::error('Paystack Sync: Step C Final Sync Failed', ['code' => $customerCode, 'resp' => $lastResp->json()]);
-                        }
-                    }
-                } else {
-                    Log::error('Paystack Sync: Step C Failed', ['resp' => $lastResp->json()]);
-                }
-            }
-
-            if (!$syncSuccess || empty($customerCode)) {
-                $errorMsg = ($lastResp) ? ($lastResp->json('message') ?? 'Identity sync failed') : 'Identity sync failed';
-                Log::error('Paystack Customer sync failed', [
-                    'user_id' => $user->id,
-                    'mode' => config('services.paystack.mode'),
-                    'body' => $lastResp?->body() ?? 'No response'
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'phone' => $phone,
                 ]);
-                return response()->json(['message' => $errorMsg], 502);
+                if (!$createResp->successful()) return response()->json(['message' => 'Customer creation failed'], 502);
+                $customerCode = $createResp->json('data.customer_code');
             }
 
-            // Save/Update the customer code locally
+            // Save local copy
             $user->virtualAccount()->updateOrCreate([], ['paystack_customer_code' => $customerCode]);
 
-            // 3.5 Customer Identification (Required for some banks like Titan Trust)
-            $bvn = $validated['bvn'] ?? $user->bvn;
-            if ($bvn) {
-                Log::info('Paystack Sync: Identification step', ['code' => $customerCode]);
+            // STEP 2: Identification (Only if not already identified)
+            if (!$isIdentified) {
                 $identResp = Http::withToken($secret)->post("https://api.paystack.co/customer/{$customerCode}/identification", [
-                    'country'    => 'NG',
-                    'type'       => 'bvn',
-                    'value'      => $bvn,
+                    'country' => 'NG',
+                    'type' => 'bvn',
+                    'value' => $bvn,
                     'first_name' => $firstName,
-                    'last_name'  => $lastName,
+                    'last_name' => $lastName,
                 ]);
 
-                if (!$identResp->successful()) {
-                    $identData = $identResp->json();
-                    Log::warning('Paystack Identification failed', ['code' => $customerCode, 'resp' => $identData]);
+                $identData = $identResp->json();
 
-                    // If it's not already identified, and it's a Titan Trust request, we might want to stop here
-                    if (($identData['message'] ?? '') !== 'Customer already identified') {
-                        // Some errors (like name mismatch) are fatal for DVA
-                        if ($identResp->status() === 400 || $identResp->status() === 422) {
-                             return response()->json([
-                                 'message' => $identData['message'] ?? 'Identity verification failed',
-                                 'details' => $identData['meta'] ?? null
-                             ], 422);
-                        }
-                    }
-                } else {
-                    Log::info('Paystack Identification successful', ['code' => $customerCode]);
+                // If it's a real failure (not "already exists/identified")
+                if (!$identResp->successful() && !str_contains($identData['message'], 'already')) {
+                    return response()->json(['message' => 'Identification Error: ' . $identData['message']], 422);
                 }
+
+                // CRITICAL: Give Paystack's system 2 seconds to propagate the identification
+                sleep(2);
             }
 
-            // 4. Assign the Dedicated Virtual Account
-            $assignPayload = [
-                'customer'       => $customerCode,
-                'preferred_bank' => $validated['preferred_bank'] ?? 'titan-paystack',
-            ];
+            // STEP 3: Assign DVA
+            $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', [
+                'customer' => $customerCode,
+                'preferred_bank' => $validated['preferred_bank'] ?? 'wema-bank',
+            ]);
 
-            if (!empty($validated['bvn'])) {
-                $assignPayload['bvn'] = $validated['bvn'];
-            }
-
-            $assignResp = Http::withToken($secret)->post('https://api.paystack.co/dedicated_account', $assignPayload);
-
-            // 5. Handle the Response
             if ($assignResp->successful()) {
                 $accData = $assignResp->json('data');
-
                 $user->virtualAccount()->updateOrCreate([], [
                     'dva_account_number' => $accData['account_number'],
                     'dva_account_name'   => $accData['account_name'],
                     'dva_bank_name'      => $accData['bank']['name'],
                 ]);
-
-                $user->update([
-                    'bvn' => $validated['bvn'] ?? $user->bvn
-                ]);
+                $user->update(['bvn' => $bvn]);
 
                 return $this->show($request);
             }
 
-            // If assignment fails, handle specific errors
-            if ($assignResp->json('code') === 'invalid_customer_code') {
-                $user->virtualAccount()->update(['paystack_customer_code' => null]);
-                Log::warning('Paystack rejected customer code during assignment - cleared locally', [
-                    'user_id' => $user->id,
-                    'customer_code' => $customerCode,
-                    'mode' => config('services.paystack.mode')
-                ]);
-                return response()->json(['message' => 'Identity verification issue. We have reset your record, please try again.'], 422);
+            // Handle specific case where Paystack says "not identified" even though we just did it
+            if (str_contains($assignResp->json('message'), 'identified')) {
+                return response()->json(['message' => 'Paystack is still processing your KYC. Please try again in 1 minute.'], 422);
             }
 
-            Log::error('DVA Assignment failed', [
-                'mode' => config('services.paystack.mode'),
-                'body' => $assignResp->body()
-            ]);
-            $errorMessage = $assignResp->json('message') ?? 'Could not assign virtual account';
-            return response()->json(['message' => $errorMessage], 502);
+            return response()->json(['message' => $assignResp->json('message')], 502);
 
         } catch (\Throwable $e) {
             Log::error('DVA Exception', ['msg' => $e->getMessage()]);

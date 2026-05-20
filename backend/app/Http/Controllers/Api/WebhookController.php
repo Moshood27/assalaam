@@ -340,12 +340,15 @@ class WebhookController extends Controller
                     return response()->json(['status' => 'ignored']);
                 }
 
-                // Idempotency: if we've already recorded this reference as a wallet transaction, skip
-                if (WalletTransaction::where('reference', $reference)->exists()) {
+                // Idempotency: if we've already recorded this reference or Paystack ID as a wallet transaction, skip
+                $paystackId = $vd['id'] ?? null;
+                $alreadyProcessed = $paystackId ? WalletTransaction::where('meta->paystack_id', $paystackId)->exists() : false;
+
+                if ($alreadyProcessed || WalletTransaction::where('reference', $reference)->exists()) {
                     return response()->json(['status' => 'ok']);
                 }
 
-                DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vdChannel, $vd, $customerCode, $metadata) {
+                DB::transaction(function () use ($topupUser, $amountNgn, $netAmount, $maintenanceCharge, $reference, $vdChannel, $vd, $customerCode, $metadata, $paystackId) {
                     // Persist Paystack customer code and authorization code for future lookups/charges
                     $vaData = [];
                     if (empty($topupUser->paystack_customer_code) && !empty($customerCode)) {
@@ -374,6 +377,7 @@ class WebhookController extends Controller
                         'reference' => $reference,
                         'source' => $source,
                         'meta' => [
+                            'paystack_id' => $paystackId,
                             'channel' => $vdChannel,
                             'customer_code' => $vd['customer']['customer_code'] ?? null,
                             'receiver_account' => $vd['authorization']['receiver_bank_account_number'] ?? ($vd['authorization']['account_number'] ?? null),
