@@ -711,12 +711,24 @@ class QardHasanResource extends Resource
                             ->label('Disbursement Mode')
                             ->options([
                                 'internal' => 'Internal Credit (Default) — spend inside app; withdrawals disabled',
-                                'cash_out' => 'Cash-Out Enabled — allow withdrawal to bank',
+                                'cash_out' => 'Automated Cash-Out — trigger automatic transfer via Paystack',
+                                'manual' => 'Manual Credit — Transfer manually to member bank account',
                             ])
                             ->default('internal')
+                            ->reactive()
                             ->inline(false)
                             ->columns(1)
                             ->required(),
+                        Forms\Components\Placeholder::make('member_bank_details')
+                            ->label('Member Bank Details')
+                            ->visible(fn ($get) => in_array($get('disbursement_mode'), ['cash_out', 'manual']))
+                            ->content(function (QardHasan $record) {
+                                $u = $record->user;
+                                if (!$u || empty($u->account_number)) {
+                                    return 'No bank details found for this member.';
+                                }
+                                return "Account Name: {$u->account_name} | Account Number: {$u->account_number} | Bank Name: {$u->bank_name} ({$u->bank_code})";
+                            }),
                         Forms\Components\Textarea::make('note')
                             ->label('Internal Note (optional)')
                             ->maxLength(200)
@@ -783,12 +795,13 @@ class QardHasanResource extends Resource
                         $credit = max($principal - $fee, 0);
 
                         $mode = $data['disbursement_mode'] ?? 'internal';
-                        $withdrawable = $mode === 'cash_out';
+                        $withdrawable = in_array($mode, ['cash_out', 'manual']);
+                        $isAutomated = $mode === 'cash_out';
 
-                        // If admin selected Cash-Out, ensure member has verified bank details
+                        // If cash-out or manual, ensure member has verified bank details
                         if ($withdrawable) {
                             $member = $record->user?->fresh();
-                            $hasBank = $member && ! empty($member->bank_code) && ! empty($member->account_number) && ! empty($member->account_name);
+                            $hasBank = $member && ! empty($member->account_number) && ! empty($member->bank_name);
                             if (! $hasBank) {
                                 Notification::make()
                                     ->title('Bank details required')
@@ -802,8 +815,8 @@ class QardHasanResource extends Resource
 
                         $reference = 'QHDISB-'.now()->format('YmdHis').'-'.$record->user_id.'-'.strtoupper(Str::random(6));
 
-                        // If cash-out, trigger real payout before ledger updates
-                        if ($withdrawable) {
+                        // If automated cash-out, trigger real payout before ledger updates
+                        if ($isAutomated) {
                             try {
                                 PayoutService::sendToBank(
                                     (string) $record->user->account_number,
@@ -876,7 +889,12 @@ class QardHasanResource extends Resource
 
                         // Notify member via preferences
                         if ($record->user) {
-                            $modeText = $withdrawable ? 'Cash-out enabled' : 'Internal use only';
+                            $modeText = 'Internal use only';
+                            if ($mode === 'cash_out') {
+                                $modeText = 'Automated Cash-out';
+                            } elseif ($mode === 'manual') {
+                                $modeText = 'Manual Bank Transfer';
+                            }
                             $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to your wallet ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($record->user->balance ?? 0), 2);
                             $record->user->notifyMember('Loan Disbursed', $msg, [
                                 'type' => 'loan_disbursed',
