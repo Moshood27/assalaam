@@ -922,8 +922,8 @@ class LoanController extends Controller
             return response()->json(['message' => 'Agreement can only be uploaded for pending loans.'], 422);
         }
 
-        if (empty($q->agreement_template)) {
-            return response()->json(['message' => 'No agreement template found for this loan.'], 422);
+        if (empty($q->approved_at)) {
+            return response()->json(['message' => 'This loan has not been approved yet. Please wait for admin approval before uploading the signed agreement.'], 422);
         }
 
         $request->validate([

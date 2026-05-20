@@ -353,11 +353,12 @@
                 </div>
                 <div>
                   <h4 class="text-xs font-black text-amber-900 uppercase tracking-widest">Loan Agreement</h4>
-                  <p class="text-[10px] text-amber-700 font-bold">Action required to disburse funds</p>
+                  <p class="text-[10px] text-amber-700 font-bold" v-if="loan.approved_at">Action required to disburse funds</p>
+                  <p class="text-[10px] text-amber-700 font-bold" v-else>Awaiting committee approval</p>
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" v-if="loan.approved_at || loan.signed_agreement">
                 <a v-if="loan.agreement_template" :href="getImageUrl(loan.agreement_template)" target="_blank" class="flex items-center justify-center gap-2 h-11 bg-white border border-amber-200 rounded-xl text-[11px] font-black text-amber-900 uppercase tracking-widest hover:bg-amber-100 transition-colors">
                   <span>📥</span> Download PDF
                 </a>
@@ -380,6 +381,10 @@
                     <span v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   </button>
                 </div>
+              </div>
+              <div v-else class="p-4 bg-white/60 border border-dashed border-amber-200 rounded-2xl text-center">
+                <p class="text-[10px] text-amber-800 font-black uppercase tracking-widest opacity-40">Agreement Locked</p>
+                <p class="text-[9px] text-amber-700 font-bold mt-1">Available after committee approval</p>
               </div>
               
               <p v-if="loan.agreement_rejection_reason" class="p-3 bg-rose-100 border border-rose-200 rounded-xl text-[10px] text-rose-700 font-bold italic">
