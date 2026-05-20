@@ -27,6 +27,7 @@ use App\Services\TakafulService;
 use App\Services\AdministrativeChargeService;
 use App\Services\OpayService;
 use App\Services\MonnifyService;
+use App\Services\PaystackService;
 
 class WebhookController extends Controller
 {
@@ -116,6 +117,57 @@ class WebhookController extends Controller
             return response()->json(['status' => 'success']);
         }
 
+        if ($event === 'customeridentification.success') {
+            $customerCode = $data['customer_code'] ?? null;
+            if ($customerCode) {
+                $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
+                if ($user && empty($user->virtualAccount?->dva_account_number)) {
+                    $paystack = app(PaystackService::class);
+                    $paystack->assignDva($user, $customerCode);
+                    Log::info("Paystack KYC Success: Auto-assigned DVA for Member ID: {$user->id}");
+                }
+            }
+            return response()->json(['status' => 'success']);
+        }
+
+        if ($event === 'dedicatedaccount.assign.success') {
+            $acc = $data['dedicated_account'] ?? null;
+            $customerCode = $acc['customer']['customer_code'] ?? ($data['customer']['customer_code'] ?? null);
+            if ($customerCode && $acc) {
+                $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
+                if ($user) {
+                    $user->virtualAccount()->updateOrCreate([], [
+                        'dva_account_number' => $acc['account_number'],
+                        'dva_account_name'   => $acc['account_name'],
+                        'dva_bank_name'      => $acc['bank']['name'] ?? ($acc['provider']['name'] ?? 'Bank'),
+                    ]);
+
+                    $user->notifyMember(
+                        'Virtual Account Ready',
+                        "Your Paystack Virtual Account has been successfully assigned and is ready for use.",
+                        ['type' => 'dva_assigned', 'route' => '/wallet']
+                    );
+                }
+            }
+            return response()->json(['status' => 'success']);
+        }
+
+        if ($event === 'dedicatedaccount.assign.failed') {
+            $customerCode = $data['customer']['customer_code'] ?? null;
+            if ($customerCode) {
+                $user = User::whereHas('virtualAccount', fn($q) => $q->where('paystack_customer_code', $customerCode))->first();
+                if ($user) {
+                    Log::warning("Paystack DVA Assignment Failed for Member ID: {$user->id}");
+                    $user->notifyMember(
+                        'Virtual Account Failed',
+                        "We encountered an issue assigning your Virtual Account. Please try again later or contact support.",
+                        ['type' => 'dva_failed', 'route' => '/wallet']
+                    );
+                }
+            }
+            return response()->json(['status' => 'success']);
+        }
+
         if ($event === 'charge.success') {
             $reference = $data['reference'] ?? null;
             if (! $reference) {
@@ -123,19 +175,15 @@ class WebhookController extends Controller
             }
 
             // Verify transaction with Paystack for extra safety
-            $verify = Http::withToken($secret)
-                ->acceptJson()
-                ->timeout(15)
-                ->connectTimeout(5)
-                ->retry(3, 300)
-                ->get('https://api.paystack.co/transaction/verify/' . urlencode($reference));
+            $paystack = app(PaystackService::class);
+            $verifyResult = $paystack->verifyTransaction($reference);
 
-            if (! $verify->ok() || ($verify->json('status') !== true)) {
-                Log::warning('Paystack verify call failed', ['reference' => $reference, 'body' => $verify->json()]);
+            if (! $verifyResult['success']) {
+                Log::warning('Paystack verify call failed', ['reference' => $reference, 'message' => $verifyResult['message']]);
                 return response()->json(['message' => 'Verification failed'], 400);
             }
 
-            $vd = $verify->json('data');
+            $vd = $verifyResult['data'];
             if (! $vd || ($vd['status'] ?? null) !== 'success') {
                 Log::info('Paystack verify not successful', ['reference' => $reference, 'status' => $vd['status'] ?? null]);
                 return response()->json(['message' => 'Not successful'], 200);
