@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use Laravel\Pennant\Feature;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -43,6 +44,16 @@ class AppStatusSettings extends Page
             'gateway_monnify_enabled' => (bool) Setting::get('gateway_monnify_enabled', true),
             'gateway_opay_enabled' => (bool) Setting::get('gateway_opay_enabled', true),
             'primary_payment_gateway' => Setting::get('primary_payment_gateway', 'paystack'),
+            'takaful_enabled' => Feature::for('global')->active('takaful-enabled'),
+            'gold_savings_enabled' => Feature::for('global')->active('gold-savings-enabled'),
+            'group_savings_enabled' => Feature::for('global')->active('group-savings-enabled'),
+            'receive_qr_enabled' => Feature::for('global')->active('receive-qr-enabled'),
+            'merchant_pay_enabled' => Feature::for('global')->active('merchant-pay-enabled'),
+            'zakat_enabled' => Feature::for('global')->active('zakat-enabled'),
+            'junior_coop_enabled' => Feature::for('global')->active('junior-coop-enabled'),
+            'projects_enabled' => Feature::for('global')->active('projects-enabled'),
+            'chat_help_enabled' => Feature::for('global')->active('chat-help-enabled'),
+            'withdrawals_enabled' => Feature::for('global')->active('withdrawals-enabled'),
         ]);
     }
 
@@ -151,6 +162,21 @@ class AppStatusSettings extends Page
                         Toggle::make('gateway_opay_enabled')
                             ->label('Enable Opay'),
                     ])->columns(2),
+                Section::make('Dashboard Features')
+                    ->description('Enable or disable specific features on the member dashboard.')
+                    ->schema([
+                        Toggle::make('takaful_enabled')->label('Takaful'),
+                        Toggle::make('gold_savings_enabled')->label('Gold Savings'),
+                        Toggle::make('group_savings_enabled')->label('Group Savings'),
+                        Toggle::make('receive_qr_enabled')->label('Receive QR'),
+                        Toggle::make('merchant_pay_enabled')->label('Merchant Pay'),
+                        Toggle::make('zakat_enabled')->label('Zakat'),
+                        Toggle::make('junior_coop_enabled')->label('Junior Coop'),
+                        Toggle::make('projects_enabled')->label('Projects'),
+                        Toggle::make('chat_help_enabled')->label('Chat & Help'),
+                        Toggle::make('withdrawals_enabled')->label('Withdrawals Enabled')
+                            ->helperText('Global kill switch for all withdrawals.'),
+                    ])->columns(3),
             ])
             ->statePath('data');
     }
@@ -159,8 +185,29 @@ class AppStatusSettings extends Page
     {
         $data = $this->form->getState();
 
+        $features = [
+            'takaful_enabled' => 'takaful-enabled',
+            'gold_savings_enabled' => 'gold-savings-enabled',
+            'group_savings_enabled' => 'group-savings-enabled',
+            'receive_qr_enabled' => 'receive-qr-enabled',
+            'merchant_pay_enabled' => 'merchant-pay-enabled',
+            'zakat_enabled' => 'zakat-enabled',
+            'junior_coop_enabled' => 'junior-coop-enabled',
+            'projects_enabled' => 'projects-enabled',
+            'chat_help_enabled' => 'chat-help-enabled',
+            'withdrawals_enabled' => 'withdrawals-enabled',
+        ];
+
         foreach ($data as $key => $value) {
-            Setting::set($key, $value);
+            if (array_key_exists($key, $features)) {
+                if ($value) {
+                    Feature::for('global')->activate($features[$key]);
+                } else {
+                    Feature::for('global')->deactivate($features[$key]);
+                }
+            } else {
+                Setting::set($key, $value);
+            }
         }
 
         Notification::make()
