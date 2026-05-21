@@ -17,7 +17,7 @@ class ExpenseEntry extends Model
         return LogOptions::defaults()
             ->logFillable()
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontSubmitEmptyLogs();
     }
 
     protected $table = 'expense_entries';

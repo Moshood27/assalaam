@@ -16,7 +16,7 @@ class ProjectProfit extends Model
         return LogOptions::defaults()
             ->logOnly(['gross_profit', 'management_fee_percent', 'management_fee_amount', 'net_distributable'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontSubmitEmptyLogs();
     }
 
     protected $fillable = [

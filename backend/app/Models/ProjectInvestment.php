@@ -16,7 +16,7 @@ class ProjectInvestment extends Model
         return LogOptions::defaults()
             ->logOnly(['amount', 'units', 'reference'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontSubmitEmptyLogs();
     }
 
     protected $fillable = [

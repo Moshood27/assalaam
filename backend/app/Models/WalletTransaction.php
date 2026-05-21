@@ -18,7 +18,7 @@ class WalletTransaction extends Model
         return LogOptions::defaults()
             ->logOnly(['type', 'amount', 'reference', 'source', 'meta', 'processed_at'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontSubmitEmptyLogs();
     }
 
     protected $fillable = [

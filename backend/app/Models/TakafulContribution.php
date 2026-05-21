@@ -16,7 +16,7 @@ class TakafulContribution extends Model
         return LogOptions::defaults()
             ->logOnly(['amount', 'reference', 'status'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontSubmitEmptyLogs();
     }
 
     protected $fillable = [

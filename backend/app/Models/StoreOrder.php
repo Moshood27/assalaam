@@ -16,7 +16,7 @@ class StoreOrder extends Model
         return LogOptions::defaults()
             ->logOnly(['status', 'total_amount', 'shipping_address', 'payment_reference', 'disbursed_at'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontSubmitEmptyLogs();
     }
 
     protected $fillable = [

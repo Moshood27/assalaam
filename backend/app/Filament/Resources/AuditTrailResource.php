@@ -11,6 +11,7 @@ use App\Models\GoalBooking;
 use App\Models\IncomeEntry;
 use App\Models\LedgerEntry;
 use App\Models\LedgerJournal;
+use App\Models\MemberApplication;
 use App\Models\Product;
 use App\Models\ProjectInvestment;
 use App\Models\ProjectProfit;
@@ -23,9 +24,12 @@ use App\Models\Setting;
 use App\Models\ShariahAuditLog;
 use App\Models\StoreOrder;
 use App\Models\TakafulContribution;
+use App\Models\TransactionApproval;
 use App\Models\User;
 use App\Models\UtilityTransaction;
+use App\Models\Vendor;
 use App\Models\WalletTransaction;
+use App\Models\WhitelistedIp;
 use App\Models\WithdrawalRequest;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\KeyValueEntry;
@@ -190,6 +194,18 @@ class AuditTrailResource extends Resource
                         StoreOrder::class => 'Store Order',
                         User::class => 'User / Member',
                         UtilityTransaction::class => 'Utility Transaction',
+                        Branch::class => 'Branch',
+                        Feature::class => 'Feature Toggle',
+                        LedgerEntry::class => 'Ledger Entry',
+                        LedgerJournal::class => 'Ledger Journal',
+                        Product::class => 'Product',
+                        Scheme::class => 'Scheme',
+                        Setting::class => 'Setting',
+                        ShariahAuditLog::class => 'Shariah Audit Log',
+                        MemberApplication::class => 'Member Application',
+                        TransactionApproval::class => 'Transaction Approval',
+                        Vendor::class => 'Vendor',
+                        WhitelistedIp::class => 'Whitelisted IP',
                     ]),
                 Tables\Filters\SelectFilter::make('description')
                     ->label('Action')

@@ -98,7 +98,7 @@ class ShariaDispute extends Model
         return LogOptions::defaults()
             ->logOnly(['status', 'mediation_notes', 'outcome_details', 'resolved_at'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontSubmitEmptyLogs();
     }
 
     public function user()
