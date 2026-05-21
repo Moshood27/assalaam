@@ -90,10 +90,19 @@ class AuditTrailResource extends Resource
                         $old = $record->properties['old'] ?? [];
                         $new = $record->properties['attributes'] ?? [];
 
+                        $user = auth()->user();
+                        $isSuperAdmin = $user && $user->hasRole('super_admin');
+                        $sensitive = ['bvn', 'membership_number', 'account_number', 'password'];
+
                         if (empty($old) && empty($new)) {
                             $props = $record->properties->except(['old', 'attributes'])->toArray();
                             if (!empty($props)) {
-                                return collect($props)->map(fn ($v, $k) => ucfirst(str_replace('_', ' ', $k)) . ": " . (is_array($v) ? json_encode($v) : $v))->implode(', ');
+                                return collect($props)->map(function ($v, $k) use ($isSuperAdmin, $sensitive) {
+                                    if (!$isSuperAdmin && in_array($k, $sensitive)) {
+                                        $v = is_string($v) ? \Illuminate\Support\Str::mask($v, '*', 2, -2) : '*******';
+                                    }
+                                    return ucfirst(str_replace('_', ' ', $k)) . ": " . (is_array($v) ? json_encode($v) : $v);
+                                })->implode(', ');
                             }
                             return 'No details';
                         }
@@ -108,6 +117,12 @@ class AuditTrailResource extends Resource
                                 $oldVal = is_array($old[$key]) ? json_encode($old[$key]) : $old[$key];
                                 $newVal = is_array($value) ? json_encode($value) : $value;
 
+                                // Mask sensitive data
+                                if (!$isSuperAdmin && in_array($key, $sensitive)) {
+                                    $oldVal = is_string($oldVal) ? \Illuminate\Support\Str::mask($oldVal, '*', 2, -2) : '*******';
+                                    $newVal = is_string($newVal) ? \Illuminate\Support\Str::mask($newVal, '*', 2, -2) : '*******';
+                                }
+
                                 // Format currency for amount fields
                                 if (str_contains($key, 'amount') || $key === 'balance') {
                                     $oldVal = '₦' . number_format((float)$oldVal, 2);
@@ -120,6 +135,9 @@ class AuditTrailResource extends Resource
 
                         $otherProps = $record->properties->except(['old', 'attributes'])->toArray();
                         foreach ($otherProps as $key => $value) {
+                            if (!$isSuperAdmin && in_array($key, $sensitive)) {
+                                $value = is_string($value) ? \Illuminate\Support\Str::mask($value, '*', 2, -2) : '*******';
+                            }
                             $changes[] = ucfirst(str_replace('_', ' ', $key)) . ": " . (is_array($value) ? json_encode($value) : $value);
                         }
 
@@ -140,6 +158,11 @@ class AuditTrailResource extends Resource
                         'finance' => 'Finance Logs',
                         'chat' => 'Chat Logs',
                     ]),
+                Tables\Filters\SelectFilter::make('causer_id')
+                    ->label('Admin/User')
+                    ->relationship('causer', 'surname')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('subject_type')
                     ->label('Model')
                     ->options([
@@ -251,7 +274,7 @@ class AuditTrailResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $financialModels = [
+        $auditedModels = [
             Contribution::class,
             WalletTransaction::class,
             QardHasan::class,
@@ -268,11 +291,21 @@ class AuditTrailResource extends Resource
             StoreOrder::class,
             User::class,
             UtilityTransaction::class,
+            Setting::class,
+            Scheme::class,
+            Product::class,
+            LedgerJournal::class,
+            LedgerEntry::class,
+            Branch::class,
+            Feature::class,
+            ShariahAuditLog::class,
         ];
 
         return parent::getEloquentQuery()
-            ->whereIn('subject_type', $financialModels)
-            ->where('description', 'updated'); // Requirement specifically asks for "edited" records
+            ->where(function (Builder $query) use ($auditedModels) {
+                $query->whereIn('subject_type', $auditedModels)
+                    ->orWhereIn('log_name', ['auth', 'security', 'chat', 'finance']);
+            });
     }
 
     public static function getPages(): array

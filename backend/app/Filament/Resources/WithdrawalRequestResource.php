@@ -162,6 +162,20 @@ class WithdrawalRequestResource extends Resource
                     ->visible(fn (WithdrawalRequest $record) => $record->status === 'pending')
                     ->requiresConfirmation()
                     ->action(function (WithdrawalRequest $record) {
+                        // Prevent self-approval
+                        if ($record->user_id === auth()->id()) {
+                            \App\Services\SecurityLogger::logSuspiciousAction('Self-approval attempt for withdrawal', [
+                                'withdrawal_id' => $record->id,
+                                'amount' => $record->amount,
+                            ]);
+                            Notification::make()
+                                ->title('Security Alert')
+                                ->body('You cannot approve your own withdrawal request.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
                         // Enforce Multi-Sig (Four-Eyes) approval for high-value withdrawals
                         if ($record->isAwaitingApprovals()) {
                             $required = config('cooperative.approvals.required_approvals_count', 2);
@@ -281,6 +295,20 @@ class WithdrawalRequestResource extends Resource
                     ->modalDescription('Confirm that you have reviewed this high-value withdrawal and approve it for processing.')
                     ->action(function (WithdrawalRequest $record) {
                         $user = auth()->user();
+
+                        // Prevent self-approval in multi-sig as well
+                        if ($record->user_id === $user->id) {
+                            \App\Services\SecurityLogger::logSuspiciousAction('Self-approval attempt (multi-sig) for withdrawal', [
+                                'withdrawal_id' => $record->id,
+                                'amount' => $record->amount,
+                            ]);
+                            Notification::make()
+                                ->title('Security Alert')
+                                ->body('You cannot approve your own withdrawal request.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
 
                         // Check if already approved by this user
                         if ($record->transactionApprovals()->where('approver_id', $user->id)->exists()) {

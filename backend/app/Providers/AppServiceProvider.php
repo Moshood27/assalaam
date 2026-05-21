@@ -17,6 +17,11 @@ use App\Listeners\Auth\LogSuccessfulLogin;
 use App\Listeners\Auth\LogSuccessfulLogout;
 use App\Listeners\Auth\LogFailedLogin;
 use App\Listeners\Auth\LogLockout;
+use App\Listeners\Security\LogRoleChange;
+use Spatie\Permission\Events\RoleAttached;
+use Spatie\Permission\Events\RoleDetached;
+use Spatie\Permission\Events\PermissionAttached;
+use Spatie\Permission\Events\PermissionDetached;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -128,5 +133,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Logout::class, LogSuccessfulLogout::class);
         Event::listen(Failed::class, LogFailedLogin::class);
         Event::listen(Lockout::class, LogLockout::class);
+
+        // Register Security Event Listeners
+        Event::listen(RoleAttached::class, LogRoleChange::class);
+        Event::listen(RoleDetached::class, LogRoleChange::class);
+        Event::listen(PermissionAttached::class, LogRoleChange::class);
+        Event::listen(PermissionDetached::class, LogRoleChange::class);
     }
 }
