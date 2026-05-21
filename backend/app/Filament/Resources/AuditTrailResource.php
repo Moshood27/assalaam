@@ -172,7 +172,7 @@ class AuditTrailResource extends Resource
                     ]),
                 Tables\Filters\SelectFilter::make('causer_id')
                     ->label('Admin/User')
-                    ->relationship('causer', 'surname')
+                    ->options(fn () => User::query()->orderBy('surname')->get()->pluck('full_name', 'id'))
                     ->searchable()
                     ->preload(),
                 Tables\Filters\SelectFilter::make('subject_type')
@@ -323,6 +323,10 @@ class AuditTrailResource extends Resource
             Branch::class,
             Feature::class,
             ShariahAuditLog::class,
+            MemberApplication::class,
+            TransactionApproval::class,
+            Vendor::class,
+            WhitelistedIp::class,
         ];
 
         return parent::getEloquentQuery()
