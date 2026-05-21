@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AuditTrailResource\Pages;
 use App\Models\Branch;
+use App\Models\CharityEntry;
 use App\Models\Contribution;
 use App\Models\ExpenseEntry;
 use App\Models\Feature;
@@ -19,8 +20,10 @@ use App\Models\ProjectProfitPayout;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
 use App\Models\SavingsGoal;
+use App\Models\SavingsGroup;
 use App\Models\Scheme;
 use App\Models\Setting;
+use App\Models\ShariaDispute;
 use App\Models\ShariahAuditLog;
 use App\Models\StoreOrder;
 use App\Models\TakafulContribution;
@@ -78,7 +81,13 @@ class AuditTrailResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('causer.full_name')
                     ->label('Admin')
-                    ->searchable(['surname', 'name', 'other_names'])
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->whereHasMorph('causer', [User::class], function (Builder $query) use ($search) {
+                            $query->where('surname', 'like', "%{$search}%")
+                                ->orWhere('name', 'like', "%{$search}%")
+                                ->orWhere('other_names', 'like', "%{$search}%");
+                        });
+                    })
                     ->placeholder('System/Unknown'),
                 Tables\Columns\TextColumn::make('subject_type')
                     ->label('Record Type')
@@ -179,6 +188,7 @@ class AuditTrailResource extends Resource
                     ->label('Model')
                     ->options([
                         Contribution::class => 'Contribution',
+                        CharityEntry::class => 'Charity Entry',
                         WalletTransaction::class => 'Wallet Transaction',
                         QardHasan::class => 'Qard Hasan',
                         QardHasanRepayment::class => 'Qard Hasan Repayment',
@@ -191,6 +201,7 @@ class AuditTrailResource extends Resource
                         ProjectInvestment::class => 'Project Investment',
                         GoalBooking::class => 'Goal Booking',
                         SavingsGoal::class => 'Savings Goal',
+                        SavingsGroup::class => 'Savings Group',
                         StoreOrder::class => 'Store Order',
                         User::class => 'User / Member',
                         UtilityTransaction::class => 'Utility Transaction',
@@ -201,6 +212,7 @@ class AuditTrailResource extends Resource
                         Product::class => 'Product',
                         Scheme::class => 'Scheme',
                         Setting::class => 'Setting',
+                        ShariaDispute::class => 'Sharia Dispute',
                         ShariahAuditLog::class => 'Shariah Audit Log',
                         MemberApplication::class => 'Member Application',
                         TransactionApproval::class => 'Transaction Approval',
@@ -300,6 +312,7 @@ class AuditTrailResource extends Resource
     {
         $auditedModels = [
             Contribution::class,
+            CharityEntry::class,
             WalletTransaction::class,
             QardHasan::class,
             QardHasanRepayment::class,
@@ -312,6 +325,7 @@ class AuditTrailResource extends Resource
             ProjectInvestment::class,
             GoalBooking::class,
             SavingsGoal::class,
+            SavingsGroup::class,
             StoreOrder::class,
             User::class,
             UtilityTransaction::class,
@@ -322,6 +336,7 @@ class AuditTrailResource extends Resource
             LedgerEntry::class,
             Branch::class,
             Feature::class,
+            ShariaDispute::class,
             ShariahAuditLog::class,
             MemberApplication::class,
             TransactionApproval::class,
