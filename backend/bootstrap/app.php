@@ -1,8 +1,10 @@
 <?php
 
+use App\Services\SecurityLogger;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -35,6 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', [\App\Http\Middleware\TrackUserActivity::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->report(function (AccessDeniedHttpException $e) {
+            SecurityLogger::logUnauthorizedAccess(request()->fullUrl());
+        });
+
         if (class_exists(\Sentry\Laravel\Integration::class)) {
             \Sentry\Laravel\Integration::handles($exceptions);
         }

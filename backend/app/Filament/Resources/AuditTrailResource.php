@@ -54,6 +54,16 @@ class AuditTrailResource extends Resource
                     ->label('Date/Time')
                     ->dateTime()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('log_name')
+                    ->label('Log Type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'auth' => 'info',
+                        'security' => 'danger',
+                        'audit' => 'warning',
+                        default => 'gray',
+                    })
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('causer.full_name')
                     ->label('Admin')
                     ->searchable(['surname', 'name', 'other_names'])
@@ -80,6 +90,14 @@ class AuditTrailResource extends Resource
                         $old = $record->properties['old'] ?? [];
                         $new = $record->properties['attributes'] ?? [];
 
+                        if (empty($old) && empty($new)) {
+                            $props = $record->properties->except(['old', 'attributes'])->toArray();
+                            if (!empty($props)) {
+                                return collect($props)->map(fn ($v, $k) => ucfirst(str_replace('_', ' ', $k)) . ": " . (is_array($v) ? json_encode($v) : $v))->implode(', ');
+                            }
+                            return 'No details';
+                        }
+
                         if (empty($old) && !empty($new)) {
                             return 'Initial record created';
                         }
@@ -100,6 +118,11 @@ class AuditTrailResource extends Resource
                             }
                         }
 
+                        $otherProps = $record->properties->except(['old', 'attributes'])->toArray();
+                        foreach ($otherProps as $key => $value) {
+                            $changes[] = ucfirst(str_replace('_', ' ', $key)) . ": " . (is_array($value) ? json_encode($value) : $value);
+                        }
+
                         return empty($changes) ? 'No significant changes' : implode(', ', $changes);
                     })
                     ->wrap()
@@ -107,6 +130,16 @@ class AuditTrailResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                Tables\Filters\SelectFilter::make('log_name')
+                    ->label('Log Type')
+                    ->options([
+                        'default' => 'Default',
+                        'auth' => 'Auth Logs',
+                        'security' => 'Suspicious Actions',
+                        'audit' => 'Audit Logs',
+                        'finance' => 'Finance Logs',
+                        'chat' => 'Chat Logs',
+                    ]),
                 Tables\Filters\SelectFilter::make('subject_type')
                     ->label('Model')
                     ->options([
