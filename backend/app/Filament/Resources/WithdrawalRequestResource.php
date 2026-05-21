@@ -203,18 +203,6 @@ class WithdrawalRequestResource extends Resource
                             $record->status = 'paid';
                             $record->processed_at = now();
                             $record->save();
-
-                            if (auth()->id() === $record->user_id) {
-                                activity('suspicious')
-                                    ->performedOn($record)
-                                    ->causedBy(auth()->user())
-                                    ->withProperties([
-                                        'user_id' => $record->user_id,
-                                        'amount' => $record->amount,
-                                    ])
-                                    ->log("Admin approved their own withdrawal request");
-                            }
-
                             ShariahAudit::log(auth()->user(), 'approve_withdrawal', [
                                 'withdrawal_request_id' => $record->id,
                                 'user_id' => $record->user_id,
@@ -309,18 +297,6 @@ class WithdrawalRequestResource extends Resource
                             'status' => 'approved',
                             'responded_at' => now(),
                         ]);
-
-                        if (auth()->id() === $record->user_id) {
-                            activity('suspicious')
-                                ->performedOn($record)
-                                ->causedBy($user)
-                                ->withProperties([
-                                    'user_id' => $record->user_id,
-                                    'amount' => $record->amount,
-                                    'type' => 'multi-sig',
-                                ])
-                                ->log("Admin signed off on their own withdrawal request");
-                        }
 
                         ShariahAudit::log($user, 'multi_sig_approve_withdrawal', [
                             'withdrawal_id' => $record->id,

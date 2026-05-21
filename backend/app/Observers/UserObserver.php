@@ -40,27 +40,6 @@ class UserObserver
             event(new \App\Events\UserAccountUpdated($user));
         }
 
-        // Suspicious action: Change of bank details
-        if ($user->wasChanged(['bank_name', 'account_number', 'bvn'])) {
-            activity('suspicious')
-                ->performedOn($user)
-                ->causedBy(auth()->user() ?? $user)
-                ->withProperties([
-                    'old' => [
-                        'bank_name' => $user->getOriginal('bank_name'),
-                        'account_number' => $user->getOriginal('account_number'),
-                        'bvn' => $user->getOriginal('bvn'),
-                    ],
-                    'new' => [
-                        'bank_name' => $user->bank_name,
-                        'account_number' => $user->account_number,
-                        'bvn' => $user->bvn,
-                    ],
-                    'ip' => request()->ip(),
-                ])
-                ->log("User sensitive bank details changed");
-        }
-
         // If balance increased
         if ($user->wasChanged('balance') && $user->balance > $user->getOriginal('balance')) {
             // 1. Process outstanding fines

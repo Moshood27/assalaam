@@ -41,22 +41,6 @@ class WalletTransactionObserver
             ], $entries);
 
             $tx->updateQuietly(['ledger_journal_id' => $journal->id]);
-
-            // Suspicious action: Large transaction
-            if ($tx->amount >= 500000) { // 500k threshold
-                $causer = auth()->user() ?? $tx->user;
-                activity('suspicious')
-                    ->performedOn($tx)
-                    ->causedBy($causer)
-                    ->withProperties([
-                        'amount' => $tx->amount,
-                        'type' => $tx->type,
-                        'source' => $tx->source,
-                        'reference' => $tx->reference,
-                        'ip' => request()->ip(),
-                    ])
-                    ->log("Large wallet transaction detected");
-            }
         } catch (\Exception $e) {
             \Log::error("Failed to record wallet transaction in ledger: " . $e->getMessage());
         }

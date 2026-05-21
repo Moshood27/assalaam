@@ -23,7 +23,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasActivity, HasApiTokens, HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, HasRoles, HasActivity, Notifiable, TwoFactorAuthenticatable;
 
     public function getActivitylogOptions(): LogOptions
     {
