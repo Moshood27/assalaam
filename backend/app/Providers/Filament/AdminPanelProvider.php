@@ -8,7 +8,7 @@ use App\Filament\Resources\ChatRoomResource;
 use App\Filament\Resources\ChatRoomResource\Widgets\ChatStatsWidget;
 use App\Filament\Resources\ChatAuditResource;
 use App\Filament\Resources\StaffResource;
-use App\Filament\Resources\ActivityLogResource;
+use App\Filament\Resources\AuditTrailResource;
 use App\Filament\Resources\WhitelistedIpResource;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use App\Filament\Resources\AgmCandidateResource;
@@ -120,7 +120,7 @@ class AdminPanelProvider extends PanelProvider
                 SupportMessageResource::class,
                 WalletTransactionResource::class,
                 UtilityTransactionResource::class,
-                ActivityLogResource::class,
+                AuditTrailResource::class,
                 WhitelistedIpResource::class,
                 ChatRoomResource::class,
                 ChatAuditResource::class,
