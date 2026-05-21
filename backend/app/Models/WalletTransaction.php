@@ -6,8 +6,8 @@ use App\Jobs\AutoRecoverOverdueLoans;
 use App\Jobs\RecoverOutstandingFines;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class WalletTransaction extends Model
 {

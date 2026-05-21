@@ -26,7 +26,7 @@
         "resend/resend-laravel": "^1.4",
         "sentry/sentry-laravel": "^4.25",
         "snipe/banbuilder": "^2.3",
-        "spatie/laravel-activitylog": "^5.0",
+        "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-backup": "^10.2",
         "spatie/laravel-permission": "*",
         "yabacon/paystack-php": "^2.2"
