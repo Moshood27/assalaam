@@ -404,8 +404,18 @@ class QardHasanResource extends Resource
                         $record->update([
                             'approved_by' => auth()->id(),
                             'approved_at' => now(),
-                            'agreement_template' => $template,
                         ]);
+
+                        if (auth()->id() === $record->user_id) {
+                            activity('suspicious')
+                                ->performedOn($record)
+                                ->causedBy(auth()->user())
+                                ->withProperties([
+                                    'user_id' => $record->user_id,
+                                    'amount' => $record->amount,
+                                ])
+                                ->log("Admin approved their own loan request");
+                        }
 
                         ShariahAudit::log(auth()->user(), 'approve_qard_hasan', [
                             'qard_id' => $record->id,
@@ -680,6 +690,18 @@ class QardHasanResource extends Resource
                             'status' => 'approved',
                             'responded_at' => now(),
                         ]);
+
+                        if (auth()->id() === $record->user_id) {
+                            activity('suspicious')
+                                ->performedOn($record)
+                                ->causedBy($user)
+                                ->withProperties([
+                                    'user_id' => $record->user_id,
+                                    'amount' => $record->amount,
+                                    'type' => 'multi-sig',
+                                ])
+                                ->log("Admin signed off on their own loan request");
+                        }
 
                         ShariahAudit::log($user, 'multi_sig_approve_loan', [
                             'qard_id' => $record->id,

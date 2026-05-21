@@ -21,6 +21,7 @@ use App\Services\PushService;
 use App\Services\SmsService;
 use App\Services\TakafulService;
 use App\Services\AdministrativeChargeService;
+use App\Notifications\WellnessCheckNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
@@ -666,6 +667,23 @@ class UserResource extends Resource
                         }, Str::replace(['/', '\\'], '_', "member-{$record->membership_number}.pdf"));
                     }),
                 Tables\Actions\EditAction::make(),
+                Action::make('wellnessCheck')
+                    ->label('Send Wellness Check')
+                    ->icon('heroicon-o-heart')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Send Wellness Check')
+                    ->modalDescription('Are you sure you want to send a wellness check notification to this member?')
+                    ->modalSubmitActionLabel('Yes, send it')
+                    ->action(function (User $record) {
+                        $record->notify(new WellnessCheckNotification());
+                        $record->update(['wellness_check_notified_at' => now()]);
+
+                        Notification::make()
+                            ->title('Wellness check notification sent.')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('chat')
                     ->label('Chat')
                     ->icon('heroicon-o-chat-bubble-left-right')

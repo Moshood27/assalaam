@@ -7,6 +7,10 @@ use App\Models\Contribution;
 use App\Models\ExpenseEntry;
 use App\Models\GoalBooking;
 use App\Models\IncomeEntry;
+use App\Models\Project;
+use App\Models\Product;
+use App\Models\Scheme;
+use App\Models\Feature;
 use App\Models\ProjectInvestment;
 use App\Models\ProjectProfit;
 use App\Models\ProjectProfitPayout;
@@ -126,6 +130,10 @@ class AuditTrailResource extends Resource
                         StoreOrder::class => 'Store Order',
                         User::class => 'User / Member',
                         UtilityTransaction::class => 'Utility Transaction',
+                        Scheme::class => 'Scheme / Savings Plan',
+                        Product::class => 'Product / Store Item',
+                        Project::class => 'Mudarabah Project',
+                        Feature::class => 'Feature Toggle / Flag',
                     ]),
                 Tables\Filters\SelectFilter::make('description')
                     ->label('Action')
@@ -235,11 +243,14 @@ class AuditTrailResource extends Resource
             StoreOrder::class,
             User::class,
             UtilityTransaction::class,
+            Scheme::class,
+            Product::class,
+            Project::class,
+            Feature::class,
         ];
 
         return parent::getEloquentQuery()
-            ->whereIn('subject_type', $financialModels)
-            ->where('description', 'updated'); // Requirement specifically asks for "edited" records
+            ->whereIn('subject_type', $financialModels);
     }
 
     public static function getPages(): array

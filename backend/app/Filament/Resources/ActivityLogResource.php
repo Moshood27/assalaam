@@ -130,6 +130,11 @@ class ActivityLogResource extends Resource
             ]);
     }
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()->whereNotIn('log_name', ['auth', 'suspicious']);
+    }
+
     public static function getPages(): array
     {
         return [

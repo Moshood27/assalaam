@@ -10,6 +10,7 @@ use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Client\ConnectionException;
 
 class VirtualAccountController extends Controller
@@ -110,6 +111,28 @@ class VirtualAccountController extends Controller
 
             if ($status === 'failed') {
                 $reason = $lastId['message'] ?? 'Your identification was rejected by the bank. Please update your profile name to match your BVN and try again.';
+
+                Log::warning("Paystack identification failed for user {$user->id}: {$reason}");
+                activity('auth')
+                    ->performedOn($user)
+                    ->withProperties(['reason' => $reason, 'bvn' => $bvn])
+                    ->log("Virtual account identification failed");
+
+                $cacheKey = "dva_ident_failed_{$user->id}";
+                $attempts = Cache::get($cacheKey, 0) + 1;
+                Cache::put($cacheKey, $attempts, now()->addDay());
+
+                if ($attempts >= 3) {
+                    activity('suspicious')
+                        ->performedOn($user)
+                        ->withProperties([
+                            'attempts' => $attempts,
+                            'bvn' => $bvn,
+                            'reason' => $reason
+                        ])
+                        ->log("Repeated virtual account identification failures");
+                }
+
                 return response()->json([
                     'message' => $reason
                 ], 422);
@@ -140,6 +163,14 @@ class VirtualAccountController extends Controller
 
         // STEP 3: Assign DVA
         $assign = $paystack->assignDva($user, $customerCode, $validated['preferred_bank'] ?? 'wema-bank');
+
+        if (!$assign['success']) {
+            Log::error("Failed to assign Paystack DVA to user {$user->id}: " . $assign['message']);
+            activity('auth')
+                ->performedOn($user)
+                ->withProperties(['message' => $assign['message']])
+                ->log("Virtual account assignment failed");
+        }
 
         if ($assign['success']) {
             $user->update(['bvn' => $bvn]);
