@@ -3,16 +3,24 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AuditTrailResource\Pages;
+use App\Models\Branch;
 use App\Models\Contribution;
 use App\Models\ExpenseEntry;
+use App\Models\Feature;
 use App\Models\GoalBooking;
 use App\Models\IncomeEntry;
+use App\Models\LedgerEntry;
+use App\Models\LedgerJournal;
+use App\Models\Product;
 use App\Models\ProjectInvestment;
 use App\Models\ProjectProfit;
 use App\Models\ProjectProfitPayout;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
 use App\Models\SavingsGoal;
+use App\Models\Scheme;
+use App\Models\Setting;
+use App\Models\ShariahAuditLog;
 use App\Models\StoreOrder;
 use App\Models\TakafulContribution;
 use App\Models\User;
