@@ -1054,7 +1054,7 @@ class AccountingReportService
             $paid = (float)$loan->paid_amount;
             $balance = (float)$loan->remaining_principal;
 
-            $expectedToDate = (float)$loan->getExpectedAmountToDate($toDate);
+            $expectedToPay = max(0.0, $loan->getExpectedAmountTillNextInstallment($toDate) - $paid);
             $overdue = (float)$loan->getOverdueAmount($toDate);
             $defaultStartDate = $loan->getDefaultStartDate($toDate);
 
@@ -1074,7 +1074,7 @@ class AccountingReportService
                 'date_granted' => $loan->received_at ?: ($loan->approved_at ?: $loan->created_at),
                 'loan_granted' => $principal,
                 'amount_repaid' => $paid,
-                'expected_amount_to_pay' => $expectedToDate,
+                'expected_amount_to_pay' => $expectedToPay,
                 'amount_defaulted' => $overdue,
                 'loan_balance' => $balance,
                 'savings_balance' => $savingsBalance,
@@ -1084,7 +1084,7 @@ class AccountingReportService
 
             $totals['loan_granted'] += $principal;
             $totals['amount_repaid'] += $paid;
-            $totals['expected_amount_to_pay'] += $expectedToDate;
+            $totals['expected_amount_to_pay'] += $expectedToPay;
             $totals['amount_defaulted'] += $overdue;
             $totals['loan_balance'] += $balance;
             $totals['savings_balance'] += $savingsBalance;

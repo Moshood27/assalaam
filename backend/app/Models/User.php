@@ -829,7 +829,7 @@ class User extends Authenticatable implements FilamentUser
         return (float) $this->qardHasans()
             ->whereIn('status', ['active', 'defaulted', 'pending'])
             ->get()
-            ->sum(fn($loan) => $loan->getExpectedAmountToDate());
+            ->sum('expected_amount_to_pay');
     }
 
     public function hasActiveLoanPenalty(): bool

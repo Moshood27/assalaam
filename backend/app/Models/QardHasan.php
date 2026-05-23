@@ -314,7 +314,27 @@ class QardHasan extends Model
 
     public function getExpectedAmountToPayAttribute(): float
     {
-        return $this->getExpectedAmountToDate(now());
+        return round(max(0.0, $this->getExpectedAmountTillNextInstallment(now()) - (float)$this->paid_amount), 2);
+    }
+
+    /**
+     * Calculate the expected amount including the next installment after a certain date.
+     */
+    public function getExpectedAmountTillNextInstallment(?Carbon $asAt = null): float
+    {
+        $asAt = $asAt ?: now();
+        $schedule = $this->generateInstallmentSchedule();
+
+        // Find the first installment that is due exactly on or after $asAt
+        $targetDate = $asAt;
+        foreach ($schedule as $item) {
+            if ($item['due_at']->greaterThanOrEqualTo($asAt)) {
+                $targetDate = $item['due_at'];
+                break;
+            }
+        }
+
+        return $this->getExpectedAmountToDate($targetDate);
     }
 
     /**
