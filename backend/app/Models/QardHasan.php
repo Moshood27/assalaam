@@ -98,7 +98,7 @@ class QardHasan extends Model
         }
 
         // Force Ascending Order (Fixes "descending order" issue for migrated loans)
-        usort($items, fn($a, $b) => $a['due_at']->timestamp <=> $b['due_at']->timestamp);
+        $items = collect($items)->sortBy('due_date')->values()->all();
 
         // Re-index after sort
         foreach ($items as $idx => &$item) {

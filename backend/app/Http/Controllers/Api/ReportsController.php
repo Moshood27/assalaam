@@ -87,6 +87,9 @@ class ReportsController extends Controller
         }
         unset($item);
 
+        // Ensure schedule is ascending by due_date before determining next due
+        usort($schedule, fn($a, $b) => strcmp($a['due_date'], $b['due_date']));
+
         // Determine next due installment helper
         $nextDue = null;
         foreach ($schedule as $it) {

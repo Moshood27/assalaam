@@ -284,6 +284,9 @@ class ExportController extends Controller
         }
         unset($item);
 
+        // Ensure schedule is ascending by due_date
+        usort($schedule, fn($a, $b) => strcmp($a['due_date'], $b['due_date']));
+
         $data = [
             'user' => $user,
             'loan' => $loan,
