@@ -134,7 +134,10 @@
             {{ formatDate(kpis.next_due_date) }} • {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
           </p>
           <p v-if="kpis.total_due_amount > 0" class="text-[10px] text-rose-500 font-bold mt-1 uppercase tracking-tighter">
-            Expected Amount to Pay: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
+            Overdue Amount: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
+          </p>
+          <p v-if="kpis.expected_amount_to_pay > 0" class="text-[10px] text-blue-500 font-bold mt-1 uppercase tracking-tighter">
+            Expected to Pay: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}
           </p>
         </div>
         <div class="text-slate-300">➡️</div>
@@ -157,7 +160,7 @@
         <div class="flex items-end gap-1 mb-8">
           <template v-if="kpis.total_due_amount > 0">
             <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
-            <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Expected Amount to Pay</span>
+            <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Overdue Amount</span>
           </template>
           <template v-else-if="kpis.is_defaulted">
             <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
@@ -171,6 +174,11 @@
             <span class="text-3xl font-black text-slate-900">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loan_limit) }}</span>
             <span class="text-[10px] text-slate-400 font-bold uppercase mb-2 ml-1 tracking-wider">Max Limit</span>
           </template>
+        </div>
+
+        <div v-if="kpis.expected_amount_to_pay > 0" class="mb-6">
+           <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Expected Amount to Pay (To Date)</p>
+           <p class="text-lg font-black text-blue-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -201,7 +209,8 @@
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
-        <StatPill v-if="kpis.total_due_amount > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-if="kpis.total_due_amount > 0" label="Overdue Amount" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="📅" @click="$router.push('/loans')" class="cursor-pointer" />
         <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? '≈ ₦ ***' : (kpis.gold_value_naira ? '≈ ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="🪙" @click="$router.push('/gold')" class="cursor-pointer" />
         <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="📊" />
         <StatPill label="Attaqwa Score" :value="String(kpis.attaqwa_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />

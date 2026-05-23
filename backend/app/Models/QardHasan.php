@@ -256,6 +256,7 @@ class QardHasan extends Model
         'next_due_at',
         'next_installment_amount',
         'overdue_amount',
+        'expected_amount_to_pay',
     ];
 
     public function user()
@@ -309,6 +310,11 @@ class QardHasan extends Model
         if ($this->user) {
             $this->user->syncLoanDefaulterStatus();
         }
+    }
+
+    public function getExpectedAmountToPayAttribute(): float
+    {
+        return $this->getExpectedAmountToDate(now());
     }
 
     /**

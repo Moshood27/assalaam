@@ -32,7 +32,7 @@
 
           <template v-else-if="scheduleData">
             <!-- Loan Summary in Modal -->
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Principal</p>
                 <p class="text-sm font-black text-slate-800">₦ {{ n(scheduleData.loan.principal_amount) }}</p>
@@ -43,6 +43,10 @@
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Expected to Pay</p>
+                <p class="text-sm font-black text-blue-600">₦ {{ n(scheduleData.loan.expected_amount_to_pay) }}</p>
+              </div>
+              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Overdue</p>
                 <p class="text-sm font-black text-rose-600">₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -87,7 +91,8 @@
                  <div>
                    <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Next Due Installment</p>
                    <p class="text-sm font-black text-indigo-900">{{ formatDate(scheduleData.next_due.due_date) }} • ₦ {{ n(scheduleData.next_due.amount_due) }}</p>
-                   <p v-if="scheduleData.loan.overdue_amount > 0" class="text-[10px] text-rose-600 font-bold uppercase mt-1">Expected Amount to Pay: ₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
+                   <p v-if="scheduleData.loan.expected_amount_to_pay > 0" class="text-[10px] text-blue-600 font-bold uppercase mt-1">Expected to Pay (To Date): ₦ {{ n(scheduleData.loan.expected_amount_to_pay) }}</p>
+                   <p v-if="scheduleData.loan.overdue_amount > 0" class="text-[10px] text-rose-600 font-bold uppercase mt-1">Overdue Amount: ₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
                  </div>
                </div>
                <span class="text-[10px] font-black text-indigo-600 bg-white px-3 py-1 rounded-full border border-indigo-200 uppercase">Item #{{ scheduleData.next_due.sequence }}</span>

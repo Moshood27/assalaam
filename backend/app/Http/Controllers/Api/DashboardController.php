@@ -154,6 +154,7 @@ class DashboardController extends Controller
 
         $isDefaulter = (bool) $user->is_defaulter;
         $totalOverdue = (float) $user->totalOverdueAmount();
+        $expectedToPay = (float) $user->totalExpectedAmountToPay();
         $hasActiveLoan = $user->hasActiveLoan();
 
         // Find next due installment info
@@ -183,6 +184,7 @@ class DashboardController extends Controller
             'is_defaulted' => $isDefaulter || $totalOverdue > 0,
             'defaulted_amount' => $totalOverdue,
             'total_due_amount' => $totalOverdue,
+            'expected_amount_to_pay' => $expectedToPay,
             'next_due_date' => $nextDueDate,
             'next_due_amount' => $nextDueAmount,
             'has_active_loan' => $hasActiveLoan,
