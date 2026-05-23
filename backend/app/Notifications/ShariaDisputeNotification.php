@@ -44,19 +44,22 @@ class ShariaDisputeNotification extends Notification implements ShouldQueue
         if ($this->type === 'created') {
             return (new MailMessage)
                 ->subject('New Sharia Dispute (Tahkim) Raised')
+                ->greeting('Assalāmu ‘alaykum,')
                 ->line('A new Sharia dispute has been raised for ' . $orderRef . '.')
                 ->line('Reason: ' . $this->dispute->reason)
                 ->action('View Dispute', url('/admin/sharia-disputes/' . $this->dispute->id . '/edit'))
-                ->line('Please review the case and initiate mediation.');
+                ->line('Please review the case and initiate mediation.')
+                ->line('Jazākumullāhu khayran.');
         }
 
         return (new MailMessage)
             ->subject('Sharia Dispute (Tahkim) Status Update')
+            ->greeting('Assalāmu ‘alaykum,')
             ->line('There has been an update to the Sharia dispute for ' . $orderRef . '.')
             ->line('New Status: ' . strtoupper($this->dispute->status))
             ->line('Outcome: ' . ($this->dispute->outcome_details ?? 'Under review'))
             ->action('View Details', url('/sharia-board/history'))
-            ->line('Thank you for your patience.');
+            ->line('Jazākumullāhu khayran for your patience.');
     }
 
     /**

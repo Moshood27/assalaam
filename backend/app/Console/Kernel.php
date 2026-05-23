@@ -15,6 +15,9 @@ class Kernel extends ConsoleKernel
         // Send reminders to defaulters every day at 08:00 server time
         $schedule->command('loans:send-default-reminders')->dailyAt('08:00');
 
+        // Send monthly loan payment reminders daily at 09:00 Africa/Lagos
+        $schedule->command('loans:send-monthly-reminders')->dailyAt('09:00')->timezone('Africa/Lagos');
+
         // Remind guarantors with pending decisions at least twice daily (09:00 and 16:00 server time)
         $schedule->command('loans:remind-guarantors')->twiceDaily(9, 16);
 

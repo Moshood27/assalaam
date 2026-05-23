@@ -45,7 +45,7 @@ class OtpNotification extends Notification
     {
         return (new MailMessage)
             ->subject($this->title)
-            ->greeting('Hello ' . $notifiable->name)
+            ->greeting('Assalāmu ‘alaykum ' . $notifiable->name . ',')
             ->line($this->message)
             ->line('If you did not request this, please ignore this message.');
     }

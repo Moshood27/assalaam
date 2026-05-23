@@ -28,8 +28,9 @@
             <p class="brand">{{ config('app.name') }} • Loan Request Rejected</p>
         </div>
         <div class="content">
-            <p>Dear {{ $member?->name ?? 'Member' }},</p>
-            <p>Your loan request <strong>{{ $loan->qard_id_string }}</strong> has been rejected.</p>
+            <p>Assalāmu ‘alaykum {{ $member?->name ?? 'Member' }},</p>
+            <p>We pray this message finds you in good health and īmān.</p>
+            <p>Your Qard Hasan request <strong>{{ $loan->qard_id_string }}</strong> has been declined.</p>
 
             <p class="reason"><strong>Reason:</strong> {{ $reason }}</p>
 

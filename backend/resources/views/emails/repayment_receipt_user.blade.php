@@ -29,8 +29,9 @@
             <p class="brand">{{ config('app.name') }} • Payment receipt</p>
         </div>
         <div class="content">
-            <p>Dear {{ $loan->user->full_name }},</p>
-            <p>We received your loan repayment. Here are the details for your records:</p>
+            <p>Assalāmu ‘alaykum {{ $loan->user->full_name }},</p>
+            <p>We pray this message finds you in good health and īmān.</p>
+            <p>We received your Qard Hasan repayment. May Allāh put barakah in your wealth. Āmīn. Here are the details for your records:</p>
             <table class="table" role="presentation">
                 <tr>
                     <td class="label">Loan ID</td>

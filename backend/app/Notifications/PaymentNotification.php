@@ -33,7 +33,7 @@ class PaymentNotification extends Notification implements ShouldQueue
     {
         $mail = (new MailMessage)
             ->subject($this->title)
-            ->greeting('Hello '.$notifiable->name)
+            ->greeting('Assalāmu ‘alaykum '.$notifiable->name.',')
             ->line($this->message);
 
         if (!empty($this->amount)) {
