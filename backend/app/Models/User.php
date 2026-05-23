@@ -819,7 +819,7 @@ class User extends Authenticatable implements FilamentUser
     public function totalOverdueAmount(): float
     {
         return (float) $this->qardHasans()
-            ->whereIn('status', ['active', 'defaulted'])
+            ->whereIn('status', ['active', 'defaulted', 'pending'])
             ->get()
             ->sum(fn($loan) => $loan->getOverdueAmount());
     }

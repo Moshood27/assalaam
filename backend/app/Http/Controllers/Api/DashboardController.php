@@ -161,8 +161,13 @@ class DashboardController extends Controller
         $nextDueAmount = 0.0;
 
         $activeLoan = $user->qardHasans()
-            ->whereIn('status', ['active', 'defaulted'])
+            ->whereIn('status', ['active', 'defaulted', 'pending'])
             ->whereColumn('paid_amount', '<', 'principal_amount')
+            ->where(function($q) {
+                $q->whereIn('status', ['active', 'defaulted'])
+                  ->orWhereNotNull('received_at')
+                  ->orWhereNotNull('approved_at');
+            })
             ->orderBy('created_at', 'asc') // Usually only one active loan, but just in case
             ->first();
 

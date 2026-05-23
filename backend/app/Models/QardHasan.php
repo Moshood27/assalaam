@@ -34,7 +34,12 @@ class QardHasan extends Model
     public function getNextDueAtAttribute(): ?string
     {
         // If not active (not yet disbursed) or already completed, next due is not applicable
-        if (! in_array($this->status, ['active', 'defaulted'], true)) {
+        if (! in_array($this->status, ['active', 'defaulted', 'pending'], true)) {
+            return null;
+        }
+
+        // For pending loans, only show next due if it has been approved or received
+        if ($this->status === 'pending' && ! $this->approved_at && ! $this->received_at) {
             return null;
         }
         if ((float) $this->principal_amount <= 0 || (int) $this->total_installments <= 0) {
@@ -312,7 +317,7 @@ class QardHasan extends Model
     public function getExpectedAmountToDate(?Carbon $asAt = null): float
     {
         $asAt = $asAt ?: now();
-        if ($this->status === 'pending') return 0.0;
+        if ($this->status === 'pending' && ! $this->approved_at && ! $this->received_at) return 0.0;
 
         $per = (float) $this->per_installment;
         if ($per <= 0) {
@@ -351,7 +356,7 @@ class QardHasan extends Model
     {
         $asAt = $asAt ?: now();
 
-        if ($this->status !== 'active' && $this->status !== 'defaulted') return 0.0;
+        if (! in_array($this->status, ['active', 'defaulted', 'pending'])) return 0.0;
 
         // If the loan is marked as defaulted, the full remaining balance is considered overdue (acceleration)
         if ($this->defaulted_at && $this->defaulted_at->year > 1970) {
