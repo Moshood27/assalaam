@@ -339,7 +339,8 @@ const getLocation = async () => {
   try {
     const position = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 10000
+      timeout: 10000,
+      maximumAge: 0
     })
     
     location.value = {

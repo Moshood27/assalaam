@@ -805,7 +805,6 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Check if user has an active loan (QardHasan).
      * Policy: A loan is active if it is pending, active, or defaulted AND has a remaining balance.
      */
     public function hasActiveLoan(): bool
@@ -815,6 +814,14 @@ class User extends Authenticatable implements FilamentUser
             ->whereColumn('paid_amount', '<', 'principal_amount')
             ->where('principal_amount', '>', 0)
             ->exists();
+    }
+
+    public function totalOverdueAmount(): float
+    {
+        return (float) $this->qardHasans()
+            ->whereIn('status', ['active', 'defaulted'])
+            ->get()
+            ->sum(fn($loan) => $loan->getOverdueAmount());
     }
 
     public function hasActiveLoanPenalty(): bool

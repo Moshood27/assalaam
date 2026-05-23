@@ -153,11 +153,15 @@ class DashboardController extends Controller
         }
 
         $isDefaulter = (bool) $user->is_defaulter;
+        $totalOverdue = $user->totalOverdueAmount();
+        $hasActiveLoan = $user->hasActiveLoan();
 
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
             'is_defaulted' => $isDefaulter,
+            'defaulted_amount' => $totalOverdue,
+            'has_active_loan' => $hasActiveLoan,
             'wallet_balance' => (float) $user->balance,
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,
             'has_pin' => !empty($user->transaction_pin_hash),

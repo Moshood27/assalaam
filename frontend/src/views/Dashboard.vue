@@ -130,8 +130,12 @@
         
         <div class="flex items-end gap-1 mb-8">
           <template v-if="kpis.is_defaulted">
-            <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
-            <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Outstanding Balance</span>
+            <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.defaulted_amount) }}</span>
+            <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Defaulted Amount</span>
+          </template>
+          <template v-else-if="kpis.has_active_loan">
+            <span class="text-3xl font-black text-amber-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
+            <span class="text-[10px] text-amber-500 font-bold uppercase mb-2 ml-1 tracking-wider">Outstanding Balance</span>
           </template>
           <template v-else>
             <span class="text-3xl font-black text-slate-900">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loan_limit) }}</span>
@@ -743,7 +747,7 @@ const kpis = computed(() => {
   const outstandingLoans = txs.filter(t => (t.type === 'loan' || String(t.scheme?.name || '').toLowerCase().includes('loan')))
     .reduce((sum, t) => sum + Number(t.balance || 0), 0)
   const utilSpent = utils.reduce((sum, u) => sum + Number(u.amount || 0), 0)
-  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent, attaqwa_score: d.attaqwa_score || 0, is_defaulted: false, loan_limit: 0, savings_balance: 0, shares_balance: 0 }
+  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent, attaqwa_score: d.attaqwa_score || 0, is_defaulted: false, defaulted_amount: 0, has_active_loan: false, loan_limit: 0, savings_balance: 0, shares_balance: 0 }
 })
 
 const chart = computed(() => {
