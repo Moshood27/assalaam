@@ -54,7 +54,7 @@ class ReportsController extends Controller
             ->orderBy('paid_at')
             ->get();
 
-        $paidTotal = (float) $repayments->sum('amount');
+        $paidTotal = max((float) $loan->paid_amount, (float) $repayments->sum('amount'));
         $remaining = max(0.0, (float)$loan->principal_amount - $paidTotal);
 
         $baseSchedule = $loan->generateInstallmentSchedule();
@@ -72,6 +72,9 @@ class ReportsController extends Controller
             $balance -= $applied;
         }
 
+        // Ensure schedule is ascending by due_date BEFORE applying repayments
+        usort($schedule, fn($a, $b) => strcmp($a['due_date'], $b['due_date']));
+
         // Mark paid installments by applying repayments in order
         $remainingToApply = $paidTotal;
         foreach ($schedule as &$item) {
@@ -86,9 +89,6 @@ class ReportsController extends Controller
             $item['status'] = $apply >= $item['installment_amount'] ? 'paid' : 'partial';
         }
         unset($item);
-
-        // Ensure schedule is ascending by due_date before determining next due
-        usort($schedule, fn($a, $b) => strcmp($a['due_date'], $b['due_date']));
 
         // Determine next due installment helper
         $nextDue = null;

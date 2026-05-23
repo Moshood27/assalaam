@@ -22,20 +22,14 @@ $loan = new QardHasan([
 echo "Testing generateInstallmentSchedule for migrated loan...\n";
 $schedule = $loan->generateInstallmentSchedule();
 
+$isSorted = true;
+$lastDate = '';
 foreach ($schedule as $item) {
     echo "Index: {$item['index']}, Due Date: {$item['due_date']}\n";
-}
-
-// Check if sorted
-$lastTimestamp = 0;
-$isSorted = true;
-foreach ($schedule as $item) {
-    $currentTimestamp = Carbon::parse($item['due_date'])->timestamp;
-    if ($currentTimestamp < $lastTimestamp) {
+    if ($lastDate && $item['due_date'] < $lastDate) {
         $isSorted = false;
-        break;
     }
-    $lastTimestamp = $currentTimestamp;
+    $lastDate = $item['due_date'];
 }
 
 if ($isSorted) {

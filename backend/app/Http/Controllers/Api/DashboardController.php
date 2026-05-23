@@ -153,14 +153,47 @@ class DashboardController extends Controller
         }
 
         $isDefaulter = (bool) $user->is_defaulter;
-        $totalOverdue = $user->totalOverdueAmount();
+        $totalOverdue = (float) $user->totalOverdueAmount();
         $hasActiveLoan = $user->hasActiveLoan();
+
+        // Find next due installment info
+        $nextDueDate = null;
+        $nextDueAmount = 0.0;
+
+        $activeLoan = $user->qardHasans()
+            ->whereIn('status', ['active', 'defaulted'])
+            ->whereColumn('paid_amount', '<', 'principal_amount')
+            ->orderBy('created_at', 'asc') // Usually only one active loan, but just in case
+            ->first();
+
+        if ($activeLoan) {
+            $nextDueDate = $activeLoan->next_due_at;
+            $nextDueAmount = (float) $activeLoan->next_installment_amount;
+
+            // If there's an overdue amount, we might want to prioritize showing the earliest unpaid installment
+            if ($totalOverdue > 0) {
+                $schedule = $activeLoan->generateInstallmentSchedule();
+                $per = (float) $activeLoan->per_installment;
+                if ($per <= 0) {
+                    $per = round(((float)$activeLoan->principal_amount) / max((int)$activeLoan->total_installments, 1), 2);
+                }
+                $paid = (float) $activeLoan->paid_amount;
+                $installmentsPaid = (int) floor($per > 0 ? ($paid / $per) : 0);
+
+                if (isset($schedule[$installmentsPaid])) {
+                    $nextDueDate = $schedule[$installmentsPaid]['due_at']->toISOString();
+                    $nextDueAmount = $schedule[$installmentsPaid]['amount'];
+                }
+            }
+        }
 
         $kpis = [
             'contributions' => $totalContributions,
             'loans' => $outstandingLoans,
-            'is_defaulted' => $isDefaulter,
+            'is_defaulted' => $isDefaulter || $totalOverdue > 0,
             'defaulted_amount' => $totalOverdue,
+            'next_due_date' => $nextDueDate,
+            'next_due_amount' => $nextDueAmount,
             'has_active_loan' => $hasActiveLoan,
             'wallet_balance' => (float) $user->balance,
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,

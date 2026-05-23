@@ -150,12 +150,6 @@ const fetchSchedule = async () => {
     const { data } = await axios.get(`/api/reports/loans/${props.loan.id}/schedule`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-    
-    // Sort schedule by due_date ascending
-    if (data && data.schedule) {
-      data.schedule.sort((a, b) => a.due_date.localeCompare(b.due_date))
-    }
-    
     scheduleData.value = data
   } catch (err) {
     error.value = err?.response?.data?.message || 'Failed to load schedule'
