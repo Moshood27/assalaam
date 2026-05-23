@@ -166,7 +166,8 @@ class DashboardController extends Controller
             ->where(function($q) {
                 $q->whereIn('status', ['active', 'defaulted'])
                   ->orWhereNotNull('received_at')
-                  ->orWhereNotNull('approved_at');
+                  ->orWhereNotNull('approved_at')
+                  ->orWhere('paid_amount', '>', 0);
             })
             ->orderBy('created_at', 'asc') // Usually only one active loan, but just in case
             ->first();

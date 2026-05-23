@@ -38,8 +38,8 @@ class QardHasan extends Model
             return null;
         }
 
-        // For pending loans, only show next due if it has been approved or received
-        if ($this->status === 'pending' && ! $this->approved_at && ! $this->received_at) {
+        // For pending loans, only show next due if it has been approved or received OR has payments (migrated loans)
+        if ($this->status === 'pending' && ! $this->approved_at && ! $this->received_at && (float)$this->paid_amount <= 0) {
             return null;
         }
         if ((float) $this->principal_amount <= 0 || (int) $this->total_installments <= 0) {
@@ -317,7 +317,7 @@ class QardHasan extends Model
     public function getExpectedAmountToDate(?Carbon $asAt = null): float
     {
         $asAt = $asAt ?: now();
-        if ($this->status === 'pending' && ! $this->approved_at && ! $this->received_at) return 0.0;
+        if ($this->status === 'pending' && ! $this->approved_at && ! $this->received_at && (float)$this->paid_amount <= 0) return 0.0;
 
         $per = (float) $this->per_installment;
         if ($per <= 0) {
