@@ -290,7 +290,7 @@
             </div>
             <div class="text-right">
               <span :class="getStatusBadgeClass(loan)" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                {{ loan.is_completed ? 'Completed' : loan.status }}
+                {{ loan.is_completed ? 'Completed' : (loan.overdue_amount > 0 ? 'Action Required' : loan.status) }}
               </span>
             </div>
           </div>
@@ -304,7 +304,7 @@
                   <p class="text-xl font-black text-slate-800">{{ Math.round((loan.paid_amount / loan.principal_amount) * 100) }}% <span class="text-xs text-slate-400 font-bold">Repaid</span></p>
                 </div>
                 <div class="text-right">
-                  <p v-if="loan.overdue_amount > 0" class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Overdue: ₦ {{ n(loan.overdue_amount) }}</p>
+                  <p v-if="loan.overdue_amount > 0" class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Expected to Pay: ₦ {{ n(loan.overdue_amount) }}</p>
                   <p class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">₦ {{ n(loan.paid_amount) }} / ₦ {{ n(loan.principal_amount) }}</p>
                 </div>
               </div>
@@ -643,7 +643,9 @@ const grMsg = ref({})
 const n = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const getStatusBadgeClass = (loan) => {
-  if (loan.is_completed || loan.status === 'active') return 'bg-emerald-100 text-emerald-700'
+  if (loan.is_completed) return 'bg-emerald-100 text-emerald-700'
+  if (loan.overdue_amount > 0) return 'bg-rose-100 text-rose-700'
+  if (loan.status === 'active') return 'bg-emerald-100 text-emerald-700'
   if (loan.status === 'pending') return 'bg-amber-100 text-amber-700'
   if (loan.status === 'defaulted' || loan.status === 'rejected') return 'bg-rose-100 text-rose-700'
   return 'bg-slate-100 text-slate-600'

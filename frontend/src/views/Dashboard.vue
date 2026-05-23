@@ -128,13 +128,13 @@
                :class="kpis.total_due_amount > 0 ? 'text-rose-600' : 'text-amber-600'">
               Next Due Installment
             </p>
-            <span v-if="kpis.total_due_amount > 0" class="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Overdue</span>
+            <span v-if="kpis.total_due_amount > 0" class="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Action Required</span>
           </div>
           <p class="text-sm font-black text-slate-800">
             {{ formatDate(kpis.next_due_date) }} • {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
           </p>
           <p v-if="kpis.total_due_amount > 0" class="text-[10px] text-rose-500 font-bold mt-1 uppercase tracking-tighter">
-            Total Arrears: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
+            Expected Amount to Pay: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
           </p>
         </div>
         <div class="text-slate-300">➡️</div>
@@ -157,7 +157,7 @@
         <div class="flex items-end gap-1 mb-8">
           <template v-if="kpis.total_due_amount > 0">
             <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
-            <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Total Due Amount</span>
+            <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Expected Amount to Pay</span>
           </template>
           <template v-else-if="kpis.is_defaulted">
             <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
@@ -201,7 +201,7 @@
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-2">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
-        <StatPill v-if="kpis.total_due_amount > 0" label="Total Due" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-if="kpis.total_due_amount > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
         <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? '≈ ₦ ***' : (kpis.gold_value_naira ? '≈ ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="🪙" @click="$router.push('/gold')" class="cursor-pointer" />
         <StatPill label="Loans" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="📊" />
         <StatPill label="Attaqwa Score" :value="String(kpis.attaqwa_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />

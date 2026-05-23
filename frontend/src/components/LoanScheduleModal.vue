@@ -42,7 +42,7 @@
                 <p class="text-sm font-black text-emerald-600">₦ {{ n(scheduleData.paid_total) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Overdue</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Expected to Pay</p>
                 <p class="text-sm font-black text-rose-600">₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -87,7 +87,7 @@
                  <div>
                    <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Next Due Installment</p>
                    <p class="text-sm font-black text-indigo-900">{{ formatDate(scheduleData.next_due.due_date) }} • ₦ {{ n(scheduleData.next_due.amount_due) }}</p>
-                   <p v-if="scheduleData.loan.overdue_amount > 0" class="text-[10px] text-rose-600 font-bold uppercase mt-1">Total Arrears: ₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
+                   <p v-if="scheduleData.loan.overdue_amount > 0" class="text-[10px] text-rose-600 font-bold uppercase mt-1">Expected Amount to Pay: ₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
                  </div>
                </div>
                <span class="text-[10px] font-black text-indigo-600 bg-white px-3 py-1 rounded-full border border-indigo-200 uppercase">Item #{{ scheduleData.next_due.sequence }}</span>
