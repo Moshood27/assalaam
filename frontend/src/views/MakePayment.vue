@@ -16,9 +16,15 @@
         </p>
         <div class="space-y-4">
           <div>
-            <label class="lbl">Scheme</label>
-            <select v-model="selectedSchemeId" class="inp">
-              <option value="">Select Scheme</option>
+            <div class="flex items-center justify-between mb-1">
+              <label class="lbl mb-0">Scheme</label>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" v-model="isCombined" class="accent-emerald-700 w-3.5 h-3.5">
+                <span class="text-[10px] font-bold uppercase text-emerald-700">Split Shares/Savings</span>
+              </label>
+            </div>
+            <select v-model="selectedSchemeId" class="inp" :disabled="isCombined">
+              <option value="">{{ isCombined ? 'Combined (Shares & Savings)' : 'Select Scheme' }}</option>
               <option v-for="s in schemes" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
@@ -164,6 +170,7 @@ const selectedProjectId = ref('')
 const inputAmount = ref('')
 const loading = ref(false)
 const isFine = ref(false)
+const isCombined = ref(false)
 const payFromWallet = ref(false)
 const enabledGateways = computed(() => {
   const gws = appStatusStore.paymentGateways || {}
@@ -185,18 +192,48 @@ const { notice, showNotice, closeNotice } = useNotice()
 const pinPrompt = ref({ visible: false })
 
 const addToList = () => {
-  if (!selectedSchemeId.value || !inputAmount.value || Number(inputAmount.value) <= 0) return
-  // robust id compare (string/number)
-  const s = schemes.value.find(x => String(x.id) == String(selectedSchemeId.value))
-  if (!s) return
-  const pid = selectedProjectId.value ? String(selectedProjectId.value) : ''
-  const p = pid ? projects.value.find(x => String(x.id) == pid) : null
-  const item = { scheme_id: s.id, scheme_name: s.name, amount: Number(inputAmount.value), category: isFine.value ? 'fine' : 'deposit' }
-  if (p) {
-    item.project_id = p.id
-    item.project_name = p.name
+  if (!isCombined.value) {
+    if (!selectedSchemeId.value || !inputAmount.value || Number(inputAmount.value) <= 0) return
+    // robust id compare (string/number)
+    const s = schemes.value.find(x => String(x.id) == String(selectedSchemeId.value))
+    if (!s) return
+    const pid = selectedProjectId.value ? String(selectedProjectId.value) : ''
+    const p = pid ? projects.value.find(x => String(x.id) == pid) : null
+    const item = { scheme_id: s.id, scheme_name: s.name, amount: Number(inputAmount.value), category: isFine.value ? 'fine' : 'deposit' }
+    if (p) {
+      item.project_id = p.id
+      item.project_name = p.name
+    }
+    paymentList.value.push(item)
+  } else {
+    if (!inputAmount.value || Number(inputAmount.value) <= 0) return
+    // Find Shares and Savings schemes
+    const sharesScheme = schemes.value.find(s => s.name === 'Shares') || schemes.value.find(s => s.name.toLowerCase().includes('share'))
+    const savingsScheme = schemes.value.find(s => s.name === 'Savings') || schemes.value.find(s => s.name.toLowerCase().includes('saving'))
+
+    if (!sharesScheme || !savingsScheme) {
+      showNotice('Scheme Not Found', 'Could not find standard "Shares" or "Savings" schemes.', 'error')
+      return
+    }
+
+    const half = Number(inputAmount.value) / 2
+    const pid = selectedProjectId.value ? String(selectedProjectId.value) : ''
+    const p = pid ? projects.value.find(x => String(x.id) == pid) : null
+
+    const itemsToAdd = [
+      { scheme_id: sharesScheme.id, scheme_name: sharesScheme.name, amount: half, category: isFine.value ? 'fine' : 'deposit' },
+      { scheme_id: savingsScheme.id, scheme_name: savingsScheme.name, amount: half, category: isFine.value ? 'fine' : 'deposit' }
+    ]
+
+    itemsToAdd.forEach(item => {
+      if (p) {
+        item.project_id = p.id
+        item.project_name = p.name
+      }
+      paymentList.value.push(item)
+    })
   }
-  paymentList.value.push(item)
+
   // Smooth scroll to the end of the payment summary after DOM updates
   nextTick(() => {
     try {
@@ -207,6 +244,7 @@ const addToList = () => {
   selectedProjectId.value = ''
   inputAmount.value = ''
   isFine.value = false
+  isCombined.value = false
 }
 
 const removeFromList = (idx) => paymentList.value.splice(idx, 1)
