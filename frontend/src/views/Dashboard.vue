@@ -114,8 +114,8 @@
         </div>
       </div>
 
-      <!-- Due Amount / Next Due Banner -->
-      <div v-if="kpis.total_due_amount > 0 || kpis.next_due_date"
+      <!-- Next Due Installment Banner -->
+      <div v-if="kpis.next_due_date"
            class="mt-4 p-4 rounded-3xl bg-white border border-slate-100 flex items-center gap-3 shadow-sm cursor-pointer"
            @click="$router.push('/loans')">
         <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
@@ -123,18 +123,18 @@
           {{ kpis.total_due_amount > 0 ? '🚨' : '🔔' }}
         </div>
         <div class="flex-1">
-          <p class="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-             :class="kpis.total_due_amount > 0 ? 'text-rose-600' : 'text-amber-600'">
-            {{ kpis.total_due_amount > 0 ? 'Total Due Amount' : 'Next Due Installment' }}
-          </p>
+          <div class="flex justify-between items-start">
+            <p class="text-[10px] font-bold uppercase tracking-widest mb-0.5"
+               :class="kpis.total_due_amount > 0 ? 'text-rose-600' : 'text-amber-600'">
+              Next Due Installment
+            </p>
+            <span v-if="kpis.total_due_amount > 0" class="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Overdue</span>
+          </div>
           <p class="text-sm font-black text-slate-800">
-            <template v-if="kpis.total_due_amount > 0">
-              {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
-              <span class="text-[10px] text-slate-400 font-normal ml-1">to clear arrears</span>
-            </template>
-            <template v-else>
-              {{ formatDate(kpis.next_due_date) }} • {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
-            </template>
+            {{ formatDate(kpis.next_due_date) }} • {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
+          </p>
+          <p v-if="kpis.total_due_amount > 0" class="text-[10px] text-rose-500 font-bold mt-1 uppercase tracking-tighter">
+            Total Arrears: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
           </p>
         </div>
         <div class="text-slate-300">➡️</div>

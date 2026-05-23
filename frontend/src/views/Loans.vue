@@ -303,7 +303,10 @@
                   <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Repayment Progress</p>
                   <p class="text-xl font-black text-slate-800">{{ Math.round((loan.paid_amount / loan.principal_amount) * 100) }}% <span class="text-xs text-slate-400 font-bold">Repaid</span></p>
                 </div>
-                <p class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">₦ {{ n(loan.paid_amount) }} / ₦ {{ n(loan.principal_amount) }}</p>
+                <div class="text-right">
+                  <p v-if="loan.overdue_amount > 0" class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Overdue: ₦ {{ n(loan.overdue_amount) }}</p>
+                  <p class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">₦ {{ n(loan.paid_amount) }} / ₦ {{ n(loan.principal_amount) }}</p>
+                </div>
               </div>
               <div class="h-3 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
                 <div class="h-full bg-emerald-500 rounded-full transition-all duration-1000 relative" :style="{ width: (loan.paid_amount / loan.principal_amount * 100) + '%' }">

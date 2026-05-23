@@ -34,7 +34,7 @@ class QardHasan extends Model
     public function getNextDueAtAttribute(): ?string
     {
         // If not active (not yet disbursed) or already completed, next due is not applicable
-        if (! in_array($this->status, ['active'], true)) {
+        if (! in_array($this->status, ['active', 'defaulted'], true)) {
             return null;
         }
         if ((float) $this->principal_amount <= 0 || (int) $this->total_installments <= 0) {
@@ -250,6 +250,7 @@ class QardHasan extends Model
         'credited_amount',
         'next_due_at',
         'next_installment_amount',
+        'overdue_amount',
     ];
 
     public function user()
@@ -333,6 +334,14 @@ class QardHasan extends Model
         }
 
         return round(min($dueCount * $per, (float) $this->principal_amount), 2);
+    }
+
+    /**
+     * Calculate the overdue amount for this loan.
+     */
+    public function getOverdueAmountAttribute(): float
+    {
+        return $this->getOverdueAmount();
     }
 
     /**
@@ -442,9 +451,20 @@ class QardHasan extends Model
     {
         $per = (float) $this->per_installment;
         if ($per <= 0) {
-            $per = round(((float)$this->principal_amount) / max((int)$totalInstallments = $this->total_installments, 1), 2);
+            $per = round(((float)$this->principal_amount) / max((int)$this->total_installments, 1), 2);
         }
-        return min($per, $this->remaining_principal);
+
+        $paid = (float) $this->paid_amount;
+        $installmentsPaid = (int) floor($per > 0 ? ($paid / $per) : 0);
+
+        $paidIntoCurrent = $paid - ($installmentsPaid * $per);
+        $remainingOnCurrent = max(0, $per - $paidIntoCurrent);
+
+        if ($remainingOnCurrent > 0.01) {
+            return round(min($remainingOnCurrent, $this->remaining_principal), 2);
+        }
+
+        return round(min($per, $this->remaining_principal), 2);
     }
 
     public function getDefaultStartDate(?Carbon $asAt = null): ?Carbon

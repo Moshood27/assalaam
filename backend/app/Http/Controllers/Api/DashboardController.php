@@ -169,22 +169,6 @@ class DashboardController extends Controller
         if ($activeLoan) {
             $nextDueDate = $activeLoan->next_due_at;
             $nextDueAmount = (float) $activeLoan->next_installment_amount;
-
-            // If there's an overdue amount, we might want to prioritize showing the earliest unpaid installment
-            if ($totalOverdue > 0) {
-                $schedule = $activeLoan->generateInstallmentSchedule();
-                $per = (float) $activeLoan->per_installment;
-                if ($per <= 0) {
-                    $per = round(((float)$activeLoan->principal_amount) / max((int)$activeLoan->total_installments, 1), 2);
-                }
-                $paid = (float) $activeLoan->paid_amount;
-                $installmentsPaid = (int) floor($per > 0 ? ($paid / $per) : 0);
-
-                if (isset($schedule[$installmentsPaid])) {
-                    $nextDueDate = $schedule[$installmentsPaid]['due_at']->toISOString();
-                    $nextDueAmount = $schedule[$installmentsPaid]['amount'];
-                }
-            }
         }
 
         $kpis = [

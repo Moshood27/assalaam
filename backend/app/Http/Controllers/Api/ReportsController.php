@@ -77,16 +77,23 @@ class ReportsController extends Controller
 
         // Mark paid installments by applying repayments in order
         $remainingToApply = $paidTotal;
+        $now = now();
         foreach ($schedule as &$item) {
-            if ($remainingToApply <= 0) {
-                $item['status'] = 'pending';
+            if ($remainingToApply <= 0.01) {
+                $isOverdue = Carbon::parse($item['due_date'])->lessThan($now);
+                $item['status'] = $isOverdue ? 'overdue' : 'pending';
                 $item['paid_amount'] = 0.0;
                 continue;
             }
             $apply = min($item['installment_amount'], $remainingToApply);
             $remainingToApply -= $apply;
             $item['paid_amount'] = round($apply, 2);
-            $item['status'] = $apply >= $item['installment_amount'] ? 'paid' : 'partial';
+
+            if ($apply >= $item['installment_amount'] - 0.01) {
+                $item['status'] = 'paid';
+            } else {
+                $item['status'] = 'partial';
+            }
         }
         unset($item);
 

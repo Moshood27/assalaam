@@ -32,7 +32,7 @@
 
           <template v-else-if="scheduleData">
             <!-- Loan Summary in Modal -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Principal</p>
                 <p class="text-sm font-black text-slate-800">₦ {{ n(scheduleData.loan.principal_amount) }}</p>
@@ -42,8 +42,12 @@
                 <p class="text-sm font-black text-emerald-600">₦ {{ n(scheduleData.paid_total) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Overdue</p>
+                <p class="text-sm font-black text-rose-600">₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
+              </div>
+              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Balance</p>
-                <p class="text-sm font-black text-rose-600">₦ {{ n(scheduleData.remaining_principal) }}</p>
+                <p class="text-sm font-black text-slate-700">₦ {{ n(scheduleData.remaining_principal) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Progress</p>
@@ -130,6 +134,7 @@ const getStatusBadgeClass = (status) => {
   switch (status) {
     case 'paid': return 'bg-emerald-100 text-emerald-700'
     case 'partial': return 'bg-amber-100 text-amber-700'
+    case 'overdue': return 'bg-rose-100 text-rose-700'
     default: return 'bg-slate-100 text-slate-500'
   }
 }
