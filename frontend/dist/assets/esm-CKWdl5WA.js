@@ -1,1 +1,0 @@
-import{d as e}from"./index-DNGACbI4.js";export{e as SplashScreen};

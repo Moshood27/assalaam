@@ -87,6 +87,7 @@
                  <div>
                    <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Next Due Installment</p>
                    <p class="text-sm font-black text-indigo-900">{{ formatDate(scheduleData.next_due.due_date) }} • ₦ {{ n(scheduleData.next_due.amount_due) }}</p>
+                   <p v-if="scheduleData.loan.overdue_amount > 0" class="text-[10px] text-rose-600 font-bold uppercase mt-1">Total Arrears: ₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
                  </div>
                </div>
                <span class="text-[10px] font-black text-indigo-600 bg-white px-3 py-1 rounded-full border border-indigo-200 uppercase">Item #{{ scheduleData.next_due.sequence }}</span>
