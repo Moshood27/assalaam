@@ -192,6 +192,7 @@ class DashboardController extends Controller
             'loans' => $outstandingLoans,
             'is_defaulted' => $isDefaulter || $totalOverdue > 0,
             'defaulted_amount' => $totalOverdue,
+            'total_due_amount' => $totalOverdue,
             'next_due_date' => $nextDueDate,
             'next_due_amount' => $nextDueAmount,
             'has_active_loan' => $hasActiveLoan,
