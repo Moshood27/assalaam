@@ -104,6 +104,8 @@ class LoanController extends Controller
             $boostPct = 0.0;
         }
 
+        $recommendedDuration = \App\Support\DurationHelper::getLoanDuration($eligWithScore);
+
         $reason = null;
         if ($user->is_defaulter) {
             $reason = 'You cannot apply for a new loan until you clear your outstanding defaulted loan.';
@@ -118,6 +120,7 @@ class LoanController extends Controller
             'reason' => $reason,
             'coop_score' => $score,
             'instant_approval' => $instant,
+            'recommended_duration' => $recommendedDuration,
             'required_guarantors' => $instant ? 0 : ($low ? 3 : 2),
             'limit_boost_pct' => $boostPct,
             'eligibility_with_score' => $eligWithScore,
@@ -215,6 +218,12 @@ class LoanController extends Controller
         }
 
         $totalInstallments = (int) $data['total_installments'];
+        $maxDuration = \App\Support\DurationHelper::getLoanDuration($principal);
+
+        if ($totalInstallments > $maxDuration) {
+            return response()->json(['message' => "The maximum allowed duration for a loan of ₦" . number_format($principal, 2) . " is $maxDuration months."], 422);
+        }
+
         $perInstallment = round($principal / max($totalInstallments, 1), 2);
         $interval = strtolower($data['interval'] ?? 'monthly');
 

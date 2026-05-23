@@ -76,6 +76,10 @@ class QardHasanResource extends Resource
                             $set('qard_id_string', 'QH-'.now()->format('Y').'-'.strtoupper(Str::random(6)));
                             $set('meeting_attendance_count', $user->meetingAttendanceCount());
 
+                            // Set default duration based on policy
+                            $duration = DurationHelper::getLoanDuration($principal);
+                            $set('total_installments', $duration);
+
                             // Also update per_installment if total_installments is already set
                             $ti = (int) $get('total_installments');
                             if ($ti > 0) {
@@ -116,12 +120,23 @@ class QardHasanResource extends Resource
                 Forms\Components\TextInput::make('total_installments')
                     ->numeric()
                     ->minValue(1)
+                    ->maxValue(function (callable $get) {
+                        $principal = (float) ($get('principal_amount') ?? 0);
+                        if ($principal <= 0) return 100; // No limit if principal not set yet
+                        return DurationHelper::getLoanDuration($principal);
+                    })
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                         $principal = (float) ($get('principal_amount') ?? 0);
                         $ti = max((int) $state, 1);
                         $set('per_installment', $ti > 0 ? round($principal / $ti, 2) : 0);
+                    })
+                    ->helperText(function (callable $get) {
+                        $principal = (float) ($get('principal_amount') ?? 0);
+                        if ($principal <= 0) return null;
+                        $max = DurationHelper::getLoanDuration($principal);
+                        return "Maximum duration for this amount is $max months.";
                     }),
                 Forms\Components\TextInput::make('per_installment')
                     ->numeric()

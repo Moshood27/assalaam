@@ -95,9 +95,10 @@
                       <div class="space-y-2">
                         <label class="text-[11px] text-slate-500 font-black uppercase tracking-widest">Repayment Period</label>
                         <div class="relative">
-                          <input v-model.number="createForm.total_installments" type="number" min="1" class="input pl-10 h-12" placeholder="e.g. 12"/>
+                          <input v-model.number="createForm.total_installments" type="number" min="1" :max="eligibility.recommended_duration" class="input pl-10 h-12" placeholder="e.g. 12"/>
                           <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⏱️</span>
                         </div>
+                        <p v-if="eligibility.recommended_duration" class="text-[9px] text-slate-400 font-black mt-1 uppercase tracking-wider">Policy Max: {{ eligibility.recommended_duration }} months</p>
                       </div>
                       
                       <div class="space-y-2">
@@ -696,6 +697,10 @@ const fetchEligibility = async () => {
     if (feePct > 2) feePct = 2
     createForm.value.admin_fee_flat = feeFlat
     createForm.value.admin_fee_pct = feePct
+
+    if (data.recommended_duration) {
+      createForm.value.total_installments = data.recommended_duration
+    }
   } catch (e) {
     // silent; component also shows list even if eligibility fails
   }

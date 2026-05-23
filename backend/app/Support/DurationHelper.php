@@ -38,4 +38,38 @@ class DurationHelper
 
         return implode(', ', $parts);
     }
+
+    /**
+     * Get the allowed loan duration in months based on amount and date.
+     *
+     * @param float $amount
+     * @param Carbon|null $date
+     * @return int
+     */
+    public static function getLoanDuration(float $amount, ?Carbon $date = null): int
+    {
+        $date = $date ?: now();
+        // The rule changes "Beginning from July, 2025"
+        $isNewRule = $date->greaterThanOrEqualTo(Carbon::parse('2025-07-01'));
+
+        if (!$isNewRule) {
+            // Before July, 2025
+            if ($amount <= 500000) {
+                return 12;
+            } elseif ($amount <= 1099000) {
+                return 14;
+            } else {
+                return 16;
+            }
+        } else {
+            // Beginning from July, 2025 till date
+            if ($amount <= 1000000) {
+                return 12;
+            } elseif ($amount <= 2000000) {
+                return 15;
+            } else {
+                return 18;
+            }
+        }
+    }
 }
