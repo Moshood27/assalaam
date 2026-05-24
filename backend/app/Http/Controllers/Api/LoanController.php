@@ -157,7 +157,7 @@ class LoanController extends Controller
 
         $data = $request->validate([
             'amount' => ['nullable', 'numeric', 'min:0'],
-            'total_installments' => ['required', 'integer', 'min:1'],
+            'total_installments' => ['nullable', 'integer', 'min:1'],
             'interval' => ['nullable', 'in:daily,weekly,monthly,Monthly,Weekly,Daily'],
             'admin_fee_flat' => ['nullable', 'numeric', 'min:0'],
             'admin_fee_pct' => ['nullable', 'numeric', 'min:0', 'max:2'],
@@ -240,12 +240,8 @@ class LoanController extends Controller
             return response()->json(['message' => 'You are not eligible for a loan at this time.'], 422);
         }
 
-        $totalInstallments = (int) $data['total_installments'];
-        $maxDuration = \App\Support\DurationHelper::getLoanDuration($principal);
-
-        if ($totalInstallments > $maxDuration) {
-            return response()->json(['message' => "The maximum allowed duration for a loan of ₦" . number_format($principal, 2) . " is $maxDuration months."], 422);
-        }
+        // Automatically apply duration rules based on amount
+        $totalInstallments = \App\Support\DurationHelper::getLoanDuration($principal);
 
         $perInstallment = round($principal / max($totalInstallments, 1), 2);
         $interval = strtolower($data['interval'] ?? 'monthly');

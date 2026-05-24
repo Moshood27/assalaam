@@ -104,10 +104,10 @@
                       <div class="space-y-2">
                         <label class="text-[11px] text-slate-500 font-black uppercase tracking-widest">Repayment Period</label>
                         <div class="relative">
-                          <input v-model.number="createForm.total_installments" type="number" min="1" :max="eligibility.recommended_duration" class="input pl-10 h-12" placeholder="e.g. 12"/>
+                          <input v-model.number="createForm.total_installments" type="number" min="1" :max="eligibility.recommended_duration" class="input pl-10 h-12 bg-slate-100" placeholder="e.g. 12" readonly disabled/>
                           <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⏱️</span>
                         </div>
-                        <p v-if="eligibility.recommended_duration" class="text-[9px] text-slate-400 font-black mt-1 uppercase tracking-wider">Policy Max: {{ eligibility.recommended_duration }} months</p>
+                        <p v-if="eligibility.recommended_duration" class="text-[9px] text-slate-400 font-black mt-1 uppercase tracking-wider">Policy Duration: {{ createForm.total_installments }} months</p>
                       </div>
                     </div>
 
@@ -506,7 +506,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import AppBottomNav from '../components/AppBottomNav.vue'
 import axios from '../http'
@@ -609,6 +609,26 @@ const hasOpenLoan = computed(() => (loans.value || []).some(l => ['pending', 'ac
 const hasCompletedLoan = computed(() => (loans.value || []).some(l => l?.is_completed || l?.status === 'completed'))
 // Creation is allowed only if no open loan and backend policy allows request (6-month rule and first-loan cap)
 const canCreateLoanVisible = computed(() => !hasOpenLoan.value && !!eligibility.value?.can_request && appStatusStore.features['apply-for-loan'] !== false)
+
+// Watch for amount changes to automatically apply duration rules
+watch(() => createForm.value.amount, (newAmount) => {
+  if (!newAmount || newAmount <= 0) {
+    createForm.value.total_installments = 12
+    return
+  }
+  // Policy rules:
+  // Beginning from July, 2025:
+  // <= 1,000,000 -> 12
+  // <= 2,000,000 -> 15
+  // > 2,000,000 -> 18
+  if (newAmount <= 1000000) {
+    createForm.value.total_installments = 12
+  } else if (newAmount <= 2000000) {
+    createForm.value.total_installments = 15
+  } else {
+    createForm.value.total_installments = 18
+  }
+})
 
 const payAmount = ref({})
 const paySource = ref({})
