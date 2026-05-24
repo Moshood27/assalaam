@@ -190,15 +190,9 @@
            <p class="text-lg font-black text-blue-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}</p>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100">
-            <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Savings</p>
-            <p class="text-sm font-black text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.savings_balance) }}</p>
-          </div>
-          <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100">
-            <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Shares</p>
-            <p class="text-sm font-black text-slate-700">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.shares_balance) }}</p>
-          </div>
+        <div class="grid grid-cols-2 gap-2">
+          <StatPill label="Savings" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.savings_balance))" icon="💰" />
+          <StatPill label="Shares" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.shares_balance))" icon="📈" />
         </div>
         
         <div v-if="kpis.is_defaulted" class="mt-6 flex items-center gap-3 bg-rose-50 p-4 rounded-3xl border border-rose-100">
@@ -216,7 +210,7 @@
       </div>
 
       <!-- KPI row -->
-      <div class="mt-4 grid grid-cols-2 gap-2">
+      <div class="mt-4 grid grid-cols-2 gap-3">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
         <StatPill v-if="kpis.total_due_amount > 0" label="Overdue Amount" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
         <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="📅" @click="$router.push('/loans')" class="cursor-pointer" />

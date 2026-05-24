@@ -1,12 +1,12 @@
 <template>
   <div :class="pillClass">
-    <div class="flex items-center gap-2 min-w-0">
-      <span v-if="icon" class="text-base">{{ icon }}</span>
-      <span class="text-[10px] uppercase tracking-widest font-black opacity-70 truncate">{{ label }}</span>
+    <div class="flex items-center gap-1.5 opacity-70">
+      <span v-if="icon" class="text-xs">{{ icon }}</span>
+      <span class="text-[9px] uppercase tracking-wider font-bold truncate">{{ label }}</span>
     </div>
-    <div class="text-right min-w-0">
-      <p class="text-sm font-extrabold leading-5 truncate">{{ value }}</p>
-      <p v-if="hint" :class="['text-[10px] leading-3 truncate', hintClass]">{{ hint }}</p>
+    <div class="min-w-0">
+      <p class="text-base font-black leading-tight">{{ value }}</p>
+      <p v-if="hint" :class="['text-[9px] leading-tight truncate font-bold uppercase tracking-tighter mt-0.5', hintClass]">{{ hint }}</p>
     </div>
   </div>
 </template>
@@ -23,11 +23,11 @@ const props = defineProps({
 })
 
 const colorMap = {
-  default: 'bg-slate-100 text-slate-700',
-  success: 'bg-emerald-100 text-emerald-700',
-  warning: 'bg-amber-100 text-amber-700',
-  info: 'bg-blue-100 text-blue-700',
-  danger: 'bg-rose-100 text-rose-700',
+  default: 'bg-slate-50 text-slate-900 border-slate-200/50',
+  success: 'bg-emerald-50 text-emerald-900 border-emerald-200/50',
+  warning: 'bg-amber-50 text-amber-900 border-amber-200/50',
+  info: 'bg-blue-50 text-blue-900 border-blue-200/50',
+  danger: 'bg-rose-50 text-rose-900 border-rose-200/50',
 }
 
 const hintMap = {
@@ -39,8 +39,8 @@ const hintMap = {
 }
 
 const pillClass = computed(() => [
-  'px-3 py-2 rounded-2xl flex items-center justify-between gap-3',
-  'border border-transparent',
+  'px-4 py-3 rounded-2xl flex flex-col gap-1',
+  'border shadow-sm',
   colorMap[props.intent] || colorMap.default,
 ])
 
