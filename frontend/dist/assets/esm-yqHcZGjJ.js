@@ -1,1 +1,0 @@
-import{d as e}from"./index-bxDHP-SX.js";export{e as SplashScreen};

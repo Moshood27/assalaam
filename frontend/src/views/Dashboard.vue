@@ -38,9 +38,14 @@
             <p class="text-xs text-emerald-100 font-mono tracking-widest">ID: {{ dashboardData.membership_id }}</p>
             <button @click="copy(dashboardData.membership_id)" class="text-xs text-white/80 underline">Copy</button>
           </div>
-          <button @click="$router.push('/wallet')" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">
-            + Add Money
-          </button>
+          <div class="flex gap-2">
+            <button @click="$router.push('/pay')" class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg border border-emerald-400">
+              Allocate Fund
+            </button>
+            <button @click="$router.push('/wallet')" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">
+              + Add Money
+            </button>
+          </div>
         </div>
       </div>
 

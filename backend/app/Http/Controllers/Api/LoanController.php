@@ -144,6 +144,7 @@ class LoanController extends Controller
         }
 
         $data = $request->validate([
+            'amount' => ['nullable', 'numeric', 'min:0'],
             'total_installments' => ['required', 'integer', 'min:1'],
             'interval' => ['nullable', 'in:daily,weekly,monthly,Monthly,Weekly,Daily'],
             'admin_fee_flat' => ['nullable', 'numeric', 'min:0'],
@@ -213,6 +214,16 @@ class LoanController extends Controller
             $principal = round($principal * (1 + ($boostPct / 100.0)), 2);
         }
 
+        // Use requested amount if provided, but capped at max eligibility
+        $requestedAmount = (float) ($data['amount'] ?? $principal);
+        if ($requestedAmount > $principal + 0.01) {
+            return response()->json(['message' => 'Requested amount exceeds your current eligibility limit of ₦' . number_format($principal, 2)], 422);
+        }
+        if ($requestedAmount <= 0) {
+            $requestedAmount = $principal;
+        }
+        $principal = $requestedAmount;
+
         if ($principal <= 0) {
             return response()->json(['message' => 'You are not eligible for a loan at this time.'], 422);
         }
@@ -279,10 +290,11 @@ class LoanController extends Controller
             if ($guarantors->count() !== count($guarantorIds)) {
                 return response()->json(['message' => 'One or more guarantors are invalid.'], 422);
             }
-            // Must not be defaulters at time of creating the loan
-            $defaulters = $guarantors->where('is_defaulter', true);
-            if ($defaulters->isNotEmpty()) {
-                return response()->json(['message' => 'Selected guarantors must not be in default.'], 422);
+            // Must not be defaulters or have outstanding loans at time of creating the loan
+            $ineligible = $guarantors->filter(fn($g) => $g->is_defaulter || $g->hasActiveLoan());
+            if ($ineligible->isNotEmpty()) {
+                $names = $ineligible->pluck('name')->implode(', ');
+                return response()->json(['message' => "The following guarantors are ineligible because they have outstanding loans or are in default: $names"], 422);
             }
         } else {
             // Instant approval path: guarantors optional, ignore if provided

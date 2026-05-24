@@ -25,7 +25,6 @@ class GuarantorController extends Controller
 
         $members = \App\Models\User::query()
             ->where('id', '!=', $user->id)
-            ->where('is_defaulter', false)
             ->whereNotNull('membership_number')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
@@ -35,13 +34,16 @@ class GuarantorController extends Controller
             })
             ->with('branch')
             ->limit(10)
-            ->get(['id', 'name', 'surname', 'other_names', 'membership_number', 'branch_id'])
+            ->get()
             ->map(function ($member) {
+                $hasActive = $member->hasActiveLoan();
                 return [
                     'id' => $member->id,
                     'name' => $member->full_name,
                     'membership_number' => $member->membership_number,
                     'branch' => $member->branch?->name,
+                    'is_eligible' => !$member->is_defaulter && !$hasActive,
+                    'reason' => $member->is_defaulter ? 'Defaulter' : ($hasActive ? 'Outstanding Loan' : null),
                 ];
             });
 
@@ -99,9 +101,9 @@ class GuarantorController extends Controller
     {
         $user = $request->user();
 
-        // Do not allow defaulters to accept
-        if ($user->is_defaulter) {
-            return response()->json(['message' => 'You are currently marked as a defaulter and cannot guarantee a loan.'], 422);
+        // Do not allow defaulters or those with outstanding loans to accept
+        if ($user->is_defaulter || $user->hasActiveLoan()) {
+            return response()->json(['message' => 'You are currently ineligible to guarantee a loan (outstanding debt or default).'], 422);
         }
 
         $loan = QardHasan::with('guarantors')->findOrFail($loanId);

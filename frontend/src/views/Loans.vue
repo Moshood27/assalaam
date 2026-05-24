@@ -93,6 +93,15 @@
                   <div class="p-6 space-y-6">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div class="space-y-2">
+                        <label class="text-[11px] text-slate-500 font-black uppercase tracking-widest">Requested Amount</label>
+                        <div class="relative">
+                          <input v-model.number="createForm.amount" type="number" min="1" :max="Number(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility)" class="input pl-10 h-12" placeholder="e.g. 100000"/>
+                          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₦</span>
+                        </div>
+                        <p class="text-[9px] text-slate-400 font-black mt-1 uppercase tracking-wider">Available: ₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
+                      </div>
+
+                      <div class="space-y-2">
                         <label class="text-[11px] text-slate-500 font-black uppercase tracking-widest">Repayment Period</label>
                         <div class="relative">
                           <input v-model.number="createForm.total_installments" type="number" min="1" :max="eligibility.recommended_duration" class="input pl-10 h-12" placeholder="e.g. 12"/>
@@ -100,7 +109,9 @@
                         </div>
                         <p v-if="eligibility.recommended_duration" class="text-[9px] text-slate-400 font-black mt-1 uppercase tracking-wider">Policy Max: {{ eligibility.recommended_duration }} months</p>
                       </div>
-                      
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div class="space-y-2">
                         <label class="text-[11px] text-slate-500 font-black uppercase tracking-widest">Payment Frequency</label>
                         <div class="relative">
@@ -151,12 +162,16 @@
                               <p class="text-[10px] text-slate-400 mt-1">Try searching by full name or ID</p>
                             </div>
                             <ul v-else class="divide-y divide-slate-50 max-h-72 overflow-y-auto">
-                              <li v-for="member in guarantorResults" :key="member.id" @click="selectGuarantor(member)" class="p-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group">
-                                <div>
-                                  <p class="text-sm font-black text-slate-800">{{ member.name }}</p>
+                              <li v-for="member in guarantorResults" :key="member.id" @click="selectGuarantor(member)" class="p-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group" :class="{'opacity-50 !cursor-not-allowed': !member.is_eligible}">
+                                <div class="flex-1">
+                                  <div class="flex items-center gap-2">
+                                    <p class="text-sm font-black text-slate-800">{{ member.name }}</p>
+                                    <span v-if="!member.is_eligible" class="text-[8px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">{{ member.reason }}</span>
+                                  </div>
                                   <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{{ member.membership_number }} • {{ member.branch }}</p>
                                 </div>
-                                <span class="text-emerald-500 opacity-0 group-hover:opacity-100 transition-all">Add ➜</span>
+                                <span v-if="member.is_eligible" class="text-emerald-500 opacity-0 group-hover:opacity-100 transition-all text-xs font-black">Add ➜</span>
+                                <span v-else class="text-rose-400 text-[10px] font-bold">Ineligible</span>
                               </li>
                             </ul>
                           </div>
@@ -176,11 +191,11 @@
                       <div class="flex items-center justify-between mb-4">
                         <div>
                           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Repayment Amount</p>
-                          <p class="text-xl font-black text-slate-800">₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
+                          <p class="text-xl font-black text-slate-800">₦ {{ n(createForm.amount) }}</p>
                         </div>
                         <div class="text-right">
                           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Installment</p>
-                          <p class="text-lg font-bold text-slate-600">₦ {{ n((eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) / (createForm.total_installments || 1)) }}</p>
+                          <p class="text-lg font-bold text-slate-600">₦ {{ n(createForm.amount / (createForm.total_installments || 1)) }}</p>
                         </div>
                       </div>
 
@@ -527,7 +542,7 @@ const { notice, showNotice, closeNotice } = useNotice()
 
 // Eligibility and create loan
 const eligibility = ref({ savings: 0, shares: 0, base: 0, eligibility: 0, eligibility_adjusted: 0, months_in_system: 0, is_first_loan: true, can_request: false, reason: '', attaqwa_score: 0, score_bonus_pct: 0, band: '', instant_approval: false, required_guarantors: 2 })
-const createForm = ref({ total_installments: 1, interval: 'monthly', admin_fee_flat: DEFAULT_ADMIN_FEE_FLAT, admin_fee_pct: DEFAULT_ADMIN_FEE_PCT, guarantor1: '', guarantor2: '', guarantor3: '' })
+const createForm = ref({ total_installments: 1, interval: 'monthly', admin_fee_flat: DEFAULT_ADMIN_FEE_FLAT, admin_fee_pct: DEFAULT_ADMIN_FEE_PCT, guarantor1: '', guarantor2: '', guarantor3: '', amount: 0 })
 const creating = ref(false)
 const createMsg = ref('')
 const createErr = ref('')
@@ -560,6 +575,13 @@ const searchGuarantors = async (query) => {
 }
 
 const selectGuarantor = (member) => {
+  if (!activeGuarantorIndex.value) return
+
+  if (!member.is_eligible) {
+    showNotice('warning', 'Guarantor Ineligible', `Member ${member.name} cannot be used as a guarantor because they have an ${member.reason === 'Outstanding Loan' ? 'outstanding loan' : 'active default'}.`)
+    return
+  }
+
   if (activeGuarantorIndex.value === 1) createForm.value.guarantor1 = member.membership_number
   if (activeGuarantorIndex.value === 2) createForm.value.guarantor2 = member.membership_number
   if (activeGuarantorIndex.value === 3) createForm.value.guarantor3 = member.membership_number
@@ -703,6 +725,9 @@ const fetchEligibility = async () => {
     createForm.value.admin_fee_flat = feeFlat
     createForm.value.admin_fee_pct = feePct
 
+    const maxAmount = Number(data.eligibility_with_score || data.eligibility_adjusted || data.eligibility || 0)
+    createForm.value.amount = maxAmount
+
     if (data.recommended_duration) {
       createForm.value.total_installments = data.recommended_duration
     }
@@ -754,6 +779,7 @@ const createLoan = async () => {
   try {
     const token = localStorage.getItem('token')
     const payload = {
+      amount: createForm.value.amount,
       total_installments: createForm.value.total_installments,
       interval: createForm.value.interval,
       admin_fee_flat: createForm.value.admin_fee_flat,
