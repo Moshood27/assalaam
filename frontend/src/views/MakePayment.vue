@@ -80,23 +80,49 @@
     <div class="fixed left-0 right-0 bottom-16 p-4">
       <div class="card card-elevated p-4">
         <div class="flex justify-between items-center mb-2">
-          <span class="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Total to Transfer</span>
+          <span class="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Total Amount</span>
           <span class="text-2xl font-black text-slate-900">₦ {{ Number(totalAmount).toLocaleString() }}</span>
         </div>
-        <div class="flex items-center justify-between mb-3">
-          <label class="flex items-center gap-2 text-sm text-slate-700">
-            <input type="checkbox" v-model="payFromWallet" class="accent-emerald-700" />
-            Allocate from wallet
-          </label>
-          <div class="flex flex-col items-end">
-            <span class="text-xs text-slate-500">Balance: ₦ {{ Number(walletBalance).toLocaleString() }}</span>
-            <button @click="$router.push('/wallet')" class="text-[10px] text-emerald-700 font-bold underline uppercase tracking-tighter">Fund Wallet</button>
+
+        <div class="space-y-2 mb-4">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Payment Source</p>
+          
+          <!-- Online Gateway -->
+          <div @click="source = 'gateway'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'gateway' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']">
+            <div class="flex items-center gap-3">
+              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'gateway' ? 'border-emerald-600' : 'border-slate-300']">
+                <div v-if="source === 'gateway'" class="w-2 h-2 rounded-full bg-emerald-600"></div>
+              </div>
+              <span class="text-xs font-bold text-slate-700 uppercase">Online Payment</span>
+            </div>
+          </div>
+
+          <!-- Wallet -->
+          <div @click="source = 'wallet'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'wallet' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']">
+            <div class="flex items-center gap-3">
+              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'wallet' ? 'border-emerald-600' : 'border-slate-300']">
+                <div v-if="source === 'wallet'" class="w-2 h-2 rounded-full bg-emerald-600"></div>
+              </div>
+              <span class="text-xs font-bold text-slate-700 uppercase">Wallet</span>
+            </div>
+            <span class="text-[10px] font-bold text-slate-500">₦ {{ Number(walletBalance).toLocaleString() }}</span>
+          </div>
+
+          <!-- Special Savings -->
+          <div v-if="specialSavingsBalance > 0" @click="source = 'special_savings'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'special_savings' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']">
+            <div class="flex items-center gap-3">
+              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'special_savings' ? 'border-emerald-600' : 'border-slate-300']">
+                <div v-if="source === 'special_savings'" class="w-2 h-2 rounded-full bg-emerald-600"></div>
+              </div>
+              <span class="text-xs font-bold text-emerald-700 uppercase">Special Savings</span>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-600">₦ {{ Number(specialSavingsBalance).toLocaleString() }}</span>
           </div>
         </div>
 
-        <!-- Gateway Selection (only if not paying from wallet) -->
-        <div v-if="!payFromWallet && enabledGateways.length" class="mb-4">
-          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 px-1">Payment Gateway</p>
+        <!-- Gateway Selection (only if not paying from wallet/special) -->
+        <div v-if="source === 'gateway' && enabledGateways.length" class="mb-4">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2 px-1">Gateway</p>
           <div class="grid grid-cols-2 gap-2">
             <button 
               v-for="gw in enabledGateways" :key="gw"
@@ -114,7 +140,7 @@
           </div>
         </div>
         <button @click="initiatePayment" :disabled="paymentList.length === 0 || loading" class="btn-primary w-full py-4 text-lg">
-          {{ loading ? 'Processing…' : (payFromWallet ? 'Allocate Fund' : 'Make Payment') }}
+          {{ loading ? 'Processing…' : (source !== 'gateway' ? 'Allocate Fund' : 'Make Payment') }}
         </button>
       </div>
     </div>
@@ -173,8 +199,9 @@ const selectedProjectId = ref('')
 const inputAmount = ref('')
 const loading = ref(false)
 const isFine = ref(false)
-const payFromWallet = ref(false)
+const source = ref('gateway')
 const outstandingLoan = ref(null)
+const specialSavingsBalance = ref(0)
 const enabledGateways = computed(() => {
   const gws = appStatusStore.paymentGateways || {}
   return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
@@ -301,12 +328,13 @@ const loadWallet = async () => {
   try {
     const { data } = await axios.get('/api/wallet')
     walletBalance.value = data.balance || 0
+    specialSavingsBalance.value = data.special_savings_balance || 0
   } catch (_) {}
 }
 
 const initiatePayment = async () => {
-  // If paying from wallet, show custom PIN prompt modal
-  if (payFromWallet.value) {
+  // If paying from wallet or special savings, show custom PIN prompt modal
+  if (source.value === 'wallet' || source.value === 'special_savings') {
     pinPrompt.value.visible = true
     return
   }
@@ -344,7 +372,8 @@ const handlePinConfirm = async (val) => {
   }
   loading.value = true
   try {
-    await axios.post('/api/wallet/allocate', { items: paymentList.value, pin })
+    const endpoint = source.value === 'special_savings' ? '/api/wallet/allocate-special' : '/api/wallet/allocate'
+    await axios.post(endpoint, { items: paymentList.value, pin })
     pinPrompt.value.visible = false
     // Navigate on success (same behavior as before)
     router.replace({ name: 'dashboard' })

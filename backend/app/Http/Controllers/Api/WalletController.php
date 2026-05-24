@@ -122,6 +122,7 @@ class WalletController extends Controller
         return response()->json([
             'balance' => (float) $user->balance,
             'gold_balance' => (float) ($user->gold_balance ?? 0),
+            'special_savings_balance' => (float) ($user->special_savings_balance ?? 0),
             'available_for_withdrawal' => (float) ($breakdown['available_for_withdrawal'] ?? 0),
             'admin_charge_balance' => (float) ($user->admin_charge_balance ?? 0),
             'breakdown' => $breakdown,
@@ -534,6 +535,139 @@ class WalletController extends Controller
             'debited' => $total,
             'balance' => (float)$user->balance,
             'distribution' => $summary,
+        ]);
+    }
+
+    public function allocateFromSpecialSavings(Request $request)
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.scheme_id' => 'required|exists:schemes,id',
+            'items.*.project_id' => 'nullable|exists:projects,id',
+            'items.*.savings_group_id' => 'nullable|exists:savings_groups,id',
+            'items.*.amount' => 'required|numeric|min:0.01',
+            'items.*.units' => 'nullable|numeric|min:0.01',
+            'items.*.category' => 'nullable|string|in:deposit,loan_repayment',
+            'pin' => ['required','regex:/^\d{4}$/'],
+        ]);
+
+        $user = $request->user();
+
+        // Enforce Transaction PIN
+        if (empty($user->transaction_pin_hash)) {
+            return response()->json(['message' => 'Transaction PIN not set'], 409);
+        }
+        if (!$user->verifyTransactionPin($validated['pin'])) {
+            return response()->json(['message' => 'Invalid PIN'], 403);
+        }
+
+        $items = collect($validated['items']);
+
+        // Check projects if any
+        $projectIds = $items->pluck('project_id')->filter()->unique()->values();
+        if ($projectIds->isNotEmpty()) {
+            $projects = Project::whereIn('id', $projectIds)->get()->keyBy('id');
+            foreach ($items as $item) {
+                if (!empty($item['project_id'])) {
+                    $p = $projects[$item['project_id']] ?? null;
+                    if (!$p || !($p->active)) {
+                        return response()->json(['message' => 'Selected project is not available'], 422);
+                    }
+                    if ($p->is_unit_based) {
+                        if (empty($item['units']) || $item['units'] <= 0) {
+                            return response()->json(['message' => 'Units are required for unit-based project: ' . $p->name], 422);
+                        }
+                        if ($item['units'] > $p->available_units) {
+                            return response()->json(['message' => "Only {$p->available_units} units available for " . $p->name], 422);
+                        }
+                    }
+                }
+            }
+        }
+
+        $total = $items->sum('amount');
+        if ($total <= 0) {
+            return response()->json(['message' => 'Total must be greater than zero'], 422);
+        }
+
+        if ((float)$user->special_savings_balance < $total) {
+            return response()->json(['message' => 'Insufficient Special Savings balance'], 422);
+        }
+
+        $specialSavingsScheme = Scheme::where('name', 'Special Savings')->first();
+        if (!$specialSavingsScheme) {
+             return response()->json(['message' => 'Special Savings scheme not found'], 422);
+        }
+
+        $reference = 'SPEC_SAV_MOVE_' . now()->format('YmdHis') . '_' . $user->id . '_' . bin2hex(random_bytes(3));
+
+        $insufficient = false;
+        DB::transaction(function () use ($user, $items, $reference, $total, $specialSavingsScheme, &$insufficient) {
+            $lockedUser = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+            if ((float)$lockedUser->special_savings_balance < (float)$total) {
+                $insufficient = true;
+                return;
+            }
+
+            // 1. Create negative contribution for Special Savings (the withdrawal)
+            Contribution::create([
+                'user_id' => $lockedUser->id,
+                'scheme_id' => $specialSavingsScheme->id,
+                'amount' => -$total,
+                'reference' => $reference . '_W',
+                'status' => 'success',
+                'category' => 'withdrawal',
+            ]);
+
+            // 2. Create positive contributions for target schemes
+            foreach ($items as $idx => $item) {
+                $row = [
+                    'user_id' => $lockedUser->id,
+                    'scheme_id' => $item['scheme_id'],
+                    'amount' => $item['amount'],
+                    'reference' => $reference . '_' . $idx,
+                    'status' => 'success',
+                    'category' => $item['category'] ?? 'deposit',
+                ];
+                if (!empty($item['project_id'])) {
+                    $row['project_id'] = (int) $item['project_id'];
+                    $row['units'] = $item['units'] ?? null;
+                }
+                if (!empty($item['savings_group_id'])) {
+                    $row['savings_group_id'] = (int) $item['savings_group_id'];
+                }
+                Contribution::create($row);
+            }
+
+            // 3. Sync all affected schemes
+            $affectedSchemeNames = Scheme::whereIn('id', $items->pluck('scheme_id')->merge([$specialSavingsScheme->id]))
+                ->pluck('name')
+                ->unique();
+
+            foreach ($affectedSchemeNames as $name) {
+                $lockedUser->syncSchemeBalance($name);
+            }
+        });
+
+        if ($insufficient) {
+            return response()->json(['message' => 'Insufficient Special Savings balance'], 422);
+        }
+
+        $user->refresh();
+
+        // Notify member
+        $user->notifyMember('Special Savings Transfer', 'Special Savings debit: ₦'.number_format($total, 2).' moved to other schemes. Ref: '.$reference, [
+            'type' => 'special_savings_move',
+            'amount' => $total,
+            'reference' => $reference,
+            'special_savings_balance' => (float)$user->special_savings_balance,
+        ]);
+
+        return response()->json([
+            'reference' => $reference,
+            'moved' => $total,
+            'special_savings_balance' => (float)$user->special_savings_balance,
+            'message' => 'Funds moved successfully from Special Savings'
         ]);
     }
     public function transfer(Request $request)
