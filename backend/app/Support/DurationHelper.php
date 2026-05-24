@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Setting;
 use Carbon\Carbon;
 
 class DurationHelper
@@ -61,15 +62,39 @@ class DurationHelper
             } else {
                 return 16;
             }
-        } else {
-            // Beginning from July, 2025 till date
-            if ($amount <= 1000000) {
-                return 12;
-            } elseif ($amount <= 2000000) {
-                return 15;
-            } else {
-                return 18;
+        }
+
+        // Try to get configurable rules for the current period (New Rule)
+        $rulesJson = Setting::get('loan_duration_rules');
+        if ($rulesJson) {
+            $rules = is_array($rulesJson) ? $rulesJson : json_decode($rulesJson, true);
+            if (is_array($rules) && !empty($rules)) {
+                // Sort rules: numeric max_amount first (ascending), then null (above)
+                usort($rules, function ($a, $b) {
+                    $maxA = $a['max_amount'] ?? null;
+                    $maxB = $b['max_amount'] ?? null;
+                    if ($maxA === null && $maxB === null) return 0;
+                    if ($maxA === null) return 1;
+                    if ($maxB === null) return -1;
+                    return $maxA <=> $maxB;
+                });
+
+                foreach ($rules as $rule) {
+                    $maxAmount = $rule['max_amount'] ?? null;
+                    if ($maxAmount === null || $amount <= $maxAmount) {
+                        return (int) $rule['duration'];
+                    }
+                }
             }
+        }
+
+        // Fallback to hardcoded New Rules
+        if ($amount <= 1000000) {
+            return 12;
+        } elseif ($amount <= 2000000) {
+            return 15;
+        } else {
+            return 18;
         }
     }
 }

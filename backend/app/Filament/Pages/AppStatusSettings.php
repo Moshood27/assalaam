@@ -9,6 +9,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -57,6 +58,11 @@ class AppStatusSettings extends Page
             'wellness_check_enabled' => (bool) Setting::get('wellness_check_enabled', true),
             'wellness_check_inactivity_months' => (int) Setting::get('wellness_check_inactivity_months', config('cooperative.legacy.inactivity_months', 6)),
             'wellness_check_period_days' => (int) Setting::get('wellness_check_period_days', config('cooperative.legacy.check_period_days', 30)),
+            'loan_duration_rules' => json_decode(Setting::get('loan_duration_rules', '[]'), true) ?: [
+                ['max_amount' => 1000000, 'duration' => 12],
+                ['max_amount' => 2000000, 'duration' => 15],
+                ['max_amount' => null, 'duration' => 18],
+            ],
         ]);
     }
 
@@ -113,6 +119,26 @@ class AppStatusSettings extends Page
                             ->required()
                             ->minValue(0)
                             ->helperText('The minimum number of meetings a member must attend to be eligible for loan approval (e.g., 8). Admins can still approve manually if below this.'),
+                        Repeater::make('loan_duration_rules')
+                            ->label('Loan Duration Rules')
+                            ->schema([
+                                TextInput::make('max_amount')
+                                    ->label('Maximum Amount (NGN)')
+                                    ->numeric()
+                                    ->prefix('₦')
+                                    ->placeholder('e.g. 1000000')
+                                    ->helperText('Leave empty for "Above" (the catch-all rule)'),
+                                TextInput::make('duration')
+                                    ->label('Duration (Months)')
+                                    ->numeric()
+                                    ->required()
+                                    ->minValue(1),
+                            ])
+                            ->columns(2)
+                            ->itemLabel(fn (array $state): ?string => isset($state['max_amount'])
+                                ? "Up to ₦" . number_format($state['max_amount']) . ": " . $state['duration'] . " months"
+                                : "Above: " . ($state['duration'] ?? '?') . " months")
+                            ->helperText('Define loan duration based on principal amount. Rules are evaluated in order.'),
                     ]),
                 Section::make('Grace Period Settings')
                     ->description('Manage grace periods for members.')
@@ -228,7 +254,7 @@ class AppStatusSettings extends Page
                     Feature::for('global')->deactivate($features[$key]);
                 }
             } else {
-                Setting::set($key, $value);
+                Setting::set($key, is_array($value) ? json_encode($value) : $value);
             }
         }
 
