@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\QardHasan;
 use App\Models\QardHasanRepayment;
 use App\Models\User;
+use App\Support\DurationHelper;
 use App\Imports\Concerns\HandlesExcelDates;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -79,6 +80,13 @@ class LoansImport implements ToModel, WithHeadingRow, WithValidation, WithChunkR
 
         $receivedAt = $this->parseExcelDate($row['received_at'], $this->migrationDate);
         $defaultedAt = $this->parseExcelDate($row['defaulted_at']);
+
+        // Enforce max duration rules
+        $allowedDuration = DurationHelper::getLoanDuration($originalAmount, $receivedAt);
+        if ($totalInstallments > $allowedDuration) {
+            $totalInstallments = $allowedDuration;
+            $perInstallment = round($originalAmount / $totalInstallments, 2);
+        }
 
         return new QardHasan([
             'user_id' => $user->id,

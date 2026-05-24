@@ -80,8 +80,34 @@ class SyncMigrationData extends Command
 
         $this->info("Total loans synced: $loanCount");
 
-        // 3. Status Maintenance
-        $this->info("\nStep 3: Running Status Maintenance...");
+        // 3. Enforce Loan Duration Rules for Migrated Loans
+        $this->info("\nStep 3: Enforcing Loan Duration Rules for Migrated Loans...");
+        $durationCount = 0;
+        QardHasan::where(function($q) {
+                $q->where('qard_id_string', 'like', 'MIG-%')
+                  ->orWhere('qard_id_string', 'like', 'MGR-%');
+            })
+            ->chunkById(100, function($loans) use ($dryRun, &$durationCount) {
+                foreach ($loans as $loan) {
+                    $allowedDuration = \App\Support\DurationHelper::getLoanDuration($loan->principal_amount, $loan->received_at);
+
+                    if ($loan->total_installments > $allowedDuration) {
+                        if (!$dryRun) {
+                            $loan->update([
+                                'total_installments' => $allowedDuration,
+                                'per_installment' => round($loan->principal_amount / $allowedDuration, 2)
+                            ]);
+                        }
+                        $this->line(" [LOAN] Updated duration: {$loan->qard_id_string} ({$loan->total_installments} -> {$allowedDuration})");
+                        $durationCount++;
+                    }
+                }
+            });
+
+        $this->info("Total loans with corrected duration: $durationCount");
+
+        // 4. Status Maintenance
+        $this->info("\nStep 4: Running Status Maintenance...");
         if (!$dryRun) {
             $this->call('loans:fix-completed-status');
             $this->call('loans:sync-penalties');

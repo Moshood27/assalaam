@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\QardHasan;
 use App\Models\Scheme;
 use App\Models\User;
+use App\Support\DurationHelper;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -175,6 +176,13 @@ class CsvImportService
             $perInstallment = $this->toFloat($row['per_installment'] ?? null);
             if (is_null($perInstallment)) {
                 $perInstallment = round(((float)$principal) / max($totalInstallments, 1), 2);
+            }
+
+            // Enforce max duration rules
+            $allowedDuration = DurationHelper::getLoanDuration($principal);
+            if ($totalInstallments > $allowedDuration) {
+                $totalInstallments = $allowedDuration;
+                $perInstallment = round($principal / $totalInstallments, 2);
             }
 
             $data = [

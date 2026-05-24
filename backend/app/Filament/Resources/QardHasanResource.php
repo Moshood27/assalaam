@@ -120,22 +120,24 @@ class QardHasanResource extends Resource
                 Forms\Components\TextInput::make('total_installments')
                     ->numeric()
                     ->minValue(1)
-                    ->maxValue(function (callable $get) {
+                    ->maxValue(function (callable $get, ?QardHasan $record) {
                         $principal = (float) ($get('principal_amount') ?? 0);
                         if ($principal <= 0) return 100; // No limit if principal not set yet
-                        return DurationHelper::getLoanDuration($principal);
+                        $date = $record?->received_at ?? $record?->approved_at ?? now();
+                        return DurationHelper::getLoanDuration($principal, $date);
                     })
                     ->required()
                     ->reactive()
-                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                    ->afterStateUpdated(function ($state, callable $set, callable $get, ?QardHasan $record) {
                         $principal = (float) ($get('principal_amount') ?? 0);
                         $ti = max((int) $state, 1);
                         $set('per_installment', $ti > 0 ? round($principal / $ti, 2) : 0);
                     })
-                    ->helperText(function (callable $get) {
+                    ->helperText(function (callable $get, ?QardHasan $record) {
                         $principal = (float) ($get('principal_amount') ?? 0);
                         if ($principal <= 0) return null;
-                        $max = DurationHelper::getLoanDuration($principal);
+                        $date = $record?->received_at ?? $record?->approved_at ?? now();
+                        $max = DurationHelper::getLoanDuration($principal, $date);
                         return "Maximum duration for this amount is $max months.";
                     }),
                 Forms\Components\TextInput::make('per_installment')
