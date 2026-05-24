@@ -188,6 +188,25 @@ const { notice, showNotice, closeNotice } = useNotice()
 // PIN prompt modal state
 const pinPrompt = ref({ visible: false })
 
+watch(selectedSchemeId, async (newVal) => {
+  if (!newVal || newVal === 'combined') return
+  const s = schemes.value.find(x => String(x.id) == String(newVal))
+  if (s && s.name.toLowerCase().includes('loan')) {
+    try {
+      loading.value = true
+      const { data } = await axios.get('/api/loans/outstanding')
+      if (!data || !data.id) {
+        showNotice('No Active Loan', 'You do not have any outstanding loan to repay.', 'warning')
+        selectedSchemeId.value = ''
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      loading.value = false
+    }
+  }
+})
+
 const addToList = () => {
   if (selectedSchemeId.value !== 'combined') {
     if (!selectedSchemeId.value || !inputAmount.value || Number(inputAmount.value) <= 0) return
@@ -196,7 +215,13 @@ const addToList = () => {
     if (!s) return
     const pid = selectedProjectId.value ? String(selectedProjectId.value) : ''
     const p = pid ? projects.value.find(x => String(x.id) == pid) : null
-    const item = { scheme_id: s.id, scheme_name: s.name, amount: Number(inputAmount.value), category: isFine.value ? 'fine' : 'deposit' }
+    
+    let category = isFine.value ? 'fine' : 'deposit'
+    if (s.name.toLowerCase().includes('loan')) {
+      category = 'loan_repayment'
+    }
+
+    const item = { scheme_id: s.id, scheme_name: s.name, amount: Number(inputAmount.value), category }
     if (p) {
       item.project_id = p.id
       item.project_name = p.name

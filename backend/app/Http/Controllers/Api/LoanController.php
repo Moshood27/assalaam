@@ -41,6 +41,18 @@ class LoanController extends Controller
         return response()->json($loans);
     }
 
+    // Return the active/defaulted loan if any for repayment
+    public function outstanding(Request $request)
+    {
+        $user = $request->user();
+        $loan = QardHasan::where('user_id', $user->id)
+            ->whereIn('status', ['active', 'defaulted'])
+            ->whereColumn('paid_amount', '<', 'principal_amount')
+            ->first();
+
+        return response()->json($loan);
+    }
+
     // Compute member's eligibility with policy adjustments (6-month rule and first-loan 5% cap)
     public function eligibility(Request $request)
     {

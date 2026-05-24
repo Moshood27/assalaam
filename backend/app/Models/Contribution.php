@@ -76,14 +76,56 @@ class Contribution extends Model
                 } catch (\Throwable $e) {}
             }
 
+            // Special handling for Loan Repayment category
+            if ($model->status === 'success' && $model->category === 'loan_repayment') {
+                try {
+                    $user = $model->user;
+                    $q = QardHasan::where('user_id', $user->id)
+                        ->whereIn('status', ['active', 'defaulted'])
+                        ->whereColumn('paid_amount', '<', 'principal_amount')
+                        ->first();
+
+                    if ($q) {
+                        if (!QardHasanRepayment::where('reference', $model->reference)->exists()) {
+                            $before = (float) $q->paid_amount;
+                            $remaining = max(0, (float) $q->principal_amount - $before);
+                            $applied = round(min((float) $model->amount, $remaining), 2);
+
+                            if ($applied > 0) {
+                                QardHasanRepayment::create([
+                                    'qard_hasan_id' => $q->id,
+                                    'amount' => $applied,
+                                    'reference' => $model->reference,
+                                    'status' => 'success',
+                                    'paid_at' => now(),
+                                ]);
+
+                                $q->paid_amount = $before + $applied;
+                                if ($q->paid_amount >= $q->principal_amount) {
+                                    $q->status = 'completed';
+                                }
+                                $q->save();
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to process loan repayment from contribution: " . $e->getMessage());
+                }
+            }
+
             // Record in Ledger if successful on creation (typical for migration)
             if ($model->status === 'success' && !$model->ledger_journal_id) {
                 try {
                     $ledger = app(\App\Services\LedgerService::class);
-                    $journal = $model->category === 'fine'
-                        ? $ledger->recordFine($model)
-                        : $ledger->recordContribution($model);
-                    $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                    if ($model->category === 'fine') {
+                        $journal = $ledger->recordFine($model);
+                        $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                    } elseif ($model->category === 'loan_repayment') {
+                        // Skip recordContribution; QardHasanRepayment will record its own ledger entry
+                    } else {
+                        $journal = $ledger->recordContribution($model);
+                        $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                    }
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to record contribution in ledger: " . $e->getMessage());
                 }
@@ -147,6 +189,43 @@ class Contribution extends Model
                         } catch (\Throwable $e) {}
                     }
 
+                    // Special handling for Loan Repayment category
+                    if ($model->category === 'loan_repayment') {
+                        try {
+                            $user = $model->user;
+                            $q = QardHasan::where('user_id', $user->id)
+                                ->whereIn('status', ['active', 'defaulted'])
+                                ->whereColumn('paid_amount', '<', 'principal_amount')
+                                ->first();
+
+                            if ($q) {
+                                if (!QardHasanRepayment::where('reference', $model->reference)->exists()) {
+                                    $before = (float) $q->paid_amount;
+                                    $remaining = max(0, (float) $q->principal_amount - $before);
+                                    $applied = round(min((float) $model->amount, $remaining), 2);
+
+                                    if ($applied > 0) {
+                                        QardHasanRepayment::create([
+                                            'qard_hasan_id' => $q->id,
+                                            'amount' => $applied,
+                                            'reference' => $model->reference,
+                                            'status' => 'success',
+                                            'paid_at' => now(),
+                                        ]);
+
+                                        $q->paid_amount = $before + $applied;
+                                        if ($q->paid_amount >= $q->principal_amount) {
+                                            $q->status = 'completed';
+                                        }
+                                        $q->save();
+                                    }
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error("Failed to process loan repayment from contribution: " . $e->getMessage());
+                        }
+                    }
+
                     // Update Attaqwa Score
                     try {
                         app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
@@ -157,10 +236,15 @@ class Contribution extends Model
                         // Record in Ledger if not already recorded
                         if (!$model->ledger_journal_id) {
                             $ledger = app(\App\Services\LedgerService::class);
-                            $journal = $model->category === 'fine'
-                                ? $ledger->recordFine($model)
-                                : $ledger->recordContribution($model);
-                            $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            if ($model->category === 'fine') {
+                                $journal = $ledger->recordFine($model);
+                                $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            } elseif ($model->category === 'loan_repayment') {
+                                // Skip; QardHasanRepayment will record its own ledger entry
+                            } else {
+                                $journal = $ledger->recordContribution($model);
+                                $model->updateQuietly(['ledger_journal_id' => $journal->id]);
+                            }
                         }
 
                         $user = $model->user;
