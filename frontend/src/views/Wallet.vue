@@ -1041,7 +1041,7 @@ const handlePinConfirm = async (val) => {
       // Refresh wallet & withdrawals
       await loadWallet()
       await resetWithdrawals()
-      showNotice('Success', 'Withdrawal request submitted.', 'success')
+      showNotice('Success', 'Mashallah! Withdrawal request submitted.', 'success')
     } else {
       const payload = {
         to_type: toType.value,
@@ -1063,7 +1063,7 @@ const handlePinConfirm = async (val) => {
       note.value = ''
       // Refresh wallet & transactions
       await loadWallet()
-      showNotice('Success', 'Transfer sent successfully.', 'success')
+      showNotice('Success', 'Mashallah! Transfer sent successfully.', 'success')
     }
   } catch (e) {
     pinPrompt.value.visible = false

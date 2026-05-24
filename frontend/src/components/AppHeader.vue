@@ -12,7 +12,7 @@
               <span v-else class="i-mdi-account text-2xl text-emerald-600/50"></span>
             </div>
             <div class="text-left min-w-0">
-              <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none mb-1 opacity-80">Welcome back,</p>
+              <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none mb-1 opacity-80">Assalamu Alaikum,</p>
               <h2 class="text-sm font-black text-slate-800 uppercase truncate max-w-[120px] sm:max-w-[200px]">{{ user.full_name || 'Member' }}</h2>
             </div>
           </button>

@@ -451,7 +451,7 @@
           </div>
           <div class="space-y-2">
             <h2 class="text-3xl font-black text-slate-900 tracking-tight">Registration Complete!</h2>
-            <p class="text-slate-500 font-medium">Welcome to the Cooperative family.</p>
+            <p class="text-slate-500 font-medium">Jazakallah Khair! Welcome to the Cooperative family.</p>
           </div>
           
           <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100">

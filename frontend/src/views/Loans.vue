@@ -665,7 +665,7 @@ const onAgreementFileChange = async (e, loanId) => {
         Authorization: `Bearer ${token}`
       }
     })
-    showNotice('Success', 'Agreement uploaded successfully. Admin will verify it shortly.', 'success')
+    showNotice('Success', 'Mashallah! Agreement uploaded successfully. Admin will verify it shortly.', 'success')
     await load()
   } catch (err) {
     showNotice('Error', err?.response?.data?.message || 'Failed to upload agreement (max 10MB).', 'error')
@@ -812,9 +812,9 @@ const createLoan = async () => {
 
     if (data?.instant_approved) {
       const credited = Number(data?.credited_amount || 0)
-      createMsg.value = data?.message || `Instant approval! ₦ ${n(credited)} has been credited to your wallet.`
+      createMsg.value = data?.message || `Mashallah! Instant approval! ₦ ${n(credited)} has been credited to your wallet.`
     } else {
-      createMsg.value = data?.message || 'Loan application submitted successfully. Awaiting guarantor approvals and admin review. You will be notified when the agreement document is ready for signing.'
+      createMsg.value = data?.message || 'Mashallah! Loan application submitted successfully. Awaiting guarantor approvals and admin review. You will be notified when the agreement document is ready for signing.'
     }
     showNotice('Success', createMsg.value, 'success')
     await load()

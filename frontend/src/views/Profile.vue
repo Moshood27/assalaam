@@ -726,7 +726,7 @@ const applyNursingMotherGrace = async () => {
     const { data } = await axios.get('/api/profile')
     profile.value = data
     showNursingMotherModal.value = false
-    alert('Application submitted successfully and is pending review.')
+    alert('Mashallah! Application submitted successfully and is pending review.')
   } catch (err) {
     alert(err?.response?.data?.message || 'Failed to submit application.')
   } finally {
@@ -825,7 +825,7 @@ const saveBank = async () => {
       account_name: resolvedName.value,
       has_verified: true,
     }
-    bankMessage.value = data?.message || 'Bank details saved successfully.'
+    bankMessage.value = data?.message || 'Mashallah! Bank details saved successfully.'
     bankError.value = false
   } catch (err) {
     bankError.value = true

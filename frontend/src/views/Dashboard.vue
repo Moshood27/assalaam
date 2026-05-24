@@ -839,7 +839,7 @@ const checkMigration = async () => {
 
   const ok = await modal.prompt(
     'Verify Opening Balance',
-    `Welcome to Attaqwa Mobile App. Based on our system migration from paper/Excel records, here is your opening balance breakdown:\n\n${breakdownLines}\n\nTotal: ${currency} ${total}\n\nIs this correct?`,
+    `Assalamu Alaikum! Welcome to Attaqwa Mobile App. Based on our system migration from paper/Excel records, here is your opening balance breakdown:\n\n${breakdownLines}\n\nTotal: ${currency} ${total}\n\nIs this correct?`,
     [
       { label: 'Yes, it is correct', value: 'verify', primary: true },
       { label: 'No, report discrepancy', value: 'report', danger: true },
@@ -851,7 +851,7 @@ const checkMigration = async () => {
   if (ok === 'verify') {
     try {
       await axios.post('/api/profile/verify-migration', {}, { headers: { Authorization: `Bearer ${token}` } })
-      showNotice('Success', 'Thank you! Your account is now fully verified.', 'success')
+      showNotice('Success', 'Mashallah! Thank you! Your account is now fully verified.', 'success')
       dashboardData.value.migration.verified_at = new Date().toISOString()
     } catch (e) {
       showNotice('Error', 'Failed to verify balance. Please try again.', 'error')
@@ -921,7 +921,7 @@ const updateGender = async () => {
     await axios.post('/api/profile/gender', { gender: selectedGender.value }, { headers: { Authorization: `Bearer ${token}` } })
     showGenderModal.value = false
     dashboardData.value.gender = selectedGender.value
-    showNotice('Success', 'Profile updated. Thank you!', 'success')
+    showNotice('Success', 'Mashallah! Profile updated. Jazakallah Khair!', 'success')
   } catch (e) {
     showNotice('Error', 'Failed to update gender. Please try again.', 'error')
   } finally {
@@ -950,7 +950,7 @@ const updateEmail = async () => {
     const { data } = await axios.post('/api/profile/email', emailForm.value, { headers: { Authorization: `Bearer ${token}` } })
     showEmailModal.value = false
     dashboardData.value.email = data.email
-    showNotice('Success', 'Email updated successfully!', 'success')
+    showNotice('Success', 'Mashallah! Email updated successfully!', 'success')
   } catch (e) {
     if (e.response?.data?.errors) {
       emailErrors.value = e.response.data.errors
@@ -987,7 +987,7 @@ const updatePin = async () => {
     })
     showPinModal.value = false
     dashboardData.value.kpis.has_pin = true
-    showNotice('Success', 'Transaction PIN set successfully!', 'success')
+    showNotice('Success', 'Mashallah! Transaction PIN set successfully!', 'success')
   } catch (err) {
     const e = err?.response?.data
     if (e?.errors) {
