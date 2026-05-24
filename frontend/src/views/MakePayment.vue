@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-72 font-sans">
-    <AppHeader title="Make Payment" :showBack="true" />
+    <AppHeader title="Allocate Fund" :showBack="true" />
 
     <div class="p-4 space-y-6 max-w-md mx-auto">
       <!-- Wallet Balance -->
@@ -16,15 +16,10 @@
         </p>
         <div class="space-y-4">
           <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="lbl mb-0">Scheme</label>
-              <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" v-model="isCombined" class="accent-emerald-700 w-3.5 h-3.5">
-                <span class="text-[10px] font-bold uppercase text-emerald-700">Split Shares/Savings</span>
-              </label>
-            </div>
-            <select v-model="selectedSchemeId" class="inp" :disabled="isCombined">
-              <option value="">{{ isCombined ? 'Combined (Shares & Savings)' : 'Select Scheme' }}</option>
+            <label class="lbl">Scheme</label>
+            <select v-model="selectedSchemeId" class="inp">
+              <option value="">Select Scheme</option>
+              <option value="combined">Shares & Savings (50/50 Split)</option>
               <option v-for="s in schemes" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
@@ -86,9 +81,12 @@
         <div class="flex items-center justify-between mb-3">
           <label class="flex items-center gap-2 text-sm text-slate-700">
             <input type="checkbox" v-model="payFromWallet" class="accent-emerald-700" />
-            Pay from wallet
+            Allocate from wallet
           </label>
-          <span class="text-xs text-slate-500">Balance: ₦ {{ Number(walletBalance).toLocaleString() }}</span>
+          <div class="flex flex-col items-end">
+            <span class="text-xs text-slate-500">Balance: ₦ {{ Number(walletBalance).toLocaleString() }}</span>
+            <button @click="$router.push('/wallet')" class="text-[10px] text-emerald-700 font-bold underline uppercase tracking-tighter">Fund Wallet</button>
+          </div>
         </div>
 
         <!-- Gateway Selection (only if not paying from wallet) -->
@@ -111,7 +109,7 @@
           </div>
         </div>
         <button @click="initiatePayment" :disabled="paymentList.length === 0 || loading" class="btn-primary w-full py-4 text-lg">
-          {{ loading ? 'Processing…' : (payFromWallet ? 'Allocate from Wallet' : 'Make Payment') }}
+          {{ loading ? 'Processing…' : (payFromWallet ? 'Allocate Fund' : 'Make Payment') }}
         </button>
       </div>
     </div>
@@ -170,7 +168,6 @@ const selectedProjectId = ref('')
 const inputAmount = ref('')
 const loading = ref(false)
 const isFine = ref(false)
-const isCombined = ref(false)
 const payFromWallet = ref(false)
 const enabledGateways = computed(() => {
   const gws = appStatusStore.paymentGateways || {}
@@ -192,7 +189,7 @@ const { notice, showNotice, closeNotice } = useNotice()
 const pinPrompt = ref({ visible: false })
 
 const addToList = () => {
-  if (!isCombined.value) {
+  if (selectedSchemeId.value !== 'combined') {
     if (!selectedSchemeId.value || !inputAmount.value || Number(inputAmount.value) <= 0) return
     // robust id compare (string/number)
     const s = schemes.value.find(x => String(x.id) == String(selectedSchemeId.value))
@@ -244,7 +241,6 @@ const addToList = () => {
   selectedProjectId.value = ''
   inputAmount.value = ''
   isFine.value = false
-  isCombined.value = false
 }
 
 const removeFromList = (idx) => paymentList.value.splice(idx, 1)
