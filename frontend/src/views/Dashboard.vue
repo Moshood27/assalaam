@@ -149,24 +149,19 @@
       </div>
     </div> <!-- end left col -->
 
-    <!-- Right Column: Eligibility & Performance -->
+    <!-- Right Column: Status & Performance -->
     <div class="lg:col-span-5 space-y-6 mt-6 lg:mt-0">
-      <!-- Loan Eligibility & Savings Section -->
+      <!-- Qard Hasan Status & Savings Section -->
       <div class="bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-6" v-if="!kpis.has_active_loan && kpis.total_due_amount <= 0">
-          <h3 class="text-slate-800 font-bold text-lg">Qard Hasan Eligibility</h3>
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-slate-800 font-bold text-lg">Qard Hasan Status</h3>
           <div class="flex items-center gap-3">
-            <router-link to="/loans/analysis" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Analysis</router-link>
             <router-link v-if="appStatusStore.features['apply-for-loan']" to="/loans" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Apply for Qard Hasan</router-link>
           </div>
           <div class="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl">💎</div>
         </div>
-        <div class="flex justify-between items-center mb-6" v-else>
-          <h3 class="text-slate-800 font-bold text-lg">Qard Hasan Status</h3>
-          <div class="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-xl">📊</div>
-        </div>
         
-        <div class="flex items-end gap-1 mb-8" v-if="!kpis.has_active_loan && kpis.total_due_amount <= 0">
+        <div class="flex items-end gap-1 mb-8" v-if="kpis.has_active_loan || kpis.total_due_amount > 0">
           <template v-if="kpis.total_due_amount > 0">
             <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
             <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Overdue Amount</span>
@@ -178,10 +173,6 @@
           <template v-else-if="kpis.has_active_loan">
             <span class="text-3xl font-black text-amber-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
             <span class="text-[10px] text-amber-500 font-bold uppercase mb-2 ml-1 tracking-wider">Outstanding Balance</span>
-          </template>
-          <template v-else>
-            <span class="text-3xl font-black text-slate-900">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loan_limit) }}</span>
-            <span class="text-[10px] text-slate-400 font-bold uppercase mb-2 ml-1 tracking-wider">Max Limit</span>
           </template>
         </div>
 
@@ -199,12 +190,6 @@
           <div class="text-lg">🛑</div>
           <p class="text-[10px] text-rose-700 leading-tight font-medium">
             Your account is currently <span class="font-bold">in default</span> due to an unpaid Qard Hasan repayment. You must clear your outstanding balance before you can access further credit.
-          </p>
-        </div>
-        <div v-else class="mt-6 flex items-center gap-3 bg-blue-50/50 p-4 rounded-3xl border border-blue-100/50">
-          <div class="text-lg">ℹ️</div>
-          <p class="text-[10px] text-blue-700 leading-tight font-medium">
-            Your Qard Hasan limit is determined by your <span class="font-bold">Member Savings</span> and <span class="font-bold">Shares balance</span>, adjusted by your <span class="font-bold">Attaqwa Score</span>.
           </p>
         </div>
       </div>
