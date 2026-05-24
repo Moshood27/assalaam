@@ -30,6 +30,11 @@
               <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
           </div>
+          <div v-if="outstandingLoan" class="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <p class="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Outstanding Loan</p>
+            <p class="text-sm font-bold text-amber-900">₦ {{ Number(outstandingLoan.remaining_principal).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
+            <p class="text-[9px] text-amber-600 mt-1">Payments will be applied to: {{ outstandingLoan.qard_id_string }}</p>
+          </div>
           <div>
             <label class="lbl">Amount</label>
             <div class="relative">
@@ -169,6 +174,7 @@ const inputAmount = ref('')
 const loading = ref(false)
 const isFine = ref(false)
 const payFromWallet = ref(false)
+const outstandingLoan = ref(null)
 const enabledGateways = computed(() => {
   const gws = appStatusStore.paymentGateways || {}
   return Object.keys(gws).filter(k => k !== 'primary' && gws[k])
@@ -189,7 +195,10 @@ const { notice, showNotice, closeNotice } = useNotice()
 const pinPrompt = ref({ visible: false })
 
 watch(selectedSchemeId, async (newVal) => {
-  if (!newVal || newVal === 'combined') return
+  if (!newVal || newVal === 'combined') {
+    outstandingLoan.value = null
+    return
+  }
   const s = schemes.value.find(x => String(x.id) == String(newVal))
   if (s && s.name.toLowerCase().includes('loan')) {
     try {
@@ -198,12 +207,18 @@ watch(selectedSchemeId, async (newVal) => {
       if (!data || !data.id) {
         showNotice('No Active Loan', 'You do not have any outstanding loan to repay.', 'warning')
         selectedSchemeId.value = ''
+        outstandingLoan.value = null
+      } else {
+        outstandingLoan.value = data
       }
     } catch (e) {
       console.error(e)
+      outstandingLoan.value = null
     } finally {
       loading.value = false
     }
+  } else {
+    outstandingLoan.value = null
   }
 })
 
