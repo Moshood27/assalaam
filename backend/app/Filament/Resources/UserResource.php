@@ -601,6 +601,35 @@ class UserResource extends Resource
                     }),
             ])
             ->headerActions([
+                Action::make('exportGmailMembers')
+                    ->label('Export Gmail Members')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(function () {
+                        $users = User::member()
+                            ->where('email', 'like', '%@gmail.com')
+                            ->orderBy('email')
+                            ->get(['email']);
+
+                        if ($users->isEmpty()) {
+                            Notification::make()
+                                ->title('No Gmail members found')
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+
+                        $csvData = "Email\n";
+                        foreach ($users as $user) {
+                            $csvData .= $user->email . "\n";
+                        }
+
+                        return response()->streamDownload(
+                            fn () => print($csvData),
+                            'gmail-members-' . now()->format('Y-m-d') . '.csv',
+                            ['Content-Type' => 'text/csv']
+                        );
+                    }),
                 Action::make('print_list')
                     ->label('Print Member List')
                     ->icon('heroicon-o-printer')
