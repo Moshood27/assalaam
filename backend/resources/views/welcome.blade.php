@@ -68,14 +68,33 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    @auth
-                        <a href="{{ url('/admin') }}" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-lg shadow-primary-500/25">Dashboard</a>
-                    @else
-                        <a href="{{ url('/admin/login') }}" class="text-sm font-medium hover:text-primary-600 transition-colors">Login</a>
-                        <a href="#download" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all">Get the App</a>
-                    @endauth
+                    <div class="hidden sm:flex items-center gap-4">
+                        @auth
+                            <a href="{{ url('/admin') }}" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-lg shadow-primary-500/25">Dashboard</a>
+                        @else
+                            <a href="{{ url('/admin/login') }}" class="text-sm font-medium hover:text-primary-600 transition-colors">Login</a>
+                            <a href="#download" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all">Get the App</a>
+                        @endauth
+                    </div>
+                    <button id="mobile-menu-button" class="md:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-4">
+            <a href="#features" class="block text-base font-medium text-slate-600 dark:text-slate-400">Features</a>
+            <a href="{{ url('/about-us') }}" class="block text-base font-medium text-slate-600 dark:text-slate-400">About</a>
+            <a href="#download" class="block text-base font-medium text-slate-600 dark:text-slate-400">App</a>
+            <hr class="border-slate-100 dark:border-slate-800">
+            @auth
+                <a href="{{ url('/admin') }}" class="block text-base font-bold text-primary-600">Dashboard</a>
+            @else
+                <a href="{{ url('/admin/login') }}" class="block text-base font-medium text-slate-600 dark:text-slate-400">Login</a>
+                <a href="#download" class="block text-base font-bold text-primary-600">Get the App</a>
+            @endauth
         </div>
     </nav>
 
@@ -126,52 +145,224 @@
         </div>
     </section>
 
+    <!-- Trust Section -->
+    <section class="py-12 bg-slate-50 dark:bg-[#0d0d0d] border-y border-slate-200 dark:border-slate-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="shield-check" class="w-6 h-6 text-emerald-500"></i> Licensed</div>
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="award" class="w-6 h-6 text-emerald-500"></i> Ethical</div>
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="users" class="w-6 h-6 text-emerald-500"></i> Community</div>
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="lock" class="w-6 h-6 text-emerald-500"></i> Secure</div>
+            </div>
+        </div>
+    </section>
+
     <!-- Features Section -->
     <section id="features" class="py-24 bg-white dark:bg-slate-950">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-20">
-                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Financial Freedom, The Halal Way</h2>
-                <p class="text-slate-600 dark:text-slate-400">Discover a range of financial products designed to grow your wealth while staying true to your values.</p>
+                <h2 class="text-3xl sm:text-5xl font-extrabold mb-6">Financial Freedom, <br> The Halal Way</h2>
+                <p class="text-lg text-slate-600 dark:text-slate-400">Discover a range of financial products designed to grow your wealth while staying true to your values.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Target Savings -->
-                <div class="group p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 hover:border-primary-500 transition-all duration-300">
-                    <div class="w-14 h-14 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600 mb-6 group-hover:scale-110 transition-transform">
+                <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
+                    <div class="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600 mb-8 group-hover:scale-110 transition-transform duration-500">
                         <i data-lucide="target" class="w-8 h-8"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Target Savings</h3>
-                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-6">Plan and save for Hajj, Umrah, weddings, or education with automated goals and reminders.</p>
-                    <ul class="space-y-3">
-                        <li class="flex items-center gap-2 text-sm text-slate-500"><i data-lucide="check" class="w-4 h-4 text-primary-500"></i> Automated deposits</li>
-                        <li class="flex items-center gap-2 text-sm text-slate-500"><i data-lucide="check" class="w-4 h-4 text-primary-500"></i> Multiple goals</li>
+                    <h3 class="text-2xl font-bold mb-4">Target Savings</h3>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Plan and save for Hajj, Umrah, weddings, or education with automated goals and reminders.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-primary-500"></div> Automated deposits</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-primary-500"></div> Multiple saving goals</li>
                     </ul>
                 </div>
 
                 <!-- Halal Investment -->
-                <div class="group p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 hover:border-primary-500 transition-all duration-300">
-                    <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
+                <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
+                    <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 mb-8 group-hover:scale-110 transition-transform duration-500">
                         <i data-lucide="trending-up" class="w-8 h-8"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Halal Investment</h3>
-                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-6">Put your money to work in vetted projects. Share profits based on the Mudarabah principle.</p>
-                    <ul class="space-y-3">
-                        <li class="flex items-center gap-2 text-sm text-slate-500"><i data-lucide="check" class="w-4 h-4 text-primary-500"></i> Ethical ventures</li>
-                        <li class="flex items-center gap-2 text-sm text-slate-500"><i data-lucide="check" class="w-4 h-4 text-primary-500"></i> Transparent sharing</li>
+                    <h3 class="text-2xl font-bold mb-4">Halal Investment</h3>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Put your money to work in vetted projects. Share profits based on the Mudarabah principle.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Ethical ventures</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Transparent sharing</li>
                     </ul>
                 </div>
 
                 <!-- Qard Hasan -->
-                <div class="group p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 hover:border-primary-500 transition-all duration-300">
-                    <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
+                <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
+                    <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mb-8 group-hover:scale-110 transition-transform duration-500">
                         <i data-lucide="heart" class="w-8 h-8"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Qard Hasan</h3>
-                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-6">Need a hand? Access benevolent interest-free loans for personal or business needs.</p>
-                    <ul class="space-y-3">
-                        <li class="flex items-center gap-2 text-sm text-slate-500"><i data-lucide="check" class="w-4 h-4 text-primary-500"></i> No interest fees</li>
-                        <li class="flex items-center gap-2 text-sm text-slate-500"><i data-lucide="check" class="w-4 h-4 text-primary-500"></i> Flexible repayment</li>
+                    <h3 class="text-2xl font-bold mb-4">Qard Hasan</h3>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Need a hand? Access benevolent interest-free loans for personal or business needs.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> No interest (Riba)</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Flexible repayment</li>
                     </ul>
+                </div>
+
+                <!-- Takaful -->
+                <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
+                    <div class="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center text-amber-600 mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <i data-lucide="shield" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Welfare (Takaful)</h3>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">A cooperative pool to protect members and their families during difficult times.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Mutual assistance</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Debt protection</li>
+                    </ul>
+                </div>
+
+                <!-- Virtual Accounts -->
+                <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
+                    <div class="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600 mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <i data-lucide="credit-card" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Virtual Accounts</h3>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Get your own dedicated account number to fund your wallet instantly via bank transfer.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div> Instant funding</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div> Personal accounts</li>
+                    </ul>
+                </div>
+
+                <!-- Merchant Payments -->
+                <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
+                    <div class="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center text-rose-600 mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <i data-lucide="qr-code" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Pay with QR</h3>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Fast and secure payments to merchants using our "Pay with Attaqwa" QR system.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Zero contact</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Trusted network</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="py-24 bg-slate-50 dark:bg-[#0d0d0d]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-20">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Start Your Ethical Journey</h2>
+                <p class="text-slate-600 dark:text-slate-400">Joining AT-TAQWA is simple and transparent. Here's how you can get started today.</p>
+            </div>
+
+            <div class="relative">
+                <!-- Line -->
+                <div class="hidden lg:block absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 dark:bg-slate-800 -translate-y-1/2"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
+                    <div class="text-center group">
+                        <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-[2rem] border-4 border-slate-50 dark:border-[#0d0d0d] shadow-xl flex items-center justify-center text-2xl font-bold text-primary-600 mx-auto mb-8 group-hover:bg-primary-600 group-hover:text-white transition-all duration-500">1</div>
+                        <h4 class="text-xl font-bold mb-2">Create Account</h4>
+                        <p class="text-sm text-slate-500">Download the app and complete your profile in minutes.</p>
+                    </div>
+                    <div class="text-center group">
+                        <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-[2rem] border-4 border-slate-50 dark:border-[#0d0d0d] shadow-xl flex items-center justify-center text-2xl font-bold text-primary-600 mx-auto mb-8 group-hover:bg-primary-600 group-hover:text-white transition-all duration-500">2</div>
+                        <h4 class="text-xl font-bold mb-2">Join Cooperative</h4>
+                        <p class="text-sm text-slate-500">Apply for membership and get verified by our team.</p>
+                    </div>
+                    <div class="text-center group">
+                        <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-[2rem] border-4 border-slate-50 dark:border-[#0d0d0d] shadow-xl flex items-center justify-center text-2xl font-bold text-primary-600 mx-auto mb-8 group-hover:bg-primary-600 group-hover:text-white transition-all duration-500">3</div>
+                        <h4 class="text-xl font-bold mb-2">Fund Wallet</h4>
+                        <p class="text-sm text-slate-500">Add funds via your dedicated virtual account or card.</p>
+                    </div>
+                    <div class="text-center group">
+                        <div class="w-20 h-20 bg-white dark:bg-slate-900 rounded-[2rem] border-4 border-slate-50 dark:border-[#0d0d0d] shadow-xl flex items-center justify-center text-2xl font-bold text-primary-600 mx-auto mb-8 group-hover:bg-primary-600 group-hover:text-white transition-all duration-500">4</div>
+                        <h4 class="text-xl font-bold mb-2">Grow Wealth</h4>
+                        <p class="text-sm text-slate-500">Start saving, investing, or access interest-free loans.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-24 bg-slate-50 dark:bg-[#0d0d0d]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 sm:p-16 border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center gap-16">
+                <div class="lg:w-1/2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold mb-6 border border-emerald-200 dark:border-emerald-800">
+                        <i data-lucide="shield-check" class="w-3 h-3"></i>
+                        SHARIA GOVERNANCE
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-6">Built on Foundation of <span class="text-emerald-600">Trust & Integrity</span></h2>
+                    <p class="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+                        At AT-TAQWA, we are committed to the highest standards of Islamic finance. Our operations are strictly supervised to ensure zero interest (Riba), avoidance of uncertainty (Gharar), and promotion of social justice.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <div>
+                                <h4 class="font-bold text-sm">Sharia Audit</h4>
+                                <p class="text-xs text-slate-500">Regular compliance audits by experts.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <div>
+                                <h4 class="font-bold text-sm">Profit Sharing</h4>
+                                <p class="text-xs text-slate-500">Fair distribution via Mudarabah.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 grid grid-cols-2 gap-4">
+                    <div class="aspect-square bg-slate-50 dark:bg-slate-800/50 rounded-3xl flex flex-col items-center justify-center p-6 text-center">
+                        <i data-lucide="book-open" class="w-8 h-8 text-primary-600 mb-4"></i>
+                        <h4 class="font-bold text-sm">Ethics First</h4>
+                    </div>
+                    <div class="aspect-square bg-slate-50 dark:bg-slate-800/50 rounded-3xl flex flex-col items-center justify-center p-6 text-center mt-8">
+                        <i data-lucide="pie-chart" class="w-8 h-8 text-primary-600 mb-4"></i>
+                        <h4 class="font-bold text-sm">Equity</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-24 bg-white dark:bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-8">Frequently Asked Questions</h2>
+                    <div class="space-y-4">
+                        <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                            <h4 class="text-lg font-bold mb-2">Is AT-TAQWA really interest-free?</h4>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Yes. All our financial products are designed based on Sharia principles, which strictly prohibit Riba (interest). We use Mudarabah (profit sharing) and Qard Hasan (benevolent loans).</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                            <h4 class="text-lg font-bold mb-2">How do you make profit if there's no interest?</h4>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">We invest in Halal businesses and projects. The profits generated from these investments are shared between the cooperative and the members according to pre-agreed ratios.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                            <h4 class="text-lg font-bold mb-2">Who can join the cooperative?</h4>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">While we operate on Islamic principles, our ethical services are open to anyone who believes in fair, transparent, and interest-free financial systems.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-primary-600 rounded-[3rem] p-8 sm:p-12 text-white relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div class="relative z-10">
+                        <h3 class="text-3xl font-bold mb-6">Have more questions?</h3>
+                        <p class="text-primary-100 mb-8">Our support team is ready to assist you with any inquiries about our services, membership, or Sharia compliance.</p>
+                        <form class="space-y-4">
+                            <input type="text" placeholder="Your Name" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
+                            <input type="email" placeholder="Email Address" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
+                            <textarea placeholder="How can we help?" rows="4" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"></textarea>
+                            <button type="button" class="w-full bg-white text-primary-600 font-bold py-4 rounded-xl hover:bg-primary-50 transition-all">Send Message</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -291,6 +482,14 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
 
         // Navbar scroll effect
         window.addEventListener('scroll', () => {
