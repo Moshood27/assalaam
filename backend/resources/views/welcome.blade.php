@@ -6,48 +6,10 @@
     <title>{{ config('brand.name', 'AT-TAQWA') }} - Ethical Islamic Fintech</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                            950: '#052e16',
-                        },
-                    },
-                    fontFamily: {
-                        sans: ['Instrument Sans', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-        .dark .glass {
-            background: rgba(10, 10, 10, 0.7);
-        }
-        .hero-pattern {
-            background-color: transparent;
-            background-image: radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.1) 0, transparent 50%), radial-gradient(at 50% 0%, rgba(16, 185, 129, 0.1) 0, transparent 50%), radial-gradient(at 100% 0%, rgba(5, 150, 105, 0.1) 0, transparent 50%);
-        }
+        /* Base styles handled by Tailwind utilities in app.css */
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-slate-100 antialiased selection:bg-primary-500 selection:text-white">
@@ -55,11 +17,11 @@
     <nav class="fixed top-0 w-full z-50 glass border-b border-slate-200 dark:border-slate-800 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-2">
-                    <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg') }}" alt="Logo" class="h-8 w-auto dark:hidden">
-                    <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg') }}" alt="Logo" class="h-8 w-auto hidden dark:block">
+                <a href="{{ url('/') }}" class="flex items-center gap-2 group">
+                    <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg') }}" alt="Logo" class="h-8 w-auto dark:hidden transition-transform group-hover:scale-105">
+                    <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg') }}" alt="Logo" class="h-8 w-auto hidden dark:block transition-transform group-hover:scale-105">
                     <span class="font-bold text-lg tracking-tight hidden sm:block uppercase">{{ config('brand.name', 'AT-TAQWA') }}</span>
-                </div>
+                </a>
 
                 <div class="hidden md:flex items-center gap-8">
                     <a href="#features" class="text-sm font-medium hover:text-primary-600 transition-colors">Features</a>
@@ -69,7 +31,7 @@
 
                 <div class="flex items-center gap-4">
                     <div class="hidden sm:flex items-center gap-4">
-                        <a href="https://attaqwacooposg.com/app/login" class="text-sm font-medium hover:text-primary-600 transition-colors">Member Login</a>
+                        <a href="https://attaqwacooposg.com/app/" class="text-sm font-medium hover:text-primary-600 transition-colors">Member Login</a>
                         <a href="#download" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all">Get the App</a>
                     </div>
                     <button id="mobile-menu-button" class="md:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
@@ -380,7 +342,7 @@
                             </div>
                         </a>
                         <a href="#" class="group bg-white text-slate-900 px-6 py-4 rounded-2xl flex items-center gap-3 hover:bg-primary-50 transition-all">
-                            <i data-lucide="apple" class="w-8 h-8 fill-slate-900"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-apple fill-slate-900"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></svg>
                             <div class="text-left">
                                 <p class="text-[10px] uppercase font-bold text-slate-500 leading-none mb-1">Download on the</p>
                                 <p class="text-xl font-extrabold leading-none">App Store</p>
@@ -409,18 +371,24 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                 <div class="space-y-6">
-                    <div class="flex items-center gap-2">
-                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg') }}" alt="Logo" class="h-6 w-auto dark:hidden">
-                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg') }}" alt="Logo" class="h-6 w-auto hidden dark:block">
+                    <a href="{{ url('/') }}" class="flex items-center gap-2 group w-fit">
+                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg') }}" alt="Logo" class="h-6 w-auto dark:hidden transition-transform group-hover:scale-105">
+                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg') }}" alt="Logo" class="h-6 w-auto hidden dark:block transition-transform group-hover:scale-105">
                         <span class="font-bold text-lg uppercase tracking-tight">{{ config('brand.name', 'AT-TAQWA') }}</span>
-                    </div>
+                    </a>
                     <p class="text-slate-500 text-sm leading-relaxed">
                         Ethical financial services empowered by community and Sharia principles. Join us today.
                     </p>
                     <div class="flex gap-4">
-                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-colors border border-slate-100 dark:border-slate-800"><i data-lucide="facebook" class="w-5 h-5"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-colors border border-slate-100 dark:border-slate-800"><i data-lucide="twitter" class="w-5 h-5"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-colors border border-slate-100 dark:border-slate-800"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-colors border border-slate-100 dark:border-slate-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-colors border border-slate-100 dark:border-slate-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-twitter"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-colors border border-slate-100 dark:border-slate-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-linkedin"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+                        </a>
                     </div>
                 </div>
 
