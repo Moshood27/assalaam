@@ -25,6 +25,7 @@
 
                 <div class="hidden md:flex items-center gap-8">
                     <a href="#features" class="text-sm font-medium hover:text-primary-600 transition-colors">Features</a>
+                    <a href="#leadership" class="text-sm font-medium hover:text-primary-600 transition-colors">Leadership</a>
                     <a href="{{ url('/about-us') }}" class="text-sm font-medium hover:text-primary-600 transition-colors">About</a>
                     <a href="#download" class="text-sm font-medium hover:text-primary-600 transition-colors">App</a>
                 </div>
@@ -44,6 +45,7 @@
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-4">
             <a href="#features" class="block text-base font-medium text-slate-600 dark:text-slate-400">Features</a>
+            <a href="#leadership" class="block text-base font-medium text-slate-600 dark:text-slate-400">Leadership</a>
             <a href="{{ url('/about-us') }}" class="block text-base font-medium text-slate-600 dark:text-slate-400">About</a>
             <a href="#download" class="block text-base font-medium text-slate-600 dark:text-slate-400">App</a>
             <hr class="border-slate-100 dark:border-slate-800">
@@ -239,7 +241,7 @@
         </div>
     </section>
 
-    <!-- FAQ Section -->
+    <!-- Sharia Governance -->
     <section class="py-24 bg-slate-50 dark:bg-[#0d0d0d]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 sm:p-16 border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center gap-16">
@@ -283,8 +285,59 @@
         </div>
     </section>
 
+    <!-- Leadership Section -->
+    <section id="leadership" class="py-24 bg-white dark:bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs font-bold mb-6 border border-primary-200 dark:border-primary-800">
+                    <i data-lucide="users" class="w-3 h-3"></i>
+                    OUR LEADERSHIP
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-bold mb-6">Guided by <span class="text-primary-600">Visionary Leaders</span></h2>
+                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Our team is composed of dedicated professionals committed to ethical financial practices and community growth.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- President -->
+                <div class="group relative bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800 transition-all hover:-translate-y-2">
+                    <div class="aspect-[4/5] overflow-hidden">
+                        <img src="{{ asset('images/team/president.jpg') }}" alt="President" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    </div>
+                    <div class="p-8 text-center">
+                        <h4 class="text-xl font-bold mb-1">Kazeem Olabamiji</h4>
+                        <p class="text-primary-600 font-semibold text-sm">President</p>
+                    </div>
+                </div>
+
+                <!-- Treasurer -->
+                <div class="group relative bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800 transition-all hover:-translate-y-2">
+                    <div class="aspect-[4/5] overflow-hidden">
+                        <img src="{{ asset('images/team/treasurer.jpg') }}" alt="Treasurer" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    </div>
+                    <div class="p-8 text-center">
+                        <h4 class="text-xl font-bold mb-1">Aliyu Akeem Olaniyi</h4>
+                        <p class="text-primary-600 font-semibold text-sm">Treasurer</p>
+                    </div>
+                </div>
+
+                <!-- Chief Financial Secretary -->
+                <div class="group relative bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800 transition-all hover:-translate-y-2">
+                    <div class="aspect-[4/5] overflow-hidden">
+                        <img src="{{ asset('images/team/chief-fin-sec.jpg') }}" alt="Chief Financial Secretary" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    </div>
+                    <div class="p-8 text-center">
+                        <h4 class="text-xl font-bold mb-1">AbdulAzeez Kadr Oladimeji</h4>
+                        <p class="text-primary-600 font-semibold text-sm">Chief Financial Secretary</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- FAQ Section -->
-    <section class="py-24 bg-white dark:bg-slate-950">
+    <section class="py-24 bg-slate-50 dark:bg-[#0d0d0d]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div>
@@ -405,6 +458,7 @@
                 <div>
                     <h4 class="font-bold mb-6">Company</h4>
                     <ul class="space-y-4 text-sm text-slate-500">
+                        <li><a href="#leadership" class="hover:text-primary-600">Leadership</a></li>
                         <li><a href="{{ url('/about-us') }}" class="hover:text-primary-600">About Us</a></li>
                         <li><a href="{{ url('/privacy-policy') }}" class="hover:text-primary-600">Privacy Policy</a></li>
                         <li><a href="{{ url('/terms') }}" class="hover:text-primary-600">Terms of Service</a></li>
