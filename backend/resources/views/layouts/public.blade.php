@@ -50,7 +50,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <p class="text-sm text-slate-400">
-                    &copy; {{ date('Y') }} {{ config('brand.name', 'AT-TAQWA') }}. RC: 3449303
+                    &copy; {{ date('Y') }} {{ config('brand.name', 'AT-TAQWA') }}. RC: 9518505
                 </p>
                 <div class="flex items-center gap-6 text-sm">
                     <a href="{{ url('/about-us') }}" class="text-slate-500 hover:text-primary-600">About Us</a>

@@ -9,7 +9,7 @@
         <section>
             <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4">Our Identity</h2>
             <p>
-                <span class="font-bold text-primary-600 uppercase tracking-tight">AT-TAQWA OSOGBO ISLAMIC CICU LTD</span> (RC Number: 3449303) is a premier Islamic Cooperative Investment and Credit Union. We operate on the principles of Sharia, providing a viable alternative to conventional interest-based financial systems.
+                <span class="font-bold text-primary-600 uppercase tracking-tight">AT-TAQWA OSOGBO ISLAMIC CICU LTD</span> (RC Number: 9518505) is a premier Islamic Cooperative Investment and Credit Union. We operate on the principles of Sharia, providing a viable alternative to conventional interest-based financial systems.
             </p>
         </section>
 

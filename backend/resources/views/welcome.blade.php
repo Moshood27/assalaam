@@ -363,11 +363,11 @@
                     <div class="relative z-10">
                         <h3 class="text-3xl font-bold mb-6">Have more questions?</h3>
                         <p class="text-primary-100 mb-8">Our support team is ready to assist you with any inquiries about our services, membership, or Sharia compliance.</p>
-                        <form class="space-y-4">
-                            <input type="text" placeholder="Your Name" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
-                            <input type="email" placeholder="Email Address" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
-                            <textarea placeholder="How can we help?" rows="4" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"></textarea>
-                            <button type="button" class="w-full bg-white text-primary-600 font-bold py-4 rounded-xl hover:bg-primary-50 transition-all">Send Message</button>
+                        <form action="mailto:attaqwaosogbo@gmail.com" method="POST" enctype="text/plain" class="space-y-4">
+                            <input type="text" name="name" placeholder="Your Name" required class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
+                            <input type="email" name="email" placeholder="Email Address" required class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
+                            <textarea name="message" placeholder="How can we help?" rows="4" required class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"></textarea>
+                            <button type="submit" class="w-full bg-white text-primary-600 font-bold py-4 rounded-xl hover:bg-primary-50 transition-all">Send Message</button>
                         </form>
                     </div>
                 </div>
@@ -483,7 +483,7 @@
 
             <div class="pt-12 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6">
                 <p class="text-sm text-slate-400">
-                    &copy; {{ date('Y') }} {{ config('brand.name', 'AT-TAQWA') }}. RC: 3449303
+                    &copy; {{ date('Y') }} {{ config('brand.name', 'AT-TAQWA') }}. RC: 9518505
                 </p>
                 <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
                     <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-emerald-500"></i> Secured</span>
