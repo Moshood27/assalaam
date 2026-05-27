@@ -3,6 +3,7 @@ import { checkAppStatus } from '../services/appStatus'
 import { useAppStatusStore } from '../stores/appStatus'
 
 // Views (lazy-loaded)
+const Landing = () => import('../views/Landing.vue')
 const Login = () => import('../views/Login.vue')
 import Dashboard from '../views/Dashboard.vue'
 const MakePayment = () => import('../views/MakePayment.vue')
@@ -66,7 +67,7 @@ const AdminVendors = () => import('../views/admin/AdminVendors.vue')
 const AdminTakaful = () => import('../views/admin/AdminTakaful.vue')
 
 const routes = [
-  { path: '/', redirect: '/dashboard' },
+  { path: '/', name: 'landing', component: Landing, meta: { guest: true, skipOnboarding: true } },
   { path: '/onboarding', name: 'onboarding', component: () => import('../views/Onboarding.vue'), meta: { guest: true, skipOnboarding: true } },
   { path: '/login', name: 'login', component: Login, meta: { guest: true } },
   { path: '/forgot', name: 'forgot', component: () => import('../views/ForgotPassword.vue'), meta: { guest: true, skipOnboarding: true } },
