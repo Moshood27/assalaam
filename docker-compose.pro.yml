@@ -12,6 +12,7 @@ services:
       - gateway-network
     depends_on:
       - app
+      - reverb
 
   app:
     build:
@@ -24,6 +25,7 @@ services:
       - ./backend:/var/www/html
     networks:
       - assalam-network
+      - gateway-network
     depends_on:
       mysql:
         condition: service_healthy
