@@ -1,5 +1,4 @@
 <template>
-<template>
   <div class="min-h-screen bg-slate-50 pb-32">
     <AppHeader title="Profile" :showBack="true">
       <template #right>
