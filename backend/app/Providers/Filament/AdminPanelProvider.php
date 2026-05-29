@@ -41,6 +41,23 @@ use App\Filament\Resources\UserResource;
 use App\Filament\Resources\UtilityTransactionResource;
 use App\Filament\Resources\WalletTransactionResource;
 use App\Filament\Resources\WithdrawalRequestResource;
+use App\Filament\Resources\LedgerJournalResource;
+use App\Filament\Resources\LoanRequestResource;
+use App\Filament\Resources\ProjectProposalResource;
+use App\Filament\Resources\AttendanceExcuseResource;
+use App\Filament\Resources\SavingsGroupResource;
+use App\Filament\Resources\MeetingResource;
+use App\Filament\Resources\PendingApprovalResource;
+use App\Filament\Resources\FineResource;
+use App\Filament\Resources\VendorResource;
+use App\Filament\Resources\ChatCannedResponseResource;
+use App\Filament\Resources\ChatMessageResource;
+use App\Filament\Resources\LoanPenaltyResource;
+use App\Filament\Resources\UserBadgeResource;
+use App\Filament\Resources\LedgerAccountResource;
+use App\Filament\Resources\FeatureToggleResource;
+use App\Filament\Resources\MigrationDiscrepancyResource;
+use App\Filament\Resources\NursingMotherResource;
 use App\Filament\Widgets\FinanceSnapshot;
 use App\Filament\Widgets\MemberGrowthChart;
 use App\Filament\Widgets\RecentPayouts;
@@ -125,6 +142,23 @@ class AdminPanelProvider extends PanelProvider
                 ChatRoomResource::class,
                 ChatAuditResource::class,
                 StaffResource::class,
+                LedgerJournalResource::class,
+                LoanRequestResource::class,
+                ProjectProposalResource::class,
+                AttendanceExcuseResource::class,
+                SavingsGroupResource::class,
+                MeetingResource::class,
+                PendingApprovalResource::class,
+                FineResource::class,
+                VendorResource::class,
+                ChatCannedResponseResource::class,
+                ChatMessageResource::class,
+                LoanPenaltyResource::class,
+                UserBadgeResource::class,
+                LedgerAccountResource::class,
+                FeatureToggleResource::class,
+                MigrationDiscrepancyResource::class,
+                NursingMotherResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

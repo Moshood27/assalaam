@@ -2,9 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Branch;
 use App\Models\User;
+use App\Models\WhitelistedIp;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 
@@ -54,6 +57,18 @@ class CreateSuperAdmin extends Command
             return 1;
         }
 
+        // Ensure a branch exists
+        try {
+            $branch = Branch::first();
+            if (!$branch) {
+                $branch = Branch::create(['name' => 'Head Office']);
+                $this->info('Created default "Head Office" branch.');
+            }
+        } catch (\Throwable $e) {
+            $this->error("Error ensuring branch existence: " . $e->getMessage());
+            return 1;
+        }
+
         $user = User::where('email', $email)->first();
 
         if ($user) {
@@ -68,6 +83,8 @@ class CreateSuperAdmin extends Command
                 'email' => $email,
                 'password' => Hash::make($password),
                 'email_verified_at' => now(),
+                'branch_id' => $branch->id,
+                'membership_number' => User::generateMembershipNumber($branch->id),
             ]);
             $this->info("User {$email} created.");
         }
@@ -78,10 +95,26 @@ class CreateSuperAdmin extends Command
         ]);
 
         // Ensure super_admin role exists
-        $role = Role::findOrCreate('super_admin', 'web');
-        $user->assignRole($role);
+        try {
+            $role = Role::findOrCreate('super_admin', 'web');
+            $user->assignRole($role);
+        } catch (\Throwable $e) {
+            $this->error("Error assigning super_admin role: " . $e->getMessage());
+            $this->info("User was created/updated but role assignment failed. You may need to run 'php artisan shield:install' first.");
+        }
 
         $this->info("User {$email} is now a Super Admin.");
+
+        if (Schema::hasTable('whitelisted_ips') && $this->confirm('Do you want to whitelist an IP address for admin access?')) {
+            $ip = $this->ask('Enter IP address (leave empty to skip)');
+            if ($ip) {
+                WhitelistedIp::updateOrCreate(
+                    ['ip_address' => $ip],
+                    ['label' => "Super Admin: {$name}", 'is_active' => true]
+                );
+                $this->info("IP address {$ip} whitelisted.");
+            }
+        }
 
         return 0;
     }

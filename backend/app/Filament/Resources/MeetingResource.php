@@ -206,4 +206,24 @@ class MeetingResource extends Resource
             'edit' => Pages\EditMeeting::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_meeting');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_meeting');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_meeting');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_meeting');
+    }
 }
