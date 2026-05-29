@@ -22,7 +22,7 @@ Project layout (relevant folders)
 - frontend/ â€” Vue 3 + Vite app (Capacitor for mobile)
 - capacitor.config.json â€” points to frontend/dist and native project paths
 - docker-compose.pro.yml â€” Nginx + PHPâ€‘FPM + MySQL production-ish stack
-- docker/nginx/conf.d/app.conf â€” Nginx routes web app from /app/
+- docker/nginx/conf.d/default.conf — Nginx routes web app from /app/
 
 1) Local development
 Backend (Laravel Sail wrappers from repo root)
@@ -43,7 +43,7 @@ Notes
 - Vite proxy reads VITE_PROXY_TARGET (default http://localhost:8000). If your Laravel (Sail) is on http://localhost:8080, set VITE_PROXY_TARGET accordingly as shown above.
 
 2) Web build and deploy (served under /app/)
-The web app is designed to be served from /app/ (see nginx app.conf). The Vite config already uses base '/app/' for normal builds.
+The web app is designed to be served from /app/ (see nginx default.conf). The Vite config already uses base '/app/' for normal builds.
 
 Build web assets
 - cd frontend
@@ -56,7 +56,7 @@ Run with Docker (nginx + php-fpm + mysql)
 
 What happens
 - Nginx serves the SPA from /app/ using the volume mapping: ./frontend/dist â†’ /var/www/html/public/app
-- Laravel API is available at the root (/) and /api routes. See docker/nginx/conf.d/app.conf for details.
+- Laravel API is available at the root (/) and /api routes. See docker/nginx/conf.d/default.conf for details.
 - Visit http://localhost (or your server host). The web app is under http://HOST/app/
 
 Updating the deployed web app
