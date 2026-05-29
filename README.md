@@ -90,7 +90,7 @@ Here is how to structure your Laravel + Vue project to match that specific app.
         <input v-model="form.password" type="password" class="w-full p-4 bg-gray-100 rounded-xl border-none mt-2" />
       </div>
 
-      <button @click="handleLogin" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg">
+      <button @click="handleLogin" class="w-full bg-teal-600 text-white py-4 rounded-xl font-bold text-lg">
         Login
       </button>
     </div>
@@ -144,12 +144,12 @@ window.location.href = response.data.url;
    Paystack sends a signal to your-api.com/api/paystack/webhook.
    Laravel receives the signal, finds the user, and adds the money to the correct Scheme (Savings, Building, etc.).
    Do you want the code for the Laravel Webhook to handle the successful payments?
-   Model 5:36â€¯PM
+   Model 5:36 PM
    ThinkingThoughts
    Expand to view model thoughts
 
 chevron_right
-Model 12:58â€¯PM
+Model 12:58 PM
 ThinkingThoughts
 Expand to view model thoughts
 
@@ -261,8 +261,8 @@ return response()->json(Branch::all());
         <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="Enter your password"
           class="w-full bg-slate-100 border-2 border-transparent focus:border-green-400 p-4 rounded-2xl outline-none" />
         <button @click="showPassword = !showPassword" class="absolute right-4 top-11 text-gray-400">
-          <span v-if="showPassword">ðŸ™ˆ</span>
-          <span v-else>ðŸ‘ï¸</span>
+          <span v-if="showPassword">🙈</span>
+          <span v-else>👁️</span>
         </button>
       </div>
 
@@ -321,7 +321,7 @@ const handleLogin = async () => {
    The "Login" button includes a CSS spinner for that "C" animation effect.
    Next Step:
    After logging in, you will need the Dashboard (Wallet Card). Should we proceed to building the dashboard with the balance-hiding "Eye" icon?
-   Model 1:00â€¯PM
+   Model 1:00 PM
    ThinkingThoughts
    Expand to view model thoughts
 
@@ -378,7 +378,7 @@ Here is how to build it.
           <h2 class="text-sm font-bold text-slate-800 uppercase">{{ dashboardData.full_name }}</h2>
         </div>
       </div>
-      <button class="bg-slate-100 p-2 rounded-full text-xl">ðŸ””</button>
+      <button class="bg-slate-100 p-2 rounded-full text-xl">🔔</button>
     </header>
 
     <!-- Balance Card -->
@@ -390,13 +390,13 @@ Here is how to build it.
         <div class="flex items-center gap-2 mb-2 relative z-10">
           <p class="text-green-100 text-sm font-medium">Available Balance</p>
           <button @click="hideBalance = !hideBalance" class="text-lg opacity-80">
-            <span v-if="hideBalance">ðŸ‘ï¸</span>
-            <span v-else>ðŸ™ˆ</span>
+            <span v-if="hideBalance">👁️</span>
+            <span v-else>🙈</span>
           </button>
         </div>
 
         <h1 class="text-4xl font-bold relative z-10 tracking-tight">
-          â‚¦ {{ hideBalance ? '***,***.**' : formatMoney(dashboardData.balance) }}
+          ₦ {{ hideBalance ? '***,***.**' : formatMoney(dashboardData.balance) }}
         </h1>
 
         <div class="mt-8 flex justify-between items-center relative z-10">
@@ -411,11 +411,11 @@ Here is how to build it.
     <!-- Quick Action Grid -->
     <div class="px-4 grid grid-cols-2 gap-4 mt-2">
       <button @click="$router.push('/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">ðŸ’³</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">💳</div>
         <span class="text-sm font-bold text-slate-700">Make Payment</span>
       </button>
       <button @click="$router.push('/loans')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">ðŸ“Š</div>
+        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">📊</div>
         <span class="text-sm font-bold text-slate-700">Loan Records</span>
       </button>
     </div>
@@ -433,14 +433,14 @@ Here is how to build it.
           <div class="flex items-center gap-3">
             <div :class="tx.status === 'success' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'" 
               class="w-10 h-10 rounded-full flex items-center justify-center text-lg">
-              {{ tx.status === 'success' ? 'âœ“' : 'âŒ›' }}
+              {{ tx.status === 'success' ? '✓' : '⌛' }}
             </div>
             <div>
               <p class="font-bold text-slate-800 text-sm">{{ tx.scheme.name }}</p>
               <p class="text-[10px] text-gray-500 uppercase font-medium">{{ formatDate(tx.created_at) }}</p>
             </div>
           </div>
-          <p class="font-bold text-slate-800">â‚¦ {{ formatMoney(tx.amount) }}</p>
+          <p class="font-bold text-slate-800">₦ {{ formatMoney(tx.amount) }}</p>
         </div>
       </div>
       
@@ -453,15 +453,15 @@ Here is how to build it.
     <!-- Mobile Bottom Navigation (Prototype) -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
       <button class="text-green-700 flex flex-col items-center gap-1">
-        <span class="text-xl">ðŸ </span>
+        <span class="text-xl">🏠</span>
         <span class="text-[10px] font-bold">Home</span>
       </button>
       <button class="text-slate-400 flex flex-col items-center gap-1">
-        <span class="text-xl">ðŸ“…</span>
+        <span class="text-xl">📅</span>
         <span class="text-[10px] font-bold">Passbook</span>
       </button>
       <button class="text-slate-400 flex flex-col items-center gap-1">
-        <span class="text-xl">âš™ï¸</span>
+        <span class="text-xl">⚙️</span>
         <span class="text-[10px] font-bold">Settings</span>
       </button>
     </nav>
@@ -498,7 +498,7 @@ onMounted(async () => {
    Transaction Badges: It automatically checks the tx.status from Laravel and changes the icon from a checkmark (green) to an hourglass (yellow).
    Next Step:
    The video showed a very specific "Make Payment" screen where you can add multiple amounts to different schemes (Savings, Shares, etc.). Should we build that Multi-Scheme Payment Form next?
-   Model 1:31â€¯PM
+   Model 1:31 PM
    ThinkingThoughts
    Expand to view model thoughts
 
@@ -551,7 +551,7 @@ Here is how to implement this Multi-Scheme Payment Form.
   <div class="min-h-screen bg-slate-50 pb-20">
     <!-- Header -->
     <header class="p-4 bg-white border-b flex items-center gap-4">
-      <button @click="$router.back()" class="text-2xl">â¬…ï¸</button>
+      <button @click="$router.back()" class="text-2xl">⬅️</button>
       <h1 class="text-xl font-bold">Make Payment</h1>
     </header>
 
@@ -559,7 +559,7 @@ Here is how to implement this Multi-Scheme Payment Form.
       <!-- Input Section Card -->
       <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
         <p class="text-xs text-red-500 font-bold mb-4 uppercase">
-          âš ï¸ Click the "+" button to share your money across multiple schemes
+          ⚠️ Click the "+" button to share your money across multiple schemes
         </p>
 
         <div class="flex gap-2">
@@ -598,8 +598,8 @@ Here is how to implement this Multi-Scheme Payment Form.
             <p class="text-xs text-gray-500">Scheduled Payment</p>
           </div>
           <div class="flex items-center gap-4">
-            <p class="font-bold text-slate-800">â‚¦ {{ item.amount.toLocaleString() }}</p>
-            <button @click="removeFromList(index)" class="text-red-400 text-sm">âœ•</button>
+            <p class="font-bold text-slate-800">₦ {{ item.amount.toLocaleString() }}</p>
+            <button @click="removeFromList(index)" class="text-red-400 text-sm">✕</button>
           </div>
         </div>
       </div>
@@ -612,7 +612,7 @@ Here is how to implement this Multi-Scheme Payment Form.
     <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t">
       <div class="flex justify-between items-center mb-4 px-2">
         <span class="text-gray-500 font-bold uppercase text-xs tracking-widest">Total to Transfer</span>
-        <span class="text-2xl font-black text-slate-900">â‚¦ {{ totalAmount.toLocaleString() }}</span>
+        <span class="text-2xl font-black text-slate-900">₦ {{ totalAmount.toLocaleString() }}</span>
       </div>
       <button @click="initiatePayment" :disabled="paymentList.length === 0"
         class="w-full bg-green-700 disabled:bg-gray-300 text-white py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all">
@@ -682,12 +682,12 @@ onMounted(async () => {
    Next Step:
    We have the dashboard and the payment system. The final big feature from the video is the Financial Passbook (The Grid) that shows payments across months (Jan, Feb, Mar, etc.).
    Should we build the Passbook Matrix next?
-   Model 1:33â€¯PM
+   Model 1:33 PM
    ThinkingThoughts
    Expand to view model thoughts
 
 chevron_right
-The Financial Passbook (or Financial Sheet) is the most complex part of the cooperative app. It provides a "matrix" view: Rows are your schemes (Savings, Shares, etc.), and Columns are the months of the year (Janâ€“Dec).
+The Financial Passbook (or Financial Sheet) is the most complex part of the cooperative app. It provides a "matrix" view: Rows are your schemes (Savings, Shares, etc.), and Columns are the months of the year (Jan–Dec).
 Here is how to build this grid logic.
 1. Backend: The Matrix Logic
    We need to group all successful contributions by Scheme and Month for a specific year.
@@ -752,7 +752,7 @@ Here is how to build this grid logic.
       <!-- Summary Mini-Card -->
       <div class="bg-blue-50 p-3 rounded-xl flex justify-between items-center">
         <span class="text-xs font-bold text-blue-800 uppercase">Yearly Cumulative</span>
-        <span class="text-lg font-black text-blue-900">â‚¦ {{ grandTotal.toLocaleString() }}</span>
+        <span class="text-lg font-black text-blue-900">₦ {{ grandTotal.toLocaleString() }}</span>
       </div>
     </header>
 
@@ -798,15 +798,15 @@ Here is how to build this grid logic.
     <!-- Re-using Bottom Nav -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
       <button @click="$router.push('/dashboard')" class="text-slate-400 flex flex-col items-center gap-1">
-        <span class="text-xl">ðŸ </span>
+        <span class="text-xl">🏠</span>
         <span class="text-[10px] font-bold">Home</span>
       </button>
       <button class="text-green-700 flex flex-col items-center gap-1">
-        <span class="text-xl">ðŸ“…</span>
+        <span class="text-xl">📅</span>
         <span class="text-[10px] font-bold">Passbook</span>
       </button>
       <button class="text-slate-400 flex flex-col items-center gap-1">
-        <span class="text-xl">âš™ï¸</span>
+        <span class="text-xl">⚙️</span>
         <span class="text-[10px] font-bold">Settings</span>
       </button>
     </nav>
@@ -850,17 +850,17 @@ onMounted(fetchPassbook);
    Real-Time Year Filtering: Changing the year in the dropdown triggers a new API call to refresh the entire grid.
    Mobile Styling: Smaller font sizes (text-[11px]) and tracking are used so the table fits as many months as possible on the screen at once.
    Summary of the Prototype Accomplished:
-   âœ… Branch-based Login with membership IDs.
-   âœ… Modern Dashboard with Balance card and Privacy toggle.
-   âœ… Multi-Scheme Payment Form with a "+" list builder.
-   âœ… Financial Passbook Grid with horizontal scrolling.
+   ✅ Branch-based Login with membership IDs.
+   ✅ Modern Dashboard with Balance card and Privacy toggle.
+   ✅ Multi-Scheme Payment Form with a "+" list builder.
+   ✅ Financial Passbook Grid with horizontal scrolling.
    Final Step for You:
    To make this "Native" for a phone, you would wrap this in Capacitor.
    Run npm run build.
    Run npx cap sync.
    Open the project in Android Studio or Xcode to generate the .apk or .app file.
    Would you like instructions on how to set up the Paystack Webhook to automate the balance updates when someone makes a payment?
-   Model 1:56â€¯PM
+   Model 1:56 PM
    ThinkingThoughts
    Expand to view model thoughts
 
@@ -945,14 +945,14 @@ $secretKey = config('services.paystack.secret_key'); // Set this in .env
    PAYSTACK_PUBLIC_KEY=pk_test_xxxxxx
    PAYSTACK_SECRET_KEY=sk_test_xxxxxx
 4. How the Flow Works (Summary)
-   Vue App: User selects 3 schemes (Savings, Shares, Takaful) totaling â‚¦15,000.
+   Vue App: User selects 3 schemes (Savings, Shares, Takaful) totaling ₦15,000.
    Laravel API: Creates 3 rows in the contributions table, all with status = pending and reference = COOP_123.
-   Paystack Checkout: The user pays â‚¦15,000 via card or bank transfer.
+   Paystack Checkout: The user pays ₦15,000 via card or bank transfer.
    Paystack Webhook: Paystack's server sends a background message to your Laravel server saying "Payment COOP_123 was successful."
    Laravel Logic:
    Finds all 3 rows with reference COOP_123.
    Changes their status to success.
-   Adds â‚¦15,000 to the user's total balance.
+   Adds ₦15,000 to the user's total balance.
    Vue App: Next time the user refreshes the Dashboard or Passbook, their balance is updated and the "Checkmark" appears in their history.
 5. Testing the Webhook
    Since your computer is likely running on localhost, Paystack cannot "see" your server to send the webhook. To test this during development, you should use a tool called Ngrok.
@@ -968,7 +968,7 @@ $secretKey = config('services.paystack.secret_key'); // Set this in .env
    Month-by-Month Passbook (Transparency)
    Automated Webhooks (Reliability)
    Is there any other specific feature from the videos (like Loans or PDF exports) that you would like to tackle?
-   Model 1:58â€¯PM
+   Model 1:58 PM
    ThinkingThoughts
    Expand to view model thoughts
 
@@ -1022,7 +1022,7 @@ In the video, the Loan Card is highly detailed, showing "Loan Amount," "Total In
     <div class="p-5 grid grid-cols-2 gap-y-4 gap-x-2">
       <div>
         <p class="text-[10px] text-slate-400 font-bold uppercase">Loan Amount</p>
-        <p class="font-black text-slate-800 tracking-tighter">â‚¦ {{ loan.amount.toLocaleString() }}</p>
+        <p class="font-black text-slate-800 tracking-tighter">₦ {{ loan.amount.toLocaleString() }}</p>
       </div>
       <div>
         <p class="text-[10px] text-slate-400 font-bold uppercase">Total Installments</p>
@@ -1034,15 +1034,15 @@ In the video, the Loan Card is highly detailed, showing "Loan Amount," "Total In
       </div>
       <div>
         <p class="text-[10px] text-slate-400 font-bold uppercase">Per Installment</p>
-        <p class="font-black text-slate-800">â‚¦ {{ loan.per_installment.toLocaleString() }}</p>
+        <p class="font-black text-slate-800">₦ {{ loan.per_installment.toLocaleString() }}</p>
       </div>
       <div>
         <p class="text-[10px] text-slate-400 font-bold uppercase">Paid Amount</p>
-        <p class="font-black text-green-600 text-lg">â‚¦ {{ loan.paid_amount.toLocaleString() }}</p>
+        <p class="font-black text-green-600 text-lg">₦ {{ loan.paid_amount.toLocaleString() }}</p>
       </div>
       <div>
         <p class="text-[10px] text-slate-400 font-bold uppercase text-right">Balance</p>
-        <p class="font-black text-red-600 text-lg text-right">â‚¦ {{ (loan.amount - loan.paid_amount).toLocaleString() }}</p>
+        <p class="font-black text-red-600 text-lg text-right">₦ {{ (loan.amount - loan.paid_amount).toLocaleString() }}</p>
       </div>
     </div>
 
@@ -1106,7 +1106,7 @@ Html
             <th>Date</th>
             <th>Scheme</th>
             <th>Reference</th>
-            <th>Amount (â‚¦)</th>
+            <th>Amount (₦)</th>
         </tr>
     </thead>
     <tbody>
@@ -1141,7 +1141,7 @@ You have built a complete Cooperative Fintech App. To turn this into a productio
 Production Deployment: Deploy the Laravel API to a server (Forge/DigitalOcean).
 App Stores: Use Capacitor to wrap the Vue code. Install the Android Studio SDK, build the .aab file, and upload it to the Google Play Store.
 You are now ready to launch the prototype. Do you have any final technical questions on deployment?
-Model 2:21â€¯PM
+Model 2:21 PM
 ThinkingThoughts
 Expand to view model thoughts
 
@@ -1163,7 +1163,7 @@ Part 1: Summary of Key Features (The "Video Look")
    Payment Gateway: Integration with Paystack or Flutterwave using background Webhooks for 100% payment reliability.
 4. The "Financial Sheet" (Passbook)
    Horizontal Matrix Grid: A complex table showing Schemes (Rows) vs. Months (Columns).
-   Sticky Columns: Keeping the Scheme name visible while swiping through the months (Janâ€“Dec).
+   Sticky Columns: Keeping the Scheme name visible while swiping through the months (Jan–Dec).
    Yearly Filter: Capability to switch between different financial years.
 5. Loan Tracking
    Real-time Amortization: Showing exactly what has been paid vs. the remaining balance.
@@ -1185,7 +1185,7 @@ Part 1: Summary of Key Features (The "Video Look")
       - Windows (WSL): bash backend/vendor/bin/sail compose up -d frontend
 
    URLs:
-   - Backend (Laravel): http://localhost:8080
+   - Backend (Laravel): http://localhost:8090
    - Frontend (Vue Vite): http://localhost:5174
    - Mailpit: http://localhost:8025
 
@@ -1195,7 +1195,7 @@ Part 1: Summary of Key Features (The "Video Look")
 
    - Set the API URL for mobile builds (since there is no proxy):
      - Create frontend/.env with:
-       VITE_API_URL=http://localhost:8080
+       VITE_API_URL=http://localhost:8090
      - On Android emulator, use 10.0.2.2 instead of localhost.
 
    - For live reload on device/emulator, also set:
@@ -1237,11 +1237,11 @@ Part 1: Summary of Key Features (The "Video Look")
    Fintech	Webhooks	Background automated balance updates
 
 
-# Shariah-Compliant Addendum: Complete, Interestâ€‘Free Cooperative App (Web + Mobile)
+# Shariah-Compliant Addendum: Complete, Interest‑Free Cooperative App (Web + Mobile)
 
-This addendum adapts the existing cooperative fintech blueprint to be fully Shariahâ€‘compliant for a Muslim community. It preserves all the good UX and reliability, while guaranteeing:
+This addendum adapts the existing cooperative fintech blueprint to be fully Shariah‑compliant for a Muslim community. It preserves all the good UX and reliability, while guaranteeing:
 - No riba (no interest or usury) on any loan or balance.
-- Transparent, ethical finance: Qard Hasan (benevolent, interestâ€‘free loans), optional permissible administrative fees at cost, late penalties routed to charity, and profitâ€‘sharing products where relevant.
+- Transparent, ethical finance: Qard Hasan (benevolent, interest‑free loans), optional permissible administrative fees at cost, late penalties routed to charity, and profit‑sharing products where relevant.
 - Strong governance: Shariah Board review, immutable audit logs, and charity ledger separation.
 
 Overview of What Changes vs. the Generic Prototype
@@ -1251,9 +1251,9 @@ Overview of What Changes vs. the Generic Prototype
 - Contracts and disclosure screens are added on the frontend for informed consent.
 
 1) Data Model Extensions (Laravel Migrations)
-Add the following migrations on top of the prototypeâ€™s schema to model Shariahâ€‘compliant logic clearly.
+Add the following migrations on top of the prototype’s schema to model Shariah‑compliant logic clearly.
 
-- Qard Hasan (interestâ€‘free loans)
+- Qard Hasan (interest‑free loans)
   PHP
   Schema::create('qard_hasans', function (Blueprint $table) {
       $table->id();
@@ -1293,7 +1293,7 @@ Add the following migrations on top of the prototypeâ€™s schema to model Sh
       $table->timestamps();
   });
 
-- Shariah Audit Logs (immutable intent; application-level appendâ€‘only)
+- Shariah Audit Logs (immutable intent; application-level append‑only)
   PHP
   Schema::create('shariah_audit_logs', function (Blueprint $table) {
       $table->id();
@@ -1309,7 +1309,7 @@ Policy Constraints to Enforce in Code
 - No interest columns or calculations are permitted anywhere.
 - Late penalty, if configured, posts a charity_ledger row and must NOT affect coop income.
 
-2) Backend API (Laravel) â€” Qard Hasan Controller
+2) Backend API (Laravel) — Qard Hasan Controller
 
 - Routes (api.php)
   PHP
@@ -1400,11 +1400,11 @@ Policy Constraints to Enforce in Code
 
 Note: If you implement late penalties for missed schedules, post them to charity_ledger and never to coop income.
 
-3) Frontend (Vue 3 + Tailwind) â€” Qard Hasan UI and Disclosures
+3) Frontend (Vue 3 + Tailwind) — Qard Hasan UI and Disclosures
 
-- Replace generic â€œLoanâ€ wording with â€œQard Hasan (Interestâ€‘Free)â€.
+- Replace generic “Loan” wording with “Qard Hasan (Interest‑Free)”.
 - Display a Disclosure box on creation and payment screens:
-  Text example: â€œThis is a Qard Hasan (benevolent loan) with 0% interest (no riba). Any optional administrative fee is only to cover costs and is capped per policy. If a late penalty applies, it will be donated to charity (sadaqah) and not treated as cooperative income.â€
+  Text example: “This is a Qard Hasan (benevolent loan) with 0% interest (no riba). Any optional administrative fee is only to cover costs and is capped per policy. If a late penalty applies, it will be donated to charity (sadaqah) and not treated as cooperative income.”
 
 - LoanCard adaptation
   Vue
@@ -1421,7 +1421,7 @@ Note: If you implement late penalties for missed schedules, post them to charity
       <div class="p-5 grid grid-cols-2 gap-y-4 gap-x-2">
         <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase">Principal</p>
-          <p class="font-black text-slate-800 tracking-tighter">â‚¦ {{ q.principal_amount.toLocaleString() }}</p>
+          <p class="font-black text-slate-800 tracking-tighter">₦ {{ q.principal_amount.toLocaleString() }}</p>
         </div>
         <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase">Installments</p>
@@ -1429,23 +1429,23 @@ Note: If you implement late penalties for missed schedules, post them to charity
         </div>
         <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase">Per Installment</p>
-          <p class="font-black text-slate-800">â‚¦ {{ q.per_installment.toLocaleString() }}</p>
+          <p class="font-black text-slate-800">₦ {{ q.per_installment.toLocaleString() }}</p>
         </div>
         <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase">Admin Fee (Total)</p>
-          <p class="font-black text-slate-800">â‚¦ {{ (q.admin_fee_flat + (q.principal_amount * (q.admin_fee_pct/100))).toFixed(2) }}</p>
+          <p class="font-black text-slate-800">₦ {{ (q.admin_fee_flat + (q.principal_amount * (q.admin_fee_pct/100))).toFixed(2) }}</p>
         </div>
         <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase">Paid</p>
-          <p class="font-black text-green-600 text-lg">â‚¦ {{ q.paid_amount.toLocaleString() }}</p>
+          <p class="font-black text-green-600 text-lg">₦ {{ q.paid_amount.toLocaleString() }}</p>
         </div>
         <div>
           <p class="text-[10px] text-slate-400 font-bold uppercase text-right">Balance</p>
-          <p class="font-black text-red-600 text-lg text-right">â‚¦ {{ (q.principal_amount + q.admin_fee_flat + (q.principal_amount * (q.admin_fee_pct/100)) - q.paid_amount).toFixed(2) }}</p>
+          <p class="font-black text-red-600 text-lg text-right">₦ {{ (q.principal_amount + q.admin_fee_flat + (q.principal_amount * (q.admin_fee_pct/100)) - q.paid_amount).toFixed(2) }}</p>
         </div>
       </div>
       <div class="px-5 pb-2 text-xs text-slate-500">
-        <p>Qard Hasan is interestâ€‘free. Any late penalty is donated to charity (not coop income).</p>
+        <p>Qard Hasan is interest‑free. Any late penalty is donated to charity (not coop income).</p>
       </div>
       <div class="p-4 pt-0 flex gap-3">
         <button class="flex-grow bg-slate-100 text-slate-700 py-3 rounded-2xl font-bold text-xs uppercase">Details</button>
@@ -1461,11 +1461,11 @@ Note: If you implement late penalties for missed schedules, post them to charity
 
 - Optional Modules for Community Giving
   - Toggle to add Sadaqah during checkout.
-  - Zakat calculator (separate feature) â€” not tied to loan balances.
+  - Zakat calculator (separate feature) — not tied to loan balances.
 
 4) Reliability and Compliance Operations
 - Shariah Board: Maintain a simple table of board members and policy caps for admin_fee_pct and late penalties.
-- Appendâ€‘only Audit: shariah_audit_logs must be appendâ€‘only at the application layer. Do not expose update/delete in admin UI.
+- Append‑only Audit: shariah_audit_logs must be append‑only at the application layer. Do not expose update/delete in admin UI.
 - Charity Disbursement: Admin UI should enable exporting charity_ledger rows as CSV/PDF and marking disbursement details; funds never mingle with operating income.
 
 5) Mobile and Web Builds (Capacitor + Vite + Laravel)
@@ -1475,8 +1475,8 @@ Web (Local Dev)
 - Frontend: cd frontend; npm i; npm run dev
 
 Web (Production)
-- Backend: Deploy Laravel 11 with PHPâ€‘FPM + Nginx, MySQL/Postgres, Redis; enable HTTPS; run migrations; set APP_KEY; configure Paystack/Flutterwave webhooks.
-- Frontend: npm run build; serve dist/ via Nginx or behind the Laravel appâ€™s public/ (as a separate static site or singleâ€‘page app).
+- Backend: Deploy Laravel 11 with PHP‑FPM + Nginx, MySQL/Postgres, Redis; enable HTTPS; run migrations; set APP_KEY; configure Paystack/Flutterwave webhooks.
+- Frontend: npm run build; serve dist/ via Nginx or behind the Laravel app’s public/ (as a separate static site or single‑page app).
 
 Mobile (Android/iOS)
 - Prereq: Capacitor deps already present.
@@ -1493,18 +1493,18 @@ Mobile (Android/iOS)
 - Configure environment: point API base URL to production HTTPS for release builds.
 
 6) Security & Governance Checklist
-- Auth: Laravel Sanctum tokens for mobile; shortâ€‘lived tokens; device binding if needed.
+- Auth: Laravel Sanctum tokens for mobile; short‑lived tokens; device binding if needed.
 - HTTPS everywhere: Webhooks require HTTPS in production.
-- Input validation: Enforce zero interest and admin fee caps serverâ€‘side.
-- Logging: Audit all balanceâ€‘affecting events (create/repay qard, charity postings).
+- Input validation: Enforce zero interest and admin fee caps server‑side.
+- Logging: Audit all balance‑affecting events (create/repay qard, charity postings).
 - Backups: Daily DB snapshots; secure access to charity and audit logs.
 
-7) Roadmap of Shariahâ€‘Compliant Features
+7) Roadmap of Shariah‑Compliant Features
 - Phase 1: Qard Hasan + Contributions + Passbook + Webhooks (current document covers this)
-- Phase 2: Profitâ€‘sharing savings (Mudarabah/Musharakah) â€” dividends via â€œprofit_distributionsâ€ tables and statements, not interest.
-- Phase 3: Community marketplace classifieds with escrow (Shariahâ€‘reviewed) â€” optional.
+- Phase 2: Profit‑sharing savings (Mudarabah/Musharakah) — dividends via “profit_distributions” tables and statements, not interest.
+- Phase 3: Community marketplace classifieds with escrow (Shariah‑reviewed) — optional.
 
-By following this addendum, the cooperative remains fully interestâ€‘free while delivering a modern, highâ€‘quality web and mobile experience aligned with Islamic finance principles.
+By following this addendum, the cooperative remains fully interest‑free while delivering a modern, high‑quality web and mobile experience aligned with Islamic finance principles.
 
 
 
@@ -1528,12 +1528,12 @@ Migrations:
 - Run: ./vendor/bin/sail artisan migrate (or php artisan migrate) to create tables/columns.
 
 API Endpoints (auth required unless stated otherwise):
-- POST /api/virtual-account/assign â†’ Creates Paystack customer if needed and assigns DVA. Optional body: { preferred_bank: "wema-bank" | "titan-paystack", phone: "..." }
-- GET  /api/virtual-account       â†’ Returns assigned virtual account details.
-- GET  /api/wallet                â†’ Returns balance, virtual account info, and 10 recent transactions.
-- GET  /api/wallet/transactions   â†’ Paginated wallet transactions. Query: ?page=1&per_page=15&type=credit|debit
-- POST /api/wallet/allocate       â†’ Allocates wallet to schemes. Body: { items: [{ scheme_id, amount }, ...] }
-- POST /api/webhooks/paystack     â†’ Public webhook, signature-verified.
+- POST /api/virtual-account/assign → Creates Paystack customer if needed and assigns DVA. Optional body: { preferred_bank: "wema-bank" | "titan-paystack", phone: "..." }
+- GET  /api/virtual-account       → Returns assigned virtual account details.
+- GET  /api/wallet                → Returns balance, virtual account info, and 10 recent transactions.
+- GET  /api/wallet/transactions   → Paginated wallet transactions. Query: ?page=1&per_page=15&type=credit|debit
+- POST /api/wallet/allocate       → Allocates wallet to schemes. Body: { items: [{ scheme_id, amount }, ...] }
+- POST /api/webhooks/paystack     → Public webhook, signature-verified.
 
 Behavior notes:
 - Paying by card via /initiate-payment creates pending scheme contributions and, on success, marks them as success (passbook). It does NOT credit the wallet to avoid double counting.
@@ -1554,7 +1554,7 @@ Prerequisites
 Steps
 1) Set your ngrok auth token
    - Edit backend/.env and set: NGROK_AUTHTOKEN=your-ngrok-token
-   - If backend/.env doesnâ€™t exist yet, copy from backend/.env.example first.
+   - If backend/.env doesn’t exist yet, copy from backend/.env.example first.
 
 2) Start Laravel and ngrok (from the backend directory)
    - docker compose up -d laravel.test
@@ -1565,19 +1565,19 @@ Steps
    - Copy the https public_url (e.g., https://abcd-1234.ngrok-free.app)
 
 4) Configure Paystack Webhook
-   - In your Paystack Dashboard â†’ Settings â†’ API â†’ Webhooks
+   - In your Paystack Dashboard → Settings → API → Webhooks
    - Set URL to: https://YOUR_NGROK_SUBDOMAIN.ngrok-free.app/api/webhooks/paystack
    - Save
 
 5) Test
-   - Make a test payment (via the appâ€™s Make Payment or Wallet Top-up)
+   - Make a test payment (via the app’s Make Payment or Wallet Top-up)
    - Observe deliveries in:
      - Ngrok inspector: http://localhost:4040
      - Laravel logs: docker compose logs -f laravel.test
 
 Notes
 - The webhook endpoint is already implemented at POST /api/webhooks/paystack and verifies X-Paystack-Signature using PAYSTACK_SECRET_KEY.
-- If you see â€œInvalid Signatureâ€, ensure youâ€™re using the correct Paystack secret (Test vs Live) for the mode youâ€™re testing in.
+- If you see “Invalid Signature”, ensure you’re using the correct Paystack secret (Test vs Live) for the mode you’re testing in.
 - Ngrok URLs change when the container restarts; update the webhook URL in Paystack accordingly. For a stable URL, use a reserved ngrok domain (paid feature) and adjust the ngrok command accordingly.
 
 
@@ -1602,7 +1602,7 @@ Setup (one-time per platform)
 Notes
 - Web builds gracefully hide biometric options.
 - On Android emulators without biometrics enrolled, enable biometrics/enroll in emulator settings.
-- The app does not delete biometric credentials on logout so users can use Quick Login next time. If you need to clear, remove the device credentials from system settings or implement a â€œForget biometrics on this deviceâ€ in Settings.
+- The app does not delete biometric credentials on logout so users can use Quick Login next time. If you need to clear, remove the device credentials from system settings or implement a “Forget biometrics on this device” in Settings.
 ## Documentation
 For detailed guides on specific modules, see:
 - [MIGRATION_STRATEGY.md](MIGRATION_STRATEGY.md) - How to migrate from paper/Excel to the digital platform.
@@ -1620,12 +1620,12 @@ For detailed guides on specific modules, see:
 This release adds automated BVN and face verification during member signup to eliminate ghost members and reduce loan fraud.
 
 - Flow (backend endpoints):
-  - POST /api/register/start â†’ returns token
-  - POST /api/register/upload â†’ upload passport (selfie), ID card, proof of address
-  - POST /api/register/send-otps â†’ email/SMS OTPs
-  - POST /api/register/verify-email â†’ verify email code
-  - POST /api/register/verify-sms â†’ verify SMS code
-  - POST /api/register/finalize â†’ now requires: token, bvn (11 digits). Performs BVN + face match before creating user.
+  - POST /api/register/start → returns token
+  - POST /api/register/upload → upload passport (selfie), ID card, proof of address
+  - POST /api/register/send-otps → email/SMS OTPs
+  - POST /api/register/verify-email → verify email code
+  - POST /api/register/verify-sms → verify SMS code
+  - POST /api/register/finalize → now requires: token, bvn (11 digits). Performs BVN + face match before creating user.
 
 - Providers:
   - mock (default): accepts even-ending BVNs, for local/dev.
