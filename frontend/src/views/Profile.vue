@@ -58,7 +58,7 @@
 
       <!-- No Results State -->
       <div v-if="visibleSections.length === 0" class="bg-white p-12 rounded-[2rem] border border-slate-100 text-center space-y-4">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-2xl">👤</div>
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-2xl">�â€Â</div>
         <div>
           <h3 class="font-bold text-slate-800">No results found</h3>
           <p class="text-xs text-slate-500 mt-1">We couldn't find any settings matching "{{ searchQuery }}"</p>
@@ -157,12 +157,12 @@
             <div class="flex flex-wrap gap-2">
               <div v-for="badge in profile.badges" :key="badge.id" 
                    class="flex items-center gap-2 bg-blue-50 border border-blue-100 px-3 py-2 rounded-xl group relative cursor-help">
-                <span class="text-lg" v-if="badge.type === 'consistency_savings_12'">📋...</span>
-                <span class="text-lg" v-else-if="badge.type === 'early_loan_repayment'">💰</span>
+                <span class="text-lg" v-if="badge.type === 'consistency_savings_12'">�â€œ...</span>
+                <span class="text-lg" v-else-if="badge.type === 'early_loan_repayment'">�Å¡â‚¬</span>
                 <span class="text-lg" v-else-if="badge.type === 'savings_milestone_100k'">💰</span>
-                <span class="text-lg" v-else-if="badge.type === 'vtu_power_user'">⚖️</span>
-                <span class="text-lg" v-else-if="badge.type === 'loan_master'">🔑</span>
-                <span class="text-lg" v-else>🔔 </span>
+                <span class="text-lg" v-else-if="badge.type === 'vtu_power_user'">⚖️Â¡</span>
+                <span class="text-lg" v-else-if="badge.type === 'loan_master'">�Å½â€œ</span>
+                <span class="text-lg" v-else>�Ââ€ </span>
                 <div class="min-w-0">
                   <p class="text-[10px] font-bold text-blue-800 leading-none">{{ badge.name }}</p>
                 </div>
@@ -220,7 +220,7 @@
       <div v-if="isSectionVisible('membership_data')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Membership Data</p>
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-2xl">📄</div>
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-2xl">�â€œâ€˜</div>
           <div class="flex-1">
             <h3 class="text-sm font-bold text-slate-800">My Enrolment Details</h3>
             <p class="text-xs text-slate-500">View your full membership data and download enrolment forms.</p>
@@ -476,7 +476,7 @@
             <input v-model="pinForm.current_password" type="password" class="mt-1 w-full border rounded-xl p-3" placeholder="Account password" />
             <p v-if="pinErrors.current_password" class="text-red-600 text-xs mt-1">{{ pinErrors.current_password }}</p>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase">New PIN (4 digits)</label>
               <input v-model="pinForm.new_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3" placeholder="••••" />
@@ -501,7 +501,7 @@
               </button>
             </div>
             <p v-if="resetSentTo" class="text-[11px] text-amber-700 mt-1">Code sent to: {{ resetSentTo }} (expires in ~10 minutes)</p>
-            <div class="grid grid-cols-3 gap-2 mt-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
               <div>
                 <label class="text-[10px] text-slate-500 font-bold uppercase">6‐digit Code</label>
                 <input v-model="resetForm.code" type="text" inputmode="numeric" pattern="\\d*" maxlength="6" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="123456" />
@@ -527,10 +527,10 @@
     <AppBottomNav />
     
     <!-- Nursing Mother Grace Modal -->
-    <div v-if="showNursingMotherModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+    <div v-if="showNursingMotherModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <div class="bg-white w-full max-w-sm rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in duration-300 my-auto">
         <div class="flex items-center gap-3 mb-6">
-           <div class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm">🛡️</div>
+           <div class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm">�Â¤Â±</div>
            <div>
              <h3 class="text-xl font-black text-slate-800 tracking-tight">Apply for Grace</h3>
              <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Nursing Mother</p>
