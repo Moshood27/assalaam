@@ -2,7 +2,7 @@
 
 This project uses Capacitor (v6) with a Vue frontend. Native platforms live under `frontend/android` and `frontend/ios`, while the Capacitor CLI and helper scripts are defined in the repository root `package.json`.
 
-Important: Most Capacitor commands should be run from the repo root unless explicitly noted. When you are inside `frontend/`, you can still run the root scripts using the `npm --prefix ..` pattern (examples below).
+Important: Most Capacitor commands should be run from the repo root unless explicitly noted. When you are inside `frontend/`, you can now run many of these scripts directly (they are proxied to the root in `frontend/package.json`).
 
 
 ## Project layout (relevant to build/sync)
@@ -37,7 +37,7 @@ From the repo root:
 4) Provide/generate app assets (icons & splash)
    - Place images at repo root: assets/icon.png (1024×1024), assets/splash.png (2732×2732)
    - Generate all platform assets from root: npm run cap:assets
-   - If you’re in frontend/: npm --prefix .. run cap:assets
+   - If you’re in frontend/: npm run cap:assets (proxied to root)
 
 Note: There’s an additional guide focused on asset generation in `frontend/GENERATE_ASSETS.md`.
 
@@ -59,11 +59,11 @@ Option A — Run everything from the repo root
 Option B — If you are already inside the frontend/ folder
 1) Build the web app
    - npm run build
-2) Sync from the repo root using prefix
-   - npm --prefix .. run cap:sync
-3) Open the native project from the repo root using prefix
-   - Android: npm --prefix .. run cap:open:android
-   - iOS (macOS): npm --prefix .. run cap:open:ios
+2) Sync from the frontend (proxied to root)
+   - npm run cap:sync
+3) Open the native project from the frontend (proxied to root)
+   - Android: npm run cap:open:android
+   - iOS (macOS): npm run cap:open:ios
 
 
 ## Quick reference: scripts
