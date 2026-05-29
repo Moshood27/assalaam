@@ -2,15 +2,15 @@
   <div class="min-h-screen bg-slate-50 pb-32">
     <AppHeader title="Loan Analysis" :showBack="true">
       <template #right>
-        <a :href="downloadUrl" target="_blank" class="p-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1">
+        <a :href="downloadUrl" target="_blank" class="p-2 text-xs font-bold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1">
           <span>Report</span>
-          <span class="text-[10px]">📥</span>
+          <span class="text-[10px]">Ã°Å¸â€œÂ¥</span>
         </a>
       </template>
     </AppHeader>
 
     <div class="container-app py-4 space-y-6">
-      <div v-if="loading" class="text-center text-slate-500 py-10">Loading analysis…</div>
+      <div v-if="loading" class="text-center text-slate-500 py-10">Loading analysisÃ¢â‚¬Â¦</div>
       <div v-else-if="error" class="card p-4 text-rose-700 bg-rose-50 border-rose-200">{{ error }}</div>
 
       <div v-else class="space-y-6">
@@ -35,15 +35,15 @@
               <div class="grid grid-cols-2 gap-4">
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Principal</p>
-                   <p class="text-sm font-bold text-slate-700">₦ {{ n(loan.principal_amount) }}</p>
+                   <p class="text-sm font-bold text-slate-700">Ã¢â€šÂ¦ {{ n(loan.principal_amount) }}</p>
                 </div>
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Paid</p>
-                   <p class="text-sm font-bold text-emerald-600">₦ {{ n(loan.paid_amount) }}</p>
+                   <p class="text-sm font-bold text-blue-600">Ã¢â€šÂ¦ {{ n(loan.paid_amount) }}</p>
                 </div>
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Remaining</p>
-                   <p class="text-sm font-bold text-rose-600">₦ {{ n(loan.remaining_principal) }}</p>
+                   <p class="text-sm font-bold text-rose-600">Ã¢â€šÂ¦ {{ n(loan.remaining_principal) }}</p>
                 </div>
                 <div v-if="loan.next_due_at">
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Next Due</p>
@@ -51,7 +51,7 @@
                 </div>
                 <div v-if="loan.next_installment_amount && loan.status === 'active'">
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Next Amount</p>
-                   <p class="text-sm font-bold text-amber-600">₦ {{ n(loan.next_installment_amount) }}</p>
+                   <p class="text-sm font-bold text-amber-600">Ã¢â€šÂ¦ {{ n(loan.next_installment_amount) }}</p>
                 </div>
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Interval</p>
@@ -63,7 +63,7 @@
                  <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Guarantors</p>
                  <div class="flex flex-wrap gap-1">
                    <span v-for="g in loan.guarantors" :key="g.id" class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full border border-slate-200">
-                     {{ g.name }} <span v-if="g.branch" class="text-[8px] opacity-75">• {{ g.branch.name }}</span>
+                     {{ g.name }} <span v-if="g.branch" class="text-[8px] opacity-75">Ã¢â‚¬Â¢ {{ g.branch.name }}</span>
                    </span>
                  </div>
               </div>
@@ -74,7 +74,7 @@
                   <span>{{ (loan.progress_pct || 0).toFixed(1) }}%</span>
                 </div>
                 <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div class="h-full bg-emerald-500 transition-all duration-500" :style="{ width: (loan.progress_pct || 0) + '%' }"></div>
+                  <div class="h-full bg-blue-500 transition-all duration-500" :style="{ width: (loan.progress_pct || 0) + '%' }"></div>
                 </div>
               </div>
             </div>
@@ -107,7 +107,7 @@
           </div>
           <div class="text-center mt-2">
             <p class="text-sm text-slate-500">
-              You have repaid <span class="font-bold text-emerald-600">{{ progressPct.toFixed(1) }}%</span> of your total borrowed principal.
+              You have repaid <span class="font-bold text-blue-600">{{ progressPct.toFixed(1) }}%</span> of your total borrowed principal.
             </p>
           </div>
         </div>
@@ -138,7 +138,7 @@ const n = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionD
 
 const getStatusClass = (status) => {
   switch (status) {
-    case 'active': return 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+    case 'active': return 'bg-blue-50 text-blue-700 border border-blue-100'
     case 'completed': return 'bg-blue-50 text-blue-700 border border-blue-100'
     case 'pending': return 'bg-amber-50 text-amber-700 border border-amber-100'
     case 'defaulted': return 'bg-rose-50 text-rose-700 border border-rose-100'
@@ -210,12 +210,12 @@ const trendChartOptions = computed(() => ({
   },
   yaxis: {
     labels: {
-      formatter: (val) => '₦' + Number(val).toLocaleString(),
+      formatter: (val) => 'Ã¢â€šÂ¦' + Number(val).toLocaleString(),
       style: { fontSize: '10px' }
     }
   },
   tooltip: {
-    y: { formatter: (val) => '₦' + n(val) }
+    y: { formatter: (val) => 'Ã¢â€šÂ¦' + n(val) }
   }
 }))
 
@@ -238,3 +238,5 @@ const statusChartOptions = computed(() => ({
   }
 }))
 </script>
+
+

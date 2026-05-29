@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-24">
     <header class="p-4 bg-white border-b flex items-center justify-between sticky top-0 z-10">
-      <h1 class="text-lg sm:text-xl font-bold text-slate-800">Admin • Products</h1>
+      <h1 class="text-lg sm:text-xl font-bold text-slate-800">Admin Ã¢â‚¬Â¢ Products</h1>
       <div class="flex items-center gap-2">
         <button class="text-sm font-bold text-slate-500" @click="$router.back()">Back</button>
       </div>
@@ -11,15 +11,15 @@
       <section class="card p-5">
         <div class="flex items-center justify-between mb-3">
           <h2 class="section-title">Manage Product Images</h2>
-          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Max 10MB</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-blue-700">Max 10MB</span>
         </div>
 
         <div class="flex items-center gap-2 mb-4">
-          <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search products…" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm w-full" />
-          <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold" @click="load(1)">Search</button>
+          <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search productsÃ¢â‚¬Â¦" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm w-full" />
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold" @click="load(1)">Search</button>
         </div>
 
-        <div v-if="loading" class="text-slate-500 text-sm">Loading…</div>
+        <div v-if="loading" class="text-slate-500 text-sm">LoadingÃ¢â‚¬Â¦</div>
         <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
         <div v-else>
           <div v-if="!items.length" class="text-slate-500 text-sm">No products found.</div>
@@ -27,20 +27,20 @@
             <li v-for="p in items" :key="p.id" class="p-3 bg-white border rounded-xl shadow-sm flex gap-3">
               <div class="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                 <img v-if="p.image_url" :src="getImageUrl(p.image_url) + cacheBust" alt="image" class="w-full h-full object-cover" />
-                <div v-else class="text-slate-400 text-2xl">🖼️</div>
+                <div v-else class="text-slate-400 text-2xl">Ã°Å¸â€“Â¼Ã¯Â¸Â</div>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-bold text-slate-800 truncate">{{ p.name }}</div>
-                <div class="text-[12px] text-slate-500 line-clamp-2">{{ p.description || '—' }}</div>
+                <div class="text-[12px] text-slate-500 line-clamp-2">{{ p.description || 'Ã¢â‚¬â€' }}</div>
 
                 <div class="mt-2 flex items-center gap-2">
                   <input class="hidden" :id="`file_${p.id}`" type="file" accept="image/*" capture="environment" @change="onPick($event, p)" />
-                  <label :for="`file_${p.id}`" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold inline-flex items-center gap-2 cursor-pointer">
+                  <label :for="`file_${p.id}`" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold inline-flex items-center gap-2 cursor-pointer">
                     <span>Change Image</span>
                   </label>
                   <button v-if="p.image_url && !removing[p.id]" class="px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold" @click="removeImage(p)">Remove</button>
-                  <span v-if="uploading[p.id]" class="text-xs text-slate-500">Uploading…</span>
-                  <span v-if="removing[p.id]" class="text-xs text-slate-500">Removing…</span>
+                  <span v-if="uploading[p.id]" class="text-xs text-slate-500">UploadingÃ¢â‚¬Â¦</span>
+                  <span v-if="removing[p.id]" class="text-xs text-slate-500">RemovingÃ¢â‚¬Â¦</span>
                 </div>
                 <div v-if="perror[p.id]" class="text-[12px] text-rose-700 mt-1">{{ perror[p.id] }}</div>
               </div>
@@ -157,3 +157,5 @@ load(1)
   overflow: hidden;
 }
 </style>
+
+

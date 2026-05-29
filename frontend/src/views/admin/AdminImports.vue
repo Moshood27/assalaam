@@ -164,3 +164,5 @@ export default {
 .card { @apply bg-white rounded-2xl border border-slate-200; }
 .card-elevated { @apply shadow-sm; }
 </style>
+
+

@@ -41,21 +41,21 @@
         <tbody>
             <tr>
                 <td>Principal Amount</td>
-                <td class="right">₦ {{ number_format((float) $loan->principal_amount, 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) $loan->principal_amount, 2) }}</td>
                 <td>Total Installments</td>
                 <td class="right">{{ (int) $loan->total_installments }}</td>
             </tr>
             <tr>
                 <td>Per Installment</td>
-                <td class="right">₦ {{ number_format((float) $loan->per_installment, 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) $loan->per_installment, 2) }}</td>
                 <td>Interval</td>
                 <td class="right">{{ ucfirst((string) $loan->interval) }}</td>
             </tr>
             <tr>
                 <td>Total Paid</td>
-                <td class="right">₦ {{ number_format((float) $paid_total, 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) $paid_total, 2) }}</td>
                 <td>Remaining Principal</td>
-                <td class="right">₦ {{ number_format((float) $remaining_principal, 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) $remaining_principal, 2) }}</td>
             </tr>
         </tbody>
     </table>
@@ -65,8 +65,8 @@
             <tr>
                 <th style="width:10%">#</th>
                 <th style="width:22%">Due Date</th>
-                <th class="right" style="width:22%">Installment (₦)</th>
-                <th class="right" style="width:22%">Paid (₦)</th>
+                <th class="right" style="width:22%">Installment (â‚¦)</th>
+                <th class="right" style="width:22%">Paid (â‚¦)</th>
                 <th style="width:24%">Status</th>
             </tr>
         </thead>

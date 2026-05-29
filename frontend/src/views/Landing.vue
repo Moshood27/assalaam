@@ -157,7 +157,7 @@ function navigateTo(route) {
                <div class="bg-slate-800 h-6 w-full rounded-t-lg mb-4 flex items-center px-4 gap-1.5">
                   <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
                   <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
                </div>
                <div class="aspect-[16/9] bg-slate-950 rounded-b-lg flex items-center justify-center p-8">
                   <div class="grid grid-cols-3 gap-6 w-full h-full opacity-50">
@@ -292,3 +292,5 @@ function navigateTo(route) {
   max-width: 1280px;
 }
 </style>
+
+

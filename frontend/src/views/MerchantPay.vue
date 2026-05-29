@@ -15,18 +15,18 @@
     <div class="p-4 space-y-6 max-w-md mx-auto">
       <div class="card card-elevated p-6">
         <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-600">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
           </svg>
           Scan or Paste QR
         </h3>
         <p class="text-xs text-slate-500 mb-3">Paste the QR payload text here. Camera scanning will be added later.</p>
-        <textarea v-model.trim="qr" rows="3" class="inp text-sm mb-4" placeholder="attaqwa:pay?to_type=membership&to=...&amount=...&note=..."></textarea>
+        <textarea v-model.trim="qr" rows="3" class="inp text-sm mb-4" placeholder="assalaam:pay?to_type=membership&to=...&amount=...&note=..."></textarea>
         <div class="flex flex-wrap gap-2">
           <button @click="paste" class="btn-muted px-4 py-2">Paste</button>
-          <button v-if="canScan" @click="scan" class="bg-white border border-emerald-200 text-emerald-700 px-4 py-2 rounded-xl font-bold hover:bg-emerald-50 transition">Scan QR</button>
-          <button @click="resolve" :disabled="!qr || loading" class="btn-primary flex-1 py-2">{{ loading ? 'Resolving…' : 'Resolve' }}</button>
+          <button v-if="canScan" @click="scan" class="bg-white border border-blue-200 text-blue-700 px-4 py-2 rounded-xl font-bold hover:bg-blue-50 transition">Scan QR</button>
+          <button @click="resolve" :disabled="!qr || loading" class="btn-primary flex-1 py-2">{{ loading ? 'ResolvingÃ¢â‚¬Â¦' : 'Resolve' }}</button>
         </div>
         <p v-if="scanError" class="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-sm">{{ scanError }}</p>
         <p v-if="error" class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-sm">{{ error }}</p>
@@ -46,18 +46,18 @@
 
       <div v-if="recipient" class="card card-elevated p-6">
         <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-600">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Confirm Details
         </h3>
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-900 text-sm mb-6">
+        <div class="p-4 rounded-2xl bg-blue-50 border border-blue-100 text-blue-900 text-sm mb-6">
           <div class="flex flex-col">
-            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-0.5">Pay to</span>
+            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">Pay to</span>
             <span class="font-black text-base">{{ recipient.name }}</span>
             <div class="flex items-center gap-2 mt-1">
-              <span v-if="recipient.membership_number" class="text-emerald-700 font-bold">{{ recipient.membership_number }}</span>
-              <span v-if="recipient.branch_name" class="text-emerald-500 text-xs font-medium">| {{ recipient.branch_name }}</span>
+              <span v-if="recipient.membership_number" class="text-blue-700 font-bold">{{ recipient.membership_number }}</span>
+              <span v-if="recipient.branch_name" class="text-blue-500 text-xs font-medium">| {{ recipient.branch_name }}</span>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@
           <div>
             <label class="lbl">Amount</label>
             <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Ã¢â€šÂ¦</span>
               <input v-model.number="amount" type="number" min="1" placeholder="0.00" class="inp pl-8 font-bold text-lg" />
             </div>
           </div>
@@ -80,7 +80,7 @@
           </div>
           <div class="flex gap-3 pt-2">
             <button @click="pay" :disabled="loading || !amount || !pin || pin.length !== 4" class="btn-primary flex-1 py-4 text-lg">
-              {{ loading ? 'Paying…' : 'Pay Now' }}
+              {{ loading ? 'PayingÃ¢â‚¬Â¦' : 'Pay Now' }}
             </button>
             <button @click="reset" class="btn-muted px-6 py-4">Clear</button>
           </div>
@@ -266,3 +266,5 @@ async function refreshWalletCache() {
 
 <style scoped>
 </style>
+
+

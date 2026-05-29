@@ -15,7 +15,7 @@
     <div class="p-4 space-y-6 max-w-md mx-auto">
       <div class="card card-elevated p-6">
         <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-600">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
           </svg>
           Generate QR
@@ -24,7 +24,7 @@
           <div>
             <label class="lbl">Amount (optional)</label>
             <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Ã¢â€šÂ¦</span>
               <input v-model.number="amount" type="number" min="1" placeholder="0.00" class="inp pl-8" />
             </div>
           </div>
@@ -34,7 +34,7 @@
           </div>
           <div class="flex gap-2 pt-2">
             <button @click="generate" :disabled="loading" class="btn-primary flex-1 py-4">
-              {{ loading ? 'Generating…' : 'Generate QR' }}
+              {{ loading ? 'GeneratingÃ¢â‚¬Â¦' : 'Generate QR' }}
             </button>
             <button v-if="payload" @click="reset" class="btn-muted px-6 py-4">Clear</button>
           </div>
@@ -42,13 +42,13 @@
         <p class="text-[10px] text-slate-400 mt-4 text-center italic">You can leave amount empty to make a reusable QR.</p>
       </div>
 
-      <div v-if="payload" class="card card-elevated p-6 border-t-4 border-emerald-600">
+      <div v-if="payload" class="card card-elevated p-6 border-t-4 border-blue-600">
         <div class="flex items-start justify-between gap-4 mb-6">
           <div>
             <h3 class="font-bold text-slate-800">Your QR Code</h3>
-            <p class="text-xs text-slate-500">Ask the payer to scan this with the Attaqwa app.</p>
+            <p class="text-xs text-slate-500">Ask the payer to scan this with the assalaam app.</p>
           </div>
-          <button @click="copy(payload)" class="text-emerald-700 text-xs font-black uppercase tracking-wider hover:opacity-70">Copy Payload</button>
+          <button @click="copy(payload)" class="text-blue-700 text-xs font-black uppercase tracking-wider hover:opacity-70">Copy Payload</button>
         </div>
         
         <div class="flex flex-col items-center gap-6">
@@ -81,7 +81,7 @@
         <div class="mt-8 space-y-3 pt-6 border-t border-slate-50">
           <div class="flex justify-between items-center"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Merchant</span><span class="font-bold text-slate-800 text-sm text-right">{{ display.merchant?.name }}</span></div>
           <div class="flex justify-between items-center" v-if="display.merchant?.membership_number"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Member ID</span><span class="font-bold text-slate-700 text-sm">{{ display.merchant.membership_number }}</span></div>
-          <div class="flex justify-between items-center" v-if="display.suggested_amount"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Suggested Amount</span><span class="font-black text-emerald-700 text-sm">₦ {{ formatMoney(display.suggested_amount) }}</span></div>
+          <div class="flex justify-between items-center" v-if="display.suggested_amount"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Suggested Amount</span><span class="font-black text-blue-700 text-sm">Ã¢â€šÂ¦ {{ formatMoney(display.suggested_amount) }}</span></div>
           <div class="flex justify-between items-center" v-if="display.note"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Note</span><span class="font-medium text-slate-600 text-sm text-right italic">"{{ display.note }}"</span></div>
         </div>
       </div>
@@ -157,10 +157,10 @@ async function copy(text) {
 }
 
 async function share() {
-  const text = `Pay with Attaqwa\n${payload.value}`
+  const text = `Pay with assalaam\n${payload.value}`
   try {
     if (navigator.share) {
-      await navigator.share({ title: 'Pay with Attaqwa', text })
+      await navigator.share({ title: 'Pay with assalaam', text })
     } else {
       await navigator.clipboard.writeText(text)
       alert('Copied to clipboard')
@@ -171,3 +171,5 @@ async function share() {
 
 <style scoped>
 </style>
+
+

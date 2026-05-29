@@ -234,7 +234,7 @@ class WebhookController extends Controller
                             $project = SadaqahProject::find($sadaqahContrib->sadaqah_project_id);
                             $user->notifyMember(
                                 'Sadaqah Contribution Successful',
-                                "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
+                                "Your contribution of â‚¦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
                                 [
                                     'type' => 'sadaqah_contribution',
                                     'amount' => (float) $sadaqahContrib->amount,
@@ -313,7 +313,7 @@ class WebhookController extends Controller
                         $loan = QardHasan::with('user')->find($loanRep->qard_hasan_id);
                         if ($loan && $loan->user) {
                             $remaining = max(0, (float) $loan->principal_amount - (float) $loan->paid_amount);
-                            $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'.';
+                            $msg = 'Loan repayment received: â‚¦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: â‚¦'.number_format($remaining, 2).'.';
                             $loan->user->notifyMember(
                                 'Repayment Received',
                                 $msg,
@@ -468,7 +468,7 @@ class WebhookController extends Controller
                 // Notify user via unified method (triggers real-time, push, mail, sms as per prefs)
                 $topupUser->notifyMember(
                     'Wallet Top-up Successful',
-                    "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+                    "Your wallet has been credited with â‚¦" . number_format($netAmount, 2) . " after a maintenance charge of â‚¦" . number_format($maintenanceCharge, 2) . ".",
                     [
                         'type' => 'wallet_topup',
                         'amount' => (float) $netAmount,
@@ -561,7 +561,7 @@ class WebhookController extends Controller
             if ($user) {
                 $user->notifyMember(
                     'Payment Successful',
-                    'Your payment of ₦' . number_format($expectedTotal, 2) . ' has been received and allocated to your schemes.',
+                    'Your payment of â‚¦' . number_format($expectedTotal, 2) . ' has been received and allocated to your schemes.',
                     [
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
@@ -595,7 +595,7 @@ class WebhookController extends Controller
                         if ($expense->creator) {
                             $expense->creator->notify(new \App\Notifications\GeneralNotification(
                                 title: 'Expense Payout Successful',
-                                message: "The payout for '{$expense->title}' (₦" . number_format($expense->amount, 2) . ") has been successfully processed to the bank.",
+                                message: "The payout for '{$expense->title}' (â‚¦" . number_format($expense->amount, 2) . ") has been successfully processed to the bank.",
                                 data: ['type' => 'expense_payout_success', 'expense_id' => $expense->id]
                             ));
                         }
@@ -605,7 +605,7 @@ class WebhookController extends Controller
                         Log::warning("Expense payout failed/reversed via webhook", ['expense_id' => $expense->id, 'reference' => $reference, 'event' => $event]);
 
                         // Notify creator and Treasurer
-                        $message = "The payout for '{$expense->title}' (₦" . number_format($expense->amount, 2) . ") failed: {$reason}. It has been reset to 'approved' for retry.";
+                        $message = "The payout for '{$expense->title}' (â‚¦" . number_format($expense->amount, 2) . ") failed: {$reason}. It has been reset to 'approved' for retry.";
                         $notification = new \App\Notifications\GeneralNotification(
                             title: 'Expense Payout Failed',
                             message: $message,
@@ -811,7 +811,7 @@ class WebhookController extends Controller
                 $loan = QardHasan::with('user')->find($loanRep->qard_hasan_id);
                 if ($loan && $loan->user) {
                     $remaining = max(0, (float) $loan->principal_amount - (float) $loan->paid_amount);
-                    $msg = 'Loan repayment received: ₦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: ₦'.number_format($remaining, 2).'.';
+                    $msg = 'Loan repayment received: â‚¦'.number_format((float)$loanRep->amount, 2).' for '.($loan->qard_id_string).'. Remaining: â‚¦'.number_format($remaining, 2).'.';
                     $loan->user->notifyMember(
                         'Repayment Received',
                         $msg,
@@ -894,7 +894,7 @@ class WebhookController extends Controller
             if ($user) {
                 $user->notifyMember(
                     'Payment Successful',
-                    'Your payment of ₦' . number_format($expectedTotal, 2) . ' has been received and allocated to your schemes.',
+                    'Your payment of â‚¦' . number_format($expectedTotal, 2) . ' has been received and allocated to your schemes.',
                     [
                         'type' => 'scheme_payment',
                         'amount' => (float) $expectedTotal,
@@ -944,7 +944,7 @@ class WebhookController extends Controller
                     $project = SadaqahProject::find($sadaqahContrib->sadaqah_project_id);
                     $user->notifyMember(
                         'Sadaqah Contribution Successful',
-                        "Your contribution of ₦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
+                        "Your contribution of â‚¦" . number_format($sadaqahContrib->amount, 2) . " to " . ($project->name ?? 'Project') . " was successful. Jazakallah Khair.",
                         [
                             'type' => 'sadaqah_contribution',
                             'amount' => (float) $sadaqahContrib->amount,
@@ -1047,7 +1047,7 @@ class WebhookController extends Controller
         // Notify user via unified method (triggers real-time, push, mail, sms as per prefs)
         $topupUser->notifyMember(
             'Wallet Top-up Successful',
-            "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+            "Your wallet has been credited with â‚¦" . number_format($netAmount, 2) . " after a maintenance charge of â‚¦" . number_format($maintenanceCharge, 2) . ".",
             [
                 'type' => 'wallet_topup',
                 'amount' => (float) $netAmount,
@@ -1134,7 +1134,7 @@ class WebhookController extends Controller
                 if ($user) {
                     $user->notifyMember(
                         'Payment Successful',
-                        "Your payment of ₦" . number_format($amountNgn, 2) . " for " . $contributions->count() . " items was successful.",
+                        "Your payment of â‚¦" . number_format($amountNgn, 2) . " for " . $contributions->count() . " items was successful.",
                         [
                             'type' => 'payment_success',
                             'amount' => (float) $amountNgn,
@@ -1244,7 +1244,7 @@ class WebhookController extends Controller
 
         $topupUser->notifyMember(
             'Wallet Top-up Successful',
-            "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+            "Your wallet has been credited with â‚¦" . number_format($netAmount, 2) . " after a maintenance charge of â‚¦" . number_format($maintenanceCharge, 2) . ".",
             [
                 'type' => 'wallet_topup',
                 'amount' => (float) $netAmount,
@@ -1334,7 +1334,7 @@ class WebhookController extends Controller
                 if ($user) {
                     $user->notifyMember(
                         'Payment Successful',
-                        "Your payment of ₦" . number_format($amountNgn, 2) . " for " . $contributions->count() . " items was successful.",
+                        "Your payment of â‚¦" . number_format($amountNgn, 2) . " for " . $contributions->count() . " items was successful.",
                         [
                             'type' => 'payment_success',
                             'amount' => (float) $amountNgn,
@@ -1445,7 +1445,7 @@ class WebhookController extends Controller
 
         $topupUser->notifyMember(
             'Wallet Top-up Successful',
-            "Your wallet has been credited with ₦" . number_format($netAmount, 2) . " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2) . ".",
+            "Your wallet has been credited with â‚¦" . number_format($netAmount, 2) . " after a maintenance charge of â‚¦" . number_format($maintenanceCharge, 2) . ".",
             [
                 'type' => 'wallet_topup',
                 'amount' => (float) $netAmount,

@@ -17,7 +17,7 @@ Prerequisites
   - If serving on port 80: `ngrok http 80`
 - Copy the HTTPS Forwarding URL shown (e.g., `https://xxxx.ngrok-free.app`)
 
-2) Tell Laravel it’s behind a proxy (required for ngrok)
+2) Tell Laravel itâ€™s behind a proxy (required for ngrok)
 We already configured this in code. Verify `backend/bootstrap/app.php` contains:
 
 ```
@@ -33,7 +33,7 @@ We already configured this in code. Verify `backend/bootstrap/app.php` contains:
 ```
 
 3) Configure Paystack Webhook
-- In Paystack Dashboard → Settings → API → Webhooks
+- In Paystack Dashboard â†’ Settings â†’ API â†’ Webhooks
 - Set URL to: `https://YOUR_NGROK_SUBDOMAIN.ngrok-free.app/api/webhooks/paystack`
 - Save
 
@@ -50,7 +50,7 @@ Some networks/drivers cause TLS errors when tunneling. Setting MTU to 1350 often
 
 Notes
 - Webhook endpoint: `POST /api/webhooks/paystack` with `X-Paystack-Signature` verification using `PAYSTACK_SECRET_KEY`.
-- If you see “Invalid Signature”, ensure the secret matches the Paystack environment (Test vs Live) used by the event.
+- If you see â€œInvalid Signatureâ€, ensure the secret matches the Paystack environment (Test vs Live) used by the event.
 - Ngrok URLs change every run unless you have a reserved domain (paid). Update the webhook URL in Paystack when it changes.
 - If your Laravel runs on a different port, adjust the `ngrok http <port>` command accordingly.
 

@@ -52,7 +52,7 @@ The Google Play Store requires an **Android App Bundle (.aab)** for all new apps
 ## 4. Uploading to Google Play Console
 
 1. Log in to your [Google Play Console](https://play.google.com/console/).
-2. Select the **ATTAQWA** app.
+2. Select the **assalaam** app.
 3. In the sidebar, go to **Testing > Production** (or Internal Testing for testing builds).
 4. Click **Create new release**.
 5. Upload the `.aab` file you generated.

@@ -63,7 +63,7 @@ class StoreOrderResource extends Resource
                             ->content(fn ($record) => (function () use ($record) {
                                 if (!$record || !isset($record->meta['financing'])) return 'Not a Murabaha order';
                                 $fin = $record->meta['financing'];
-                                return "Type: " . ($fin['type'] ?? 'Murabaha') . " | Months: " . ($fin['months'] ?? '—') . " | Profit Rate: " . (isset($fin['profit_rate']) ? ($fin['profit_rate'] * 100) . '%' : '—');
+                                return "Type: " . ($fin['type'] ?? 'Murabaha') . " | Months: " . ($fin['months'] ?? 'â€”') . " | Profit Rate: " . (isset($fin['profit_rate']) ? ($fin['profit_rate'] * 100) . '%' : 'â€”');
                             })()),
                         Forms\Components\Placeholder::make('schedule_view')
                             ->label('Installment Schedule')
@@ -75,7 +75,7 @@ class StoreOrderResource extends Resource
                                     $html .= "<tr style='border-bottom: 1px solid #f0f0f0;'>";
                                     $html .= "<td>{$it['installment']}</td>";
                                     $html .= "<td>" . \Carbon\Carbon::parse($it['due_date'])->format('d M Y') . "</td>";
-                                    $html .= "<td style='text-align: right;'>₦ " . number_format($it['amount'], 2) . "</td>";
+                                    $html .= "<td style='text-align: right;'>â‚¦ " . number_format($it['amount'], 2) . "</td>";
                                     $html .= "<td><span style='padding: 2px 6px; border-radius: 4px; font-weight: bold; background: " . (strtolower($it['status']) === 'paid' ? '#d1fae5; color: #065f46;' : '#fee2e2; color: #991b1b;') . "'>{$it['status']}</span></td>";
                                     $html .= "</tr>";
                                 }
@@ -143,15 +143,15 @@ class StoreOrderResource extends Resource
                                     })()),
                                 Forms\Components\TextInput::make('unit_price')
                                     ->numeric()
-                                    ->prefix('₦')
+                                    ->prefix('â‚¦')
                                     ->required(),
                                 Forms\Components\TextInput::make('unit_cost')
                                     ->numeric()
-                                    ->prefix('₦')
+                                    ->prefix('â‚¦')
                                     ->required(),
                                 Forms\Components\TextInput::make('vendor_amount')
                                     ->numeric()
-                                    ->prefix('₦')
+                                    ->prefix('â‚¦')
                                     ->disabled()
                                     ->dehydrated(),
                             ])->columns(4)

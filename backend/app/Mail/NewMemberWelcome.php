@@ -18,7 +18,7 @@ class NewMemberWelcome extends Mailable
     public function build()
     {
         return $this
-            ->subject('Welcome to '.config('app.name').' — Bismillāh and Barakah')
+            ->subject('Welcome to '.config('app.name').' â€” BismillÄh and Barakah')
             ->view('emails.new_member_welcome', [
                 'user' => $this->user,
             ]);

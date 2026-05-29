@@ -26,7 +26,7 @@ class ImportOldSqlSeeder extends Seeder
 
         foreach ($targets as $table) {
             if (!Schema::hasTable($table)) {
-                // Legacy table not present at all — stage it from dump
+                // Legacy table not present at all â€” stage it from dump
                 $this->importTable($path, $table);
                 continue;
             }
@@ -39,7 +39,7 @@ class ImportOldSqlSeeder extends Seeder
                 }
             } catch (\Throwable $e) {
                 // If counting fails for any reason, try importing to self-heal
-                Log::warning("Could not inspect legacy table '{$table}': " . $e->getMessage() . ' — attempting import.');
+                Log::warning("Could not inspect legacy table '{$table}': " . $e->getMessage() . ' â€” attempting import.');
                 $this->importTable($path, $table);
             }
         }

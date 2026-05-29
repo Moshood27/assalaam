@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-slate-50/50 pb-24">
     <AppHeader title="Wasiyyah (Next of Kin)" :showBack="true">
       <template #right>
-        <button @click="openAdd" class="text-emerald-700 text-xs font-bold mr-2">Add New</button>
+        <button @click="openAdd" class="text-blue-700 text-xs font-bold mr-2">Add New</button>
       </template>
     </AppHeader>
 
@@ -20,10 +20,10 @@
         <div v-for="(val, type) in summary" :key="type" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ type === 'all' ? 'General' : type }} Assets</span>
-            <span class="text-xs font-bold" :class="val > 33.33 ? 'text-amber-600' : 'text-emerald-600'">{{ val }}% Allocated</span>
+            <span class="text-xs font-bold" :class="val > 33.33 ? 'text-amber-600' : 'text-blue-600'">{{ val }}% Allocated</span>
           </div>
           <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-500" :class="val > 33.33 ? 'bg-amber-500' : 'bg-emerald-500'" :style="{ width: val + '%' }"></div>
+            <div class="h-full rounded-full transition-all duration-500" :class="val > 33.33 ? 'bg-amber-500' : 'bg-blue-500'" :style="{ width: val + '%' }"></div>
           </div>
           <p v-if="val > 33.33" class="text-[10px] text-amber-600 font-medium mt-1">Note: Bequests exceeding 1/3 (33.33%) may require heirs' consent under Sharia.</p>
         </div>
@@ -31,10 +31,10 @@
         <div v-for="b in beneficiaries" :key="b.id" @click="editBeneficiary(b)" class="card p-5 group cursor-pointer active:bg-slate-50 hover:border-indigo-100 transition-all">
           <div class="flex items-start justify-between">
             <div class="flex gap-4">
-              <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">👤</div>
+              <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">Ã°Å¸â€˜Â¤</div>
               <div>
                 <h3 class="font-bold text-slate-800">{{ b.name }}</h3>
-                <p class="text-xs text-slate-500 font-medium">{{ b.relationship }} • {{ b.percentage }}% Allocation ({{ b.asset_type === 'all' ? 'General' : b.asset_type }})</p>
+                <p class="text-xs text-slate-500 font-medium">{{ b.relationship }} Ã¢â‚¬Â¢ {{ b.percentage }}% Allocation ({{ b.asset_type === 'all' ? 'General' : b.asset_type }})</p>
               </div>
             </div>
             <div class="flex gap-2">
@@ -60,7 +60,7 @@
       </div>
 
       <div v-else class="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">📋</div>
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">Ã°Å¸â€œâ€¹</div>
         <p class="text-slate-500 font-medium mb-4">No beneficiaries listed yet.</p>
         <button @click="openAdd" class="btn-primary">Add your first next of kin</button>
       </div>
@@ -217,3 +217,5 @@ onMounted(load)
 .modal { @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4; }
 .modal-card { @apply w-full max-w-md bg-white rounded-[2rem] p-8 shadow-2xl; }
 </style>
+
+

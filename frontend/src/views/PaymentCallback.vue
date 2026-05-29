@@ -2,8 +2,8 @@
   <div class="min-h-screen flex items-center justify-center bg-slate-50 p-6 font-sans">
     <div class="bg-white p-8 rounded-[2rem] shadow-xl text-center max-w-sm w-full border border-slate-100">
       <div class="flex justify-center mb-6">
-        <div class="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 text-emerald-600 animate-bounce">
+        <div class="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 text-blue-600 animate-bounce">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
@@ -12,8 +12,8 @@
       <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Reference: {{ reference || 'N/A' }}</p>
       
       <div class="flex items-center justify-center gap-3 bg-slate-50 p-4 rounded-2xl">
-        <div class="animate-spin rounded-full h-4 w-4 border-2 border-emerald-700 border-t-transparent"></div>
-        <p class="text-xs font-medium text-slate-600">Verifying transaction…</p>
+        <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-700 border-t-transparent"></div>
+        <p class="text-xs font-medium text-slate-600">Verifying transactionÃ¢â‚¬Â¦</p>
       </div>
 
       <p class="text-[10px] text-slate-400 mt-8 italic">You will be redirected to your dashboard shortly.</p>
@@ -62,3 +62,5 @@ onMounted(async () => {
   }
 })
 </script>
+
+

@@ -66,7 +66,7 @@ class SmsService
     protected function sendViaTermii(string $to, string $message): bool
     {
         $apiKey = (string) config('sms.api_key');
-        $sender = (string) config('sms.sender', 'ATTAQWA');
+        $sender = (string) config('sms.sender', 'assalaam');
         $base = rtrim((string) config('sms.base_url', 'https://v3.api.termii.com'), '/');
         if (!$apiKey) {
             Log::warning('Termii SMS not sent: missing api key');

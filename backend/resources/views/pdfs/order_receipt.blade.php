@@ -57,15 +57,15 @@
                 <tr>
                     <td>{{ $item->product_name }}</td>
                     <td class="right">{{ $item->quantity }}</td>
-                    <td class="right">₦ {{ number_format((float)$item->unit_price, 2) }}</td>
-                    <td class="right">₦ {{ number_format((float)$item->line_total, 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float)$item->unit_price, 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float)$item->line_total, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr class="total-row">
                     <td colspan="3" class="right">GRAND TOTAL</td>
-                    <td class="right">₦ {{ number_format((float)$order->total_amount, 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float)$order->total_amount, 2) }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -83,8 +83,8 @@
                 <td style="border:none; width: 50%; padding: 2px 0;">Profit Rate: <strong>{{ round(((float)($financing['profit_rate'] ?? 0)) * 100) }}%</strong></td>
             </tr>
             <tr style="border:none;">
-                <td style="border:none; width: 50%; padding: 2px 0;">Total Paid: <strong>₦ {{ number_format((float)($financing['total_paid'] ?? 0), 2) }}</strong></td>
-                <td style="border:none; width: 50%; padding: 2px 0;">Remaining: <strong>₦ {{ number_format((float)($financing['remaining'] ?? ($order->total_amount - ($financing['total_paid'] ?? 0))), 2) }}</strong></td>
+                <td style="border:none; width: 50%; padding: 2px 0;">Total Paid: <strong>â‚¦ {{ number_format((float)($financing['total_paid'] ?? 0), 2) }}</strong></td>
+                <td style="border:none; width: 50%; padding: 2px 0;">Remaining: <strong>â‚¦ {{ number_format((float)($financing['remaining'] ?? ($order->total_amount - ($financing['total_paid'] ?? 0))), 2) }}</strong></td>
             </tr>
         </table>
     </div>

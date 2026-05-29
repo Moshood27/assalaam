@@ -14,7 +14,7 @@
 
     <div class="p-4 max-w-2xl mx-auto space-y-4">
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mb-4"></div>
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
         <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Loading Disputes...</p>
       </div>
 
@@ -26,11 +26,11 @@
         </div>
         <p class="text-slate-500 font-medium">No disputes found.</p>
         <p class="text-slate-400 text-xs mt-1">Raise a dispute from your Order Receipt if needed.</p>
-        <router-link to="/store/orders" class="mt-6 inline-block bg-emerald-600 text-white px-6 py-2 rounded-full text-sm font-bold">Go to Orders</router-link>
+        <router-link to="/store/orders" class="mt-6 inline-block bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold">Go to Orders</router-link>
       </div>
 
       <div v-else class="space-y-3">
-        <div v-for="d in disputes" :key="d.id" class="card p-4 hover:border-emerald-200 transition-colors cursor-pointer" @click="selectDispute(d)">
+        <div v-for="d in disputes" :key="d.id" class="card p-4 hover:border-blue-200 transition-colors cursor-pointer" @click="selectDispute(d)">
           <div class="flex justify-between items-start mb-2">
             <div>
               <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Order #{{ d.order?.reference || 'N/A' }}</p>
@@ -43,7 +43,7 @@
           <p class="text-xs text-slate-500 line-clamp-1 mb-3">{{ d.description || 'No description provided.' }}</p>
           <div class="flex items-center justify-between pt-3 border-t border-slate-50">
             <span class="text-[10px] text-slate-400 font-medium">{{ formatDate(d.created_at) }}</span>
-            <span class="text-emerald-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+            <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
               View Details
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
                 <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
@@ -92,23 +92,23 @@
 
             <div v-if="selectedDispute.order">
                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Associated Order</p>
-               <div class="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+               <div class="flex items-center justify-between p-4 bg-blue-50 rounded-2xl border border-blue-100">
                  <div>
-                   <p class="text-xs font-bold text-emerald-900">Order #{{ selectedDispute.order.reference }}</p>
-                   <p class="text-[10px] text-emerald-700">Total: ₦ {{ numberFormat(selectedDispute.order.total_amount) }}</p>
+                   <p class="text-xs font-bold text-blue-900">Order #{{ selectedDispute.order.reference }}</p>
+                   <p class="text-[10px] text-blue-700">Total: Ã¢â€šÂ¦ {{ numberFormat(selectedDispute.order.total_amount) }}</p>
                  </div>
-                 <router-link :to="'/store/orders/' + selectedDispute.order.id" class="text-[10px] font-black text-emerald-700 underline uppercase tracking-widest">View Receipt</router-link>
+                 <router-link :to="'/store/orders/' + selectedDispute.order.id" class="text-[10px] font-black text-blue-700 underline uppercase tracking-widest">View Receipt</router-link>
                </div>
             </div>
 
             <div v-if="selectedDispute.outcome_details">
-              <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+              <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
                 </svg>
                 Final Resolution
               </p>
-              <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-sm text-emerald-900 leading-relaxed">
+              <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-sm text-blue-900 leading-relaxed">
                 {{ selectedDispute.outcome_details }}
               </div>
               <p v-if="selectedDispute.resolved_at" class="text-[9px] text-slate-400 mt-2 text-right">Resolved on {{ formatDate(selectedDispute.resolved_at) }}</p>
@@ -185,7 +185,7 @@ const statusClass = (status) => {
   switch (status?.toLowerCase()) {
     case 'pending': return 'bg-slate-100 text-slate-600'
     case 'mediation': return 'bg-amber-100 text-amber-700'
-    case 'resolved': return 'bg-emerald-100 text-emerald-700'
+    case 'resolved': return 'bg-blue-100 text-blue-700'
     case 'rejected': return 'bg-rose-100 text-rose-700'
     default: return 'bg-slate-100 text-slate-600'
   }
@@ -203,3 +203,5 @@ onMounted(load)
   to { transform: translateY(0); }
 }
 </style>
+
+

@@ -16,7 +16,7 @@
 <body>
     <div class="header">
         <div class="title">Attendance & Fine Summary Report</div>
-        <div>At-Taqwa Osogbo CICS Ltd</div>
+        <div>AS-SALAAM Osogbo CICS Ltd</div>
         <div>Year: {{ $year }}</div>
     </div>
 
@@ -27,7 +27,7 @@
                 <th>Date</th>
                 <th class="right">Present</th>
                 <th class="right">Absent</th>
-                <th class="right">Fines Generated (₦)</th>
+                <th class="right">Fines Generated (â‚¦)</th>
             </tr>
         </thead>
         <tbody>

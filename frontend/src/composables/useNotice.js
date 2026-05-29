@@ -14,3 +14,5 @@ function closeNotice() {
 export function useNotice() {
   return { notice, showNotice, closeNotice }
 }
+
+

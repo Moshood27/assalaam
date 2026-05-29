@@ -1,6 +1,6 @@
 # Islamic Cooperative Chat System Implementation
 
-This document details the implementation of the Sharia-compliant, real-time chat system for the Attaqwa Cooperative.
+This document details the implementation of the Sharia-compliant, real-time chat system for the assalaam Cooperative.
 
 ## 1. Core Architecture
 
@@ -97,4 +97,4 @@ The system keeps users and staff informed through multiple channels:
 - **Unified Delivery**: Managed via `User::notifyMember` and the `GeneralNotification` system, respecting user preferences for Email, SMS, and Push.
 
 ---
-*Developed for Attaqwa Cooperative - Maintaining the Adab of Finance.*
+*Developed for assalaam Cooperative - Maintaining the Adab of Finance.*

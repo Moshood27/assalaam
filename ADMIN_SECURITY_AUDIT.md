@@ -65,7 +65,7 @@ Ensures that all actions affecting the cooperative's Shariah-compliant status (l
 
 ---
 
-## 5. Member 360° Financial View
+## 5. Member 360Â° Financial View
 
 To improve oversight, the `UserResource` (Member view) includes comprehensive **Relation Managers** that allow admins to see a member's entire history in one place:
 - **Wallet History**: Every transaction ever made by the member.

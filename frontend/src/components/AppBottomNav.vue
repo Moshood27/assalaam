@@ -6,11 +6,11 @@
         :key="item.path"
         @click="router.push(item.path)"
         class="flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all relative"
-        :class="[isActive(item.path) ? 'text-emerald-700' : 'text-slate-400']"
+        :class="[isActive(item.path) ? 'text-blue-700' : 'text-slate-400']"
       >
         <div class="relative">
           <span :class="[isActive(item.path) ? item.activeIcon : item.icon, 'text-2xl transition-transform duration-300', isActive(item.path) ? 'scale-110' : '']"></span>
-          <div v-if="isActive(item.path)" class="absolute -bottom-1 left-1/2 -translateX-1/2 w-1 h-1 bg-emerald-700 rounded-full"></div>
+          <div v-if="isActive(item.path)" class="absolute -bottom-1 left-1/2 -translateX-1/2 w-1 h-1 bg-blue-700 rounded-full"></div>
         </div>
         <span class="text-[10px] font-bold uppercase tracking-wider leading-none">{{ item.label }}</span>
       </button>
@@ -50,3 +50,5 @@ const isActive = (path) => {
 
 <style scoped>
 </style>
+
+

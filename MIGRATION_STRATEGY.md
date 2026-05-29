@@ -3,7 +3,7 @@
 > **Note:** For detailed step-by-step instructions on how to use the migration tools in the Admin Panel, please refer to the **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)**.
 
 ## 1) Concept Overview
-- The "Opening Balance" migration strategy is designed to transition Attaqwa Cooperative from paper/Excel records to the digital platform without importing every historical transaction.
+- The "Opening Balance" migration strategy is designed to transition assalaam Cooperative from paper/Excel records to the digital platform without importing every historical transaction.
 - **Amanah (Trust):** Maintaining accuracy is paramount. The system creates a clear audit trail for every migrated balance so members can verify their starting point.
 - **Cut-off Date:** A specific date (e.g., Dec 31st) where paper books are closed and digital records begin.
 
@@ -46,7 +46,7 @@ The migration tool is located in the Admin Panel under **System Migration**.
 ## 5) Phase 3: Reconciliation & Certification
 Before notifying members, the Admin must perform a final audit.
 
-1. **Reconciliation Summary:** The Migration page displays the grand total of all migrated funds (e.g., "Total Migrated Savings: ₦5,200,000").
+1. **Reconciliation Summary:** The Migration page displays the grand total of all migrated funds (e.g., "Total Migrated Savings: â‚¦5,200,000").
 2. **PDF Audit Report:** Generate the **Migration Points of Truth** PDF. This document contains:
    - Total members migrated.
    - Sum of all opening balances per scheme.
@@ -60,7 +60,7 @@ Transparency helps build trust with the cooperative members.
 
 1. **Onboarding SMS:** Admins can trigger a "Send Onboarding SMS" to all migrated members with their login details.
 2. **Verification Prompt:** On first login, members see a non-dismissible modal:
-   - "Your migrated opening balance is **₦XX,XXX.XX** (Detailed breakdown of all 20+ schemes including Savings, Shares, Takaful, and other funds)."
+   - "Your migrated opening balance is **â‚¦XX,XXX.XX** (Detailed breakdown of all 20+ schemes including Savings, Shares, Takaful, and other funds)."
 3. **Actions:**
    - **Verify:** Member confirms accuracy. `verified_at` is set.
    - **Report Discrepancy:** Member submits a brief explanation of the error. A support message is generated for Admin review.

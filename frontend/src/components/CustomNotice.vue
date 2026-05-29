@@ -4,13 +4,13 @@
       <div class="p-6 text-center">
         <div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl"
              :class="{
-               'bg-emerald-100 text-emerald-600': type === 'success',
+               'bg-blue-100 text-blue-600': type === 'success',
                'bg-red-100 text-red-600': type === 'error',
                'bg-amber-100 text-amber-600': type !== 'success' && type !== 'error'
              }">
-          <span v-if="type==='success'">✅</span>
-          <span v-else-if="type==='error'">⚠️</span>
-          <span v-else>ℹ️</span>
+          <span v-if="type==='success'">Ã¢Å“â€¦</span>
+          <span v-else-if="type==='error'">Ã¢Å¡Â Ã¯Â¸Â</span>
+          <span v-else>Ã¢â€žÂ¹Ã¯Â¸Â</span>
         </div>
         <h3 class="text-xl font-black mb-2 text-slate-800">{{ title }}</h3>
         <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line">{{ message }}</p>
@@ -25,7 +25,7 @@
             :maxlength="inputMaxlength"
             inputmode="numeric"
             class="w-full border border-slate-200 rounded-xl p-3 text-center tracking-[0.5em] font-black text-slate-900"
-            placeholder="••••"
+            placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
             @keyup.enter="onConfirm"
           />
         </div>
@@ -34,9 +34,9 @@
       <!-- Actions -->
       <div v-if="prompt" class="flex divide-x border-t border-slate-100">
         <button @click="onClose" :disabled="busy" class="flex-1 p-4 font-bold text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">{{ cancelText }}</button>
-        <button @click="onConfirm" :disabled="busy" class="flex-1 p-4 font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">{{ confirmText }}</button>
+        <button @click="onConfirm" :disabled="busy" class="flex-1 p-4 font-bold text-white bg-blue-700 hover:bg-blue-800 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">{{ confirmText }}</button>
       </div>
-      <button v-else @click="onClose" class="w-full p-4 bg-slate-50 border-t border-slate-100 font-bold text-emerald-700 hover:bg-emerald-50 transition-colors uppercase tracking-widest text-xs">
+      <button v-else @click="onClose" class="w-full p-4 bg-slate-50 border-t border-slate-100 font-bold text-blue-700 hover:bg-blue-50 transition-colors uppercase tracking-widest text-xs">
         Dismiss
       </button>
     </div>
@@ -79,3 +79,5 @@ function onConfirm() {
   emit('confirm', inputValue.value)
 }
 </script>
+
+

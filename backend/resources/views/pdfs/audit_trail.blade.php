@@ -15,7 +15,7 @@
 <body>
     <div class="header">
         <div class="title">System Audit Trail Report</div>
-        <div>At-Taqwa Osogbo CICS Ltd</div>
+        <div>AS-SALAAM Osogbo CICS Ltd</div>
         <div>Last {{ $days }} days - Generated: {{ $date }}</div>
     </div>
 

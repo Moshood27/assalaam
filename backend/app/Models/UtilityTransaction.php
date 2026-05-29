@@ -45,7 +45,7 @@ class UtilityTransaction extends Model
     {
         static::updated(function ($model) {
             if ($model->wasChanged('status') && $model->status === 'success') {
-                app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->user);
+                app(\App\Services\AssalaamScoreService::class)->calculateAndUpdateScore($model->user);
             }
         });
     }

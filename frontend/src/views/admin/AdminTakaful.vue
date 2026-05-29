@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 sm:p-8">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-8">
     <div class="max-w-7xl mx-auto">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <p class="text-xs font-semibold tracking-widest text-emerald-700 uppercase">Admin Portal</p>
+          <p class="text-xs font-semibold tracking-widest text-blue-700 uppercase">Admin Portal</p>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Takaful (Member Welfare Pool)</h1>
           <p class="text-slate-600">Monitor pool ledger, filter by member, and trigger manual batch charges.</p>
         </div>
@@ -25,9 +25,9 @@
             <span class="text-xs text-slate-500" v-if="summary.period">Showing: {{ summary.period }}</span>
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-            <div class="card p-3 border-emerald-200 bg-emerald-50">
-              <p class="text-xs uppercase text-emerald-700 font-bold">Pool Balance</p>
-              <p class="text-2xl font-extrabold text-emerald-900">₦ {{ money(summary.pool_balance) }}</p>
+            <div class="card p-3 border-blue-200 bg-blue-50">
+              <p class="text-xs uppercase text-blue-700 font-bold">Pool Balance</p>
+              <p class="text-2xl font-extrabold text-blue-900">Ã¢â€šÂ¦ {{ money(summary.pool_balance) }}</p>
             </div>
             <div class="card p-3 border-sky-200 bg-sky-50">
               <p class="text-xs uppercase text-sky-700 font-bold">Contrib Count</p>
@@ -35,11 +35,11 @@
             </div>
             <div class="card p-3 border-amber-200 bg-amber-50">
               <p class="text-xs uppercase text-amber-700 font-bold">Contrib Total</p>
-              <p class="text-2xl font-extrabold text-amber-900">₦ {{ money(summary.contributions?.sum || 0) }}</p>
+              <p class="text-2xl font-extrabold text-amber-900">Ã¢â€šÂ¦ {{ money(summary.contributions?.sum || 0) }}</p>
             </div>
             <div class="card p-3 border-indigo-200 bg-indigo-50">
               <p class="text-xs uppercase text-indigo-700 font-bold">Status</p>
-              <p class="text-sm text-indigo-900">✅ {{ summary.contributions?.by_status?.success || 0 }} • ⌛ {{ summary.contributions?.by_status?.pending || 0 }} • ✕ {{ summary.contributions?.by_status?.failed || 0 }}</p>
+              <p class="text-sm text-indigo-900">Ã¢Å“â€¦ {{ summary.contributions?.by_status?.success || 0 }} Ã¢â‚¬Â¢ Ã¢Å’â€º {{ summary.contributions?.by_status?.pending || 0 }} Ã¢â‚¬Â¢ Ã¢Å“â€¢ {{ summary.contributions?.by_status?.failed || 0 }}</p>
             </div>
           </div>
           <div class="mt-4 flex flex-wrap gap-2">
@@ -70,7 +70,7 @@
             </div>
           </div>
           <div class="mt-3 flex gap-2">
-            <button class="btn-primary" @click="triggerCharge" :disabled="loading.charge">{{ loading.charge ? 'Processing…' : 'Run' }}</button>
+            <button class="btn-primary" @click="triggerCharge" :disabled="loading.charge">{{ loading.charge ? 'ProcessingÃ¢â‚¬Â¦' : 'Run' }}</button>
             <button class="btn-muted" @click="resetCharge">Reset</button>
           </div>
           <div v-if="chargeResult" class="mt-3 text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 whitespace-pre-wrap font-mono">
@@ -130,7 +130,7 @@
             <tr v-for="row in ledgerRows" :key="row.id" class="border-b last:border-b-0">
               <td class="td">{{ fmtDate(row.created_at) }}</td>
               <td class="td capitalize">{{ row.direction }}</td>
-              <td class="td text-right">₦ {{ money(row.amount) }}</td>
+              <td class="td text-right">Ã¢â€šÂ¦ {{ money(row.amount) }}</td>
               <td class="td font-mono text-[11px] text-slate-600">{{ row.reference }}</td>
               <td class="td">{{ row.meta?.user_id || '' }}</td>
               <td class="td">{{ row.meta?.period || '' }}</td>
@@ -152,13 +152,13 @@
           <span class="text-sm text-slate-600">Page {{ page }}</span>
         </div>
         <div class="text-sm text-slate-600">
-          <span>Credits: ₦ {{ money(ledgerSummary.credits) }}</span>
-          <span class="mx-2">•</span>
-          <span>Debits: ₦ {{ money(ledgerSummary.debits) }}</span>
-          <span class="mx-2">•</span>
-          <span>Net: ₦ {{ money(ledgerSummary.net) }}</span>
-          <span class="mx-2">•</span>
-          <span>Pool Balance: ₦ {{ money(ledgerSummary.pool_balance) }}</span>
+          <span>Credits: Ã¢â€šÂ¦ {{ money(ledgerSummary.credits) }}</span>
+          <span class="mx-2">Ã¢â‚¬Â¢</span>
+          <span>Debits: Ã¢â€šÂ¦ {{ money(ledgerSummary.debits) }}</span>
+          <span class="mx-2">Ã¢â‚¬Â¢</span>
+          <span>Net: Ã¢â€šÂ¦ {{ money(ledgerSummary.net) }}</span>
+          <span class="mx-2">Ã¢â‚¬Â¢</span>
+          <span>Pool Balance: Ã¢â€šÂ¦ {{ money(ledgerSummary.pool_balance) }}</span>
         </div>
       </div>
     </div>
@@ -238,7 +238,7 @@ const triggerCharge = async () => {
     }
     const { data } = await client.post('/api/admin/takaful/charge', payload, { headers: authHeaders() })
     chargeResult.value = data
-    alert(`Charge ${data.dry_run ? 'dry-run ' : ''}completed. Processed: ${data.processed}, Created: ${data.created}, Charged: ₦ ${money(data.charged)}`)
+    alert(`Charge ${data.dry_run ? 'dry-run ' : ''}completed. Processed: ${data.processed}, Created: ${data.created}, Charged: Ã¢â€šÂ¦ ${money(data.charged)}`)
     await loadSummary(); await reloadLedger()
   } catch (e) {
     const msg = e?.response?.data?.message || 'Failed to run charge'
@@ -273,8 +273,10 @@ onMounted(async () => { await loadSummary(); await loadLedger() })
 .inp { @apply w-full bg-white p-2.5 rounded-xl border border-slate-200 text-sm outline-none; }
 .th { @apply text-left px-4 py-2 font-semibold text-xs uppercase tracking-wide; }
 .td { @apply px-4 py-2 align-top; }
-.btn-primary { @apply bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow; }
+.btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow; }
 .btn-muted { @apply bg-white border border-slate-200 text-slate-700 px-3 py-2 rounded-lg shadow-sm; }
 .card { @apply bg-white rounded-2xl border border-slate-200; }
 .card-elevated { @apply shadow-sm; }
 </style>
+
+

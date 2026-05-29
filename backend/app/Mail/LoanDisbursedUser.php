@@ -18,7 +18,7 @@ class LoanDisbursedUser extends Mailable
     public function build()
     {
         return $this
-            ->subject('Alhamdulillāh — Your Qard Hasan Has Been Disbursed')
+            ->subject('AlhamdulillÄh â€” Your Qard Hasan Has Been Disbursed')
             ->view('emails.loan_disbursed_user', [
                 'loan' => $this->loan,
                 'creditedAmount' => $this->creditedAmount,

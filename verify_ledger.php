@@ -20,9 +20,9 @@ $unbalancedJournals = LedgerJournal::all()->filter(function ($journal) {
 });
 
 if ($unbalancedJournals->isEmpty()) {
-    echo "✅ All journals are balanced.\n";
+    echo "âœ… All journals are balanced.\n";
 } else {
-    echo "❌ Found " . $unbalancedJournals->count() . " unbalanced journals!\n";
+    echo "âŒ Found " . $unbalancedJournals->count() . " unbalanced journals!\n";
     foreach ($unbalancedJournals as $j) {
         echo "   Journal ID: {$j->id}, Ref: {$j->reference}, Diff: " . ($j->entries()->sum('debit') - $j->entries()->sum('credit')) . "\n";
     }
@@ -48,9 +48,9 @@ foreach (LedgerAccount::all() as $account) {
 }
 
 if (empty($mismatchedAccounts)) {
-    echo "✅ All account balances match their entries.\n";
+    echo "âœ… All account balances match their entries.\n";
 } else {
-    echo "❌ Found " . count($mismatchedAccounts) . " accounts with mismatched balances!\n";
+    echo "âŒ Found " . count($mismatchedAccounts) . " accounts with mismatched balances!\n";
     foreach ($mismatchedAccounts as $m) {
         echo "   Account: {$m['account']}, Stored: {$m['stored']}, Calculated: {$m['calculated']}\n";
     }
@@ -74,7 +74,7 @@ echo "Total Equity: " . number_format($equity, 2) . "\n";
 echo "Net Income (Unclosed): " . number_format($netIncome, 2) . "\n";
 
 if (abs($assets - $totalEquityAndLiabilities) < 0.01) {
-    echo "✅ Accounting Equation Balance: Assets = Liabilities + Equity (₦" . number_format($assets, 2) . ")\n";
+    echo "âœ… Accounting Equation Balance: Assets = Liabilities + Equity (â‚¦" . number_format($assets, 2) . ")\n";
 } else {
-    echo "❌ Accounting Equation Mismatch! Diff: " . ($assets - $totalEquityAndLiabilities) . "\n";
+    echo "âŒ Accounting Equation Mismatch! Diff: " . ($assets - $totalEquityAndLiabilities) . "\n";
 }

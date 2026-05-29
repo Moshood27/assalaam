@@ -3,15 +3,15 @@
     <!-- Header -->
     <AppHeader title="Airtime, Data & Bills" :showBack="true">
       <template #right>
-        <router-link to="/vtu/history" class="text-emerald-700 text-xs font-bold mr-2">History</router-link>
+        <router-link to="/vtu/history" class="text-blue-700 text-xs font-bold mr-2">History</router-link>
       </template>
     </AppHeader>
 
     <div class="p-4 space-y-6 max-w-md mx-auto">
       <!-- Balance Card -->
-      <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl transform transition-all active:scale-95">
-        <p class="text-emerald-100 text-sm font-medium">Available Wallet Balance</p>
-        <h2 class="text-4xl font-bold mt-1 tracking-tight">₦ {{ formatMoney(balance) }}</h2>
+      <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-7 text-white shadow-xl transform transition-all active:scale-95">
+        <p class="text-blue-100 text-sm font-medium">Available Wallet Balance</p>
+        <h2 class="text-4xl font-bold mt-1 tracking-tight">Ã¢â€šÂ¦ {{ formatMoney(balance) }}</h2>
       </div>
 
       <!-- Tab Switcher -->
@@ -26,7 +26,7 @@
       <div v-if="tab==='airtime'" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 space-y-4">
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Select Network</label>
-          <select v-model="airtime.network" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500 transition-colors">
+          <select v-model="airtime.network" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500 transition-colors">
             <option value="mtn">MTN</option>
             <option value="airtel">Airtel</option>
             <option value="glo">Glo</option>
@@ -35,11 +35,11 @@
         </div>
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Phone Number</label>
-          <input v-model="airtime.phone" type="tel" placeholder="0803 000 0000" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-emerald-500" />
+          <input v-model="airtime.phone" type="tel" placeholder="0803 000 0000" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500" />
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (₦)</label>
-          <input v-model.number="airtime.amount" type="number" min="50" placeholder="e.g. 100" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-emerald-500" />
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (Ã¢â€šÂ¦)</label>
+          <input v-model.number="airtime.amount" type="number" min="50" placeholder="e.g. 100" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500" />
         </div>
         <button @click="buyAirtime" :disabled="loadingAirtime || !canBuyAirtime" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
           <span v-if="loadingAirtime" class="flex items-center justify-center gap-2">
@@ -55,7 +55,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Network</label>
-            <select v-model="dataForm.network" @change="loadBundles" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500">
+            <select v-model="dataForm.network" @change="loadBundles" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
               <option value="mtn">MTN</option>
               <option value="airtel">Airtel</option>
               <option value="glo">Glo</option>
@@ -64,19 +64,19 @@
           </div>
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Phone Number</label>
-            <input v-model="dataForm.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+            <input v-model="dataForm.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500" />
           </div>
         </div>
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Select Bundle</label>
-          <select v-model="dataForm.bundleCode" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500">
+          <select v-model="dataForm.bundleCode" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
             <option disabled value="">Choose a plan...</option>
             <option v-for="b in bundles" :key="b.code" :value="b.code">
-              {{ b.name }} — ₦ {{ formatMoney(b.amount) }}
+              {{ b.name }} Ã¢â‚¬â€ Ã¢â€šÂ¦ {{ formatMoney(b.amount) }}
             </option>
           </select>
           <p v-if="selectedBundle" class="mt-2 text-xs text-slate-500 ml-1 italic text-center">
-            Total to be debited: <span class="font-bold text-emerald-700">₦ {{ formatMoney(selectedBundle.total_debit) }}</span>
+            Total to be debited: <span class="font-bold text-blue-700">Ã¢â€šÂ¦ {{ formatMoney(selectedBundle.total_debit) }}</span>
           </p>
         </div>
         <button @click="buyData" :disabled="loadingData || !canBuyData" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
@@ -90,7 +90,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Disco</label>
-            <select v-model="electricity.disco" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500">
+            <select v-model="electricity.disco" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
               <option value="aedc">AEDC</option>
               <option value="ekedc">EKEDC</option>
               <option value="ikeja-electric">IKEDC</option>
@@ -103,7 +103,7 @@
           </div>
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Meter Type</label>
-            <select v-model="electricity.meterType" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500">
+            <select v-model="electricity.meterType" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
               <option value="prepaid">Prepaid</option>
               <option value="postpaid">Postpaid</option>
             </select>
@@ -112,12 +112,12 @@
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Meter Number</label>
           <div class="flex gap-2">
-            <input v-model="electricity.meter" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+            <input v-model="electricity.meter" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500" />
             <button @click="verifyMerchant" :disabled="verification.loading || !electricity.meter || electricity.meter.length < 6" class="btn-muted text-xs">
               {{ verification.loading ? '...' : 'Verify' }}
             </button>
           </div>
-          <p v-if="verification.verified && tab==='electricity'" class="mt-1 text-[10px] text-emerald-600 font-bold ml-1">
+          <p v-if="verification.verified && tab==='electricity'" class="mt-1 text-[10px] text-blue-600 font-bold ml-1">
             Name: {{ verification.customerName }}
           </p>
           <p v-if="verification.error && tab==='electricity'" class="mt-1 text-[10px] text-red-500 font-bold ml-1">
@@ -125,13 +125,13 @@
           </p>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (₦)</label>
-          <input v-model.number="electricity.amount" type="number" min="100" placeholder="e.g. 1000" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-emerald-500" />
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (Ã¢â€šÂ¦)</label>
+          <input v-model.number="electricity.amount" type="number" min="100" placeholder="e.g. 1000" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500" />
           <p class="mt-2 text-[10px] text-slate-500 italic ml-1">Note: A small convenience fee may apply.</p>
         </div>
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Phone (Optional)</label>
-          <input v-model="electricity.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+          <input v-model="electricity.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500" />
         </div>
         <button @click="buyElectricity" :disabled="loadingElectricity || !canBuyElectricity" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
           <span v-if="loadingElectricity">Processing...</span>
@@ -144,7 +144,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Service</label>
-            <select v-model="cable.service" @change="loadTvBundles" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500">
+            <select v-model="cable.service" @change="loadTvBundles" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
               <option value="dstv">DSTV</option>
               <option value="gotv">GOTV</option>
               <option value="startimes">Startimes</option>
@@ -153,12 +153,12 @@
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Smartcard Number</label>
             <div class="flex gap-2">
-              <input v-model="cable.smartcard" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+              <input v-model="cable.smartcard" type="text" placeholder="e.g. 1234567890" class="flex-1 bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500" />
               <button @click="verifyMerchant" :disabled="verification.loading || !cable.smartcard || cable.smartcard.length < 6" class="btn-muted text-xs">
                 {{ verification.loading ? '...' : 'Verify' }}
               </button>
             </div>
-            <p v-if="verification.verified && tab==='cable'" class="mt-1 text-[10px] text-emerald-600 font-bold ml-1">
+            <p v-if="verification.verified && tab==='cable'" class="mt-1 text-[10px] text-blue-600 font-bold ml-1">
               Name: {{ verification.customerName }}
             </p>
             <p v-if="verification.error && tab==='cable'" class="mt-1 text-[10px] text-red-500 font-bold ml-1">
@@ -168,19 +168,19 @@
         </div>
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Select Package</label>
-          <select v-model="cable.bundleCode" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500">
+          <select v-model="cable.bundleCode" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
             <option disabled value="">Choose a package...</option>
             <option v-for="b in tvBundles" :key="b.code" :value="b.code">
-              {{ b.name }} — ₦ {{ formatMoney(b.amount) }}
+              {{ b.name }} Ã¢â‚¬â€ Ã¢â€šÂ¦ {{ formatMoney(b.amount) }}
             </option>
           </select>
           <p v-if="selectedTvBundle" class="mt-2 text-xs text-slate-500 ml-1 italic text-center">
-            Total to be debited: <span class="font-bold text-emerald-700">₦ {{ formatMoney(selectedTvBundle.total_debit) }}</span>
+            Total to be debited: <span class="font-bold text-blue-700">Ã¢â€šÂ¦ {{ formatMoney(selectedTvBundle.total_debit) }}</span>
           </p>
         </div>
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Phone (Optional)</label>
-          <input v-model="cable.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-emerald-500" />
+          <input v-model="cable.phone" type="tel" placeholder="0803..." class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500" />
         </div>
         <button @click="buyCable" :disabled="loadingCable || !canBuyCable" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
           <span v-if="loadingCable">Processing...</span>
@@ -654,3 +654,5 @@ watch(tab, () => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
+
+

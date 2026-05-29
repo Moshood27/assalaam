@@ -23,9 +23,9 @@
     </p>
 
     <p>
-        Credits: ₦ {{ number_format((float)($summary['credits'] ?? 0), 2) }} &nbsp;|
-        Debits: ₦ {{ number_format((float)($summary['debits'] ?? 0), 2) }} &nbsp;|
-        Pool Balance: ₦ {{ number_format((float)($summary['balance'] ?? 0), 2) }}
+        Credits: â‚¦ {{ number_format((float)($summary['credits'] ?? 0), 2) }} &nbsp;|
+        Debits: â‚¦ {{ number_format((float)($summary['debits'] ?? 0), 2) }} &nbsp;|
+        Pool Balance: â‚¦ {{ number_format((float)($summary['balance'] ?? 0), 2) }}
     </p>
 
     <table>
@@ -46,7 +46,7 @@
                 <tr>
                     <td>{{ $r->created_at }}</td>
                     <td>{{ $r->direction }}</td>
-                    <td>₦ {{ number_format((float) $r->amount, 2) }}</td>
+                    <td>â‚¦ {{ number_format((float) $r->amount, 2) }}</td>
                     <td>{{ $r->reference }}</td>
                     <td>{{ $r->meta['user_id'] ?? '' }}</td>
                     <td>{{ $r->meta['period'] ?? '' }}</td>

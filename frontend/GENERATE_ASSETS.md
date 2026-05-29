@@ -21,8 +21,8 @@ Alternative: temporarily go to the repo root
 
 Prerequisites
 1) Provide source images at the repo root in assets/:
-   - assets/icon.png — 1024x1024 PNG, no rounded corners, no transparency.
-   - assets/splash.png — 2732x2732 PNG, keep important content centered.
+   - assets/icon.png â€” 1024x1024 PNG, no rounded corners, no transparency.
+   - assets/splash.png â€” 2732x2732 PNG, keep important content centered.
 
 2) No design yet? You can generate compliant placeholders from the frontend folder:
    - npm --prefix .. run assets:placeholders
@@ -37,8 +37,8 @@ Troubleshooting
 - Ensure you have Node.js and npm installed.
 
 Reference scripts (defined in repo-root package.json)
-- cap:assets → npx @capacitor/assets generate
-- cap:assets:android → npx @capacitor/assets generate --platform android
-- cap:assets:ios → npx @capacitor/assets generate --platform ios
-- cap:sync → npx cap sync
-- assets:placeholders → node scripts/generate-placeholder-assets.mjs
+- cap:assets â†’ npx @capacitor/assets generate
+- cap:assets:android â†’ npx @capacitor/assets generate --platform android
+- cap:assets:ios â†’ npx @capacitor/assets generate --platform ios
+- cap:sync â†’ npx cap sync
+- assets:placeholders â†’ node scripts/generate-placeholder-assets.mjs

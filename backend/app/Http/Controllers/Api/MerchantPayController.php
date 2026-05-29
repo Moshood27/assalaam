@@ -41,7 +41,7 @@ class MerchantPayController extends Controller
         }
         $params['medium'] = 'qr';
 
-        $payload = 'attaqwa:pay?' . http_build_query($params);
+        $payload = 'assalaam:pay?' . http_build_query($params);
 
         return response()->json([
             'payload' => $payload,
@@ -195,8 +195,8 @@ class MerchantPayController extends Controller
         $result = [];
 
         // If it looks like our scheme
-        if (str_starts_with($text, 'attaqwa:')) {
-            $after = substr($text, strlen('attaqwa:'));
+        if (str_starts_with($text, 'assalaam:')) {
+            $after = substr($text, strlen('assalaam:'));
             // e.g., pay?to_type=...&to=...
             $parts = explode('?', $after, 2);
             if (count($parts) === 2) {

@@ -49,8 +49,8 @@
                 <tr>
                     <th>Product Name</th>
                     <th>Quantity</th>
-                    <th>Unit Price (₦)</th>
-                    <th>Line Total (₦)</th>
+                    <th>Unit Price (â‚¦)</th>
+                    <th>Line Total (â‚¦)</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,7 +66,7 @@
             <tfoot>
                 <tr>
                     <th colspan="3" style="text-align: right;">Grand Total:</th>
-                    <th>₦ {{ number_format($order->total_amount, 2) }}</th>
+                    <th>â‚¦ {{ number_format($order->total_amount, 2) }}</th>
                 </tr>
             </tfoot>
         </table>
@@ -74,14 +74,14 @@
 
     <div class="section">
         <p class="section-title">3. PRICE AND PAYMENT TERMS</p>
-        <p>The Cooperative has purchased the asset(s) at a cost of <strong>₦ {{ number_format($order->total_cost, 2) }}</strong> and sells it to the Member at a total price of <strong>₦ {{ number_format($order->total_amount, 2) }}</strong>, which includes a markup (profit) of <strong>₦ {{ number_format($order->total_profit, 2) }}</strong>.</p>
+        <p>The Cooperative has purchased the asset(s) at a cost of <strong>â‚¦ {{ number_format($order->total_cost, 2) }}</strong> and sells it to the Member at a total price of <strong>â‚¦ {{ number_format($order->total_amount, 2) }}</strong>, which includes a markup (profit) of <strong>â‚¦ {{ number_format($order->total_profit, 2) }}</strong>.</p>
         <p>The Member agrees to pay the total amount in <strong>{{ $order->meta['financing']['months'] ?? 0 }}</strong> monthly installments as per the following schedule:</p>
         <table>
             <thead>
                 <tr>
                     <th>Installment</th>
                     <th>Due Date</th>
-                    <th>Amount (₦)</th>
+                    <th>Amount (â‚¦)</th>
                 </tr>
             </thead>
             <tbody>

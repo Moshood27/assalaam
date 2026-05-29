@@ -24,7 +24,7 @@
 <div class="wrapper">
     <div class="container">
         <div class="header">
-            <p class="brand">{{ config('app.name') }} • Loan disbursed (Admin)</p>
+            <p class="brand">{{ config('app.name') }} â€¢ Loan disbursed (Admin)</p>
         </div>
         <div class="content">
             <p>A loan has been disbursed.</p>
@@ -39,11 +39,11 @@
                 </tr>
                 <tr>
                     <td class="label">Principal</td>
-                    <td class="value">₦{{ number_format($loan->principal_amount, 2) }}</td>
+                    <td class="value">â‚¦{{ number_format($loan->principal_amount, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Admin fee (flat)</td>
-                    <td class="value">₦{{ number_format($loan->admin_fee_flat, 2) }}</td>
+                    <td class="value">â‚¦{{ number_format($loan->admin_fee_flat, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Admin fee (%)</td>
@@ -51,7 +51,7 @@
                 </tr>
                 <tr>
                     <td class="label">Credited to wallet</td>
-                    <td class="value">₦{{ number_format($creditedAmount, 2) }}</td>
+                    <td class="value">â‚¦{{ number_format($creditedAmount, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Status</td>

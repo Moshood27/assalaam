@@ -1,8 +1,8 @@
 # Branch Performance Analytics
 
-This document details the Branch Performance Analytics feature, which provides administrators with a visual and data-driven overview of the cooperative’s branch network, focusing on savings mobilization and loan performance (delinquency).
+This document details the Branch Performance Analytics feature, which provides administrators with a visual and data-driven overview of the cooperativeâ€™s branch network, focusing on savings mobilization and loan performance (delinquency).
 
-Last updated: 2026‑04‑09
+Last updated: 2026â€‘04â€‘09
 
 ## Overview
 The Branch Performance Analytics system consists of a visual map, aggregate performance metrics, and detailed reports. It allows Super Admins to identify high-performing branches and areas requiring intervention due to high default rates.
@@ -31,7 +31,7 @@ The visual centerpiece is the **Branch Analytics Map**, accessible via the Filam
 *   **Aggregate Totals**: A header bar shows the total number of branches on the map, the combined total savings, and the average default rate across all mapped branches.
 *   **Interactive Markers**: Clicking a branch marker reveals a popup with:
     *   Branch Name
-    *   Total Savings (Formatted in ₦)
+    *   Total Savings (Formatted in â‚¦)
     *   Default Rate (Percentage)
 *   **Auto-scaling**: The map automatically zooms and centers to fit all branches with valid coordinates (latitude/longitude).
 

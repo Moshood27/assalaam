@@ -26,16 +26,16 @@ What this seeding does
 - Imports every non-zero contribution column from `investment_record_details` into `contributions`:
   - Column-to-scheme mapping: Investment, Savings, Shares, Building, Development, AGM, Loan Repayment, Sav, Welfare, Lateness, Stationery, Loan Form, Others, ID Card, Emergency, Entrance, H Savings, Fine
   - Preserves the original `paymentdate`
-  - Uses deterministic references (e.g., `OLDINV-<row>-<COLUMN>`) so reruns don’t duplicate
-- Migrates legacy Loan Repayment amounts into the dedicated `qard_hasan_repayments` table and updates each loan’s `paid_amount`:
+  - Uses deterministic references (e.g., `OLDINV-<row>-<COLUMN>`) so reruns donâ€™t duplicate
+- Migrates legacy Loan Repayment amounts into the dedicated `qard_hasan_repayments` table and updates each loanâ€™s `paid_amount`:
   - Creates a repayment record per legacy row with reference like `OLDREPAY-<row>` and `status=success`
-  - Increments the linked loan’s `paid_amount` and marks it `completed` when fully repaid
+  - Increments the linked loanâ€™s `paid_amount` and marks it `completed` when fully repaid
   - Matches repayments to the most plausible active/incomplete loan for the member based on payment date
   - If no plausible loan exists in the new DB, it will look up the correct legacy loan (by member and paid date) and auto-import that loan on-the-fly (idempotent) before applying the repayment
 
 Idempotency and safety
 - Seeders use update-or-create semantics so you can re-run them without creating duplicates.
-- Legacy tables are only staged if they don’t already exist in your database.
+- Legacy tables are only staged if they donâ€™t already exist in your database.
 - Toggle the import on or off via the `SEED_OLD_DATA` flag.
 
 Prerequisites
@@ -141,7 +141,7 @@ Troubleshooting
     - .\sail.ps1 artisan migrate:fresh --seed  (Docker)
     - php artisan migrate:fresh --seed          (local)
 - Previously saw "Failed executing old SQL for table <name>: ... doesn't exist"
-  - You were likely on an earlier importer that didn’t finalize CREATE TABLE statements correctly. Update to this version and rerun a clean seed:
+  - You were likely on an earlier importer that didnâ€™t finalize CREATE TABLE statements correctly. Update to this version and rerun a clean seed:
     - .\sail.ps1 artisan migrate:fresh --seed  (Docker)
     - php artisan migrate:fresh --seed          (local)
 
@@ -155,9 +155,9 @@ Recreate legacy loans only (preserve member investments)
 Commands (Docker Sail):
 1) From backend folder, ensure latest migrations are applied:
    .\sail.ps1 artisan migrate
-2) Option A — Re-import without purging existing legacy loans (safe upsert):
+2) Option A â€” Re-import without purging existing legacy loans (safe upsert):
    .\sail.ps1 artisan db:seed --class=Database\\Seeders\\ReimportLegacyLoansSeeder
-3) Option B — Purge safe-to-delete legacy loans first, then re-import:
+3) Option B â€” Purge safe-to-delete legacy loans first, then re-import:
    - Temporarily set in backend/.env: REIMPORT_PURGE_OLD_LOANS=true
    - Clear config cache (if any): .\sail.ps1 artisan config:clear
    - Run: .\sail.ps1 artisan db:seed --class=Database\\Seeders\\ReimportLegacyLoansSeeder
@@ -171,7 +171,7 @@ Commands (Local PHP):
 Notes
 - Purge step deletes only loans with qard_id_string like OLD-*, with paid_amount <= 0, and with no repayments; others are left intact.
 - Contributions (member investments) are not touched by this seeder.
-- Importers are idempotent; repeated runs won’t duplicate data.
+- Importers are idempotent; repeated runs wonâ€™t duplicate data.
 
 Notes
 - Legacy tables (members, loan, investment_record_details) are staged inside the same database and are only used during import.
@@ -179,7 +179,7 @@ Notes
 - Email addresses from legacy data are validated; invalid or duplicate emails get a generated unique placeholder like `member-<id>-<slug>@old.local`.
 
 Support
-If you run into issues that aren’t covered here, please share the relevant error output from the artisan command you ran so we can help diagnose quickly.
+If you run into issues that arenâ€™t covered here, please share the relevant error output from the artisan command you ran so we can help diagnose quickly.
 
 
 ## Member Passports Linking

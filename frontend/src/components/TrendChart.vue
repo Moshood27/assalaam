@@ -19,7 +19,7 @@ import { computed, onMounted, ref } from 'vue'
 const props = defineProps({
   series: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
-  currency: { type: String, default: '₦' },
+  currency: { type: String, default: 'Ã¢â€šÂ¦' },
 })
 
 const isReady = ref(false)
@@ -71,3 +71,5 @@ const options = computed(() => ({
   },
 }))
 </script>
+
+

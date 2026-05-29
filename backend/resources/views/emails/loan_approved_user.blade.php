@@ -4,11 +4,11 @@
     <title>Loan Approved</title>
 </head>
 <body>
-    <h3>Assalāmu ‘alaykum, {{ $member->name ?? 'Member' }}!</h3>
-    <p>We pray this message finds you in good health and īmān.</p>
+    <h3>AssalÄmu â€˜alaykum, {{ $member->name ?? 'Member' }}!</h3>
+    <p>We pray this message finds you in good health and Ä«mÄn.</p>
     <p>We are pleased to inform you that your Qard Hasan request <strong>{{ $loan->qard_id_string }}</strong> has been approved.</p>
 
-    <p>Before we can disburse the funds (₦{{ number_format($loan->principal_amount, 2) }}), we require you to sign the loan agreement.</p>
+    <p>Before we can disburse the funds (â‚¦{{ number_format($loan->principal_amount, 2) }}), we require you to sign the loan agreement.</p>
 
     <p><strong>Instructions:</strong></p>
     <ol>
@@ -20,8 +20,8 @@
     </ol>
 
     <p>Once you upload the signed agreement, our admin will verify it and disburse the funds to your wallet.</p>
-    <p>May Allāh place barakah in this for you.</p>
+    <p>May AllÄh place barakah in this for you.</p>
 
-    <p>Jazākumullāhu khayran,<br>{{ config('app.name') }}</p>
+    <p>JazÄkumullÄhu khayran,<br>{{ config('app.name') }}</p>
 </body>
 </html>

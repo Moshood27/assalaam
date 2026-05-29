@@ -38,8 +38,8 @@
             <div class="brand">{{ config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $user->full_name }},</p>
-            <p>Welcome to {{ config('app.name') }}. We begin in the Name of Allāh, the Most Merciful, the Especially Merciful. May Allāh place barakah in your membership and make it a means of khayr for you and your family. Āmīn.</p>
+            <p class="salam">AssalÄmu â€˜alaykum {{ $user->full_name }},</p>
+            <p>Welcome to {{ config('app.name') }}. We begin in the Name of AllÄh, the Most Merciful, the Especially Merciful. May AllÄh place barakah in your membership and make it a means of khayr for you and your family. Ä€mÄ«n.</p>
 
             @if(!empty($user->membership_number))
             <table class="meta" role="presentation" cellspacing="0" cellpadding="0">
@@ -68,7 +68,7 @@
                 <a href="mailto:{{ $supportEmail }}" class="btn">Contact Support</a>
             </p>
 
-            <p>Jazākumullāhu khayran,<br>{{ config('app.name') }}</p>
+            <p>JazÄkumullÄhu khayran,<br>{{ config('app.name') }}</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

@@ -16,7 +16,7 @@
     <div class="p-4 space-y-6">
       <!-- Bank Info Missing Warning -->
       <div v-if="!vendor.settlement_account_number || !vendor.settlement_bank_code || !vendor.settlement_account_name" class="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3">
-        <div class="text-xl">⚠️</div>
+        <div class="text-xl">âš ï¸</div>
         <div class="flex-1">
           <p class="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-0.5">Bank Details Missing</p>
           <p class="text-[11px] text-amber-700 font-medium">Please update your bank details in your profile to request payouts.</p>
@@ -26,20 +26,20 @@
 
       <!-- Balance Card -->
       <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 relative overflow-hidden">
-        <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 opacity-40" />
+        <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-40" />
         <div class="relative z-10">
           <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Withdrawable Balance</p>
-          <h2 class="text-3xl font-black text-slate-800 uppercase leading-tight">₦{{ formatMoney(availableBalance) }}</h2>
+          <h2 class="text-3xl font-black text-slate-800 uppercase leading-tight">â‚¦{{ formatMoney(availableBalance) }}</h2>
           
           <div class="mt-6">
             <button 
               @click="showRequestModal = true"
               :disabled="availableBalance < 100 || !vendor.settlement_account_number || !vendor.settlement_bank_code || !vendor.settlement_account_name"
-              class="w-full h-14 rounded-2xl bg-emerald-700 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-700/30 disabled:bg-slate-300 disabled:shadow-none transition-all active:scale-95"
+              class="w-full h-14 rounded-2xl bg-blue-700 text-white font-black uppercase tracking-wider shadow-lg shadow-blue-700/30 disabled:bg-slate-300 disabled:shadow-none transition-all active:scale-95"
             >
               Request Payout
             </button>
-            <p v-if="availableBalance < 100" class="text-[10px] text-center text-slate-400 mt-2 font-bold uppercase">Minimum settlement: ₦100.00</p>
+            <p v-if="availableBalance < 100" class="text-[10px] text-center text-slate-400 mt-2 font-bold uppercase">Minimum settlement: â‚¦100.00</p>
           </div>
         </div>
       </div>
@@ -62,7 +62,7 @@
               {{ getStatusIcon(s.status) }}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-slate-800 truncate">₦{{ formatMoney(s.amount) }}</p>
+              <p class="text-sm font-bold text-slate-800 truncate">â‚¦{{ formatMoney(s.amount) }}</p>
               <p class="text-[10px] text-slate-500 font-medium">{{ formatDate(s.created_at) }}</p>
             </div>
             <div class="text-right">
@@ -80,29 +80,29 @@
       <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-slide-up">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Request Payout</h2>
-          <button @click="showRequestModal = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">✕</button>
+          <button @click="showRequestModal = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">âœ•</button>
         </div>
         
-        <div class="bg-emerald-50 p-4 rounded-2xl mb-6">
-          <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">To Bank Account</p>
+        <div class="bg-blue-50 p-4 rounded-2xl mb-6">
+          <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">To Bank Account</p>
           <p class="text-sm font-bold text-slate-800">{{ vendor.settlement_bank_name }}</p>
-          <p class="text-xs text-slate-500">{{ vendor.settlement_account_number }} • {{ vendor.settlement_account_name }}</p>
+          <p class="text-xs text-slate-500">{{ vendor.settlement_account_number }} â€¢ {{ vendor.settlement_account_name }}</p>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Amount to Withdraw (₦)</label>
-            <input v-model.number="form.amount" type="number" step="0.01" :max="availableBalance" class="w-full mt-1 px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-emerald-500 outline-none transition-colors font-black text-xl text-slate-800" placeholder="0.00" />
+            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Amount to Withdraw (â‚¦)</label>
+            <input v-model.number="form.amount" type="number" step="0.01" :max="availableBalance" class="w-full mt-1 px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-blue-500 outline-none transition-colors font-black text-xl text-slate-800" placeholder="0.00" />
             <div class="flex justify-between mt-1 px-1">
-               <span class="text-[9px] text-slate-400 font-bold uppercase">Max: ₦{{ formatMoney(availableBalance) }}</span>
-               <button @click="form.amount = availableBalance" class="text-[9px] text-emerald-700 font-black uppercase">Withdraw All</button>
+               <span class="text-[9px] text-slate-400 font-bold uppercase">Max: â‚¦{{ formatMoney(availableBalance) }}</span>
+               <button @click="form.amount = availableBalance" class="text-[9px] text-blue-700 font-black uppercase">Withdraw All</button>
             </div>
           </div>
 
           <button 
             @click="submitRequest"
             :disabled="submitting || !form.amount || form.amount > availableBalance || form.amount < 100"
-            class="w-full h-16 rounded-3xl bg-emerald-700 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-700/30 disabled:bg-slate-300 disabled:shadow-none transition-all active:scale-95"
+            class="w-full h-16 rounded-3xl bg-blue-700 text-white font-black uppercase tracking-wider shadow-lg shadow-blue-700/30 disabled:bg-slate-300 disabled:shadow-none transition-all active:scale-95"
           >
             {{ submitting ? 'Processing...' : 'Confirm Request' }}
           </button>
@@ -140,7 +140,7 @@ const formatDate = (dateStr) => {
 const getStatusClass = (s) => {
   switch (s) {
     case 'processed':
-    case 'completed': return 'bg-emerald-50 text-emerald-600'
+    case 'completed': return 'bg-blue-50 text-blue-600'
     case 'pending': return 'bg-amber-50 text-amber-600'
     case 'failed': return 'bg-rose-50 text-rose-600'
     default: return 'bg-slate-50 text-slate-600'
@@ -150,9 +150,9 @@ const getStatusClass = (s) => {
 const getStatusIcon = (s) => {
   switch (s) {
     case 'processed':
-    case 'completed': return '✓'
-    case 'pending': return '⌛'
-    case 'failed': return '✕'
+    case 'completed': return 'âœ“'
+    case 'pending': return 'âŒ›'
+    case 'failed': return 'âœ•'
     default: return '?'
   }
 }
@@ -160,7 +160,7 @@ const getStatusIcon = (s) => {
 const getStatusBadgeClass = (s) => {
   switch (s) {
     case 'processed':
-    case 'completed': return 'bg-emerald-100 text-emerald-700'
+    case 'completed': return 'bg-blue-100 text-blue-700'
     case 'pending': return 'bg-amber-100 text-amber-700'
     case 'failed': return 'bg-rose-100 text-rose-700'
     default: return 'bg-slate-100 text-slate-700'
@@ -230,3 +230,5 @@ onMounted(loadData)
   animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>
+
+

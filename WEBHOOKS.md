@@ -1,6 +1,6 @@
 # Webhooks Overview
 
-This repository supports multiple inbound webhooks used to reconcile payments and value‑added services. This document provides a quick overview and links to detailed guides.
+This repository supports multiple inbound webhooks used to reconcile payments and valueâ€‘added services. This document provides a quick overview and links to detailed guides.
 
 
 ## Paystack (Payments)
@@ -45,7 +45,7 @@ After you have a public URL, configure your provider dashboards accordingly:
 
 
 ## Security Notes
-- These endpoints are intentionally unauthenticated so providers can call them. Implement perimeter protections where possible (e.g., IP allow‑listing, WAF rules).
+- These endpoints are intentionally unauthenticated so providers can call them. Implement perimeter protections where possible (e.g., IP allowâ€‘listing, WAF rules).
 - Each controller performs verification/validation tailored to the provider.
 - All webhook payloads are logged for diagnostics; ensure logs are shipped/rotated securely.
 
@@ -59,4 +59,4 @@ After you have a public URL, configure your provider dashboards accordingly:
   - Check backend/.env for provider keys and ensure backend/config/services.php has correct values.
 
 
-— Last updated: 2026-03-20
+â€” Last updated: 2026-03-20

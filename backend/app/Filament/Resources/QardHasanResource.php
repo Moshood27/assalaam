@@ -88,7 +88,7 @@ class QardHasanResource extends Resource
                         }
                     }),
                 Forms\Components\MultiSelect::make('guarantor_ids')
-                    ->label('Guarantors (2–3, not in default)')
+                    ->label('Guarantors (2â€“3, not in default)')
                     ->options(function (callable $get) {
                         $selectedUserId = $get('user_id');
 
@@ -112,11 +112,11 @@ class QardHasanResource extends Resource
                     ->hint('Auto-generated at create time'),
                 Forms\Components\TextInput::make('principal_amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required()
                     ->disabled()
                     ->dehydrated()
-                    ->helperText('Auto: 5% on first loan; 2 × thereafter (incl. migrated balances). Migrated members bypass the 5% cap.'),
+                    ->helperText('Auto: 5% on first loan; 2 Ã— thereafter (incl. migrated balances). Migrated members bypass the 5% cap.'),
                 Forms\Components\TextInput::make('total_installments')
                     ->numeric()
                     ->minValue(1)
@@ -142,7 +142,7 @@ class QardHasanResource extends Resource
                     }),
                 Forms\Components\TextInput::make('per_installment')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required()
                     ->disabled()
                     ->dehydrated()
@@ -156,7 +156,7 @@ class QardHasanResource extends Resource
                 Forms\Components\TextInput::make('admin_fee_flat')
                     ->label('Admin Fee (Flat)')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->default(0),
                 Forms\Components\TextInput::make('admin_fee_pct')
                     ->label('Admin Fee (%)')
@@ -165,7 +165,7 @@ class QardHasanResource extends Resource
                     ->default(0),
                 Forms\Components\TextInput::make('paid_amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->default(0)
                     ->disabled()
                     ->dehydrated(),
@@ -443,7 +443,7 @@ class QardHasanResource extends Resource
                             foreach ($admins as $admin) {
                                 $admin->notifyMember(
                                     'High-Value Loan Approval Required',
-                                    "A loan of ₦" . number_format($record->principal_amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
+                                    "A loan of â‚¦" . number_format($record->principal_amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
                                     [
                                         'type' => 'high_value_loan_approval',
                                         'loan_id' => $record->id,
@@ -728,9 +728,9 @@ class QardHasanResource extends Resource
                         Forms\Components\Radio::make('disbursement_mode')
                             ->label('Disbursement Mode')
                             ->options([
-                                'internal' => 'Internal Credit (Default) — spend inside app; withdrawals disabled',
-                                'cash_out' => 'Automated Cash-Out — trigger automatic transfer via Paystack',
-                                'manual' => 'Manual Credit — Transfer manually to member bank account',
+                                'internal' => 'Internal Credit (Default) â€” spend inside app; withdrawals disabled',
+                                'cash_out' => 'Automated Cash-Out â€” trigger automatic transfer via Paystack',
+                                'manual' => 'Manual Credit â€” Transfer manually to member bank account',
                             ])
                             ->default('internal')
                             ->reactive()
@@ -751,7 +751,7 @@ class QardHasanResource extends Resource
                             ->label('Internal Note (optional)')
                             ->maxLength(200)
                             ->rows(2)
-                            ->placeholder('e.g., Low liquidity this week — restrict to internal spend'),
+                            ->placeholder('e.g., Low liquidity this week â€” restrict to internal spend'),
                     ])
                     ->action(function (QardHasan $record, array $data) {
                         // Enforce 6-month membership before disbursement
@@ -917,7 +917,7 @@ class QardHasanResource extends Resource
                                 $modeText = 'Manual Bank Transfer';
                             }
                             $locationText = ($mode === 'manual') ? 'your bank account' : 'your wallet';
-                            $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to '.$locationText.' ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($record->user->balance ?? 0), 2);
+                            $msg = 'Loan disbursed: â‚¦'.number_format($credit, 2).' to '.$locationText.' ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: â‚¦'.number_format((float) ($record->user->balance ?? 0), 2);
                             $record->user->notifyMember('Loan Disbursed', $msg, [
                                 'type' => 'loan_disbursed',
                                 'loan_id' => $record->id,
@@ -1048,7 +1048,7 @@ class QardHasanResource extends Resource
                     ->form([
                         Forms\Components\TextInput::make('amount')
                             ->numeric()
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->required()
                             ->default(fn (QardHasan $record) => max(0, $record->principal_amount - $record->paid_amount)),
                         Forms\Components\DateTimePicker::make('paid_at')

@@ -8,8 +8,8 @@ export const startDashboardTour = () => {
     const driverObj = driver({
       showProgress: true,
       animate: true,
-      nextBtnText: 'Next —>',
-      prevBtnText: '<— Back',
+      nextBtnText: 'Next Ã¢â‚¬â€>',
+      prevBtnText: '<Ã¢â‚¬â€ Back',
       doneBtnText: 'Got it!',
       steps: [
         {
@@ -54,3 +54,5 @@ export const startDashboardTour = () => {
     console.warn('Dashboard tour failed to start:', e)
   }
 }
+
+

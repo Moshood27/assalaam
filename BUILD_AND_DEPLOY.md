@@ -1,6 +1,6 @@
 # Build and Deploy Guide (Web + Mobile)
 
-This is a concise, copy‑paste friendly guide to build and deploy the web app and the native mobile apps. For deeper, production‑grade notes, see DEPLOYMENT.md and MOBILE_BUILD_SYNC.md.
+This is a concise, copyâ€‘paste friendly guide to build and deploy the web app and the native mobile apps. For deeper, productionâ€‘grade notes, see DEPLOYMENT.md and MOBILE_BUILD_SYNC.md.
 
 Contents
 - Prerequisites
@@ -18,11 +18,11 @@ Prerequisites
 - If using WSL2: run Android Studio/Xcode on the host OS; you can build the web inside WSL2
 
 Project layout (relevant folders)
-- backend/ — Laravel API
-- frontend/ — Vue 3 + Vite app (Capacitor for mobile)
-- capacitor.config.json — points to frontend/dist and native project paths
-- docker-compose.pro.yml — Nginx + PHP‑FPM + MySQL production-ish stack
-- docker/nginx/conf.d/app.conf — Nginx routes web app from /app/
+- backend/ â€” Laravel API
+- frontend/ â€” Vue 3 + Vite app (Capacitor for mobile)
+- capacitor.config.json â€” points to frontend/dist and native project paths
+- docker-compose.pro.yml â€” Nginx + PHPâ€‘FPM + MySQL production-ish stack
+- docker/nginx/conf.d/app.conf â€” Nginx routes web app from /app/
 
 1) Local development
 Backend (Laravel Sail wrappers from repo root)
@@ -55,7 +55,7 @@ Run with Docker (nginx + php-fpm + mysql)
 - docker compose -f docker-compose.pro.yml up -d --build
 
 What happens
-- Nginx serves the SPA from /app/ using the volume mapping: ./frontend/dist → /var/www/html/public/app
+- Nginx serves the SPA from /app/ using the volume mapping: ./frontend/dist â†’ /var/www/html/public/app
 - Laravel API is available at the root (/) and /api routes. See docker/nginx/conf.d/app.conf for details.
 - Visit http://localhost (or your server host). The web app is under http://HOST/app/
 
@@ -112,7 +112,7 @@ Clean Android debug APK (from frontend/android)
 
 5) Troubleshooting
 - White screen in Android build
-  - Make sure you used: npm run build:mobile (base './') and re‑ran npx cap sync android
+  - Make sure you used: npm run build:mobile (base './') and reâ€‘ran npx cap sync android
 - API calls failing on device
   - Use a reachable origin (e.g., http://YOUR_LAN_IP:8080). Configure VITE_API_URL before building.
 - 404s on web under /app/
@@ -121,5 +121,5 @@ Clean Android debug APK (from frontend/android)
   - Set VITE_PROXY_TARGET to your backend origin (e.g., http://localhost:8080) before npm run dev
 
 Further reading
-- DEPLOYMENT.md — comprehensive Docker, production hardening, and mobile notes
-- MOBILE_BUILD_SYNC.md — detailed Capacitor build/sync workflow and asset generation
+- DEPLOYMENT.md â€” comprehensive Docker, production hardening, and mobile notes
+- MOBILE_BUILD_SYNC.md â€” detailed Capacitor build/sync workflow and asset generation

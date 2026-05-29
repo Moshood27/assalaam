@@ -53,10 +53,10 @@ class SendLoanMonthlyReminders extends Command
                 $dueDateText = $dueDate ? Carbon::parse($dueDate)->format('d M, Y') : 'this month';
 
                 if ($dryRun) {
-                    $this->info("DRY RUN: Would send reminder to {$user->full_name} ({$user->email}) for amount ₦" . number_format($expectedToPay, 2) . " due by {$dueDateText}");
+                    $this->info("DRY RUN: Would send reminder to {$user->full_name} ({$user->email}) for amount â‚¦" . number_format($expectedToPay, 2) . " due by {$dueDateText}");
                 } else {
                     $user->notify(new LoanPaymentReminder($expectedToPay, $dueDateText));
-                    $this->info("Sent reminder to {$user->full_name} ({$user->email}) for amount ₦" . number_format($expectedToPay, 2));
+                    $this->info("Sent reminder to {$user->full_name} ({$user->email}) for amount â‚¦" . number_format($expectedToPay, 2));
                 }
                 $count++;
             }

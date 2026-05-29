@@ -45,7 +45,7 @@
                     <td>{{ $user->phone }}</td>
                     <td>{{ $user->branch?->name ?? 'N/A' }}</td>
                     <td>{{ $user->deceased_at ? 'Deceased' : 'Active' }}</td>
-                    <td>₦{{ number_format((float)($user->balance ?? 0), 2) }}</td>
+                    <td>â‚¦{{ number_format((float)($user->balance ?? 0), 2) }}</td>
                     <td>{{ number_format((float)($user->gold_balance ?? 0), 4) }}g</td>
                 </tr>
             @endforeach

@@ -13,7 +13,7 @@
       >
         <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <h3 class="text-base sm:text-lg font-bold text-slate-800">{{ state.title || 'Notice' }}</h3>
-          <button class="text-slate-400 hover:text-slate-600" @click="close()" aria-label="Close">✕</button>
+          <button class="text-slate-400 hover:text-slate-600" @click="close()" aria-label="Close">Ã¢Å“â€¢</button>
         </div>
         <div class="p-4 sm:p-5 text-slate-700 whitespace-pre-line">
           {{ state.message }}
@@ -22,7 +22,7 @@
             <textarea
               v-model="state.inputValue"
               :placeholder="state.inputPlaceholder"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm min-h-[100px]"
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm min-h-[100px]"
             ></textarea>
           </div>
         </div>
@@ -32,7 +32,7 @@
             :key="i"
             @click="a.handler && a.handler()"
             :class="[
-              a.primary ? 'bg-emerald-700 text-white' : (a.danger ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700'),
+              a.primary ? 'bg-blue-700 text-white' : (a.danger ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700'),
               state.type === 'prompt' ? 'flex-1 sm:flex-none' : ''
             ]"
             class="px-6 py-3 rounded-xl text-sm font-bold min-w-[100px] active:scale-95 transition-transform"
@@ -82,3 +82,5 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .fade-enter-from,
 .fade-leave-to { opacity: 0; }
 </style>
+
+

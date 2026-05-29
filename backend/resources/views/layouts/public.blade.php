@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') - {{ config('brand.name', 'AT-TAQWA') }}</title>
+    <title>@yield('title') - {{ config('brand.name', 'AS-SALAAM') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -19,9 +19,9 @@
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2">
                     <a href="{{ url('/') }}" class="flex items-center gap-2 group">
-                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg') }}" alt="Logo" class="h-8 w-auto dark:hidden transition-transform group-hover:scale-105">
-                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg') }}" alt="Logo" class="h-8 w-auto hidden dark:block transition-transform group-hover:scale-105">
-                        <span class="font-bold text-lg tracking-tight hidden sm:block uppercase">{{ config('brand.name', 'AT-TAQWA') }}</span>
+                        <img src="{{ asset('images/' . config('brand.slug', 'assalaam') . '-logo.svg') }}" alt="Logo" class="h-8 w-auto dark:hidden transition-transform group-hover:scale-105">
+                        <img src="{{ asset('images/' . config('brand.slug', 'assalaam') . '-logo-dark.svg') }}" alt="Logo" class="h-8 w-auto hidden dark:block transition-transform group-hover:scale-105">
+                        <span class="font-bold text-lg tracking-tight hidden sm:block uppercase">{{ config('brand.name', 'AS-SALAAM') }}</span>
                     </a>
                 </div>
 
@@ -50,7 +50,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <p class="text-sm text-slate-400">
-                    &copy; {{ date('Y') }} {{ config('brand.name', 'AT-TAQWA') }}. RC: 9518505
+                    &copy; {{ date('Y') }} {{ config('brand.name', 'AS-SALAAM') }}. RC: 9518505
                 </p>
                 <div class="flex items-center gap-6 text-sm">
                     <a href="{{ url('/about-us') }}" class="text-slate-500 hover:text-primary-600">About Us</a>

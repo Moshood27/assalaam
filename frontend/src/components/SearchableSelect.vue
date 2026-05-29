@@ -1,7 +1,7 @@
 <template>
   <div class="relative" ref="root">
     <label v-if="label" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">{{ label }}</label>
-    <button type="button" @click="toggle" class="w-full bg-slate-50/50 border border-slate-200/60 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 h-14 px-4 rounded-2xl outline-none text-left flex items-center justify-between transition-all duration-200">
+    <button type="button" @click="toggle" class="w-full bg-slate-50/50 border border-slate-200/60 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 h-14 px-4 rounded-2xl outline-none text-left flex items-center justify-between transition-all duration-200">
       <span class="truncate text-lg font-semibold" :class="!selectedLabel ? 'text-slate-400' : 'text-slate-700'">
         {{ selectedLabel || placeholder }}
       </span>
@@ -21,13 +21,13 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </span>
-            <input v-model="query" type="text" :placeholder="searchPlaceholder" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border-none outline-none text-sm focus:ring-2 focus:ring-emerald-500/10" />
+            <input v-model="query" type="text" :placeholder="searchPlaceholder" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border-none outline-none text-sm focus:ring-2 focus:ring-blue-500/10" />
           </div>
         </div>
         <div class="max-h-64 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-slate-200">
-          <button v-for="it in filtered" :key="valueOf(it)" @click="select(it)" class="w-full text-left px-4 py-3 hover:bg-emerald-50/50 flex items-center justify-between group transition-colors">
-            <span class="truncate font-medium text-slate-700 group-hover:text-emerald-700">{{ labelOf(it) }}</span>
-            <span v-if="modelValue === valueOf(it)" class="text-emerald-600">
+          <button v-for="it in filtered" :key="valueOf(it)" @click="select(it)" class="w-full text-left px-4 py-3 hover:bg-blue-50/50 flex items-center justify-between group transition-colors">
+            <span class="truncate font-medium text-slate-700 group-hover:text-blue-700">{{ labelOf(it) }}</span>
+            <span v-if="modelValue === valueOf(it)" class="text-blue-600">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
@@ -49,7 +49,7 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
   modelValue: [String, Number],
   placeholder: { type: String, default: 'Select an option' },
-  searchPlaceholder: { type: String, default: 'Search…' },
+  searchPlaceholder: { type: String, default: 'SearchÃ¢â‚¬Â¦' },
   labelField: { type: String, default: 'name' },
   valueField: { type: String, default: 'id' },
   label: { type: String, default: '' }
@@ -99,3 +99,5 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 
 <style scoped>
 </style>
+
+

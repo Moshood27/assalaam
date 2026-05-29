@@ -22,7 +22,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Current Password</label>
-                        <input type="password" wire:model.defer="currentPasswordForEmail" class="fi-input fi-input-base w-full text-sm" placeholder="••••••••" />
+                        <input type="password" wire:model.defer="currentPasswordForEmail" class="fi-input fi-input-base w-full text-sm" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
                         @error('currentPasswordForEmail')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="pt-2">
@@ -36,7 +36,7 @@
                 <div class="p-5 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Current Password</label>
-                        <input type="password" wire:model.defer="current_password" class="fi-input fi-input-base w-full text-sm" placeholder="••••••••" />
+                        <input type="password" wire:model.defer="current_password" class="fi-input fi-input-base w-full text-sm" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
                         @error('current_password')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div>

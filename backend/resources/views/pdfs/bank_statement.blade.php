@@ -46,9 +46,9 @@
                 <th style="width: 15%">Date</th>
                 <th>Description</th>
                 <th style="width: 15%">Reference</th>
-                <th class="right" style="width: 12%">Credit (₦)</th>
-                <th class="right" style="width: 12%">Debit (₦)</th>
-                <th class="right" style="width: 15%">Balance (₦)</th>
+                <th class="right" style="width: 12%">Credit (â‚¦)</th>
+                <th class="right" style="width: 12%">Debit (â‚¦)</th>
+                <th class="right" style="width: 15%">Balance (â‚¦)</th>
             </tr>
         </thead>
         <tbody>
@@ -76,7 +76,7 @@
                     }
 
                     if (!empty($meta['maintenance_charge'])) {
-                        $desc .= " (Net of ₦" . number_format((float)$meta['maintenance_charge'], 2) . " fee)";
+                        $desc .= " (Net of â‚¦" . number_format((float)$meta['maintenance_charge'], 2) . " fee)";
                     }
                 @endphp
                 <tr>
@@ -96,7 +96,7 @@
             <table>
                 <tr>
                     <td><strong>Closing Balance</strong></td>
-                    <td class="right"><strong>₦ {{ number_format($currentBalance, 2) }}</strong></td>
+                    <td class="right"><strong>â‚¦ {{ number_format($currentBalance, 2) }}</strong></td>
                 </tr>
             </table>
         </div>

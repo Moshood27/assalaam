@@ -125,7 +125,7 @@ class AppStatusSettings extends Page
                                 TextInput::make('max_amount')
                                     ->label('Maximum Amount (NGN)')
                                     ->numeric()
-                                    ->prefix('₦')
+                                    ->prefix('â‚¦')
                                     ->placeholder('e.g. 1000000')
                                     ->helperText('Leave empty for "Above" (the catch-all rule)'),
                                 TextInput::make('duration')
@@ -136,7 +136,7 @@ class AppStatusSettings extends Page
                             ])
                             ->columns(2)
                             ->itemLabel(fn (array $state): ?string => isset($state['max_amount'])
-                                ? "Up to ₦" . number_format($state['max_amount']) . ": " . $state['duration'] . " months"
+                                ? "Up to â‚¦" . number_format($state['max_amount']) . ": " . $state['duration'] . " months"
                                 : "Above: " . ($state['duration'] ?? '?') . " months")
                             ->helperText('Define loan duration based on principal amount. Rules are evaluated in order.'),
                     ]),
@@ -186,7 +186,7 @@ class AppStatusSettings extends Page
                             ->numeric()
                             ->required()
                             ->minValue(0)
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->helperText('The maintenance charge will be capped at this amount.'),
                     ]),
                 Section::make('Payment Gateways')

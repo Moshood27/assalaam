@@ -1,6 +1,6 @@
 # VPS Update & Deployment Guide (System Migration)
 
-This guide describes how to deploy the new **System Migration** features to an existing VPS environment where the Attaqwa Cooperative app is already running.
+This guide describes how to deploy the new **System Migration** features to an existing VPS environment where the assalaam Cooperative app is already running.
 
 ## 1) Overview of Changes
 The recent update introduces:
@@ -25,13 +25,13 @@ git pull origin main
 ### Step B: Install Backend Dependencies
 Run composer inside the app container to install the new Excel and PDF libraries:
 ```bash
-docker exec -it attaqwa-app composer install --optimize-autoloader --no-dev
+docker exec -it assalaam-app composer install --optimize-autoloader --no-dev
 ```
 
 ### Step C: Run Database Migrations
 Apply the new fields to the `users` table. This is safe and will not affect existing user data:
 ```bash
-docker exec -it attaqwa-app php artisan migrate --force
+docker exec -it assalaam-app php artisan migrate --force
 ```
 
 ### Step D: Rebuild Frontend Assets
@@ -46,17 +46,17 @@ cd ..
 
 ### Step E: Clear Caches & Publish Assets
 ```bash
-docker exec -it attaqwa-app php artisan optimize
-docker exec -it attaqwa-app php artisan filament:assets
+docker exec -it assalaam-app php artisan optimize
+docker exec -it assalaam-app php artisan filament:assets
 ```
 
 ### Step F: Clear Filament-Specific Caches (Important)
 If you encounter `RouteNotFoundException` or the new page is missing from the sidebar, run:
 ```bash
-docker exec -it attaqwa-app php artisan route:clear
-docker exec -it attaqwa-app php artisan config:clear
-docker exec -it attaqwa-app php artisan filament:clear-cached-components
-docker exec -it attaqwa-app php artisan view:clear
+docker exec -it assalaam-app php artisan route:clear
+docker exec -it assalaam-app php artisan config:clear
+docker exec -it assalaam-app php artisan filament:clear-cached-components
+docker exec -it assalaam-app php artisan view:clear
 ```
 
 ---
@@ -76,7 +76,7 @@ docker exec -it attaqwa-app php artisan view:clear
 3. **Check Logs:**
    If you encounter any "500 Internal Server Error", check the logs:
    ```bash
-   docker logs -f attaqwa-app
+   docker logs -f assalaam-app
    ```
 
 ---

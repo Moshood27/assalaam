@@ -35,3 +35,5 @@ export const getImageUrl = (path) => {
 }
 
 export default getImageUrl
+
+

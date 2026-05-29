@@ -50,7 +50,7 @@ class AppServiceProvider extends ServiceProvider
                 if (Feature::for('global')->inactive('gold-savings-beta')) {
                     return false;
                 }
-                return ($scope->attaqwa_score ?? 0) > 80;
+                return ($scope->assalaam_score ?? 0) > 80;
             }
             return true;
         });
@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
                 if (Feature::for('global')->inactive('apply-for-loan')) {
                     return false;
                 }
-                return $scope->is_verified && ($scope->attaqwa_score ?? 0) > 40;
+                return $scope->is_verified && ($scope->assalaam_score ?? 0) > 40;
             }
             return true;
         });

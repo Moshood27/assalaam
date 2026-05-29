@@ -17,7 +17,7 @@
 <body>
     <div class="header">
         <div class="title">Project Investment & ROI Report</div>
-        <div>At-Taqwa Osogbo CICS Ltd</div>
+        <div>AS-SALAAM Osogbo CICS Ltd</div>
         <div>Generated Date: {{ $date }}</div>
     </div>
 
@@ -26,10 +26,10 @@
             <tr>
                 <th>Project Name</th>
                 <th>Status</th>
-                <th class="right">Invested (₦)</th>
-                <th class="right">Gross Profit (₦)</th>
-                <th class="right">Coop Fee (₦)</th>
-                <th class="right">Distributable (₦)</th>
+                <th class="right">Invested (â‚¦)</th>
+                <th class="right">Gross Profit (â‚¦)</th>
+                <th class="right">Coop Fee (â‚¦)</th>
+                <th class="right">Distributable (â‚¦)</th>
                 <th class="right">ROI %</th>
             </tr>
         </thead>

@@ -4,9 +4,9 @@ This project supports sending push notifications to mobile or web clients using 
 
 Two drivers are available so you can migrate safely from the legacy HTTP API to the latest HTTP v1 API:
 
-- fcm_v1 — Recommended. Uses Firebase HTTP v1 via Service Account credentials and the Kreait SDK.
-- fcm — Legacy HTTP API using a Server Key.
-- log — Development-only driver that writes messages to the log instead of sending them.
+- fcm_v1 â€” Recommended. Uses Firebase HTTP v1 via Service Account credentials and the Kreait SDK.
+- fcm â€” Legacy HTTP API using a Server Key.
+- log â€” Development-only driver that writes messages to the log instead of sending them.
 
 The backend wiring lives in `backend/app/Services/PushService.php` and is configured via `backend/config/push.php` and `.env` entries.
 
@@ -79,7 +79,7 @@ The backend uses `kreait/laravel-firebase` to obtain a `Messaging` client and se
 
 ## Legacy driver (fcm)
 
-If you can’t move yet to HTTP v1, keep using `PUSH_DRIVER=fcm` and set `FCM_SERVER_KEY`. The backend will call `https://fcm.googleapis.com/fcm/send` with a high-priority notification and default sound.
+If you canâ€™t move yet to HTTP v1, keep using `PUSH_DRIVER=fcm` and set `FCM_SERVER_KEY`. The backend will call `https://fcm.googleapis.com/fcm/send` with a high-priority notification and default sound.
 
 ## Code reference
 
@@ -112,7 +112,7 @@ php artisan tinker
 - "Push driver not recognized": Check `PUSH_DRIVER` value.
 - FCM v1 errors (Kreait):
   - Ensure `FIREBASE_CREDENTIALS` points to a readable Service Account JSON.
-  - The Service Account project must match your client app’s Firebase project.
+  - The Service Account project must match your client appâ€™s Firebase project.
   - Check server time drift and network egress to Google endpoints.
 - Legacy API errors:
   - 401/403: Wrong `FCM_SERVER_KEY`.

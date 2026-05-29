@@ -110,3 +110,5 @@ watch(open, (v) => { if (v) fetchList(page.value) })
 .slide-enter-active, .slide-leave-active { transition: transform .25s; }
 .slide-enter-from, .slide-leave-to { transform: translateX(100%); }
 </style>
+
+

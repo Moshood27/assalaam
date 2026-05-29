@@ -38,10 +38,10 @@
         <div class="brand">{{ config('app.name') }}</div>
     </div>
     <div class="content">
-        <p class="salam">Assalāmu ‘alaykum {{ $loan->user->full_name }},</p>
-        <p>Alhamdulillāh, your Qard Hasan has been disbursed successfully. The amount below has been credited to your cooperative wallet.</p>
+        <p class="salam">AssalÄmu â€˜alaykum {{ $loan->user->full_name }},</p>
+        <p>AlhamdulillÄh, your Qard Hasan has been disbursed successfully. The amount below has been credited to your cooperative wallet.</p>
 
-        <p class="amount">+ ₦{{ number_format($creditedAmount, 2) }}</p>
+        <p class="amount">+ â‚¦{{ number_format($creditedAmount, 2) }}</p>
 
         <table class="meta" role="presentation" cellspacing="0" cellpadding="0">
             <tr>
@@ -50,11 +50,11 @@
             </tr>
             <tr>
                 <th>Principal Amount</th>
-                <td>₦{{ number_format($loan->principal_amount, 2) }}</td>
+                <td>â‚¦{{ number_format($loan->principal_amount, 2) }}</td>
             </tr>
             <tr>
                 <th>Credited to Wallet</th>
-                <td>₦{{ number_format($creditedAmount, 2) }}</td>
+                <td>â‚¦{{ number_format($creditedAmount, 2) }}</td>
             </tr>
             <tr>
                 <th>Status</th>
@@ -67,13 +67,13 @@
             @if(!empty($loan->user?->balance))
             <tr>
                 <th>Current Wallet Balance</th>
-                <td>₦{{ number_format((float) $loan->user->balance, 2) }}</td>
+                <td>â‚¦{{ number_format((float) $loan->user->balance, 2) }}</td>
             </tr>
             @endif
         </table>
 
         <div class="divider"></div>
-        <p>May Allāh make this a means of ease for you and bless your wealth with barakah. Remember, Qard Hasan is a trust—please plan your repayments responsibly. Āmīn.</p>
+        <p>May AllÄh make this a means of ease for you and bless your wealth with barakah. Remember, Qard Hasan is a trustâ€”please plan your repayments responsibly. Ä€mÄ«n.</p>
 
         <p class="muted">You can view your loan schedule and repayments from your member portal.</p>
         <p>
@@ -83,7 +83,7 @@
             <a class="btn" href="mailto:{{ $supportEmail }}">Contact Support</a>
         </p>
 
-        <p>Jazākumullāhu khayran,<br>{{ config('app.name') }}</p>
+        <p>JazÄkumullÄhu khayran,<br>{{ config('app.name') }}</p>
     </div>
     <div class="footer">
         <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

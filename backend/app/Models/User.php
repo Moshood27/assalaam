@@ -93,7 +93,7 @@ class User extends Authenticatable implements FilamentUser
         'notify_email',
         'notify_sms',
         'notify_push',
-        'attaqwa_score',
+        'assalaam_score',
         'last_activity_at',
         'wellness_check_notified_at',
         'zakat_nisab_crossed_at',
@@ -780,14 +780,14 @@ class User extends Authenticatable implements FilamentUser
         $baseAdjusted = $isFirstLoan ? round($base * 0.05, 2) : round($base * 2, 2);
         $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled', true));
 
-        // Attaqwa Score Bonus: +1% for every 20 points, max +50%
-        $scoreBonus = $scoreEnabled ? min(($this->attaqwa_score / 20) / 100, 0.50) : 0.0;
+        // assalaam Score Bonus: +1% for every 20 points, max +50%
+        $scoreBonus = $scoreEnabled ? min(($this->assalaam_score / 20) / 100, 0.50) : 0.0;
         $finalEligibility = round($baseAdjusted * (1 + $scoreBonus), 2);
 
         return array_merge($calc, [
             'months_in_system' => $months,
             'is_first_loan' => $isFirstLoan,
-            'attaqwa_score' => $this->attaqwa_score,
+            'assalaam_score' => $this->assalaam_score,
             'score_bonus_pct' => round($scoreBonus * 100, 2),
             'eligibility_adjusted' => $finalEligibility,
             'score_enabled' => $scoreEnabled,

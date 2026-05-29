@@ -79,7 +79,7 @@
                 <th>Scheme</th>
                 <th style="width: 25%">Reference</th>
                 <th class="right" style="width: 15%">Units</th>
-                <th class="right" style="width: 15%">Amount (₦)</th>
+                <th class="right" style="width: 15%">Amount (â‚¦)</th>
             </tr>
         </thead>
         <tbody>
@@ -88,9 +88,9 @@
                 @php $amt = (float) $c->amount; $total += $amt; @endphp
                 <tr>
                     <td>{{ optional($c->created_at)->format('Y-m-d H:i') }}</td>
-                    <td>{{ optional($c->scheme)->name ?? '—' }}</td>
+                    <td>{{ optional($c->scheme)->name ?? 'â€”' }}</td>
                     <td>{{ $c->reference }}</td>
-                    <td class="right">{{ $c->units ? number_format((float)$c->units, 4).(str_contains(strtolower(optional($c->scheme)->name), 'gold') ? 'g' : '') : '—' }}</td>
+                    <td class="right">{{ $c->units ? number_format((float)$c->units, 4).(str_contains(strtolower(optional($c->scheme)->name), 'gold') ? 'g' : '') : 'â€”' }}</td>
                     <td class="right">{{ number_format($amt, 2) }}</td>
                 </tr>
             @empty

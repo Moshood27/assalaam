@@ -135,7 +135,7 @@ class DistributeProjectProfit implements ShouldQueue
                 // Best-effort push notification
                 try {
                     $push = app(PushService::class);
-                    $push->send($user->fcm_token ?: $user->device_token, 'Profit Distributed', 'You received ₦'.number_format($amount, 2).' from '.$profit->project->name, [
+                    $push->send($user->fcm_token ?: $user->device_token, 'Profit Distributed', 'You received â‚¦'.number_format($amount, 2).' from '.$profit->project->name, [
                         'type' => 'project_profit',
                         'project_id' => (string) $projectId,
                         'project_profit_id' => (string) $profit->id,

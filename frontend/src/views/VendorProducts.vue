@@ -11,32 +11,32 @@
           <h1 class="text-lg font-bold text-slate-800">My Products</h1>
         </div>
         <button @click="vendor.is_approved ? openCreateModal() : alert('Your vendor profile is pending approval. You cannot add products yet.')" 
-                :class="vendor.is_approved ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-slate-400 cursor-not-allowed'"
+                :class="vendor.is_approved ? 'bg-blue-700 hover:bg-blue-800' : 'bg-slate-400 cursor-not-allowed'"
                 class="text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors">Add New</button>
       </div>
     </header>
 
     <div class="p-4 space-y-6">
       <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4">
-        <div class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-600 rounded-full animate-spin"></div>
+        <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin"></div>
         <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading catalog...</p>
       </div>
       
       <div v-else-if="products.length === 0" class="bg-white rounded-[2.5rem] p-16 text-center border-2 border-dashed border-slate-100">
-        <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">📦</div>
+        <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">ðŸ“¦</div>
         <h3 class="text-xl font-black text-slate-800 uppercase mb-2">No products yet</h3>
         <p class="text-sm text-slate-500 mb-8 max-w-[240px] mx-auto">Start listing your products to grow your business with our members.</p>
-        <button v-if="vendor.is_approved" @click="openCreateModal" class="px-8 py-4 rounded-2xl bg-emerald-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-700/20 active:scale-95 transition-all">Add your first product</button>
+        <button v-if="vendor.is_approved" @click="openCreateModal" class="px-8 py-4 rounded-2xl bg-blue-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-700/20 active:scale-95 transition-all">Add your first product</button>
         <div v-else class="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-700 text-[10px] font-black uppercase tracking-widest">
           Approval Required to list products
         </div>
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div v-for="p in products" :key="p.id" class="group bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex gap-5 hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300">
+        <div v-for="p in products" :key="p.id" class="group bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex gap-5 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300">
           <div class="w-28 h-28 rounded-3xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 relative">
             <img v-if="p.image_url" :src="getImageUrl(p.image_url)" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-            <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-3xl">🖼️</div>
+            <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-3xl">ðŸ–¼ï¸</div>
             
             <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                <button @click="openEditModal(p)" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-lg scale-0 group-hover:scale-100 transition-transform duration-300">
@@ -47,21 +47,21 @@
           <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
             <div class="space-y-1">
               <div class="flex items-center justify-between">
-                <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest truncate">{{ p.category?.name || 'General' }}</span>
-                <div :class="p.is_approved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'" class="px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-tighter">
+                <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest truncate">{{ p.category?.name || 'General' }}</span>
+                <div :class="p.is_approved ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'" class="px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-tighter">
                   {{ p.is_approved ? 'Approved' : 'Pending' }}
                 </div>
               </div>
               <h3 class="text-sm font-black text-slate-800 truncate">{{ p.name }}</h3>
               <div class="flex items-baseline gap-2">
-                <p class="text-base font-black text-slate-900">₦{{ formatMoney(p.selling_price) }}</p>
+                <p class="text-base font-black text-slate-900">â‚¦{{ formatMoney(p.selling_price) }}</p>
                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Markup: {{ p.markup_percentage }}%</p>
               </div>
             </div>
             
             <div class="flex items-center justify-between mt-2">
               <div class="flex items-center gap-2">
-                <span :class="p.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'" class="px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">
+                <span :class="p.is_active ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400'" class="px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">
                   {{ p.is_active ? 'Active' : 'Hidden' }}
                 </span>
                 <span :class="p.stock_quantity <= 5 ? 'text-rose-600 font-black' : 'text-slate-500 font-bold'" class="text-[9px] uppercase tracking-widest">
@@ -69,7 +69,7 @@
                 </span>
               </div>
               <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button @click="openEditModal(p)" class="p-2 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all">
+                <button @click="openEditModal(p)" class="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all">
                    <span class="i-mdi-pencil text-lg"></span>
                 </button>
                 <button @click="confirmDelete(p)" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all">
@@ -97,41 +97,41 @@
         <div class="p-6 max-h-[70vh] overflow-y-auto space-y-4">
           <div>
             <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Product Name</label>
-            <input v-model="form.name" type="text" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800" placeholder="e.g. iPhone 15 Pro Max" />
+            <input v-model="form.name" type="text" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-800" placeholder="e.g. iPhone 15 Pro Max" />
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Category</label>
-              <select v-model="form.category_id" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800 appearance-none">
+              <select v-model="form.category_id" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-800 appearance-none">
                 <option value="">Select Category</option>
                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Cost Price (₦)</label>
-              <input v-model="form.cost_price" type="number" step="0.01" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800" placeholder="0.00" />
+              <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Cost Price (â‚¦)</label>
+              <input v-model="form.cost_price" type="number" step="0.01" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-800" placeholder="0.00" />
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Markup (%)</label>
-              <input v-model="form.markup_percent" type="number" step="0.1" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800" placeholder="10.0" />
+              <input v-model="form.markup_percent" type="number" step="0.1" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-800" placeholder="10.0" />
             </div>
             <div class="flex flex-col justify-end pb-1">
               <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest ml-1">Selling Price (Est.)</p>
-              <p class="text-lg font-black text-emerald-700 ml-1">₦{{ formatMoney(calculatedSellingPrice) }}</p>
+              <p class="text-lg font-black text-blue-700 ml-1">â‚¦{{ formatMoney(calculatedSellingPrice) }}</p>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Stock Quantity</label>
-              <input v-model="form.stock_quantity" type="number" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800" placeholder="0" />
+              <input v-model="form.stock_quantity" type="number" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-800" placeholder="0" />
             </div>
             <div class="flex items-center gap-2 mt-4 ml-1">
-              <input type="checkbox" v-model="form.track_stock" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+              <input type="checkbox" v-model="form.track_stock" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
               <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Track Stock</label>
             </div>
           </div>
@@ -141,7 +141,7 @@
             <div class="mt-2 flex items-center gap-4">
               <div class="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden flex-shrink-0">
                 <img v-if="imagePreview" :src="imagePreview" class="w-full h-full object-cover" />
-                <div v-else class="w-full h-full flex items-center justify-center text-2xl">🖼️</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-2xl">ðŸ–¼ï¸</div>
               </div>
               <div class="flex-1">
                 <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*" class="hidden" />
@@ -158,7 +158,7 @@
             <div class="mt-2 flex items-center gap-4">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="radio" :value="true" v-model="form.is_active" class="sr-only peer" />
-                <div class="w-4 h-4 rounded-full border-2 border-slate-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-all shadow-inner" />
+                <div class="w-4 h-4 rounded-full border-2 border-slate-200 peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-all shadow-inner" />
                 <span class="text-xs font-bold text-slate-700 uppercase tracking-widest">Active & Visible</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
@@ -171,13 +171,13 @@
 
           <div>
             <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Description</label>
-            <textarea v-model="form.description" rows="3" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-emerald-500 font-bold text-slate-800" placeholder="Describe your product..."></textarea>
+            <textarea v-model="form.description" rows="3" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-800" placeholder="Describe your product..."></textarea>
           </div>
           
         </div>
 
         <div class="p-6 bg-slate-50 border-t border-slate-100">
-          <button @click="saveProduct" :disabled="saving" class="w-full h-14 rounded-2xl bg-emerald-700 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-700/20 active:scale-95 transition-all disabled:bg-slate-300">
+          <button @click="saveProduct" :disabled="saving" class="w-full h-14 rounded-2xl bg-blue-700 text-white font-black uppercase tracking-wider shadow-lg shadow-blue-700/20 active:scale-95 transition-all disabled:bg-slate-300">
             {{ saving ? 'Saving...' : 'Save Product' }}
           </button>
         </div>
@@ -346,3 +346,5 @@ const confirmDelete = async (p) => {
 
 onMounted(loadData)
 </script>
+
+

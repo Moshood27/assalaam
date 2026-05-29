@@ -6,9 +6,9 @@ html, body, #app { height: 100%; }
 
 @layer base {
   :root {
-    --brand-1: 16 185 129; /* emerald-500 */
-    --brand-2: 5 150 105;  /* emerald-600 */
-    --brand-3: 15 118 110; /* teal-700-ish */
+    --brand-1: 59 130 246; /* blue-500 */
+    --brand-2: 37 99 235;  /* blue-600 */
+    --brand-3: 29 78 216; /* blue-700 */
     --bg-0: 241 245 249;   /* slate-100 */
   }
   html { @apply antialiased; }
@@ -32,15 +32,15 @@ html, body, #app { height: 100%; }
   .card-elevated { @apply shadow-lg border-slate-100; }
 
   .form-label { @apply block text-slate-700 font-medium mb-1; }
-  .input { @apply w-full bg-slate-100 border-2 border-transparent focus:border-emerald-400 p-3 rounded-xl outline-none; }
+  .input { @apply w-full bg-slate-100 border-2 border-transparent focus:border-blue-400 p-3 rounded-xl outline-none; }
 
   .btn { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-primary { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-700 text-white hover:bg-emerald-800 focus:ring-emerald-600; }
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-700 text-white hover:bg-blue-800 focus:ring-blue-600; }
   .btn-secondary { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-400; }
-  .btn-ghost { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-emerald-700 hover:bg-emerald-50 focus:ring-emerald-600; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-4 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-blue-700 hover:bg-blue-50 focus:ring-blue-600; }
 
   .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest; }
-  .badge-success { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700; }
+  .badge-success { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700; }
   .badge-muted { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-600; }
 
   .navbar { @apply w-full bg-white/80 backdrop-blur border-b border-slate-200; }
@@ -49,7 +49,7 @@ html, body, #app { height: 100%; }
   .money { @apply font-black text-slate-800 tracking-tight; }
   .section-title { @apply font-bold text-slate-800 text-lg; }
 
-  .auth-bg { @apply bg-gradient-to-br from-emerald-50 via-white to-sky-50; }
+  .auth-bg { @apply bg-gradient-to-br from-blue-50 via-white to-sky-50; }
 }
 
 /* Utility helpers */
@@ -64,7 +64,7 @@ html, body, #app { height: 100%; }
   /* Segmented control */
   .segmented { @apply bg-white/90 backdrop-blur border border-slate-200 rounded-2xl p-1 shadow-sm; }
   .segment { @apply w-full text-center py-2.5 rounded-xl font-semibold text-slate-600 text-sm transition-all; }
-  .segment-active { @apply bg-emerald-700 text-white shadow; }
+  .segment-active { @apply bg-blue-700 text-white shadow; }
 
   /* Bottom navigation */
   .bottom-nav { 
@@ -74,7 +74,7 @@ html, body, #app { height: 100%; }
     min-height: calc(64px + env(safe-area-inset-bottom, 0));
   }
   .bottom-nav-btn { @apply text-slate-400 flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all py-2; }
-  .bottom-nav-btn-active { @apply text-emerald-700 font-bold; }
+  .bottom-nav-btn-active { @apply text-blue-700 font-bold; }
   .bottom-nav-btn span { @apply leading-none; }
   .bottom-nav-btn .text-xl { @apply text-2xl mb-0.5 transition-transform; }
   .bottom-nav-btn-active .text-xl { @apply scale-110; }
@@ -89,7 +89,7 @@ html, body, #app { height: 100%; }
 
   /* Admin helpers used elsewhere */
   .lbl { @apply block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1; }
-  .inp { @apply w-full bg-slate-50 p-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-emerald-500; }
+  .inp { @apply w-full bg-slate-50 p-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500; }
 
   /* Empty state */
   .empty-state { @apply text-center text-slate-500 text-sm; }
@@ -296,3 +296,5 @@ input[type="number"] {
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m-13 9H5V9h2v2m4 0H9V9h2v2m4 0h-2V9h2v2'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m-13 9H5V9h2v2m4 0H9V9h2v2m4 0h-2V9h2v2'/%3E%3C/svg%3E");
 }
+
+

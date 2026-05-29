@@ -51,7 +51,7 @@ class CharityEntryResource extends Resource
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
                     ->required()
-                    ->prefix('₦'),
+                    ->prefix('â‚¦'),
                 Forms\Components\Textarea::make('note')
                     ->maxLength(255)
                     ->columnSpanFull(),
@@ -131,7 +131,7 @@ class CharityEntryResource extends Resource
                                 return $query->orderByRaw("EXISTS (SELECT 1 FROM user_badges WHERE user_badges.user_id = users.id AND badge_type = 'zakat_needy') DESC")
                                              ->orderBy('surname');
                             })
-                            ->getOptionLabelFromRecordUsing(fn (User $record) => $record->full_name . ($record->badges()->where('badge_type', 'zakat_needy')->exists() ? ' ⭐ (Zakat Eligible)' : ''))
+                            ->getOptionLabelFromRecordUsing(fn (User $record) => $record->full_name . ($record->badges()->where('badge_type', 'zakat_needy')->exists() ? ' â­ (Zakat Eligible)' : ''))
                             ->searchable(['surname', 'name', 'other_names'])
                             ->preload()
                             ->helperText('Select the member receiving this disbursement. Starred members are verified Zakat eligible.'),
@@ -146,7 +146,7 @@ class CharityEntryResource extends Resource
                         TextInput::make('amount')
                             ->numeric()
                             ->required()
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->helperText('Enter the amount to disburse (will be stored as negative)'),
                         Textarea::make('note')
                             ->placeholder('e.g. Distributed to needy member for medical bills')

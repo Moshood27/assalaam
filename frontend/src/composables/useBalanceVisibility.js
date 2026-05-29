@@ -27,3 +27,5 @@ function toggleBalances() {
 export function useBalanceVisibility() {
   return { hideBalances, toggleBalances }
 }
+
+

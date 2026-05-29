@@ -14,7 +14,7 @@
 
     <div class="p-4 max-w-2xl mx-auto">
       <div v-if="loading" class="flex justify-center py-12">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-700"></div>
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700"></div>
       </div>
       <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
       <section v-else class="card card-elevated p-6 space-y-6">
@@ -25,7 +25,7 @@
           </div>
           <div class="text-left sm:text-right">
             <div class="text-xs text-slate-500">Total Amount</div>
-            <div class="text-lg font-extrabold text-emerald-700">₦ {{ money(order.total_amount) }}</div>
+            <div class="text-lg font-extrabold text-blue-700">Ã¢â€šÂ¦ {{ money(order.total_amount) }}</div>
           </div>
         </div>
 
@@ -34,12 +34,12 @@
             <div class="flex-1 min-w-0 pr-2">
               <div class="font-bold text-slate-800 truncate">{{ it.product_name }}</div>
               <div class="text-[10px] text-slate-500">
-                <span v-if="it.vendor" class="font-bold text-emerald-700">Vendor: {{ it.vendor.name }}</span>
-                <span v-if="it.vendor" class="mx-1">•</span>
-                <span>₦ {{ money(it.unit_price) }} x {{ it.quantity }}</span>
+                <span v-if="it.vendor" class="font-bold text-blue-700">Vendor: {{ it.vendor.name }}</span>
+                <span v-if="it.vendor" class="mx-1">Ã¢â‚¬Â¢</span>
+                <span>Ã¢â€šÂ¦ {{ money(it.unit_price) }} x {{ it.quantity }}</span>
               </div>
             </div>
-            <div class="text-sm font-bold text-slate-800">₦ {{ money(it.line_total) }}</div>
+            <div class="text-sm font-bold text-slate-800">Ã¢â€šÂ¦ {{ money(it.line_total) }}</div>
           </li>
         </ul>
 
@@ -64,26 +64,26 @@
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div>Tenor: <span class="font-bold">{{ financing.months }} months</span></div>
             <div>Profit Rate: <span class="font-bold">{{ financingRate }}</span></div>
-            <div v-if="monthlyDue !== null">Monthly (min): <span class="font-bold">₦ {{ money(monthlyDue) }}</span></div>
+            <div v-if="monthlyDue !== null">Monthly (min): <span class="font-bold">Ã¢â€šÂ¦ {{ money(monthlyDue) }}</span></div>
             <div v-if="financingNextDue">Next Due: <span class="font-bold">{{ financingNextDue }}</span></div>
-            <div>Total Paid: <span class="font-bold text-emerald-700">₦ {{ money(totalPaid) }}</span></div>
-            <div>Remaining: <span class="font-bold text-rose-700">₦ {{ money(remaining) }}</span></div>
+            <div>Total Paid: <span class="font-bold text-blue-700">Ã¢â€šÂ¦ {{ money(totalPaid) }}</span></div>
+            <div>Remaining: <span class="font-bold text-rose-700">Ã¢â€šÂ¦ {{ money(remaining) }}</span></div>
           </div>
 
           <div class="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
             <label class="text-[11px] text-slate-600 font-bold">Enter Amount to Pay</label>
             <div class="flex items-center gap-2">
               <input v-model.number="payAmount" :min="monthlyDue || 0" :max="remaining || undefined" step="0.01" type="number" inputmode="decimal" class="input !py-1 !px-2 w-40" placeholder="e.g. 10000"/>
-              <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50" :disabled="paying || !canPayInstallment || !validPayAmount" @click="openPin()">
-                <span v-if="paying" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Processing…</span>
+              <button class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold disabled:opacity-50" :disabled="paying || !canPayInstallment || !validPayAmount" @click="openPin()">
+                <span v-if="paying" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> ProcessingÃ¢â‚¬Â¦</span>
                 <span v-else>Pay Installment</span>
               </button>
             </div>
-            <div class="text-[11px] text-slate-500">Min: ₦ {{ money(monthlyDue || 0) }} • Max: ₦ {{ money(remaining || 0) }}</div>
+            <div class="text-[11px] text-slate-500">Min: Ã¢â€šÂ¦ {{ money(monthlyDue || 0) }} Ã¢â‚¬Â¢ Max: Ã¢â€šÂ¦ {{ money(remaining || 0) }}</div>
           </div>
 
           <div v-if="payError" class="mt-2 text-rose-700 bg-rose-50 border border-rose-200 p-2 rounded">{{ payError }}</div>
-          <div v-if="paySuccess" class="mt-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded">{{ paySuccess }}</div>
+          <div v-if="paySuccess" class="mt-2 text-blue-700 bg-blue-50 border border-blue-200 p-2 rounded">{{ paySuccess }}</div>
         </div>
 
         <div v-if="order.dispute" class="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-xl">
@@ -97,7 +97,7 @@
           <p class="text-[11px] text-slate-600 line-clamp-2 mb-2">{{ order.dispute.description }}</p>
 
           <div v-if="order.dispute.outcome_details" class="mt-2 pt-2 border-t border-slate-200">
-            <div class="text-[10px] text-emerald-700 font-bold uppercase tracking-tight mb-1">Mediation Outcome</div>
+            <div class="text-[10px] text-blue-700 font-bold uppercase tracking-tight mb-1">Mediation Outcome</div>
             <p class="text-[11px] text-slate-700 whitespace-pre-line">{{ order.dispute.outcome_details }}</p>
           </div>
         </div>
@@ -133,7 +133,7 @@
           <div class="space-y-4">
             <div>
               <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1">Reason for Dispute</label>
-              <select v-model="disputeModal.reason" class="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+              <select v-model="disputeModal.reason" class="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">Select a reason</option>
                 <option value="Faulty Item">Faulty/Damaged Item</option>
                 <option value="Wrong Item Received">Wrong Item Received</option>
@@ -146,19 +146,19 @@
               <label class="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1">Description</label>
               <textarea
                   v-model="disputeModal.description"
-                  class="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none min-h-[100px]"
+                  class="w-full border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px]"
                   placeholder="Tell the Sharia Board what happened..."
               ></textarea>
             </div>
           </div>
 
           <div v-if="disputeModal.error" class="mt-4 p-3 bg-rose-50 text-rose-700 text-xs rounded-xl border border-rose-100">{{ disputeModal.error }}</div>
-          <div v-if="disputeModal.success" class="mt-4 p-3 bg-emerald-50 text-emerald-700 text-xs rounded-xl border border-emerald-100">{{ disputeModal.success }}</div>
+          <div v-if="disputeModal.success" class="mt-4 p-3 bg-blue-50 text-blue-700 text-xs rounded-xl border border-blue-100">{{ disputeModal.success }}</div>
         </div>
 
         <div class="flex divide-x border-t border-slate-100">
           <button @click="disputeModal.visible = false" :disabled="disputeModal.submitting" class="flex-1 p-4 font-bold text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">Cancel</button>
-          <button @click="handleDisputeSubmit" :disabled="disputeModal.submitting || !disputeModal.reason" class="flex-1 p-4 font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">
+          <button @click="handleDisputeSubmit" :disabled="disputeModal.submitting || !disputeModal.reason" class="flex-1 p-4 font-bold text-white bg-blue-700 hover:bg-blue-800 transition-colors uppercase tracking-widest text-xs disabled:opacity-50">
             <span v-if="disputeModal.submitting">Submitting...</span>
             <span v-else>Submit Case</span>
           </button>
@@ -222,7 +222,7 @@ const money = (val) => Number(val || 0).toLocaleString(undefined, { minimumFract
 
 const statusClass = (status) => {
   const s = String(status || '').toLowerCase()
-  if (s === 'paid' || s === 'completed' || s === 'success' || s === 'delivered') return 'text-emerald-700'
+  if (s === 'paid' || s === 'completed' || s === 'success' || s === 'delivered') return 'text-blue-700'
   if (s === 'pending' || s === 'processing' || s === 'shipped' || s.includes('murabaha')) return 'text-amber-600'
   if (s === 'failed' || s === 'cancelled') return 'text-rose-700'
   return 'text-slate-500'
@@ -286,7 +286,7 @@ const disputeModal = ref({
 
 const disputeStatusClass = (status) => {
   const s = String(status || '').toLowerCase()
-  if (s === 'resolved') return 'bg-emerald-100 text-emerald-700'
+  if (s === 'resolved') return 'bg-blue-100 text-blue-700'
   if (s === 'rejected') return 'bg-rose-100 text-rose-700'
   if (s === 'mediation') return 'bg-amber-100 text-amber-700'
   return 'bg-slate-200 text-slate-600'
@@ -421,3 +421,5 @@ onMounted(load)
 <style scoped>
 .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 1rem; }
 </style>
+
+

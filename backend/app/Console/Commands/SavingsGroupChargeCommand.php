@@ -36,7 +36,7 @@ class SavingsGroupChargeCommand extends Command
         $this->line('Members processed: ' . $result['members_processed']);
         $this->line('Successful charges: ' . $result['successful_charges']);
         $this->line('Failed (insufficient): ' . $result['failed_insufficient']);
-        $this->line('Total amount: ₦' . number_format($result['total_amount'], 2));
+        $this->line('Total amount: â‚¦' . number_format($result['total_amount'], 2));
 
         $this->info('Done.');
         return 0;

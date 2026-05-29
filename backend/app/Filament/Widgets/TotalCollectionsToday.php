@@ -24,7 +24,7 @@ class TotalCollectionsToday extends BaseWidget
             ->sum('amount');
 
         return [
-            Card::make('Total Collections Today', '₦' . number_format((float) $sum, 2))
+            Card::make('Total Collections Today', 'â‚¦' . number_format((float) $sum, 2))
                 ->description('Successful contributions today')
                 ->color('success'),
         ];

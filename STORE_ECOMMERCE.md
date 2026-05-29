@@ -7,7 +7,7 @@ The Coop Store provides a complete e-commerce experience for members to purchase
 - **Product Catalog**: Organized by categories with search and sorting.
 - **Stock Management**: Track inventory and prevent overselling.
 - **Cart & Checkout**: Multi-item cart with persistent storage.
-- **Murabaha Financing**: Flexible 6–12 month installment plans with profit margin.
+- **Murabaha Financing**: Flexible 6â€“12 month installment plans with profit margin.
 - **Order Management**: Admin dashboard to track, fulfill, and manage member orders.
 - **Receipts & History**: Detailed order receipts with installment payment tracking.
 

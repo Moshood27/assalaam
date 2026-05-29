@@ -99,11 +99,11 @@ services:
     build:
       context: ./backend
       dockerfile: ../docker/php/Dockerfile
-    container_name: attaqwa-reverb
+    container_name: assalaam-reverb
     command: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080" ]
     env_file: [ ".env" ]
     networks:
-      - attaqwa-network
+      - assalaam-network
     restart: unless-stopped
 
 networks:

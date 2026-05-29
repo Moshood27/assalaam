@@ -6,7 +6,7 @@ The backend already implements a VTpass-compatible webhook handler.
 
 - Public endpoint: POST /api/vtu/webhook
 - Purpose: Receive asynchronous status updates from VTpass and reconcile member wallets.
-- Idempotency: Safe to receive duplicate callbacks; wallet will not be double‑debited or double‑refunded.
+- Idempotency: Safe to receive duplicate callbacks; wallet will not be doubleâ€‘debited or doubleâ€‘refunded.
 
 
 ## 1) Expose a Public URL (Local Development)
@@ -55,8 +55,8 @@ When VTpass calls POST /api/vtu/webhook, the backend:
 
 
 ## 4) Reference (request_id) Format Requirement
-VTpass is strict about request_id. The backend generates a compliant default when you don’t override the reference:
-- Format: UTC timestamp (YYYYMMDDHHmm) followed by a unique 6‑char string.
+VTpass is strict about request_id. The backend generates a compliant default when you donâ€™t override the reference:
+- Format: UTC timestamp (YYYYMMDDHHmm) followed by a unique 6â€‘char string.
 - Example: 202603201415a1b2c3
 
 If you supply your own reference, ensure it starts with the current UTC datetime in the same format. Avoid prefixes like "VTU-AIRTIME-" as VTpass may reject them.
@@ -65,7 +65,7 @@ If you supply your own reference, ensure it starts with the current UTC datetime
 ## 5) Endpoint Details
 - Method: POST
 - Path: /api/vtu/webhook
-- Auth: Public (VTpass servers). Consider IP allow‑listing at your perimeter if possible.
+- Auth: Public (VTpass servers). Consider IP allowâ€‘listing at your perimeter if possible.
 - Content type: application/json (preferred). Form-encoded is tolerated as long as fields are present.
 - Response: 200 { "status": "received" }
 
@@ -116,7 +116,7 @@ Failed:
 - Data success: Debit base amount + configured convenience fee (already stored as tx amount); meta includes convenience_fee and bundle_code.
 - Failed after prior debit: Create a REFUND credit (reference: {original}-REFUND) and restore balance.
 
-All operations are wrapped in a DB transaction with row‑level locking to ensure atomicity and idempotency.
+All operations are wrapped in a DB transaction with rowâ€‘level locking to ensure atomicity and idempotency.
 
 
 ## 8) Configuration & Environment
@@ -171,4 +171,4 @@ The base URL auto-selects sandbox (https://sandbox.vtpass.com/api) when VTU_SAND
 - Consider restricting the webhook route by network perimeter rules (IP allowlist) and monitoring logs/metrics for anomalies.
 
 
-— Last updated: 2026-03-20
+â€” Last updated: 2026-03-20

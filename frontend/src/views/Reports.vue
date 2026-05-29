@@ -9,7 +9,7 @@
           <h2 class="section-title">Contribution Mix</h2>
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Breakdown</span>
         </div>
-        <div v-if="mixLoading" class="text-slate-500 text-sm">Loading…</div>
+        <div v-if="mixLoading" class="text-slate-500 text-sm">LoadingÃ¢â‚¬Â¦</div>
         <div v-else-if="mixError" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ mixError }}</div>
         <div v-else>
           <div v-if="!mix.breakdown?.length" class="text-slate-500 text-sm">No data</div>
@@ -24,14 +24,14 @@
                   <div class="text-xs text-slate-500">{{ row.percentage.toFixed(2) }}%</div>
                 </div>
                 <div class="h-2 bg-slate-200 rounded overflow-hidden">
-                  <div class="h-2 bg-emerald-500" :style="{ width: Math.min(100, Math.max(0, row.percentage)).toFixed(2) + '%' }"></div>
+                  <div class="h-2 bg-blue-500" :style="{ width: Math.min(100, Math.max(0, row.percentage)).toFixed(2) + '%' }"></div>
                 </div>
-                <div class="text-right text-[11px] text-slate-500 mt-1">₦ {{ money(row.amount) }}</div>
+                <div class="text-right text-[11px] text-slate-500 mt-1">Ã¢â€šÂ¦ {{ money(row.amount) }}</div>
               </li>
             </ul>
           </div>
           <div class="mt-4 text-right text-xs text-slate-600">
-            Total: <span class="font-black text-slate-900">₦ {{ money(mix.total) }}</span>
+            Total: <span class="font-black text-slate-900">Ã¢â€šÂ¦ {{ money(mix.total) }}</span>
           </div>
         </div>
       </section>
@@ -49,12 +49,12 @@
             </a>
           </div>
         </div>
-        <div v-if="divLoading" class="text-slate-500 text-sm">Loading…</div>
+        <div v-if="divLoading" class="text-slate-500 text-sm">LoadingÃ¢â‚¬Â¦</div>
         <div v-else-if="divError" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ divError }}</div>
         <div v-else class="space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-[11px] text-slate-500 uppercase font-black tracking-widest">Total Savings ({{ divYear }})</span>
-            <span class="font-black text-slate-900">₦ {{ money(divData.total_savings) }}</span>
+            <span class="font-black text-slate-900">Ã¢â€šÂ¦ {{ money(divData.total_savings) }}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-[11px] text-slate-500 uppercase font-black tracking-widest">Rate</span>
@@ -62,7 +62,7 @@
           </div>
           <div class="flex items-center justify-between">
             <span class="text-[11px] text-slate-500 uppercase font-black tracking-widest">Estimated Dividend</span>
-            <span class="text-emerald-700 font-black text-lg">₦ {{ money(divData.dividend) }}</span>
+            <span class="text-blue-700 font-black text-lg">Ã¢â€šÂ¦ {{ money(divData.dividend) }}</span>
           </div>
         </div>
       </section>
@@ -198,4 +198,6 @@ const getStatementUrl = (format) => {
 
 onMounted(() => { loadMix(); loadDividend() })
 </script>
+
+
 

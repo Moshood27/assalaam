@@ -32,7 +32,7 @@
             <div class="brand">{{ config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $name }},</p>
+            <p class="salam">AssalÄmu â€˜alaykum {{ $name }},</p>
             <p>We are pleased to invite you to a meeting regarding your membership application with <strong>{{ config('app.name') }}</strong>.</p>
 
             <div class="divider"></div>
@@ -60,7 +60,7 @@
 
             <p>If you have any questions or need to reschedule, please contact us.</p>
 
-            <p>Jazākumullāhu khayran,<br>{{ config('app.name') }}</p>
+            <p>JazÄkumullÄhu khayran,<br>{{ config('app.name') }}</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

@@ -5,7 +5,7 @@
     <div class="max-w-5xl mx-auto px-4 pb-10">
       <!-- Global System Announcement -->
       <div v-if="appStatusStore.systemAnnouncement" 
-           class="mt-4 bg-emerald-600 text-white px-4 py-3 rounded-2xl text-center text-xs font-bold flex items-center justify-center gap-3 shadow-md animate-in fade-in slide-in-from-top duration-500 mb-6">
+           class="mt-4 bg-blue-600 text-white px-4 py-3 rounded-2xl text-center text-xs font-bold flex items-center justify-center gap-3 shadow-md animate-in fade-in slide-in-from-top duration-500 mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.007.51.011.77.011h3.39c.8 0 1.545-.466 1.89-1.159L18.42 12l-1.12-2.25c-.345-.693-1.09-1.159-1.89-1.159h-3.39c-.26 0-.517.004-.77.011m0 9.18c.612.016 1.221.031 1.83.042m-1.83-9.222c.61-.011 1.218-.026 1.83-.042m-1.83 9.222v-9.18m1.83 9.138A17.944 17.944 0 0 1 12 18c-1.353 0-2.65-.148-3.903-.432m10.343-9.43A17.944 17.944 0 0 0 12 6c-1.353 0-2.65.148-3.903.432" />
         </svg>
@@ -15,31 +15,31 @@
       <div class="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
         <!-- Left Column: Primary Info & Warnings -->
         <div class="lg:col-span-7 space-y-4">
-          <div id="balance-card" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
+          <div id="balance-card" class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full"></div>
         <div class="flex items-center gap-2 mb-2 relative z-10">
-          <p class="text-emerald-100 text-sm font-medium">Available Balance</p>
+          <p class="text-blue-100 text-sm font-medium">Available Balance</p>
           <button @click="toggleBalances()" class="text-lg opacity-80 p-1 rounded-lg hover:bg-white/10 transition-colors" title="Toggle visibility">
-            <svg v-if="hideBalances" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg v-if="hideBalances" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.076m3.313-3.313A9.959 9.959 0 0112 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-1.447 0-2.811-.31-4.04-.864m1.107-1.107l1.107-1.107m2.774-2.774l.553-.553m2.21-2.21l.553-.553" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
             </svg>
           </button>
         </div>
         <h1 class="text-3xl sm:text-4xl leading-tight font-bold relative z-10 tracking-tight">
-          ₦ {{ hideBalances ? '***,***.**' : formatMoney(dashboardData.balance) }}
+          Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(dashboardData.balance) }}
         </h1>
         <div class="mt-8 flex items-center justify-between flex-wrap gap-2 relative z-10">
           <div class="flex items-center gap-2">
-            <p class="text-xs text-emerald-100 font-mono tracking-widest">ID: {{ dashboardData.membership_id }}</p>
+            <p class="text-xs text-blue-100 font-mono tracking-widest">ID: {{ dashboardData.membership_id }}</p>
             <button @click="copy(dashboardData.membership_id)" class="text-xs text-white/80 underline">Copy</button>
           </div>
           <div class="flex gap-2">
-            <button @click="$router.push('/pay')" class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg border border-emerald-400">
+            <button @click="$router.push('/pay')" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg border border-blue-400">
               Allocate Fund
             </button>
             <button @click="$router.push('/wallet')" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-md transition-all">
@@ -53,66 +53,66 @@
       <div v-if="dashboardData.kpis && !dashboardData.kpis.has_pin"
            class="mt-4 p-4 rounded-3xl bg-amber-50 border border-amber-200 flex items-center gap-3"
            @click="$router.push('/profile')">
-        <div class="text-2xl">🔑</div>
+        <div class="text-2xl">Ã°Å¸â€â€˜</div>
         <div class="flex-1">
           <p class="text-sm font-bold text-amber-900">Transaction PIN not set</p>
           <p class="text-xs text-amber-700">You need a PIN to transfer or withdraw funds.</p>
         </div>
-        <div class="text-amber-400">➡️</div>
+        <div class="text-amber-400">Ã¢Å¾Â¡Ã¯Â¸Â</div>
       </div>
 
       <!-- Attendance Reminder -->
       <div v-if="dashboardData.kpis && dashboardData.kpis.has_ongoing_meeting"
-           class="mt-4 p-4 rounded-3xl bg-emerald-900 text-white flex items-center gap-3 shadow-lg shadow-emerald-200 cursor-pointer"
+           class="mt-4 p-4 rounded-3xl bg-blue-900 text-white flex items-center gap-3 shadow-lg shadow-blue-200 cursor-pointer"
            @click="$router.push('/attendance')">
-        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-pulse">📍</div>
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-pulse">Ã°Å¸â€œÂ</div>
         <div class="flex-1">
           <p class="text-sm font-bold">Meeting Ongoing</p>
           <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Tap to mark attendance</p>
         </div>
-        <div class="text-white/40">➡️</div>
+        <div class="text-white/40">Ã¢Å¾Â¡Ã¯Â¸Â</div>
       </div>
 
       <!-- Outstanding Fines Warning -->
       <div v-if="dashboardData.kpis && dashboardData.kpis.outstanding_fines > 0"
            class="mt-4 p-4 rounded-3xl bg-rose-50 border border-rose-200 flex items-center gap-3"
            @click="$router.push('/passbook')">
-        <div class="text-2xl">⚠️</div>
+        <div class="text-2xl">Ã¢Å¡Â Ã¯Â¸Â</div>
         <div class="flex-1">
-          <p class="text-sm font-bold text-rose-900">Outstanding Fines: ₦{{ formatMoney(dashboardData.kpis.outstanding_fines) }}</p>
+          <p class="text-sm font-bold text-rose-900">Outstanding Fines: Ã¢â€šÂ¦{{ formatMoney(dashboardData.kpis.outstanding_fines) }}</p>
           <p class="text-xs text-rose-700">These will be deducted from your next wallet funding.</p>
         </div>
-        <div class="text-rose-400">➡️</div>
+        <div class="text-rose-400">Ã¢Å¾Â¡Ã¯Â¸Â</div>
       </div>
 
       <!-- Tahkim Dispute Warning -->
       <div v-if="kpis.active_disputes_count > 0"
            class="mt-4 p-4 rounded-3xl bg-slate-900 text-white flex items-center gap-3 shadow-lg shadow-slate-200 cursor-pointer"
            @click="$router.push('/sharia-board/history')">
-        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-xl">⚖️</div>
+        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-xl">Ã¢Å¡â€“Ã¯Â¸Â</div>
         <div class="flex-1">
           <p class="text-sm font-bold">Active Tahkim ({{ kpis.active_disputes_count }})</p>
           <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Sharia Board Mediation in progress</p>
         </div>
-        <div class="text-white/40">➡️</div>
+        <div class="text-white/40">Ã¢Å¾Â¡Ã¯Â¸Â</div>
       </div>
 
       <!-- Shura Voting Banner -->
       <div v-if="appStatusStore.features['shura-voting-active']"
            class="mt-4 p-4 rounded-3xl bg-indigo-600 text-white flex items-center gap-3 shadow-lg shadow-indigo-200 cursor-pointer"
            @click="$router.push('/agm')">
-        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-bounce">🗳️</div>
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-bounce">Ã°Å¸â€”Â³Ã¯Â¸Â</div>
         <div class="flex-1">
           <p class="text-sm font-bold">AGM Voting Live</p>
           <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Cast your vote for the Shura Council</p>
         </div>
-        <div class="text-white/40">➡️</div>
+        <div class="text-white/40">Ã¢Å¾Â¡Ã¯Â¸Â</div>
       </div>
 
       <!-- Migration Discrepancy Banner -->
       <div v-if="dashboardData.migration?.discrepancy_reported_at && !dashboardData.migration?.verified_at"
            class="mt-4 p-4 rounded-3xl bg-blue-50 border border-blue-200 flex items-center gap-3">
-        <div class="text-2xl">⏳</div>
+        <div class="text-2xl">Ã¢ÂÂ³</div>
         <div class="flex-1">
           <p class="text-sm font-bold text-blue-900">Balance Under Review</p>
           <p class="text-xs text-blue-700">You reported a discrepancy. Our officers are currently reconciling your records.</p>
@@ -125,7 +125,7 @@
            @click="$router.push('/loans')">
         <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
              :class="kpis.total_due_amount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'">
-          {{ kpis.total_due_amount > 0 ? '🚨' : '🔔' }}
+          {{ kpis.total_due_amount > 0 ? 'Ã°Å¸Å¡Â¨' : 'Ã°Å¸â€â€' }}
         </div>
         <div class="flex-1">
           <div class="flex justify-between items-start">
@@ -136,7 +136,7 @@
             <span v-if="kpis.total_due_amount > 0" class="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Action Required</span>
           </div>
           <p class="text-sm font-black text-slate-800">
-            {{ formatDate(kpis.next_due_date) }} • {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
+            {{ formatDate(kpis.next_due_date) }} Ã¢â‚¬Â¢ {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
           </p>
           <p v-if="kpis.total_due_amount > 0" class="text-[10px] text-rose-500 font-bold mt-1 uppercase tracking-tighter">
             Overdue Amount: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
@@ -145,7 +145,7 @@
             Expected to Pay: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}
           </p>
         </div>
-        <div class="text-slate-300">➡️</div>
+        <div class="text-slate-300">Ã¢Å¾Â¡Ã¯Â¸Â</div>
       </div>
     </div> <!-- end left col -->
 
@@ -156,38 +156,38 @@
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-slate-800 font-bold text-lg">Qard Hasan Status</h3>
           <div class="flex items-center gap-3">
-            <router-link v-if="appStatusStore.features['apply-for-loan']" to="/loans" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">Apply for Qard Hasan</router-link>
+            <router-link v-if="appStatusStore.features['apply-for-loan']" to="/loans" class="text-xs font-bold text-blue-600 hover:text-blue-700">Apply for Qard Hasan</router-link>
           </div>
-          <div class="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl">💎</div>
+          <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">Ã°Å¸â€™Å½</div>
         </div>
         
         <div class="flex items-end gap-1 mb-8" v-if="kpis.has_active_loan || kpis.total_due_amount > 0">
           <template v-if="kpis.total_due_amount > 0">
-            <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
+            <span class="text-3xl font-black text-rose-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
             <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Overdue Amount</span>
           </template>
           <template v-else-if="kpis.is_defaulted">
-            <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
+            <span class="text-3xl font-black text-rose-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
             <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Defaulted Amount</span>
           </template>
           <template v-else-if="kpis.has_active_loan">
-            <span class="text-3xl font-black text-amber-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
+            <span class="text-3xl font-black text-amber-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
             <span class="text-[10px] text-amber-500 font-bold uppercase mb-2 ml-1 tracking-wider">Outstanding Balance</span>
           </template>
         </div>
 
         <div v-if="kpis.expected_amount_to_pay > 0" class="mb-6">
            <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Expected Amount to Pay (To Date)</p>
-           <p class="text-lg font-black text-blue-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}</p>
+           <p class="text-lg font-black text-blue-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
-          <StatPill label="Savings" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.savings_balance))" icon="💰" />
-          <StatPill label="Shares" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.shares_balance))" icon="📈" />
+          <StatPill label="Savings" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.savings_balance))" icon="Ã°Å¸â€™Â°" />
+          <StatPill label="Shares" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.shares_balance))" icon="Ã°Å¸â€œË†" />
         </div>
         
         <div v-if="kpis.is_defaulted" class="mt-6 flex items-center gap-3 bg-rose-50 p-4 rounded-3xl border border-rose-100">
-          <div class="text-lg">🛑</div>
+          <div class="text-lg">Ã°Å¸â€ºâ€˜</div>
           <p class="text-[10px] text-rose-700 leading-tight font-medium">
             Your account is currently <span class="font-bold">in default</span> due to an unpaid Qard Hasan repayment. You must clear your outstanding balance before you can access further credit.
           </p>
@@ -196,12 +196,12 @@
 
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-3">
-        <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
-        <StatPill v-if="kpis.total_due_amount > 0" label="Overdue Amount" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
-        <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="📅" @click="$router.push('/loans')" class="cursor-pointer" />
-        <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? '≈ ₦ ***' : (kpis.gold_value_naira ? '≈ ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="🪙" @click="$router.push('/gold')" class="cursor-pointer" />
-        <StatPill label="Qard Hasan" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="📊" />
-        <StatPill label="Attaqwa Score" :value="String(kpis.attaqwa_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />
+        <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="Ã°Å¸â€™Â°" />
+        <StatPill v-if="kpis.total_due_amount > 0" label="Overdue Amount" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="Ã¢Å¡Â Ã¯Â¸Â" @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="Ã°Å¸â€œâ€¦" @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? 'Ã¢â€°Ë† Ã¢â€šÂ¦ ***' : (kpis.gold_value_naira ? 'Ã¢â€°Ë† Ã¢â€šÂ¦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="Ã°Å¸Âªâ„¢" @click="$router.push('/gold')" class="cursor-pointer" />
+        <StatPill label="Qard Hasan" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="Ã°Å¸â€œÅ " />
+        <StatPill label="Assalaam Score" :value="String(kpis.assalaam_score || 0)" hint="Credit Rating" intent="info" icon="Ã¢Â­Â" @click="$router.push('/profile')" class="cursor-pointer" />
       </div>
     </div> <!-- end right col -->
   </div> <!-- end grid -->
@@ -216,103 +216,103 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-8">
       <button @click="$router.push('/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">💳</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€™Â³</div>
         <span class="text-sm font-bold text-slate-700">Allocate Fund</span>
       </button>
       <button v-if="appStatusStore.features['chat-help-enabled']" @click="$router.push('/chat')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">💬</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€™Â¬</div>
         <span class="text-sm font-bold text-slate-700">Chat & Help</span>
       </button>
       <button v-if="appStatusStore.features['projects-enabled']" @click="$router.push('/projects')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl">📦</div>
+        <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ¦</div>
         <span class="text-sm font-bold text-slate-700">Projects</span>
       </button>
       <button @click="$router.push('/sadaqah')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl">🌙</div>
+        <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Å’â„¢</div>
         <span class="text-sm font-bold text-slate-700">Sadaqah</span>
       </button>
       <button @click="$router.push('/attendance')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">📍</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ</div>
         <span class="text-sm font-bold text-slate-700">Attendance</span>
       </button>
       <button v-if="appStatusStore.features['group-savings-enabled']" @click="$router.push('/savings-groups')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">🤝</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Â¤Â</div>
         <span class="text-sm font-bold text-slate-700">Group Savings</span>
       </button>
       <button @click="$router.push('/vtu')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📶</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ¶</div>
         <span class="text-sm font-bold text-slate-700">Airtime/Data</span>
       </button>
       <button id="loan-btn" @click="$router.push('/loans')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">📊</div>
+        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÅ </div>
         <span class="text-sm font-bold text-slate-700">Qard Hasan Records</span>
       </button>
       <button @click="$router.push('/reports')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">📈</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œË†</div>
         <span class="text-sm font-bold text-slate-700">Reports</span>
       </button>
       <button v-if="appStatusStore.features['takaful-enabled']" @click="$router.push('/takaful')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-cyan-50 rounded-2xl flex items-center justify-center text-2xl">🛡️</div>
+        <div class="w-14 h-14 bg-cyan-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€ºÂ¡Ã¯Â¸Â</div>
         <span class="text-sm font-bold text-slate-700">Takaful</span>
       </button>
       <button @click="$router.push('/transparency')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-lime-50 rounded-2xl flex items-center justify-center text-2xl">🧾</div>
+        <div class="w-14 h-14 bg-lime-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Â§Â¾</div>
         <span class="text-sm font-bold text-slate-700">Transparency</span>
       </button>
       <button @click="$router.push('/store')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center text-2xl">🛒</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€ºâ€™</div>
         <span class="text-sm font-bold text-slate-700">Store</span>
       </button>
       <button v-if="appStatusStore.features['gold-savings-enabled'] || appStatusStore.features['gold-savings-beta']" @click="$router.push('/gold')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-yellow-50 rounded-2xl flex items-center justify-center text-2xl">🪙</div>
+        <div class="w-14 h-14 bg-yellow-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Âªâ„¢</div>
         <span class="text-sm font-bold text-slate-700">Gold Savings</span>
       </button>
       <button v-if="appStatusStore.features['merchant-pay-enabled']" @click="$router.push('/merchant/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">📸</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ¸</div>
         <span class="text-sm font-bold text-slate-700">Pay Merchant</span>
       </button>
       <button v-if="appStatusStore.features['receive-qr-enabled']" @click="$router.push('/merchant/receive')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">🔲</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€Â²</div>
         <span class="text-sm font-bold text-slate-700">Receive QR</span>
       </button>
       <button @click="$router.push('/agm')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-fuchsia-50 rounded-2xl flex items-center justify-center text-2xl">🗳️</div>
+        <div class="w-14 h-14 bg-fuchsia-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€”Â³Ã¯Â¸Â</div>
         <span class="text-sm font-bold text-slate-700">AGM & Voting</span>
       </button>
       <button v-if="appStatusStore.features['zakat-enabled']" @click="checkZakat" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">🕌</div>
+        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€¢Å’</div>
         <span class="text-sm font-bold text-slate-700">Zakat</span>
       </button>
-      <button v-if="dashboardData.is_ramadan && appStatusStore.features['zakat-enabled']" @click="payZakatFitr" class="bg-emerald-50 p-5 rounded-3xl shadow-sm border border-emerald-100 flex flex-col items-center gap-2 active:bg-emerald-100 transition-all">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">🥣</div>
-        <span class="text-sm font-bold text-emerald-800">Zakat Al-Fitr</span>
+      <button v-if="dashboardData.is_ramadan && appStatusStore.features['zakat-enabled']" @click="payZakatFitr" class="bg-blue-50 p-5 rounded-3xl shadow-sm border border-blue-100 flex flex-col items-center gap-2 active:bg-blue-100 transition-all">
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Â¥Â£</div>
+        <span class="text-sm font-bold text-blue-800">Zakat Al-Fitr</span>
       </button>
       <button @click="$router.push('/goals')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">🕋</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€¢â€¹</div>
         <span class="text-sm font-bold text-slate-700">Hajj & Umrah</span>
       </button>
       <button v-if="appStatusStore.features['junior-coop-enabled']" @click="$router.push('/junior-cooperative')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">👶</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€˜Â¶</div>
         <span class="text-sm font-bold text-slate-700">Junior Coop</span>
       </button>
       <button @click="$router.push('/wasiyyah')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📋</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œâ€¹</div>
         <span class="text-sm font-bold text-slate-700">Wasiyyah</span>
       </button>
-      <button v-if="kpis.vendor && kpis.vendor.is_vendor" @click="$router.push('/vendor/dashboard')" class="bg-emerald-50 p-5 rounded-3xl shadow-sm border border-emerald-100 flex flex-col items-center gap-2 active:bg-emerald-100 transition-all">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">🏪</div>
-        <span class="text-sm font-bold text-emerald-800">Vendor Portal</span>
+      <button v-if="kpis.vendor && kpis.vendor.is_vendor" @click="$router.push('/vendor/dashboard')" class="bg-blue-50 p-5 rounded-3xl shadow-sm border border-blue-100 flex flex-col items-center gap-2 active:bg-blue-100 transition-all">
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸ÂÂª</div>
+        <span class="text-sm font-bold text-blue-800">Vendor Portal</span>
       </button>
       <button v-else @click="$router.push('/vendor/apply')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">🏪</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸ÂÂª</div>
         <span class="text-sm font-bold text-slate-700">Become a Vendor</span>
       </button>
       <button @click="$router.push('/sharia-board')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">⚖️</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã¢Å¡â€“Ã¯Â¸Â</div>
         <span class="text-sm font-bold text-slate-700">Sharia Board</span>
       </button>
       <button v-if="dashboardData.is_admin" @click="$router.push('/admin/vendors')" class="bg-rose-50 p-5 rounded-3xl shadow-sm border border-rose-100 flex flex-col items-center gap-2 active:bg-rose-100 transition-all">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">👮</div>
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€˜Â®</div>
         <span class="text-sm font-bold text-rose-800">Admin Portal</span>
       </button>
     </div>
@@ -321,12 +321,12 @@
     <div class="mt-6 text-[12px] text-slate-600">
       <p>
         New here? Learn about
-        <button class="text-emerald-700 font-semibold underline" @click="showPassbookInfo">Passbook</button>,
+        <button class="text-blue-700 font-semibold underline" @click="showPassbookInfo">Passbook</button>,
         <template v-if="appStatusStore.features['zakat-enabled']">
-          <button class="text-emerald-700 font-semibold underline" @click="showZakatInfo">Zakat</button>,
+          <button class="text-blue-700 font-semibold underline" @click="showZakatInfo">Zakat</button>,
         </template>
         and
-        <button class="text-emerald-700 font-semibold underline" @click="showHajjInfo">Hajj & Umrah</button>.
+        <button class="text-blue-700 font-semibold underline" @click="showHajjInfo">Hajj & Umrah</button>.
       </p>
     </div>
 
@@ -337,7 +337,7 @@
           v-for="tab in ['transactions', 'passbook', 'vtu']" 
           :key="tab"
           @click="switchTab(tab)"
-          :class="activeTab === tab ? 'bg-white text-emerald-700 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/30'"
+          :class="activeTab === tab ? 'bg-white text-blue-700 shadow-md scale-[1.02]' : 'text-slate-500 hover:bg-white/30'"
           class="flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 ease-out"
         >
           {{ tab }}
@@ -350,9 +350,9 @@
           v-model="searchQuery" 
           type="text" 
           :placeholder="activeTab === 'transactions' ? 'Search transactions...' : 'Search airtime/data...'"
-          class="w-full pl-12 pr-4 py-4 bg-white border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
+          class="w-full pl-12 pr-4 py-4 bg-white border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
         >
-        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -364,19 +364,19 @@
         <!-- Live Activity Feed -->
         <div v-if="liveActions.length" class="animate-in fade-in slide-in-from-bottom duration-500">
           <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
             Live Activity
           </h3>
           <div class="space-y-3">
             <div v-for="action in liveActions" :key="action.id" 
-                 class="bg-white p-4 rounded-2xl flex items-center justify-between gap-3 border-2 border-emerald-100 shadow-sm animate-bounce-in">
+                 class="bg-white p-4 rounded-2xl flex items-center justify-between gap-3 border-2 border-blue-100 shadow-sm animate-bounce-in">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-lg shrink-0">
-                  🔔
+                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-lg shrink-0">
+                  Ã°Å¸â€â€
                 </div>
                 <div>
                   <p class="font-bold text-slate-800 text-sm">{{ action.message }}</p>
-                  <p class="text-[10px] text-emerald-600 font-mono uppercase tracking-widest font-black">{{ action.time }}</p>
+                  <p class="text-[10px] text-blue-600 font-mono uppercase tracking-widest font-black">{{ action.time }}</p>
                 </div>
               </div>
             </div>
@@ -385,16 +385,16 @@
 
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-slate-800 text-lg">Recent Transactions</h3>
-          <button class="text-emerald-700 text-sm font-bold" @click="$router.push('/passbook')">See All</button>
+          <button class="text-blue-700 text-sm font-bold" @click="$router.push('/passbook')">See All</button>
         </div>
 
         <div v-if="filteredTransactions.length" class="space-y-3">
           <div v-for="tx in filteredTransactions" :key="tx.id"
                class="bg-white p-4 rounded-2xl flex items-center justify-between gap-3 overflow-hidden border border-slate-100 shadow-sm">
             <div class="flex items-center gap-3 min-w-0 flex-1">
-              <div :class="tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'"
+              <div :class="tx.type === 'credit' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'"
                    class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
-                {{ tx.type === 'credit' ? '+' : '−' }}
+                {{ tx.type === 'credit' ? '+' : 'Ã¢Ë†â€™' }}
               </div>
               <div class="min-w-0 overflow-hidden">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -406,7 +406,7 @@
               </div>
             </div>
             <div class="text-right">
-              <p class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(tx.amount) }}</p>
+              <p class="font-bold text-slate-800">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(tx.amount) }}</p>
             </div>
           </div>
         </div>
@@ -426,14 +426,14 @@
           <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
             <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full"></div>
             <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Yearly Cumulative</p>
-            <h2 class="text-4xl font-black tracking-tight">₦ {{ formatMoney(passbookSummary.grand_total) }}</h2>
+            <h2 class="text-4xl font-black tracking-tight">Ã¢â€šÂ¦ {{ formatMoney(passbookSummary.grand_total) }}</h2>
             
             <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
               <div>
                 <p class="text-slate-400 text-[10px] uppercase font-bold">Current Year</p>
                 <p class="text-sm font-bold">{{ new Date().getFullYear() }}</p>
               </div>
-              <button @click="$router.push('/passbook')" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-2xl text-xs font-bold transition-all shadow-lg shadow-emerald-900/20">
+              <button @click="$router.push('/passbook')" class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-2xl text-xs font-bold transition-all shadow-lg shadow-blue-900/20">
                 View Full Passbook
               </button>
             </div>
@@ -448,9 +448,9 @@
             <div v-if="passbookSummary.agm_fee_amount" class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
               <p class="text-[10px] text-slate-400 uppercase font-black mb-1">AGM Fee</p>
               <div class="flex items-center gap-2">
-                <p class="text-xl font-black text-slate-800">₦{{ formatMoney(passbookSummary.agm_fee_amount) }}</p>
-                <span :class="passbookSummary.agm_fee_paid ? 'text-emerald-500' : 'text-amber-500'" class="text-xs">
-                  {{ passbookSummary.agm_fee_paid ? '✓' : '⌛' }}
+                <p class="text-xl font-black text-slate-800">Ã¢â€šÂ¦{{ formatMoney(passbookSummary.agm_fee_amount) }}</p>
+                <span :class="passbookSummary.agm_fee_paid ? 'text-blue-500' : 'text-amber-500'" class="text-xs">
+                  {{ passbookSummary.agm_fee_paid ? 'Ã¢Å“â€œ' : 'Ã¢Å’â€º' }}
                 </span>
               </div>
             </div>
@@ -458,7 +458,7 @@
         </div>
         <div v-else class="text-center py-10 text-gray-400 bg-white rounded-3xl border border-dashed border-slate-200">
           <p>Could not load passbook summary.</p>
-          <button @click="fetchPassbookSummary" class="mt-4 text-emerald-700 font-bold underline">Retry</button>
+          <button @click="fetchPassbookSummary" class="mt-4 text-blue-700 font-bold underline">Retry</button>
         </div>
       </div>
 
@@ -466,16 +466,16 @@
       <div v-if="activeTab === 'vtu'" class="space-y-6">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-slate-800 text-lg">Recent Airtime/Data</h3>
-          <button class="text-emerald-700 text-sm font-bold" @click="$router.push('/vtu/history')">See All</button>
+          <button class="text-blue-700 text-sm font-bold" @click="$router.push('/vtu/history')">See All</button>
         </div>
 
         <div v-if="filteredUtilityTransactions.length" class="space-y-3">
           <div v-for="ux in filteredUtilityTransactions" :key="ux.id"
                class="bg-white p-4 rounded-2xl flex items-center justify-between gap-3 overflow-hidden border border-slate-100 shadow-sm">
             <div class="flex items-center gap-3 min-w-0 flex-1">
-              <div :class="ux.status === 'success' ? 'bg-emerald-100 text-emerald-600' : (ux.status === 'failed' ? 'bg-rose-100 text-rose-600' : 'bg-yellow-100 text-yellow-600')"
+              <div :class="ux.status === 'success' ? 'bg-blue-100 text-blue-600' : (ux.status === 'failed' ? 'bg-rose-100 text-rose-600' : 'bg-yellow-100 text-yellow-600')"
                    class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
-                {{ ux.status === 'success' ? '✓' : (ux.status === 'failed' ? '✕' : '⌛') }}
+                {{ ux.status === 'success' ? 'Ã¢Å“â€œ' : (ux.status === 'failed' ? 'Ã¢Å“â€¢' : 'Ã¢Å’â€º') }}
               </div>
               <div class="min-w-0 overflow-hidden">
                 <p class="font-bold text-slate-800 text-sm capitalize truncate max-w-[180px] sm:max-w-none">{{ utilLabel(ux) }}</p>
@@ -484,7 +484,7 @@
               </div>
             </div>
             <div class="text-right shrink-0">
-              <p class="font-bold text-slate-800">₦ {{ formatMoney(ux.amount) }}</p>
+              <p class="font-bold text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(ux.amount) }}</p>
             </div>
           </div>
         </div>
@@ -508,7 +508,7 @@
     <div v-if="showGenderModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[100] p-6">
       <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
         <div class="p-8">
-           <div class="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-emerald-100">👤</div>
+           <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-blue-100">Ã°Å¸â€˜Â¤</div>
            
            <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Update Gender</h3>
            <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">To provide you with tailored services and accurate records, please select your gender.</p>
@@ -516,20 +516,20 @@
            <div class="space-y-3">
              <button 
                @click="selectedGender = 'male'"
-               :class="selectedGender === 'male' ? 'bg-emerald-600 text-white border-emerald-600 scale-[1.02] shadow-lg shadow-emerald-100' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'"
+               :class="selectedGender === 'male' ? 'bg-blue-600 text-white border-blue-600 scale-[1.02] shadow-lg shadow-blue-100' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'"
                class="w-full p-5 rounded-2xl border-2 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-between"
              >
                <span>Male</span>
-               <span v-if="selectedGender === 'male'" class="text-lg">✓</span>
+               <span v-if="selectedGender === 'male'" class="text-lg">Ã¢Å“â€œ</span>
              </button>
              
              <button 
                @click="selectedGender = 'female'"
-               :class="selectedGender === 'female' ? 'bg-emerald-600 text-white border-emerald-600 scale-[1.02] shadow-lg shadow-emerald-100' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'"
+               :class="selectedGender === 'female' ? 'bg-blue-600 text-white border-blue-600 scale-[1.02] shadow-lg shadow-blue-100' : 'bg-slate-50 text-slate-600 border-slate-100 hover:bg-slate-100'"
                class="w-full p-5 rounded-2xl border-2 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-between"
              >
                <span>Female</span>
-               <span v-if="selectedGender === 'female'" class="text-lg">✓</span>
+               <span v-if="selectedGender === 'female'" class="text-lg">Ã¢Å“â€œ</span>
              </button>
            </div>
         </div>
@@ -553,7 +553,7 @@
     <div v-if="showEmailModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[101] p-6">
       <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
         <div class="p-8">
-           <div class="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-emerald-100">📧</div>
+           <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-blue-100">Ã°Å¸â€œÂ§</div>
            
            <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Update Email</h3>
            <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">Your current email address is invalid. Please provide a valid email to receive notifications and secure your account.</p>
@@ -565,7 +565,7 @@
                  v-model="emailForm.email" 
                  type="email" 
                  placeholder="yourname@example.com"
-                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
                />
                <p v-if="emailErrors.email" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ emailErrors.email[0] }}</p>
              </div>
@@ -575,8 +575,8 @@
                <input 
                  v-model="emailForm.password" 
                  type="password" 
-                 placeholder="••••••••"
-                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-emerald-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
+                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
                />
                <p v-if="emailErrors.password" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ emailErrors.password[0] }}</p>
              </div>
@@ -602,7 +602,7 @@
     <div v-if="showPinModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[101] p-6">
       <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
         <div class="p-8">
-           <div class="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-amber-100">🔐</div>
+           <div class="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-amber-100">Ã°Å¸â€Â</div>
            
            <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Set Security PIN</h3>
            <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">Please set a 4-digit transaction PIN to secure your withdrawals and transfers.</p>
@@ -615,7 +615,7 @@
                  type="password" 
                  inputmode="numeric"
                  maxlength="4"
-                 placeholder="••••"
+                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
                  class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700 text-center text-2xl tracking-[0.5em]"
                />
                <p v-if="pinErrors.new_pin" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.new_pin) ? pinErrors.new_pin[0] : pinErrors.new_pin }}</p>
@@ -628,7 +628,7 @@
                  type="password" 
                  inputmode="numeric"
                  maxlength="4"
-                 placeholder="••••"
+                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
                  class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700 text-center text-2xl tracking-[0.5em]"
                />
                <p v-if="pinErrors.confirm_pin" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.confirm_pin) ? pinErrors.confirm_pin[0] : pinErrors.confirm_pin }}</p>
@@ -639,7 +639,7 @@
                <input 
                  v-model="pinForm.current_password" 
                  type="password" 
-                 placeholder="••••••••"
+                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
                  class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
                />
                <p v-if="pinErrors.current_password" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.current_password) ? pinErrors.current_password[0] : pinErrors.current_password }}</p>
@@ -688,7 +688,7 @@ const modal = useModal()
 const { notice, showNotice, closeNotice } = useNotice()
 const appStatusStore = useAppStatusStore()
 
-const currency = '₦'
+const currency = 'Ã¢â€šÂ¦'
 const dashboardData = ref({})
 const liveActions = ref([])
 const activeTab = ref('transactions')
@@ -775,7 +775,7 @@ const kpis = computed(() => {
   const outstandingLoans = txs.filter(t => (t.type === 'loan' || String(t.scheme?.name || '').toLowerCase().includes('loan')))
     .reduce((sum, t) => sum + Number(t.balance || 0), 0)
   const utilSpent = utils.reduce((sum, u) => sum + Number(u.amount || 0), 0)
-  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent, attaqwa_score: d.attaqwa_score || 0, is_defaulted: false, defaulted_amount: 0, total_due_amount: 0, has_active_loan: false, loan_limit: 0, savings_balance: 0, shares_balance: 0, next_due_date: null, next_due_amount: 0 }
+  return { contributions: totalContrib, loans: outstandingLoans, utilities: utilSpent, assalaam_score: d.assalaam_score || 0, is_defaulted: false, defaulted_amount: 0, total_due_amount: 0, has_active_loan: false, loan_limit: 0, savings_balance: 0, shares_balance: 0, next_due_date: null, next_due_amount: 0 }
 })
 
 const chart = computed(() => {
@@ -820,9 +820,9 @@ const utilLabel = (ux) => {
   const type = (ux.type || '').toLowerCase()
   const net = (ux.network || '').toUpperCase()
   const phone = ux.phone_number || ''
-  if (type === 'airtime') return `Airtime — ${net} (${phone})`
-  if (type === 'data') return `Data — ${net} (${phone})`
-  return `${type || 'utility'} — ${net} (${phone})`
+  if (type === 'airtime') return `Airtime Ã¢â‚¬â€ ${net} (${phone})`
+  if (type === 'data') return `Data Ã¢â‚¬â€ ${net} (${phone})`
+  return `${type || 'utility'} Ã¢â‚¬â€ ${net} (${phone})`
 }
 
 const checkMigration = async () => {
@@ -834,12 +834,12 @@ const checkMigration = async () => {
   const total = formatMoney(m.total_balance)
   const breakdownLines = Object.entries(m.breakdown || {})
     .filter(([_, val]) => Number(val) > 0)
-    .map(([key, val]) => `• ${key}: ${currency} ${formatMoney(val)}`)
+    .map(([key, val]) => `Ã¢â‚¬Â¢ ${key}: ${currency} ${formatMoney(val)}`)
     .join('\n')
 
   const ok = await modal.prompt(
     'Verify Opening Balance',
-    `Assalamu Alaikum! Welcome to Attaqwa Mobile App. Based on our system migration from paper/Excel records, here is your opening balance breakdown:\n\n${breakdownLines}\n\nTotal: ${currency} ${total}\n\nIs this correct?`,
+    `Assalamu Alaikum! Welcome to As-Salaam Mobile App. Based on our system migration from paper/Excel records, here is your opening balance breakdown:\n\n${breakdownLines}\n\nTotal: ${currency} ${total}\n\nIs this correct?`,
     [
       { label: 'Yes, it is correct', value: 'verify', primary: true },
       { label: 'No, report discrepancy', value: 'report', danger: true },
@@ -1077,9 +1077,9 @@ const payZakatFitr = async () => {
 const showPassbookInfo = () => {
   const msg = [
     'Your digital ledger with the cooperative.',
-    '• See every contribution, withdrawal, Qard Hasan disbursement/repayment, fines, and adjustments.',
-    '• Tap a row to view full details and reference.',
-    '• Use filters (date range, scheme/type) to find entries fast.'
+    'Ã¢â‚¬Â¢ See every contribution, withdrawal, Qard Hasan disbursement/repayment, fines, and adjustments.',
+    'Ã¢â‚¬Â¢ Tap a row to view full details and reference.',
+    'Ã¢â‚¬Â¢ Use filters (date range, scheme/type) to find entries fast.'
   ].join('\n')
   showNotice('Passbook', msg, 'info')
 }
@@ -1087,9 +1087,9 @@ const showPassbookInfo = () => {
 const showZakatInfo = () => {
   const msg = [
     'We help you check if Zakat is due and estimate the amount.',
-    '• Eligibility: compares your eligible wealth with the Nisab and timing (haul).',
-    '• Rate: typically 2.5% on eligible holdings once due.',
-    '• Data source: based on balances and assets recorded with the cooperative.',
+    'Ã¢â‚¬Â¢ Eligibility: compares your eligible wealth with the Nisab and timing (haul).',
+    'Ã¢â‚¬Â¢ Rate: typically 2.5% on eligible holdings once due.',
+    'Ã¢â‚¬Â¢ Data source: based on balances and assets recorded with the cooperative.',
     'You can run an estimate now and, if due, pay securely in-app.'
   ].join('\n')
   showNotice('Zakat', msg, 'info')
@@ -1098,9 +1098,9 @@ const showZakatInfo = () => {
 const showHajjInfo = () => {
   const msg = [
     'Plan and save towards your Hajj or Umrah journey.',
-    '• Set a goal amount and target date on the Goals page.',
-    '• Track progress with each deposit and stay on schedule.',
-    '• Withdrawals are protected to keep your pilgrimage savings intact.'
+    'Ã¢â‚¬Â¢ Set a goal amount and target date on the Goals page.',
+    'Ã¢â‚¬Â¢ Track progress with each deposit and stay on schedule.',
+    'Ã¢â‚¬Â¢ Withdrawals are protected to keep your pilgrimage savings intact.'
   ].join('\n')
   showNotice('Hajj & Umrah', msg, 'info')
 }
@@ -1130,7 +1130,7 @@ onMounted(async () => {
               dashboardData.value.kpis.takaful_balance = e.balances.takaful
               dashboardData.value.kpis.outstanding_fines = e.balances.outstanding_fines
               dashboardData.value.kpis.loan_limit = e.balances.loan_limit
-              dashboardData.value.kpis.attaqwa_score = e.balances.attaqwa_score
+              dashboardData.value.kpis.assalaam_score = e.balances.assalaam_score
             }
           }
 
@@ -1166,3 +1166,5 @@ onMounted(async () => {
   }, 500)
 })
 </script>
+
+

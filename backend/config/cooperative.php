@@ -56,6 +56,6 @@ return [
     'maintenance_message' => env('MAINTENANCE_MESSAGE', 'We are currently performing scheduled maintenance to improve our services. We\'ll be back shortly.'),
     'maintenance_until' => env('MAINTENANCE_UNTIL', 'Approximately 1 hour'),
     'system_announcement' => env('SYSTEM_ANNOUNCEMENT', null),
-    'play_store_url' => env('PLAY_STORE_URL', 'https://play.google.com/store/apps/details?id=com.attaqwa.app'),
+    'play_store_url' => env('PLAY_STORE_URL', 'https://play.google.com/store/apps/details?id=com.assalaam.app'),
     'loan_credit_score_enabled' => env('LOAN_CREDIT_SCORE_ENABLED', true),
 ];

@@ -25,7 +25,7 @@ class JuniorAccountsRelationManager extends RelationManager
                     ->required(),
                 Forms\Components\TextInput::make('balance')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->default(0)
                     ->disabled() // Admins should probably use a specialized transaction to adjust this if needed
                     ->dehydrated(false),

@@ -1,8 +1,8 @@
 # Digital AGM & Member Voting
 
-This document explains how the cooperative’s Annual General Meeting (AGM) and in‑app Member Voting work across the system: data model, APIs, frontend UX, and the Filament admin panel.
+This document explains how the cooperativeâ€™s Annual General Meeting (AGM) and inâ€‘app Member Voting work across the system: data model, APIs, frontend UX, and the Filament admin panel.
 
-Last updated: 2026‑03‑21
+Last updated: 2026â€‘03â€‘21
 
 
 ## Goals
@@ -31,11 +31,11 @@ Last updated: 2026‑03‑21
 - Admin (Filament panel):
   - Create/update AGM sessions (name, status, optional start/end window)
   - Add/manage candidates per session and position
-  - View votes (read‑only) and vote counts per candidate
+  - View votes (readâ€‘only) and vote counts per candidate
 
 
 ## Data Model
-The feature uses three tables/models with constraints that enforce one‑vote‑per‑position per member:
+The feature uses three tables/models with constraints that enforce oneâ€‘voteâ€‘perâ€‘position per member:
 
 - AgmSession
   - Fields: id, name, status (draft|open|closed), voting_type (one_member_one_vote|share_percentage), minimum_quorum, start_at, end_at, voting_open_notified_at, results_notified_at, timestamps
@@ -77,7 +77,7 @@ These are defined in:
   - Defaulters (is_defaulter = true) are blocked from voting and submitting proposals.
   - Deceased members are blocked.
   - Logic is centralized in `User::isEligibleForShura()`.
-- Sessions can be “open” explicitly (status=open) OR implicitly by a schedule window where now ∈ [start_at, end_at].
+- Sessions can be â€œopenâ€ explicitly (status=open) OR implicitly by a schedule window where now âˆˆ [start_at, end_at].
 - Project Proposals:
   - Members can submit proposals (if eligible).
   - Proposals undergo Sharia Review (Sharia Status: pending_review -> compliant/non_compliant).
@@ -88,12 +88,12 @@ These are defined in:
 - Members can cast one vote per position per session. Once recorded, it cannot be changed from the app.
 - Server validates that the candidate belongs to the given session.
 - Server blocks voting if:
-  - Session is closed or out of window → 422 Voting is closed
-  - Member already voted for that position → 409 You have already voted for <position>
+  - Session is closed or out of window â†’ 422 Voting is closed
+  - Member already voted for that position â†’ 409 You have already voted for <position>
 - Results are live tallies grouped by position and candidate. Positions/candidates with zero votes are still listed with 0.
 
 
-## Backend APIs (Member‑facing)
+## Backend APIs (Memberâ€‘facing)
 All endpoints are protected with Sanctum and the inactivity middleware. Send the member token with Authorization: Bearer <token>.
 
 ### AGM Voting
@@ -105,7 +105,7 @@ Routes: backend/routes/api.php
   - 200 OK: [ { id, name, status, start_at, end_at, is_open, is_within_window, ... }, ... ]
 
 - GET /api/agm/sessions/{id}/candidates
-  - Returns candidates grouped by position for the session, plus the caller’s voted_candidate_id per position.
+  - Returns candidates grouped by position for the session, plus the callerâ€™s voted_candidate_id per position.
   - 200 OK: {
       session: { ... },
       positions: [
@@ -179,7 +179,7 @@ Views are in frontend/src/views and routes in frontend/src/router/index.js.
 
 - /agm/sessions/:id (AgmSession.vue)
   - Shows positions with candidate cards (photo, name, manifesto).
-  - Prevents voting again if you already voted for a position (shows “Voted”).
+  - Prevents voting again if you already voted for a position (shows â€œVotedâ€).
   - Confirms selection before submission (native/overridden alert/confirm pattern).
   - Live results section fetches and displays tallies per position; can refresh.
 
@@ -202,7 +202,7 @@ Admins manage AGM via Filament resources in the backend admin panel.
       - CRUD for candidates with name, position, manifesto, photo URL
       - Shows live votes_count per candidate
     - Votes (VotesRelationManager)
-      - Read‑only list of recorded votes: position, candidate, voter, timestamp
+      - Readâ€‘only list of recorded votes: position, candidate, voter, timestamp
 
 - ProjectProposalResource
   - Manage member-submitted investment ideas.
@@ -220,7 +220,7 @@ Admins manage AGM via Filament resources in the backend admin panel.
 
 Usage guidance:
 1) Create a new session (status=draft while you add candidates).
-2) Add candidates for each position (ensure position names are consistent, e.g., “President”, “Secretary”).
+2) Add candidates for each position (ensure position names are consistent, e.g., â€œPresidentâ€, â€œSecretaryâ€).
 3) Open the session by either:
    - Setting status to open; or
    - Setting a [start_at, end_at] window that includes the current time.
@@ -230,9 +230,9 @@ Usage guidance:
 
 ## Security, Privacy, and Integrity
 - Authentication: All member endpoints require a valid Sanctum token.
-- One‑vote enforcement: Backed by database unique constraint (session_id, position, user_id) plus controller checks.
-- Auditability: Admin panel exposes read‑only view of votes. Consider limiting access to authorized election officers.
-- Privacy: Although the system stores which user voted for whom (for audit), member‑facing results are aggregated only. If stronger secrecy is required, a future enhancement could pseudonymize votes while preserving constraints and tallies.
+- Oneâ€‘vote enforcement: Backed by database unique constraint (session_id, position, user_id) plus controller checks.
+- Auditability: Admin panel exposes readâ€‘only view of votes. Consider limiting access to authorized election officers.
+- Privacy: Although the system stores which user voted for whom (for audit), memberâ€‘facing results are aggregated only. If stronger secrecy is required, a future enhancement could pseudonymize votes while preserving constraints and tallies.
 
 
 ## Error Codes & Messages
@@ -282,21 +282,21 @@ These appear in the app under Reports (/reports) with a year selector.
 - [ ] Create a draft session; add at least two positions with multiple candidates.
 - [ ] Set status=open (or set a valid time window) and confirm it appears under /agm.
 - [ ] As a member, open /agm/sessions/:id, vote for each position once; confirm UI blocks repeat votes and server returns 409 if forced.
-- [ ] Refresh “Live Results” and confirm tallies increase accurately and include zero‑vote candidates.
+- [ ] Refresh â€œLive Resultsâ€ and confirm tallies increase accurately and include zeroâ€‘vote candidates.
 - [ ] Set status=closed and confirm voting is blocked (422).
 - [ ] Review admin panel Votes relation for audit.
 
 
 ## Troubleshooting
-- “Voting is closed for this session” (422): Ensure status=open or current time within start/end window.
-- “You have already voted for <position>” (409): One vote per position is enforced; there is no re‑vote.
-- Session not visible on /agm: Confirm status=open or the time window is currently active; also ensure you’re authenticated.
+- â€œVoting is closed for this sessionâ€ (422): Ensure status=open or current time within start/end window.
+- â€œYou have already voted for <position>â€ (409): One vote per position is enforced; there is no reâ€‘vote.
+- Session not visible on /agm: Confirm status=open or the time window is currently active; also ensure youâ€™re authenticated.
 - Candidate not found (404): The candidate must be created under the same session.
 
 
 ## Future Enhancements
 - Anonymous ballot storage with verifiable tallies
-- Tie‑break logic and runoff workflows in results view
+- Tieâ€‘break logic and runoff workflows in results view
 - Auto-generate PDF Fatwa certificates from templates
 - Push notifications when quorum is reached
 

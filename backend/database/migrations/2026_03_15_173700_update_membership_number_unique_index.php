@@ -14,14 +14,14 @@ return new class extends Migration {
                 try {
                     $table->dropUnique('users_membership_number_unique');
                 } catch (\Throwable $e) {
-                    // Index might not exist (fresh databases) — ignore
+                    // Index might not exist (fresh databases) â€” ignore
                 }
 
                 // Create a composite unique index on (branch_id, membership_number)
                 try {
                     $table->unique(['branch_id', 'membership_number'], 'users_branch_membership_unique');
                 } catch (\Throwable $e) {
-                    // Index might already exist — ignore
+                    // Index might already exist â€” ignore
                 }
             });
         } catch (\Throwable $e) {

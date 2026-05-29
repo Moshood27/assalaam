@@ -191,7 +191,7 @@ class DashboardController extends Controller
             'wallet_balance' => (float) $user->balance,
             'withdrawable' => method_exists($user, 'availableForWithdrawal') ? (float) $user->availableForWithdrawal() : (float) $user->balance,
             'has_pin' => !empty($user->transaction_pin_hash),
-            'attaqwa_score' => (int) $user->attaqwa_score,
+            'assalaam_score' => (int) $user->assalaam_score,
             'gold_balance' => (float) $user->gold_balance,
             'gold_value_naira' => $goldSellPrice ? round($user->gold_balance * $goldSellPrice, 2) : null,
             'gold_price_per_gram' => $goldBasePrice,

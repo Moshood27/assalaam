@@ -29,7 +29,7 @@
             <div class="brand">{{ config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $application->full_name }},</p>
+            <p class="salam">AssalÄmu â€˜alaykum {{ $application->full_name }},</p>
             <p>Thank you for your interest in joining {{ config('app.name') }}. After reviewing your application, we regret to inform you that we cannot approve it at this time.</p>
 
             <div class="divider"></div>
@@ -41,7 +41,7 @@
 
             <p style="margin-top:16px;">If you have any questions or would like to provide more information, you may reply to this email or contact our support team.</p>
 
-            <p>Jazākumullāhu khayran,<br>{{ config('app.name') }}</p>
+            <p>JazÄkumullÄhu khayran,<br>{{ config('app.name') }}</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

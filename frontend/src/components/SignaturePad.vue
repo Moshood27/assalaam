@@ -5,8 +5,8 @@
     </label>
     <div class="relative group">
       <div 
-        class="border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 p-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-500/20"
-        :class="{ 'border-emerald-500/40 bg-emerald-50/20': isDrawing }"
+        class="border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 p-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/20"
+        :class="{ 'border-blue-500/40 bg-blue-50/20': isDrawing }"
       >
         <canvas 
           ref="canvas" 
@@ -144,3 +144,5 @@ const handleResize = () => {
 window.addEventListener('resize', handleResize);
 onUnmounted(() => window.removeEventListener('resize', handleResize));
 </script>
+
+

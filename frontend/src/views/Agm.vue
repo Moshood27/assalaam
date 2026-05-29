@@ -6,22 +6,22 @@
       <section class="card card-elevated p-5">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-black text-slate-800 tracking-tight text-lg">Active Sessions</h2>
-          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Live</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Live</span>
         </div>
         <div v-if="loading" class="flex justify-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
         </div>
         <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
         <div v-else>
           <div v-if="!sessions.length" class="text-slate-400 text-sm text-center py-8 italic">No active sessions at the moment.</div>
           <ul class="space-y-4">
-            <li v-for="s in sessions" :key="s.id" class="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-start justify-between gap-3 hover:border-emerald-200 transition-colors">
+            <li v-for="s in sessions" :key="s.id" class="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-start justify-between gap-3 hover:border-blue-200 transition-colors">
               <div class="flex-1">
                 <div class="font-bold text-slate-800 leading-tight mb-1">{{ s.name || s.title || ('AGM #' + s.id) }}</div>
                 <div class="text-[11px] text-slate-500 line-clamp-2 mb-2">{{ s.description || 'No description available' }}</div>
                 <div class="flex flex-wrap gap-2 items-center">
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter"
-                        :class="s.status === 'open' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
+                        :class="s.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'">
                     {{ s.status }}
                   </span>
                   <span v-if="s.start_at" class="text-[9px] text-slate-400 font-bold uppercase">{{ formatDate(s.start_at) }}</span>
@@ -39,7 +39,7 @@
       <section class="card card-elevated p-5">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-black text-slate-800 tracking-tight text-lg">Project Proposals</h2>
-          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Shura</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Shura</span>
         </div>
         <p class="text-xs text-slate-500 mb-4 leading-relaxed">
           Submit investment ideas or vote on community-proposed projects.
@@ -53,7 +53,7 @@
       <section class="card card-elevated p-5">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-black text-slate-800 tracking-tight text-lg">Sharia Board</h2>
-          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Gov</span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Gov</span>
         </div>
         <p class="text-xs text-slate-500 mb-4 leading-relaxed">
           Meet the scholars ensuring our operations remain interest-free and ethical.
@@ -64,11 +64,11 @@
         </button>
       </section>
 
-      <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-600 flex-shrink-0">
+      <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600 flex-shrink-0">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
-        <p class="text-[11px] text-emerald-800 font-medium leading-relaxed">
+        <p class="text-[11px] text-blue-800 font-medium leading-relaxed">
           You can vote once per position. Your selections are final and cannot be reversed after submission.
         </p>
       </div>
@@ -111,3 +111,5 @@ onMounted(load)
 
 <style scoped>
 </style>
+
+

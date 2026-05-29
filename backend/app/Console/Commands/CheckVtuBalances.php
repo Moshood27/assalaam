@@ -58,9 +58,9 @@ class CheckVtuBalances extends Command
         // Build human-readable message
         $pairs = [];
         foreach ($low as $name => $amt) {
-            $pairs[] = strtoupper($name) . ': ₦' . number_format($amt, 2);
+            $pairs[] = strtoupper($name) . ': â‚¦' . number_format($amt, 2);
         }
-        $msg = 'Low VTU balance alert — ' . implode(', ', $pairs) . '. Threshold: ₦' . number_format($threshold, 2);
+        $msg = 'Low VTU balance alert â€” ' . implode(', ', $pairs) . '. Threshold: â‚¦' . number_format($threshold, 2);
 
         Log::warning('VTU balances below threshold', ['threshold' => $threshold, 'low' => $low, 'all' => $balances]);
         $this->warn($msg);

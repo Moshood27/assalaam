@@ -78,7 +78,7 @@ class SavingsGroupController extends Controller
                     $amount = (float) $validated['monthly_contribution_amount'];
                     if (fmod($amount, $unitPrice) != 0) {
                         return response()->json([
-                            'message' => "Monthly contribution must be a multiple of the project unit price (₦" . number_format($unitPrice, 2) . ")"
+                            'message' => "Monthly contribution must be a multiple of the project unit price (â‚¦" . number_format($unitPrice, 2) . ")"
                         ], 422);
                     }
                 }

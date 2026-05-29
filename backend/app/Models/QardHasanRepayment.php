@@ -44,7 +44,7 @@ class QardHasanRepayment extends Model
                     }
 
                     if ($model->qardHasan && $model->qardHasan->user) {
-                        app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
+                        app(\App\Services\AssalaamScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
                     }
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to record loan repayment in ledger: " . $e->getMessage());
@@ -62,7 +62,7 @@ class QardHasanRepayment extends Model
                     }
 
                     if ($model->qardHasan && $model->qardHasan->user) {
-                        app(\App\Services\AttaqwaScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
+                        app(\App\Services\AssalaamScoreService::class)->calculateAndUpdateScore($model->qardHasan->user);
                     }
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to record loan repayment in ledger: " . $e->getMessage());

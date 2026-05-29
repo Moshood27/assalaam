@@ -42,7 +42,7 @@
         <thead>
             <tr>
                 <th>Description</th>
-                <th class="right">Amount (₦)</th>
+                <th class="right">Amount (â‚¦)</th>
             </tr>
         </thead>
         <tbody>
@@ -52,12 +52,12 @@
             @foreach(($ie['income'] ?? []) as $row)
                 <tr>
                     <td>{{ $row['name'] ?? '' }}</td>
-                    <td class="right">₦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
                 </tr>
             @endforeach
             <tr>
                 <td><strong>Total Income</strong></td>
-                <td class="right"><strong>₦ {{ number_format((float)($ie['total_income'] ?? 0), 2) }}</strong></td>
+                <td class="right"><strong>â‚¦ {{ number_format((float)($ie['total_income'] ?? 0), 2) }}</strong></td>
             </tr>
             <tr>
                 <td colspan="2" class="muted">Expenses</td>
@@ -65,18 +65,18 @@
             @foreach(($ie['expenses'] ?? []) as $row)
                 <tr>
                     <td>{{ $row['name'] ?? '' }}</td>
-                    <td class="right">₦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
                 </tr>
             @endforeach
             <tr>
                 <td><strong>Total Expenses</strong></td>
-                <td class="right"><strong>₦ {{ number_format((float)($ie['total_expense'] ?? 0), 2) }}</strong></td>
+                <td class="right"><strong>â‚¦ {{ number_format((float)($ie['total_expense'] ?? 0), 2) }}</strong></td>
             </tr>
         </tbody>
         <tfoot>
             <tr>
                 <td>Surplus / (Deficit)</td>
-                <td class="right">₦ {{ number_format((float)($ie['surplus'] ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float)($ie['surplus'] ?? 0), 2) }}</td>
             </tr>
         </tfoot>
     </table>
@@ -87,21 +87,21 @@
         <thead>
             <tr>
                 <th>Assets</th>
-                <th class="right">Amount (₦)</th>
+                <th class="right">Amount (â‚¦)</th>
             </tr>
         </thead>
         <tbody>
             @foreach(($bs['assets'] ?? []) as $row)
                 <tr>
                     <td>{{ $row['name'] ?? '' }}</td>
-                    <td class="right">₦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
                 <td>Total Assets</td>
-                <td class="right">₦ {{ number_format((float)($bs['total_assets'] ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float)($bs['total_assets'] ?? 0), 2) }}</td>
             </tr>
         </tfoot>
     </table>
@@ -110,21 +110,21 @@
         <thead>
             <tr>
                 <th>Liabilities and Equity</th>
-                <th class="right">Amount (₦)</th>
+                <th class="right">Amount (â‚¦)</th>
             </tr>
         </thead>
         <tbody>
             @foreach(($bs['liabilities'] ?? []) as $row)
                 <tr>
                     <td>{{ $row['name'] ?? '' }}</td>
-                    <td class="right">₦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
                 <td>Total Liabilities & Equity</td>
-                <td class="right">₦ {{ number_format((float)($bs['total_liabilities_and_equity'] ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float)($bs['total_liabilities_and_equity'] ?? 0), 2) }}</td>
             </tr>
         </tfoot>
     </table>
@@ -135,30 +135,30 @@
         <thead>
             <tr>
                 <th>Activities</th>
-                <th class="right">Amount (₦)</th>
+                <th class="right">Amount (â‚¦)</th>
             </tr>
         </thead>
         <tbody>
             <tr><td colspan="2" class="muted">Operating Activities</td></tr>
             <tr class="total-row">
                 <td>Net cash provided by operating activities</td>
-                <td class="right">₦ {{ number_format((float)($cf['operating']['net'] ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float)($cf['operating']['net'] ?? 0), 2) }}</td>
             </tr>
             <tr><td colspan="2" class="muted">Investing Activities</td></tr>
             <tr class="total-row">
                 <td>Net cash used in investing activities</td>
-                <td class="right">₦ {{ number_format((float)($cf['investing']['net'] ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float)($cf['investing']['net'] ?? 0), 2) }}</td>
             </tr>
             <tr><td colspan="2" class="muted">Financing Activities</td></tr>
             <tr class="total-row">
                 <td>Net cash from financing activities</td>
-                <td class="right">₦ {{ number_format((float)($cf['financing']['net'] ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float)($cf['financing']['net'] ?? 0), 2) }}</td>
             </tr>
         </tbody>
         <tfoot>
             <tr style="background-color: #111827; color: white;">
                 <td>NET INCREASE / (DECREASE) IN CASH</td>
-                <td class="right">₦ {{ number_format((float)($cf['net_increase'] ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float)($cf['net_increase'] ?? 0), 2) }}</td>
             </tr>
         </tfoot>
     </table>

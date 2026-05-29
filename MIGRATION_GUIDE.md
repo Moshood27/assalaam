@@ -1,4 +1,4 @@
-# Amanah/At-Taqwa System Migration Guide
+# Amanah/AS-SALAAM System Migration Guide
 
 This document provides a comprehensive guide for administrators to transition legacy records (Excel/Paper) into the digital platform. It covers the **"Delete and Reset"** strategy, ensuring a clean, accurate, and professional member experience.
 
@@ -18,7 +18,7 @@ During the testing/demo phase, members may have created "Test" transactions or l
 
 Before importing, ensure your Excel files match the system templates. You can download these templates directly from the **Admin Panel > System Migration** page.
 
-### 📥 Downloadable Templates:
+### ðŸ“¥ Downloadable Templates:
 - **Member Master:** Full KYC, contact info, and admission details.
 - **Balances Master:** Opening totals for all 22+ financial schemes.
 - **Loans Master:** Outstanding loan balances, intervals, and repayment counts.

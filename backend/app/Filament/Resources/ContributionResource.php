@@ -66,7 +66,7 @@ class ContributionResource extends Resource
                             ->label('Amount')
                             ->numeric()
                             ->minValue(0.01)
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->required(),
                     ]),
 
@@ -91,7 +91,7 @@ class ContributionResource extends Resource
                     ->hiddenOn('create'),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required()
                     ->hiddenOn('create'),
 

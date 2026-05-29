@@ -26,12 +26,12 @@
 <div class="wrapper">
     <div class="container">
         <div class="header">
-            <p class="brand">{{ config('app.name') }} • Payment receipt</p>
+            <p class="brand">{{ config('app.name') }} â€¢ Payment receipt</p>
         </div>
         <div class="content">
-            <p>Assalāmu ‘alaykum {{ $loan->user->full_name }},</p>
-            <p>We pray this message finds you in good health and īmān.</p>
-            <p>We received your Qard Hasan repayment. May Allāh put barakah in your wealth. Āmīn. Here are the details for your records:</p>
+            <p>AssalÄmu â€˜alaykum {{ $loan->user->full_name }},</p>
+            <p>We pray this message finds you in good health and Ä«mÄn.</p>
+            <p>We received your Qard Hasan repayment. May AllÄh put barakah in your wealth. Ä€mÄ«n. Here are the details for your records:</p>
             <table class="table" role="presentation">
                 <tr>
                     <td class="label">Loan ID</td>
@@ -39,7 +39,7 @@
                 </tr>
                 <tr>
                     <td class="label">Amount paid</td>
-                    <td class="value">₦{{ number_format($repayment->amount, 2) }}</td>
+                    <td class="value">â‚¦{{ number_format($repayment->amount, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Reference</td>
@@ -51,7 +51,7 @@
                 </tr>
                 <tr>
                     <td class="label">Remaining principal</td>
-                    <td class="value">₦{{ number_format($loan->remaining_principal, 2) }}</td>
+                    <td class="value">â‚¦{{ number_format($loan->remaining_principal, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Loan status</td>
@@ -67,7 +67,7 @@
                 </p>
             @endif
 
-            <p class="muted" style="margin-top:16px;">If you didn’t make this payment, please contact support immediately.</p>
+            <p class="muted" style="margin-top:16px;">If you didnâ€™t make this payment, please contact support immediately.</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

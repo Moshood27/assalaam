@@ -114,7 +114,7 @@ class ProfileController extends Controller
             }
         }
 
-        $scoreSvc = app(\App\Services\AttaqwaScoreService::class);
+        $scoreSvc = app(\App\Services\AssalaamScoreService::class);
         $scoreData = $scoreSvc->scoreForUser($user);
         $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled', true));
 
@@ -173,11 +173,11 @@ class ProfileController extends Controller
                 'is_active' => (bool) $user->vendor->is_active,
                 'commission_rate' => (float) $user->vendor->commission_rate,
             ] : null,
-            'attaqwa_score' => $scoreData['score'],
-            'attaqwa_band' => $scoreData['band'],
-            'attaqwa_breakdown' => $scoreData['breakdown'],
-            'attaqwa_tips' => $scoreSvc->getScoreTips($user),
-            'attaqwa_score_enabled' => $scoreEnabled,
+            'assalaam_score' => $scoreData['score'],
+            'assalaam_band' => $scoreData['band'],
+            'assalaam_breakdown' => $scoreData['breakdown'],
+            'assalaam_tips' => $scoreSvc->getScoreTips($user),
+            'assalaam_score_enabled' => $scoreEnabled,
             'badges' => $user->badges->map(fn($b) => [
                 'id' => $b->id,
                 'name' => $b->name,
@@ -665,7 +665,7 @@ class ProfileController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'Opening balances verified successfully. Welcome to Attaqwa Pay!',
+            'message' => 'Opening balances verified successfully. Welcome to assalaam Pay!',
             'verified_at' => $user->verified_at,
         ]);
     }

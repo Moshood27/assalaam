@@ -29,7 +29,7 @@ class SchemeResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('min_amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required(),
                 Forms\Components\Toggle::make('active')
                     ->label('Active')

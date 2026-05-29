@@ -80,10 +80,10 @@ class AdminPanelProvider extends PanelProvider
             ->registration(Register::class)
             ->passwordReset()
             ->brandName(config('brand.name'))
-            ->brandLogo(asset('images/'.config('brand.slug', 'attaqwa').'-logo.svg'))
+            ->brandLogo(asset('images/'.config('brand.slug', 'assalaam').'-logo.svg'))
             ->brandLogoHeight('3rem')
-            ->darkModeBrandLogo(asset('images/'.config('brand.slug', 'attaqwa').'-logo-dark.svg'))
-            ->favicon(asset('images/'.config('brand.slug', 'attaqwa').'-favicon.svg'))
+            ->darkModeBrandLogo(asset('images/'.config('brand.slug', 'assalaam').'-logo-dark.svg'))
+            ->favicon(asset('images/'.config('brand.slug', 'assalaam').'-favicon.svg'))
             ->colors([
                 'primary' => Color::Amber,
             ])

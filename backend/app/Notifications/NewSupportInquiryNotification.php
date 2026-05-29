@@ -43,7 +43,7 @@ class NewSupportInquiryNotification extends Notification implements ShouldQueue
         $url = url('/admin/chat-staff');
         return (new MailMessage)
             ->subject('New Support Inquiry: Action Required')
-            ->greeting('Assalāmu ‘alaykum ' . $notifiable->name . ',')
+            ->greeting('AssalÄmu â€˜alaykum ' . $notifiable->name . ',')
             ->line("A new support inquiry has been started by {$this->member->name}.")
             ->line("Please assign an available staff member to handle this chat.")
             ->action('Assign Staff', $url)

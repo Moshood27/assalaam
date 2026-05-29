@@ -16,14 +16,14 @@
           <p class="font-bold text-slate-800">{{ p.name }}</p>
           <p class="text-[11px] text-slate-500 mt-1">
             Mgmt fee: <span class="font-semibold text-slate-700">{{ Number(p.management_fee_percent || 0).toLocaleString() }}%</span>
-            <span v-if="p.target_amount" class="ml-2">Target: ₦{{ Number(p.target_amount).toLocaleString() }}</span>
+            <span v-if="p.target_amount" class="ml-2">Target: Ã¢â€šÂ¦{{ Number(p.target_amount).toLocaleString() }}</span>
           </p>
           <p class="text-[11px] text-slate-500 mt-1">
             <span v-if="p.started_at">Started: {{ formatDate(p.started_at) }}</span>
             <span v-if="p.closed_at" class="ml-2">Closed: {{ formatDate(p.closed_at) }}</span>
           </p>
         </div>
-        <span :class="p.active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'" class="px-2 py-1 rounded-full text-[10px] font-black uppercase">{{ p.active ? 'Active' : 'Closed' }}</span>
+        <span :class="p.active ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'" class="px-2 py-1 rounded-full text-[10px] font-black uppercase">{{ p.active ? 'Active' : 'Closed' }}</span>
       </button>
     </div>
 
@@ -60,3 +60,5 @@ const formatDate = (d) => {
 
 onMounted(fetchProjects)
 </script>
+
+

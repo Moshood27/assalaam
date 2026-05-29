@@ -45,7 +45,7 @@ import { Browser } from '@capacitor/browser'
 const props = defineProps({
   url: {
     type: String,
-    default: 'https://play.google.com/store/apps/details?id=com.attaqwa.app'
+    default: 'https://play.google.com/store/apps/details?id=com.assalaam.app'
   }
 })
 
@@ -68,3 +68,5 @@ const goToPlayStore = async () => {
   box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
 }
 </style>
+
+

@@ -47,13 +47,13 @@ class Meeting extends Model
         static::created(function ($meeting) {
             if ($meeting->status === 'scheduled') {
                 $meeting->notifyMembers(
-                    "📅 New Meeting Scheduled: {$meeting->name}",
+                    "ðŸ“… New Meeting Scheduled: {$meeting->name}",
                     "A new meeting has been scheduled for " . $meeting->date->format('M d, Y') . " at " . $meeting->start_time . ".",
                     ['type' => 'meeting_scheduled']
                 );
             } elseif ($meeting->status === 'ongoing') {
                 $meeting->notifyMembers(
-                    "⏰ Meeting Time: {$meeting->name}",
+                    "â° Meeting Time: {$meeting->name}",
                     "The meeting is starting now. Please join or mark your attendance.",
                     ['type' => 'meeting_ongoing']
                 );
@@ -68,13 +68,13 @@ class Meeting extends Model
 
                 if ($oldStatus !== 'ongoing' && $newStatus === 'ongoing') {
                     $meeting->notifyMembers(
-                        "⏰ Meeting Time: {$meeting->name}",
+                        "â° Meeting Time: {$meeting->name}",
                         "The meeting is starting now. Please join or mark your attendance.",
                         ['type' => 'meeting_ongoing']
                     );
                 } elseif ($oldStatus !== 'audited' && $newStatus === 'audited') {
                     $meeting->notifyMembers(
-                        "✅ Meeting Audited: {$meeting->name}",
+                        "âœ… Meeting Audited: {$meeting->name}",
                         "The attendance for '{$meeting->name}' has been audited. You can check your status in the app.",
                         ['type' => 'meeting_audited']
                     );

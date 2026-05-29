@@ -9,20 +9,20 @@
     </AppHeader>
 
     <div class="p-4 space-y-4">
-      <div class="bg-gradient-to-br from-emerald-600 to-teal-700 p-6 rounded-[2rem] text-white shadow-lg mb-6">
+      <div class="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[2rem] text-white shadow-lg mb-6">
         <h2 class="text-xl font-bold mb-2">Crowdfunding</h2>
-        <p class="text-emerald-50 text-xs opacity-90 leading-relaxed">
+        <p class="text-blue-50 text-xs opacity-90 leading-relaxed">
           Contribute small amounts to community projects like building wells, mosque repairs, or helping members with medical bills. Earning continuous rewards.
         </p>
       </div>
 
       <div v-if="loading" class="flex flex-col items-center justify-center py-20 text-slate-400">
-        <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="text-sm font-medium">Loading projects...</p>
       </div>
       
       <div v-else-if="projects.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
-        <div class="text-4xl mb-4">🌟</div>
+        <div class="text-4xl mb-4">Ã°Å¸Å’Å¸</div>
         <p class="text-slate-500 text-sm">No active projects at the moment.</p>
       </div>
 
@@ -44,7 +44,7 @@
                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
             </div>
             <div class="absolute top-3 right-3">
-              <span class="px-2 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-bold text-emerald-700 shadow-sm uppercase tracking-wider">
+              <span class="px-2 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-bold text-blue-700 shadow-sm uppercase tracking-wider">
                 {{ p.type }}
               </span>
             </div>
@@ -56,12 +56,12 @@
             
             <div class="space-y-2">
               <div class="flex justify-between text-[11px] font-bold">
-                <span class="text-emerald-600">₦ {{ formatMoney(p.raised_amount) }} raised</span>
-                <span class="text-slate-400">Target: ₦ {{ formatMoney(p.target_amount) }}</span>
+                <span class="text-blue-600">Ã¢â€šÂ¦ {{ formatMoney(p.raised_amount) }} raised</span>
+                <span class="text-slate-400">Target: Ã¢â€šÂ¦ {{ formatMoney(p.target_amount) }}</span>
               </div>
               <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div 
-                  class="h-full bg-emerald-500 transition-all duration-500" 
+                  class="h-full bg-blue-500 transition-all duration-500" 
                   :style="{ width: getProgress(p) + '%' }"
                 ></div>
               </div>
@@ -116,3 +116,5 @@ const getImageUrl = (url) => {
 
 onMounted(fetchProjects)
 </script>
+
+

@@ -46,7 +46,7 @@ class TakafulPoolEntryResource extends Resource
                     ])
                     ->sortable(),
                 TextColumn::make('amount')
-                    ->label('Amount (₦)')
+                    ->label('Amount (â‚¦)')
                     ->money('ngn', true)
                     ->sortable(),
                 TextColumn::make('reference')
@@ -120,7 +120,7 @@ class TakafulPoolEntryResource extends Resource
                             ->numeric()
                             ->minValue(0.01)
                             ->required()
-                            ->prefix('₦'),
+                            ->prefix('â‚¦'),
                         Forms\Components\TextInput::make('reason')
                             ->label('Reason/Description')
                             ->required()

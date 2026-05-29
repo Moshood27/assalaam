@@ -10,7 +10,7 @@ const SPLASH_PATH = path.join(ASSETS_DIR, 'splash.png');
 const BRAND_GREEN = '#065f46';
 const WHITE = '#ffffff';
 
-// Determine brand slug for wordmark (fallback to attaqwa)
+// Determine brand slug for wordmark (fallback to assalaam)
 function detectBrandSlug() {
   const envSlug = process.env.BRAND_SLUG || process.env.VITE_BRAND_SLUG;
   if (envSlug) return String(envSlug).toLowerCase();
@@ -33,7 +33,7 @@ function detectBrandSlug() {
       }
     }
   } catch (_) {}
-  return 'attaqwa';
+  return 'assalam';
 }
 
 function cliBrandOverride() {
@@ -52,14 +52,14 @@ function getBrandSlug() {
   return detectBrandSlug();
 }
 const BRAND_SLUG = getBrandSlug();
-const WORDMARK = BRAND_SLUG === 'assalam' ? 'ASSALAM' : 'ATTAQWA';
+const WORDMARK = BRAND_SLUG === 'assalam' ? 'ASSALAM' : 'ASSALAAM';
 
 function hexToRgb(hex) {
   const n = parseInt(hex.replace('#', ''), 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
-// ---- Minimal PNG writer for 8‑bit RGB (no alpha) ----
+// ---- Minimal PNG writer for 8â€‘bit RGB (no alpha) ----
 function crc32(buf) {
   let c = ~0;
   for (let i = 0; i < buf.length; i++) {
@@ -314,14 +314,14 @@ function main() {
   fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
   if (!force && fs.existsSync(ICON_PATH)) {
-    console.log('icon.png exists — use --force to overwrite. Skipping.');
+    console.log('icon.png exists â€” use --force to overwrite. Skipping.');
   } else {
     createBrandedIcon();
     console.log(`Wrote ${ICON_PATH}`);
   }
 
   if (!force && fs.existsSync(SPLASH_PATH)) {
-    console.log('splash.png exists — use --force to overwrite. Skipping.');
+    console.log('splash.png exists â€” use --force to overwrite. Skipping.');
   } else {
     createBrandedSplash();
     console.log(`Wrote ${SPLASH_PATH}`);

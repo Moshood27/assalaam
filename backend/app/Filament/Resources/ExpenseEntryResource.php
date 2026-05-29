@@ -54,7 +54,7 @@ class ExpenseEntryResource extends Resource
                             ->required()
                             ->numeric()
                             ->minValue(0.01)
-                            ->prefix('₦'),
+                            ->prefix('â‚¦'),
                         Forms\Components\Select::make('source_of_funds')
                             ->options([
                                 'administrative_fund' => 'Administrative Fund (Monthly Fees)',

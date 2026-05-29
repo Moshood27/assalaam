@@ -48,3 +48,5 @@ function createCanvasToFit(img, maxW, maxH) {
 function canvasToBlob(canvas, type = 'image/jpeg', quality = 0.9) {
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), type, quality))
 }
+
+

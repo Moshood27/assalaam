@@ -1095,7 +1095,7 @@ class AccountingReportService
             'totals' => $totals,
             'month' => $monthStr,
             'year' => $yearStr,
-            'cooperative_name' => 'AT-TAQWA C.I.C.S.',
+            'cooperative_name' => 'AS-SALAAM C.I.C.S.',
         ];
     }
 

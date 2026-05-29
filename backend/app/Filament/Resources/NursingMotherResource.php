@@ -106,7 +106,7 @@ class NursingMotherResource extends Resource
                         ]);
 
                         $record->notifyMember(
-                            "🤱 Nursing Mother Grace Approved",
+                            "ðŸ¤± Nursing Mother Grace Approved",
                             "Your nursing mother grace application has been approved. You are exempt from attendance fines until " . $record->nursing_mother_grace_until->toDateString() . ".",
                             ['type' => 'nursing_mother_grace_approved']
                         );
@@ -128,7 +128,7 @@ class NursingMotherResource extends Resource
                         $record->update(['nursing_mother_status' => 'rejected']);
 
                         $record->notifyMember(
-                            "❌ Nursing Mother Grace Rejected",
+                            "âŒ Nursing Mother Grace Rejected",
                             "Your nursing mother grace application was not approved. Reason: " . $data['reason'],
                             ['type' => 'nursing_mother_grace_rejected']
                         );

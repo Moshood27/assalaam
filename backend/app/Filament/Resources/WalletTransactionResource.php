@@ -48,7 +48,7 @@ class WalletTransactionResource extends Resource
                         Forms\Components\TextInput::make('amount')
                             ->label('Net Amount')
                             ->numeric()
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->required()
                             ->helperText('The actual amount to be added to or removed from the user balance.'),
                         Forms\Components\Grid::make(2)
@@ -56,11 +56,11 @@ class WalletTransactionResource extends Resource
                                 Forms\Components\TextInput::make('meta.gross_amount')
                                     ->label('Gross Amount')
                                     ->numeric()
-                                    ->prefix('₦'),
+                                    ->prefix('â‚¦'),
                                 Forms\Components\TextInput::make('meta.maintenance_charge')
                                     ->label('Maintenance Charge')
                                     ->numeric()
-                                    ->prefix('₦'),
+                                    ->prefix('â‚¦'),
                             ])
                             ->visible(fn (Get $get) => $get('type') === 'credit'),
                         Forms\Components\TextInput::make('reference')

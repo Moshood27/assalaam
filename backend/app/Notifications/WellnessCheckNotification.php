@@ -28,14 +28,14 @@ class WellnessCheckNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('Wellness Check - ' . config('app.name'))
-            ->greeting('Assalāmu ‘alaykum ' . $notifiable->name . ',')
-            ->line('We pray this message finds you in good health and īmān.')
+            ->greeting('AssalÄmu â€˜alaykum ' . $notifiable->name . ',')
+            ->line('We pray this message finds you in good health and Ä«mÄn.')
             ->line('We noticed you haven\'t been active on the platform for a while.')
             ->line('We just wanted to check in and ensure everything is fine.')
             ->line('If you are seeing this, please log in to your account to confirm your activity.')
             ->action('Log in to Account', config('app.frontend_url', config('app.url')))
             ->line('This check is part of our legacy and estate planning (Wasiyyah) policy to ensure your cooperative assets are well managed.')
-            ->line('Jazākumullāhu khayran for being part of our cooperative.');
+            ->line('JazÄkumullÄhu khayran for being part of our cooperative.');
     }
 
     /**

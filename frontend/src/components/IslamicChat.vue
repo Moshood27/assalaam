@@ -231,28 +231,28 @@ function sendFinAction(type) {
     send('peer_transfer', {
        body: input.value,
        type: 'peer_transfer',
-       metadata: { amount: '₦5,000.00', note: 'Contribution for Sadaqah', status: 'completed' }
+       metadata: { amount: 'Ã¢â€šÂ¦5,000.00', note: 'Contribution for Sadaqah', status: 'completed' }
     })
   } else if (type === 'peer_request') {
     input.value = "Salam, I'm requesting the payment for the lunch we had."
     send('peer_request', {
        body: input.value,
        type: 'peer_request',
-       metadata: { amount: '₦2,500.00', purpose: 'Lunch sharing', status: 'pending' }
+       metadata: { amount: 'Ã¢â€šÂ¦2,500.00', purpose: 'Lunch sharing', status: 'pending' }
     })
   } else if (type === 'bill_payment') {
     input.value = "Salam, I've paid the electricity bill for our branch."
     send('bill_payment', {
        body: input.value,
        type: 'bill_payment',
-       metadata: { bill_type: 'Electricity', amount: '₦12,000.00', status: 'completed', paid_at: new Date().toLocaleString() }
+       metadata: { bill_type: 'Electricity', amount: 'Ã¢â€šÂ¦12,000.00', status: 'completed', paid_at: new Date().toLocaleString() }
     })
   } else if (type === 'mudarabah_update') {
     input.value = "Assalamu Alaikum, here is the update for our ongoing Rice Farming Mudarabah project."
     send('mudarabah_update', {
        body: input.value,
        type: 'mudarabah_update',
-       metadata: { project_name: 'Rice Farming (Batch B)', roi: '15.5%', amount: '₦45,200.00', status: 'distributed' }
+       metadata: { project_name: 'Rice Farming (Batch B)', roi: '15.5%', amount: 'Ã¢â€šÂ¦45,200.00', status: 'distributed' }
     })
   } else if (type === 'approval') {
     input.value = "Please review and sign the Qard Hasan loan agreement."
@@ -311,23 +311,23 @@ function hasBadge(user, type) {
     <!-- Header -->
     <div class="p-4 bg-white dark:bg-gray-800 border-b flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <button v-if="showBack" @click="emit('back')" class="md:hidden p-1 -ml-1 mr-1 text-gray-500 hover:text-emerald-600 transition">
+        <button v-if="showBack" @click="emit('back')" class="md:hidden p-1 -ml-1 mr-1 text-gray-500 hover:text-blue-600 transition">
           <span class="material-icons">arrow_back</span>
         </button>
-        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
           {{ room?.name?.[0] || 'C' }}
         </div>
         <div>
           <h3 class="font-bold dark:text-white flex items-center max-w-[120px] sm:max-w-none">
             <span class="truncate">{{ room?.name || 'Cooperative Chat' }}</span>
             <span v-if="room?.type === 'private' && room?.users?.some(u => u.id !== userId && hasBadge(u, 'verified'))" 
-                  class="material-icons text-emerald-500 text-xs ml-1 flex-shrink-0" 
+                  class="material-icons text-blue-500 text-xs ml-1 flex-shrink-0" 
                   title="Member Verified">verified</span>
           </h3>
           <p class="text-xs text-gray-500 dark:text-gray-400">
             {{ room?.type }}
-            <span v-if="room?.metadata?.assigned_staff_id" class="ml-2 text-emerald-600 font-medium">
-              • Assigned to Staff
+            <span v-if="room?.metadata?.assigned_staff_id" class="ml-2 text-blue-600 font-medium">
+              Ã¢â‚¬Â¢ Assigned to Staff
             </span>
           </p>
         </div>
@@ -338,7 +338,7 @@ function hasBadge(user, type) {
           <span class="hidden xs:inline">SENSITIVE (2FA)</span>
           <span class="xs:hidden">2FA</span>
         </div>
-        <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] rounded-full font-bold">
+        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] rounded-full font-bold">
           <span class="hidden xs:inline">SHARIA COMPLIANT (ADAB)</span>
           <span class="xs:hidden">ADAB</span>
         </span>
@@ -362,7 +362,7 @@ function hasBadge(user, type) {
       </div>
 
       <div v-if="loading" class="flex justify-center p-8">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
       
       <template v-else>
@@ -371,14 +371,14 @@ function hasBadge(user, type) {
           
           <div v-if="msg.user_id !== userId" class="flex items-center space-x-1 mb-1 ml-2">
             <span class="text-[10px] font-bold text-gray-500">{{ msg.user?.name }}</span>
-            <span v-if="hasBadge(msg.user, 'verified')" class="material-icons text-[10px] text-emerald-500">verified</span>
+            <span v-if="hasBadge(msg.user, 'verified')" class="material-icons text-[10px] text-blue-500">verified</span>
           </div>
 
           <div class="group relative flex items-center">
             <!-- Message Actions -->
             <div :class="['hidden group-hover:flex items-center space-x-1 absolute top-0 px-2 py-1 bg-white dark:bg-gray-800 rounded shadow-md border z-10', 
                           msg.user_id === userId ? 'right-full mr-2' : 'left-full ml-2']">
-              <button @click="setReply(msg)" class="text-gray-500 hover:text-emerald-600">
+              <button @click="setReply(msg)" class="text-gray-500 hover:text-blue-600">
                 <span class="material-icons text-xs">reply</span>
               </button>
               <button v-if="msg.user_id === userId && msg.type === 'text'" @click="startEdit(msg)" class="text-gray-500 hover:text-blue-600">
@@ -391,11 +391,11 @@ function hasBadge(user, type) {
 
             <div :class="[
               'max-w-[80vw] sm:max-w-[400px] rounded-2xl px-4 py-2 shadow-sm',
-              msg.user_id === userId ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 dark:text-white rounded-tl-none'
+              msg.user_id === userId ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 dark:text-white rounded-tl-none'
             ]">
               <!-- Reply context -->
               <div v-if="msg.metadata?.reply_to" 
-                   class="mb-2 p-2 bg-black/5 dark:bg-white/5 rounded-lg border-l-4 border-emerald-300 text-[10px] opacity-80 truncate">
+                   class="mb-2 p-2 bg-black/5 dark:bg-white/5 rounded-lg border-l-4 border-blue-300 text-[10px] opacity-80 truncate">
                 <p class="font-bold">{{ msg.metadata.reply_to.user_name }}</p>
                 <p>{{ msg.metadata.reply_to.body }}</p>
               </div>
@@ -404,30 +404,30 @@ function hasBadge(user, type) {
               <p v-if="msg.type === 'text'" class="text-sm whitespace-pre-wrap">{{ msg.body }}</p>
 
               <!-- Transaction Card -->
-              <div v-else-if="msg.type === 'transaction'" class="p-2 border rounded-lg bg-emerald-50 dark:bg-emerald-900/20 mt-1">
-                <div class="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 mb-2">
+              <div v-else-if="msg.type === 'transaction'" class="p-2 border rounded-lg bg-blue-50 dark:bg-blue-900/20 mt-1">
+                <div class="flex items-center space-x-2 text-blue-700 dark:text-blue-400 mb-2">
                   <span class="material-icons text-sm">payments</span>
                   <span class="font-bold text-xs uppercase">Transaction Request</span>
                 </div>
                 <p class="text-sm mb-3 dark:text-gray-200">{{ msg.body }}</p>
                 <button v-if="msg.metadata?.status === 'pending' && msg.user_id !== userId" 
                         @click="respondToMessage(msg, 'paid')"
-                        class="w-full py-2 bg-emerald-600 text-white text-xs rounded-md font-bold hover:bg-emerald-700 transition">
+                        class="w-full py-2 bg-blue-600 text-white text-xs rounded-md font-bold hover:bg-blue-700 transition">
                   Pay Instantly
                 </button>
-                <div v-else class="text-xs font-bold text-emerald-600 bg-white dark:bg-gray-800 px-2 py-1 rounded text-center border border-emerald-100">
+                <div v-else class="text-xs font-bold text-blue-600 bg-white dark:bg-gray-800 px-2 py-1 rounded text-center border border-blue-100">
                   {{ msg.metadata?.status.toUpperCase() }}
                 </div>
               </div>
 
               <!-- Peer Transfer Card -->
-              <div v-else-if="msg.type === 'peer_transfer'" class="p-2 border rounded-lg bg-emerald-100 dark:bg-emerald-800/40 mt-1 min-w-[200px]">
+              <div v-else-if="msg.type === 'peer_transfer'" class="p-2 border rounded-lg bg-blue-100 dark:bg-blue-800/40 mt-1 min-w-[200px]">
                 <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center space-x-1 text-emerald-800 dark:text-emerald-300">
+                  <div class="flex items-center space-x-1 text-blue-800 dark:text-blue-300">
                     <span class="material-icons text-sm">check_circle</span>
                     <span class="font-bold text-[10px] uppercase">Transfer Sent</span>
                   </div>
-                  <span class="text-xs font-black text-emerald-700 dark:text-emerald-300">{{ msg.metadata?.amount }}</span>
+                  <span class="text-xs font-black text-blue-700 dark:text-blue-300">{{ msg.metadata?.amount }}</span>
                 </div>
                 <p class="text-xs dark:text-gray-200">{{ msg.metadata?.note || 'Funds transferred successfully.' }}</p>
               </div>
@@ -475,7 +475,7 @@ function hasBadge(user, type) {
                 <div class="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded border border-blue-100 dark:border-blue-900">
                   <div class="text-center">
                     <p class="text-[8px] uppercase text-gray-400">Profit Share</p>
-                    <p class="text-xs font-black text-emerald-600">{{ msg.metadata?.roi }}</p>
+                    <p class="text-xs font-black text-blue-600">{{ msg.metadata?.roi }}</p>
                   </div>
                   <div class="text-center">
                     <p class="text-[8px] uppercase text-gray-400">Amount</p>
@@ -483,7 +483,7 @@ function hasBadge(user, type) {
                   </div>
                   <div class="text-center">
                     <p class="text-[8px] uppercase text-gray-400">Status</p>
-                    <p class="text-[10px] font-bold text-emerald-600">Distributed</p>
+                    <p class="text-[10px] font-bold text-blue-600">Distributed</p>
                   </div>
                 </div>
               </div>
@@ -533,7 +533,7 @@ function hasBadge(user, type) {
       <!-- Reply Preview -->
       <div v-if="replyingTo" class="mb-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg flex justify-between items-center text-xs">
         <div class="truncate">
-          <span class="font-bold text-emerald-600">Replying to {{ replyingTo.user_name }}:</span>
+          <span class="font-bold text-blue-600">Replying to {{ replyingTo.user_name }}:</span>
           <span class="ml-1 opacity-70">{{ replyingTo.body }}</span>
         </div>
         <button @click="replyingTo = null" class="text-gray-500"><span class="material-icons text-sm">close</span></button>
@@ -549,7 +549,7 @@ function hasBadge(user, type) {
       <div v-if="showGreetings" class="flex flex-wrap gap-2 mb-3">
         <button v-for="g in greetings" :key="g" 
                 @click="useGreeting(g)"
-                class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs hover:bg-emerald-100 transition">
+                class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs hover:bg-blue-100 transition">
           {{ g }}
         </button>
       </div>
@@ -558,7 +558,7 @@ function hasBadge(user, type) {
       <div v-if="showCanned" class="flex flex-col space-y-2 mb-3 max-h-40 overflow-y-auto">
         <button v-for="(text, key) in cannedResponses" :key="key" 
                 @click="input = text; showCanned = false"
-                class="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 text-left text-xs rounded-lg hover:bg-emerald-100 transition">
+                class="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-left text-xs rounded-lg hover:bg-blue-100 transition">
           <p class="font-bold">{{ key }}</p>
           <p class="truncate opacity-70">{{ text }}</p>
         </button>
@@ -570,12 +570,12 @@ function hasBadge(user, type) {
         <div class="grid grid-cols-2 gap-2">
           <button v-if="userRole !== 'member'" 
                   @click="sendFinAction('transaction')"
-                  class="flex items-center space-x-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition text-xs font-bold">
+                  class="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition text-xs font-bold">
             <span class="material-icons text-sm">payments</span>
             <span>Request Payment</span>
           </button>
           <button @click="sendFinAction('peer_transfer')"
-                  class="flex items-center space-x-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition text-xs font-bold">
+                  class="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition text-xs font-bold">
             <span class="material-icons text-sm">send</span>
             <span>Send Money</span>
           </button>
@@ -602,7 +602,7 @@ function hasBadge(user, type) {
           </button>
           <button v-if="userRole !== 'member'" 
                   @click="sendFinAction('mudarabah_update')"
-                  class="flex items-center space-x-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 transition text-xs font-bold">
+                  class="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition text-xs font-bold">
             <span class="material-icons text-sm">trending_up</span>
             <span>Investment Update</span>
           </button>
@@ -611,15 +611,15 @@ function hasBadge(user, type) {
 
       <div class="flex items-center space-x-2">
         <button @click="showFinActions = !showFinActions; showGreetings = false; showCanned = false" 
-                class="p-2 text-emerald-600 hover:text-emerald-700">
+                class="p-2 text-blue-600 hover:text-blue-700">
           <span class="material-icons">add_circle</span>
         </button>
         <button @click="showGreetings = !showGreetings; showCanned = false; showFinActions = false" 
-                class="p-2 text-gray-500 hover:text-emerald-600">
+                class="p-2 text-gray-500 hover:text-blue-600">
           <span class="material-icons">sentiment_satisfied_alt</span>
         </button>
         <button @click="showCanned = !showCanned; showGreetings = false; showFinActions = false" 
-                class="p-2 text-gray-500 hover:text-emerald-600">
+                class="p-2 text-gray-500 hover:text-blue-600">
           <span class="material-icons">quickreply</span>
         </button>
         <textarea v-model="input" 
@@ -628,10 +628,10 @@ function hasBadge(user, type) {
                @keyup.enter.exact.prevent="send('text')"
                placeholder="Type a message (Maintain Adab)..."
                rows="1"
-               class="flex-1 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none overflow-y-auto max-h-[120px]"></textarea>
+               class="flex-1 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto max-h-[120px]"></textarea>
         <button @click="send('text')" 
                 :disabled="sending || (!input.trim() && !attachment)"
-                class="p-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                class="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors">
           <span class="material-icons">{{ editingMessage ? 'check' : 'send' }}</span>
         </button>
       </div>
@@ -641,3 +641,5 @@ function hasBadge(user, type) {
 
 <style scoped>
 </style>
+
+

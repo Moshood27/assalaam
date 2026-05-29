@@ -46,7 +46,7 @@
             <x-filament::section>
                 <x-slot name="heading">
                     <div class="flex items-center gap-2">
-                        <x-filament::icon icon="heroicon-o-moon" class="h-5 w-5 text-emerald-500" />
+                        <x-filament::icon icon="heroicon-o-moon" class="h-5 w-5 text-blue-500" />
                         <span>Islamic Finance & Sharia</span>
                     </div>
                 </x-slot>

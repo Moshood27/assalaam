@@ -17,7 +17,7 @@
 <body>
     <div class="header">
         <div class="title">Qard Hasan & Murabahah Aging Report</div>
-        <div>At-Taqwa Osogbo CICS Ltd</div>
+        <div>AS-SALAAM Osogbo CICS Ltd</div>
         <div>As of Date: {{ $date }}</div>
     </div>
 
@@ -26,9 +26,9 @@
             <tr>
                 <th>Type</th>
                 <th>Member</th>
-                <th class="right">Original Amount (₦)</th>
-                <th class="right">Repaid (₦)</th>
-                <th class="right">Balance (₦)</th>
+                <th class="right">Original Amount (â‚¦)</th>
+                <th class="right">Repaid (â‚¦)</th>
+                <th class="right">Balance (â‚¦)</th>
                 <th class="right">Days Since Last Pymt</th>
                 <th>Status</th>
             </tr>

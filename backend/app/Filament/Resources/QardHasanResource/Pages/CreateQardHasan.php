@@ -122,7 +122,7 @@ class CreateQardHasan extends CreateRecord
                 $member = $this->record->user?->name;
                 $amount = number_format((float) $this->record->principal_amount, 2);
                 foreach ($this->record->guarantors as $g) {
-                    $msg = 'Guarantor request: Member '.($member).' requested a loan (ID: '.($this->record->qard_id_string).', ₦'.$amount.'). Please open your Coop app > Loans to Accept or Decline.';
+                    $msg = 'Guarantor request: Member '.($member).' requested a loan (ID: '.($this->record->qard_id_string).', â‚¦'.$amount.'). Please open your Coop app > Loans to Accept or Decline.';
                     $sms->send($g->phone ?? null, $msg);
                 }
             } catch (\Throwable $e) {

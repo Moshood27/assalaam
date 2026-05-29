@@ -34,7 +34,7 @@ class UserGrowthChart extends ChartWidget
                 [
                     'label' => 'New Users',
                     'data' => $series,
-                    'borderColor' => '#10b981', // emerald-500
+                    'borderColor' => '#10b981', // blue-500
                     'backgroundColor' => 'rgba(16,185,129,0.2)',
                     'fill' => true,
                     'tension' => 0.3,

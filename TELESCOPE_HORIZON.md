@@ -1,4 +1,4 @@
-# Telescope & Horizon – Monitoring and Debugging
+# Telescope & Horizon â€“ Monitoring and Debugging
 
 This document explains how to use Laravel Telescope and Horizon in this project for monitoring background jobs, debugging webhooks, and ensuring system reliability in both local and production environments.
 
@@ -21,8 +21,8 @@ By default, these tools are prefixed with `app/` to avoid conflicts with other r
 ### Authorization
 Access is restricted by email address via the `viewTelescope` and `viewHorizon` gates in their respective service providers.
 - **Configuration**: Set the authorized emails in your `backend/.env` file.
-  - `TELESCOPE_EMAILS="admin@attaqwa.com,other@example.com"`
-  - `HORIZON_EMAILS="admin@attaqwa.com"`
+  - `TELESCOPE_EMAILS="admin@assalaam.com,other@example.com"`
+  - `HORIZON_EMAILS="admin@assalaam.com"`
 
 ---
 
@@ -71,8 +71,8 @@ TELESCOPE_PATH=app/telescope
 HORIZON_PATH=app/horizon
 
 # Access control
-TELESCOPE_EMAILS="admin@attaqwa.com"
-HORIZON_EMAILS="admin@attaqwa.com"
+TELESCOPE_EMAILS="admin@assalaam.com"
+HORIZON_EMAILS="admin@assalaam.com"
 
 # Storage
 TELESCOPE_ENABLED=true
@@ -83,7 +83,7 @@ When deploying updates, the following commands are automatically run via `compos
 - `php artisan telescope:publish`: Updates the Telescope assets (JS/CSS).
 - `php artisan horizon:publish`: Updates the Horizon assets.
 
-**Note**: In production, ensure the `horizon` worker is running. This is managed via Docker Compose (`attaqwa-worker` service) which runs `php artisan horizon`.
+**Note**: In production, ensure the `horizon` worker is running. This is managed via Docker Compose (`assalaam-worker` service) which runs `php artisan horizon`.
 
 ---
 
@@ -96,4 +96,4 @@ When deploying updates, the following commands are automatically run via `compos
 
 ---
 
-— Last updated: 2026-04-06
+â€” Last updated: 2026-04-06

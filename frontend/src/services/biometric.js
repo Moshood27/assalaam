@@ -11,7 +11,7 @@ let NativeBiometric
 // Lazy-load the plugin to avoid issues on web
 async function loadPlugin() {
   if (NativeBiometric) return NativeBiometric
-  // Avoid resolving native plugin on web — Vite can't bundle it and it's not needed
+  // Avoid resolving native plugin on web Ã¢â‚¬â€ Vite can't bundle it and it's not needed
   try {
     const platform = Capacitor?.getPlatform?.() || 'web'
     if (platform === 'web') {
@@ -195,3 +195,5 @@ export async function verifyBiometricIdentity(options = {}) {
     return false
   }
 }
+
+

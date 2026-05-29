@@ -17,15 +17,15 @@
 <body>
     <div class="header">
         <div class="title">Charity Fund Report (Non-Halal Income Disposal)</div>
-        <div>At-Taqwa Osogbo CICS Ltd</div>
+        <div>AS-SALAAM Osogbo CICS Ltd</div>
         <div>Period: {{ $from }} to {{ $to }}</div>
     </div>
 
     <div class="summary">
         <strong>Summary</strong><br>
-        Total Inflow (Attendance Fines, etc.): ₦ {{ number_format($total_inflow, 2) }}<br>
-        Total Outflow (Donations/Sadaqah): ₦ {{ number_format($total_outflow, 2) }}<br>
-        <strong>Net Fund Balance: ₦ {{ number_format($net_balance, 2) }}</strong>
+        Total Inflow (Attendance Fines, etc.): â‚¦ {{ number_format($total_inflow, 2) }}<br>
+        Total Outflow (Donations/Sadaqah): â‚¦ {{ number_format($total_outflow, 2) }}<br>
+        <strong>Net Fund Balance: â‚¦ {{ number_format($net_balance, 2) }}</strong>
     </div>
 
     <table>
@@ -34,7 +34,7 @@
                 <th>Date</th>
                 <th>Source/Purpose</th>
                 <th>Note</th>
-                <th class="right">Amount (₦)</th>
+                <th class="right">Amount (â‚¦)</th>
             </tr>
         </thead>
         <tbody>

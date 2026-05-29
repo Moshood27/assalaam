@@ -5,7 +5,7 @@
     <main class="p-4 space-y-6 max-w-3xl mx-auto">
       <div class="flex items-center justify-between px-2">
         <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Effective: 2026-03-21</p>
-        <span class="badge bg-emerald-100 text-emerald-700">v1.2</span>
+        <span class="badge bg-blue-100 text-blue-700">v1.2</span>
       </div>
 
       <section class="card card-elevated p-6 bg-gradient-to-br from-white to-slate-50">
@@ -23,19 +23,19 @@
           </h2>
           <ul class="space-y-3">
             <li class="flex gap-3 items-start text-sm text-slate-600">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               You must be a registered member of {{ brand.name }} to access member features.
             </li>
             <li class="flex gap-3 items-start text-sm text-slate-600">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               You are responsible for maintaining the confidentiality of your login credentials.
             </li>
             <li class="flex gap-3 items-start text-sm text-slate-600">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               Notify Support immediately if you suspect unauthorized access to your account.
@@ -61,13 +61,13 @@
           </h2>
           <ul class="space-y-3">
             <li class="flex gap-3 items-start text-sm text-slate-600">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-              Use the services only for lawful purposes and in accordance with co‑operative rules.
+              Use the services only for lawful purposes and in accordance with coÃ¢â‚¬â€˜operative rules.
             </li>
             <li class="flex gap-3 items-start text-sm text-slate-600">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               Do not attempt to interfere with the security or integrity of the platform.
@@ -93,7 +93,7 @@
           </h2>
           <p class="text-sm text-slate-600 leading-relaxed">
             Our handling of personal data is described in our
-            <router-link to="/privacy" class="text-emerald-700 font-bold hover:underline">Privacy Policy</router-link>.
+            <router-link to="/privacy" class="text-blue-700 font-bold hover:underline">Privacy Policy</router-link>.
           </p>
         </section>
 
@@ -114,8 +114,8 @@
             Support
           </h2>
           <p class="text-sm text-slate-600 leading-relaxed">
-            For questions or concerns, visit the <router-link to="/support" class="text-emerald-700 font-bold hover:underline">Support</router-link>
-            page or email <a href="mailto:attaqwaosogbo@gmail.com" class="text-emerald-700 font-bold hover:underline">attaqwaosogbo@gmail.com</a>.
+            For questions or concerns, visit the <router-link to="/support" class="text-blue-700 font-bold hover:underline">Support</router-link>
+            page or email <a href="mailto:assalaamosogbo@gmail.com" class="text-blue-700 font-bold hover:underline">assalaamosogbo@gmail.com</a>.
           </p>
         </section>
       </div>
@@ -127,3 +127,5 @@
 import AppHeader from '../components/AppHeader.vue'
 import brand from '../brand'
 </script>
+
+

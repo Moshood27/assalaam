@@ -59,7 +59,7 @@ class GeneralNotification extends Notification implements ShouldQueue
     {
         $mail = (new MailMessage)
             ->subject($this->title)
-            ->greeting('Assalāmu ‘alaykum '.$notifiable->name.',')
+            ->greeting('AssalÄmu â€˜alaykum '.$notifiable->name.',')
             ->line($this->message);
 
         // Add CTA if route provided

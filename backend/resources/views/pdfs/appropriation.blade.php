@@ -43,7 +43,7 @@
             </tr>
             <tr>
                 <td>Surplus for the year</td>
-                <td class="right">₦ {{ number_format((float) ($surplus ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) ($surplus ?? 0), 2) }}</td>
             </tr>
         </tbody>
     </table>
@@ -53,7 +53,7 @@
             <tr>
                 <th>Appropriation</th>
                 <th class="right">Percent</th>
-                <th class="right">Amount (₦)</th>
+                <th class="right">Amount (â‚¦)</th>
             </tr>
         </thead>
         <tbody>
@@ -61,7 +61,7 @@
                 <tr>
                     <td>{{ $line['name'] ?? 'Appropriation' }}</td>
                     <td class="right">{{ number_format((float) ($line['percent'] ?? 0), 2) }}%</td>
-                    <td class="right">₦ {{ number_format((float) ($line['amount'] ?? 0), 2) }}</td>
+                    <td class="right">â‚¦ {{ number_format((float) ($line['amount'] ?? 0), 2) }}</td>
                 </tr>
             @empty
                 <tr>
@@ -73,12 +73,12 @@
             <tr>
                 <td>Total Appropriations</td>
                 <td></td>
-                <td class="right">₦ {{ number_format((float) ($total_appropriated ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) ($total_appropriated ?? 0), 2) }}</td>
             </tr>
             <tr>
                 <td>Carried forward</td>
                 <td></td>
-                <td class="right">₦ {{ number_format((float) ($carried_forward ?? 0), 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) ($carried_forward ?? 0), 2) }}</td>
             </tr>
         </tfoot>
     </table>

@@ -10,14 +10,14 @@
         <section>
             <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">1. Acceptance of Terms</h2>
             <p>
-                By accessing and using the {{ config('brand.name', 'AT-TAQWA') }} website, mobile application, and services, you agree to comply with and be bound by these Terms and Conditions.
+                By accessing and using the {{ config('brand.name', 'AS-SALAAM') }} website, mobile application, and services, you agree to comply with and be bound by these Terms and Conditions.
             </p>
         </section>
 
         <section>
             <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">2. Membership and Eligibility</h2>
             <p>
-                Membership is subject to the bylaws of AT-TAQWA OSOGBO ISLAMIC CICU LTD. Users must provide accurate and complete information during registration and maintain the confidentiality of their account credentials.
+                Membership is subject to the bylaws of AS-SALAAM OSOGBO ISLAMIC CICU LTD. Users must provide accurate and complete information during registration and maintain the confidentiality of their account credentials.
             </p>
         </section>
 
@@ -38,7 +38,7 @@
         <section>
             <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">5. Limitation of Liability</h2>
             <p>
-                {{ config('brand.name', 'AT-TAQWA') }} shall not be liable for any indirect, incidental, or consequential damages arising out of your use of our services, except as required by law.
+                {{ config('brand.name', 'AS-SALAAM') }} shall not be liable for any indirect, incidental, or consequential damages arising out of your use of our services, except as required by law.
             </p>
         </section>
 
@@ -53,7 +53,7 @@
             <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">7. Contact Information</h2>
             <p>
                 For questions regarding these terms, please contact us at
-                <a href="mailto:attaqwaosogbo@gmail.com" class="text-primary-600 hover:underline transition-colors font-medium">attaqwaosogbo@gmail.com</a>.
+                <a href="mailto:assalaamosogbo@gmail.com" class="text-primary-600 hover:underline transition-colors font-medium">assalaamosogbo@gmail.com</a>.
             </p>
         </section>
     </div>

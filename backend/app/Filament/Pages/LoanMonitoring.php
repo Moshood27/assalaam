@@ -72,7 +72,7 @@ class LoanMonitoring extends Page
                 'outstanding' => round($outstanding, 2),
                 'overdue' => round($overdue, 2),
                 'is_defaulter' => (bool) $u->is_defaulter,
-                'received_at' => $earliestReceived ? $earliestReceived->format('Y-m-d') : '—',
+                'received_at' => $earliestReceived ? $earliestReceived->format('Y-m-d') : 'â€”',
             ];
         })->sortByDesc('overdue')->values()->all();
 
@@ -112,7 +112,7 @@ class LoanMonitoring extends Page
                 'loans_count' => $loans,
                 'outstanding' => round($outstanding, 2),
                 'overdue' => round($overdue, 2),
-                'defaulted_at' => $earliestDefault ? $earliestDefault->format('Y-m-d') : '—',
+                'defaulted_at' => $earliestDefault ? $earliestDefault->format('Y-m-d') : 'â€”',
             ];
         })->sortByDesc('overdue')->values()->all();
     }
@@ -159,7 +159,7 @@ class LoanMonitoring extends Page
             $push = app(\App\Services\PushService::class);
             $token = $user->fcm_token ?: ($user->device_token ?? null);
             $title = 'Loan Repayment Reminder';
-            $body = 'You have outstanding loan balance of ₦' . number_format($totalOutstanding, 2) . '. Please make a repayment.';
+            $body = 'You have outstanding loan balance of â‚¦' . number_format($totalOutstanding, 2) . '. Please make a repayment.';
             $push->send($token, $title, $body, [
                 'type' => 'loan_reminder',
                 'total_outstanding' => (float) $totalOutstanding,

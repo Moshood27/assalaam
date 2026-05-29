@@ -1,6 +1,6 @@
 {
-  "appId": "com.attaqwa.com",
-  "appName": "ATTAQWA",
+  "appId": "com.assalaam.com",
+  "appName": "AS-SALAAM",
   "webDir": "frontend/dist",
   "plugins": {
     "SplashScreen": {

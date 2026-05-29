@@ -256,7 +256,7 @@ class GoldSilverPriceService
                     $basePrice = $symbol === 'XAU' ? 85000 : 1200;
                     // Seed the randomizer with the date so it's consistent for the same date
                     srand(strtotime($date->format('Y-m-d')));
-                    $variation = (rand(-200, 200) / 10000); // ±2%
+                    $variation = (rand(-200, 200) / 10000); // Â±2%
                     $price = $basePrice * (1 + $variation);
                 }
 

@@ -18,7 +18,7 @@ class MemberApplicationRejected extends Mailable
 
     public function build(): self
     {
-        return $this->subject('Update on Your Membership Application — ' . config('app.name'))
+        return $this->subject('Update on Your Membership Application â€” ' . config('app.name'))
             ->view('emails.member_application_rejected', [
                 'application' => $this->application,
                 'reason' => $this->reason,

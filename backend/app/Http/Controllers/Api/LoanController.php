@@ -20,7 +20,7 @@ use App\Mail\RepaymentReceiptUser;
 use App\Mail\LoanDisbursedUser;
 use App\Mail\LoanDisbursedAdminNotification;
 use App\Mail\LoanRequestedAdminNotification;
-use App\Services\AttaqwaScoreService;
+use App\Services\AssalaamScoreService;
 use App\Notifications\LoanApprovedNotification;
 use App\Traits\VerifiesOtp;
 use App\Notifications\OtpNotification;
@@ -61,17 +61,17 @@ class LoanController extends Controller
         $months = $user->monthsInSystem();
         $canRequest = $months >= 6 && ($adj['eligibility_adjusted'] ?? 0) > 0;
 
-        // Attaqwa Score and guidance
+        // assalaam Score and guidance
         $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled'));
-        $scoreSvc = app(AttaqwaScoreService::class);
+        $scoreSvc = app(AssalaamScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
 
         $requiredMeetings = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
         $currentMeetings = $user->meetingAttendanceCount();
 
         if ($scoreEnabled) {
-            $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
-            $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+            $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AssalaamScoreService::INSTANT_THRESHOLD);
+            $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AssalaamScoreService::LOW_THRESHOLD);
 
             // Meeting attendance requirement for instant approval
             if ($currentMeetings < $requiredMeetings) {
@@ -177,17 +177,17 @@ class LoanController extends Controller
             return response()->json(['message' => 'Invalid or expired authorization code (OTP).'], 403);
         }
 
-        // Compute Attaqwa Score and derived requirements
+        // Compute assalaam Score and derived requirements
         $scoreEnabled = (bool) \App\Models\Setting::get('loan_credit_score_enabled', config('cooperative.loan_credit_score_enabled'));
-        $scoreSvc = app(AttaqwaScoreService::class);
+        $scoreSvc = app(AssalaamScoreService::class);
         $score = $scoreSvc->scoreForUser($user);
 
         $requiredMeetings = (int) \App\Models\Setting::get('required_loan_meetings', config('cooperative.attendance.required_loan_meetings', 8));
         $currentMeetings = $user->meetingAttendanceCount();
 
         if ($scoreEnabled) {
-            $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AttaqwaScoreService::INSTANT_THRESHOLD);
-            $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AttaqwaScoreService::LOW_THRESHOLD);
+            $instant = ($score['score'] ?? 0) >= ($score['thresholds']['instant'] ?? AssalaamScoreService::INSTANT_THRESHOLD);
+            $low = ($score['score'] ?? 0) < ($score['thresholds']['low'] ?? AssalaamScoreService::LOW_THRESHOLD);
 
             // Meeting attendance requirement for instant approval
             if ($currentMeetings < $requiredMeetings) {
@@ -229,7 +229,7 @@ class LoanController extends Controller
         // Use requested amount if provided, but capped at max eligibility
         $requestedAmount = (float) ($data['amount'] ?? $principal);
         if ($requestedAmount > $principal + 0.01) {
-            return response()->json(['message' => 'Requested amount exceeds your current eligibility limit of ₦' . number_format($principal, 2)], 422);
+            return response()->json(['message' => 'Requested amount exceeds your current eligibility limit of â‚¦' . number_format($principal, 2)], 422);
         }
         if ($requestedAmount <= 0) {
             $requestedAmount = $principal;
@@ -259,7 +259,7 @@ class LoanController extends Controller
             return response()->json(['message' => "You must wait until {$user->loan_penalty_until->format('Y-m-d H:i')} before you can apply for a new loan due to your previous default."], 422);
         }
 
-        // Validate guarantors based on Attaqwa Score policy
+        // Validate guarantors based on assalaam Score policy
         // Build guarantor ID list from either numeric IDs or membership numbers (alphanumeric)
         $guarantorIds = array_values(array_unique(array_map('intval', $data['guarantor_ids'] ?? [])));
         $membershipInputs = $data['guarantor_memberships'] ?? null;
@@ -374,7 +374,7 @@ class LoanController extends Controller
             try {
                 $q->user->getAuthorizedAdmins()->each(function ($a) use ($q, $credit) {
                     $memberName = $q->user?->full_name ?: 'Member';
-                    $body = 'Loan ' . $q->qard_id_string . ' disbursed: ₦' . number_format($credit, 2) . ' to ' . $memberName;
+                    $body = 'Loan ' . $q->qard_id_string . ' disbursed: â‚¦' . number_format($credit, 2) . ' to ' . $memberName;
                     $a->notifyMember('Loan Disbursed', $body, [
                         'type' => 'loan_disbursed_admin',
                         'loan_id' => $q->id,
@@ -389,7 +389,7 @@ class LoanController extends Controller
 
             // Notify member via preferences (SMS, Push, Email, Database)
             if ($q->user) {
-                $msg = 'Loan approved instantly: ₦'.number_format($credit, 2).' credited. Loan ID: '.($q->qard_id_string).'. Bal: ₦'.number_format((float) ($q->user->balance ?? 0), 2);
+                $msg = 'Loan approved instantly: â‚¦'.number_format($credit, 2).' credited. Loan ID: '.($q->qard_id_string).'. Bal: â‚¦'.number_format((float) ($q->user->balance ?? 0), 2);
                 $q->user->notifyMember('Loan Approved', $msg, [
                     'type' => 'loan_disbursed',
                     'loan_id' => $q->id,
@@ -427,7 +427,7 @@ class LoanController extends Controller
 
             // Notify guarantors via preferences
             foreach ($guarantors as $g) {
-                $msg = 'Guarantor request: Member '.($user->name).' requested a loan (ID: '.($q->qard_id_string).', ₦'.number_format((float)$q->principal_amount, 2).'). Please open your Coop app > Loans to Accept or Decline.';
+                $msg = 'Guarantor request: Member '.($user->name).' requested a loan (ID: '.($q->qard_id_string).', â‚¦'.number_format((float)$q->principal_amount, 2).'). Please open your Coop app > Loans to Accept or Decline.';
                 $g->notifyMember('Guarantor Request', $msg, [
                     'type' => 'guarantor_request',
                     'loan_id' => $q->id,
@@ -652,7 +652,7 @@ class LoanController extends Controller
                 // Notify member via preferences
                 $remaining = number_format((float) $q->remaining_principal, 2);
                 $newBal = number_format((float) $user->balance, 2);
-                $msg = 'Loan repayment: ₦'.number_format($appliedAmount, 2).' applied to '.($q->qard_id_string).'. Remaining: ₦'.$remaining.'. Ref: '.$rep->reference.'. Wallet: ₦'.$newBal;
+                $msg = 'Loan repayment: â‚¦'.number_format($appliedAmount, 2).' applied to '.($q->qard_id_string).'. Remaining: â‚¦'.$remaining.'. Ref: '.$rep->reference.'. Wallet: â‚¦'.$newBal;
                 $user->notifyMember('Loan Repayment', $msg, [
                     'type' => 'loan_repayment',
                     'loan_id' => $q->id,

@@ -31,7 +31,7 @@ class SavingsGroupResource extends Resource
                     ->maxLength(65535),
                 Forms\Components\TextInput::make('monthly_contribution_amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required()
                     ->step('0.01'),
                 Forms\Components\Select::make('project_id')

@@ -111,7 +111,7 @@ function writeFileSyncEnsured(outPath, data) {
 
 function createIconIfMissing() {
   if (fs.existsSync(ICON_PATH)) {
-    console.log('icon.png already exists — skipping');
+    console.log('icon.png already exists â€” skipping');
     return;
   }
   const size = 1024;
@@ -126,7 +126,7 @@ function createIconIfMissing() {
 
 function createSplashIfMissing() {
   if (fs.existsSync(SPLASH_PATH)) {
-    console.log('splash.png already exists — skipping');
+    console.log('splash.png already exists â€” skipping');
     return;
   }
   const w = 2732;

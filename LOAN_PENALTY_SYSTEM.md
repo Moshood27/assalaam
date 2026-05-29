@@ -1,4 +1,4 @@
-# Loan Penalty System – Implementation Guide
+# Loan Penalty System â€“ Implementation Guide
 
 This document explains the Loan Penalty system designed to discourage defaults by imposing a mandatory wait period before a member can apply for a new loan.
 

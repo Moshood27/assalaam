@@ -59,3 +59,5 @@ export const openBlob = (blob, filename) => {
     alert('Unable to open the file on this device. Please try again or update the app.')
   }
 }
+
+

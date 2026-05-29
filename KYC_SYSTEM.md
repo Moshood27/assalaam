@@ -71,4 +71,4 @@ The `KYC_FACE_MATCH_MIN` variable (default `0.82`) determines the strictness of 
 
 ---
 
-— Last updated: 2026-04-06
+â€” Last updated: 2026-04-06

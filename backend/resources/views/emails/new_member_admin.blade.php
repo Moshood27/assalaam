@@ -23,7 +23,7 @@
 <div class="wrapper">
     <div class="container">
         <div class="header">
-            <p class="brand">{{ config('app.name') }} • New member created</p>
+            <p class="brand">{{ config('app.name') }} â€¢ New member created</p>
         </div>
         <div class="content">
             <p>A new member account has been created.</p>
@@ -34,7 +34,7 @@
                 </tr>
                 <tr>
                     <td class="label">Email</td>
-                    <td class="value">{{ $user->email ?: '—' }}</td>
+                    <td class="value">{{ $user->email ?: 'â€”' }}</td>
                 </tr>
                 @if($user->branch)
                     <tr>

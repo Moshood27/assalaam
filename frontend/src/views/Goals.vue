@@ -2,19 +2,19 @@
   <div class="min-h-screen bg-slate-50/50 pb-24">
     <AppHeader title="Hajj & Umrah" :showBack="true">
       <template #right>
-        <button @click="openCreate" class="text-emerald-700 text-xs font-bold mr-2">New Goal</button>
+        <button @click="openCreate" class="text-blue-700 text-xs font-bold mr-2">New Goal</button>
       </template>
     </AppHeader>
 
     <div class="p-4 max-w-2xl mx-auto space-y-4">
-      <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-7 text-white shadow-lg relative overflow-hidden">
+      <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-7 text-white shadow-lg relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full"></div>
-        <p class="text-emerald-100 text-sm font-medium mb-1 relative z-10">Available Wallet Balance</p>
-        <h2 class="text-3xl font-black relative z-10">₦ {{ formatMoney(balance) }}</h2>
+        <p class="text-blue-100 text-sm font-medium mb-1 relative z-10">Available Wallet Balance</p>
+        <h2 class="text-3xl font-black relative z-10">Ã¢â€šÂ¦ {{ formatMoney(balance) }}</h2>
       </div>
 
-      <div class="bg-emerald-50/50 border border-emerald-100 text-emerald-900 rounded-2xl p-4 flex gap-3">
-        <div class="text-emerald-500 mt-0.5">
+      <div class="bg-blue-50/50 border border-blue-100 text-blue-900 rounded-2xl p-4 flex gap-3">
+        <div class="text-blue-500 mt-0.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         </div>
         <p class="text-[13px] leading-relaxed">
@@ -29,12 +29,12 @@
             <div>
               <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Savings Goal</p>
               <h3 class="text-lg font-bold text-slate-800">{{ g.title }}</h3>
-              <p class="text-xs text-slate-500 font-medium mt-0.5">Target: ₦ {{ formatMoney(g.target_amount) }} • Saved: ₦ {{ formatMoney(g.saved_amount) }}</p>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">Target: Ã¢â€šÂ¦ {{ formatMoney(g.target_amount) }} Ã¢â‚¬Â¢ Saved: Ã¢â€šÂ¦ {{ formatMoney(g.saved_amount) }}</p>
             </div>
             <span :class="badgeClass(g.status)" class="badge">{{ g.status }}</span>
           </div>
           <div class="mt-4 w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-            <div class="h-full rounded-full bg-emerald-600 transition-all duration-1000" :style="{ width: g.progress + '%' }"></div>
+            <div class="h-full rounded-full bg-blue-600 transition-all duration-1000" :style="{ width: g.progress + '%' }"></div>
           </div>
           <div class="mt-5 flex flex-wrap gap-2">
             <button @click="openDeposit(g)" class="btn-primary flex-1 py-2.5 text-xs">Deposit</button>
@@ -48,7 +48,7 @@
       </div>
 
       <div v-else class="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🎯</div>
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">Ã°Å¸Å½Â¯</div>
         <p class="text-slate-500 font-medium mb-4">No savings goals yet.</p>
         <button @click="openCreate" class="btn-primary">Create your first goal</button>
       </div>
@@ -69,7 +69,7 @@
             <input v-model="form.title" placeholder="e.g., Umrah 2026" class="inp" />
           </div>
           <div>
-            <label class="lbl">Target Amount (₦)</label>
+            <label class="lbl">Target Amount (Ã¢â€šÂ¦)</label>
             <input v-model.number="form.target_amount" type="number" min="1" class="inp" placeholder="0.00" />
           </div>
           <div>
@@ -95,14 +95,14 @@
         </div>
         <p class="text-sm font-medium text-slate-500 mb-6">Deposit to <span class="text-slate-800 font-bold">{{ depositGoal?.title }}</span></p>
         
-        <div class="bg-emerald-50 p-4 rounded-2xl mb-6 flex justify-between items-center">
-          <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Wallet Balance</span>
-          <span class="font-black text-emerald-900">₦ {{ formatMoney(balance) }}</span>
+        <div class="bg-blue-50 p-4 rounded-2xl mb-6 flex justify-between items-center">
+          <span class="text-xs font-bold text-blue-800 uppercase tracking-wider">Wallet Balance</span>
+          <span class="font-black text-blue-900">Ã¢â€šÂ¦ {{ formatMoney(balance) }}</span>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="lbl">Amount to Deposit (₦)</label>
+            <label class="lbl">Amount to Deposit (Ã¢â€šÂ¦)</label>
             <input v-model.number="depositAmount" type="number" min="1" class="inp" placeholder="0.00" />
           </div>
           <div class="grid grid-cols-2 gap-3 mt-6">
@@ -207,7 +207,7 @@ async function viewGoal(g) {
   try {
     const { data } = await axios.get(`/api/goals/${g.id}`)
     const details = data.goal
-    const msg = `Title: ${details.title}\nTarget: ₦ ${formatMoney(details.target_amount)}\nSaved: ₦ ${formatMoney(details.saved_amount)}\nStatus: ${details.status}\nProgress: ${details.progress}%`
+    const msg = `Title: ${details.title}\nTarget: Ã¢â€šÂ¦ ${formatMoney(details.target_amount)}\nSaved: Ã¢â€šÂ¦ ${formatMoney(details.saved_amount)}\nStatus: ${details.status}\nProgress: ${details.progress}%`
     alert(msg)
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to load goal')
@@ -225,7 +225,7 @@ async function bookTravel(g) {
       partner_name: partner,
       package: pkg || undefined,
     })
-    alert(`Booking recorded with ${data?.booking?.partner_name}. Commission: ₦ ${formatMoney(data?.commission_amount)}`)
+    alert(`Booking recorded with ${data?.booking?.partner_name}. Commission: Ã¢â€šÂ¦ ${formatMoney(data?.commission_amount)}`)
     await load()
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to record booking')
@@ -242,3 +242,5 @@ onMounted(load)
 .modal { @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4; }
 .modal-card { @apply w-full max-w-md bg-white rounded-[2rem] p-8 shadow-2xl; }
 </style>
+
+

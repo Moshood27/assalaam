@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.attaqwa.com"
+    namespace "com.assalaam.com"
     compileSdk rootProject.ext.compileSdkVersion
 
     // 1. ADD THIS SECTION: Signing Configuration
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.attaqwa.com"
+        applicationId "com.assalaam.com"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 4

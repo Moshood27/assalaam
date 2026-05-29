@@ -95,7 +95,7 @@ class AttendanceService
 
             // Notify user about lateness fine
             $lockedUser->notifyMember(
-                "⚠️ Lateness Fine: {$meeting->name}",
+                "âš ï¸ Lateness Fine: {$meeting->name}",
                 $isPaid
                     ? "A lateness fine of " . number_format($amount, 2) . " has been deducted from your balance for meeting: {$meeting->name}."
                     : "A lateness fine of " . number_format($amount, 2) . " has been added to your outstanding fines for meeting: {$meeting->name}. Please settle it as soon as possible.",
@@ -189,7 +189,7 @@ class AttendanceService
             // Notify user about absence fine
             $isPaid = ($status === 'fine_paid');
             $lockedUser->notifyMember(
-                "⚠️ Absence Fine: {$meeting->name}",
+                "âš ï¸ Absence Fine: {$meeting->name}",
                 $isPaid
                     ? "An absence fine of " . number_format($amount, 2) . " has been deducted from your balance for meeting: {$meeting->name}."
                     : "An absence fine of " . number_format($amount, 2) . " has been added to your outstanding fines for meeting: {$meeting->name}. Please settle it as soon as possible.",

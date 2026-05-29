@@ -23,7 +23,7 @@ class WithdrawalRequestsRelationManager extends RelationManager
                     ->disabled(),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->disabled(),
                 Forms\Components\TextInput::make('bank_name')
                     ->disabled(),

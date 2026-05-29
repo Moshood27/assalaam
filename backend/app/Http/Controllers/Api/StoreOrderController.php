@@ -165,7 +165,7 @@ class StoreOrderController extends Controller
 
             if ($grandTotal > $limit) {
                 return response()->json([
-                    'message' => "Your borrowing limit is ₦ " . number_format($limit, 2) . ". Please choose a lower priced product or more savings/shares."
+                    'message' => "Your borrowing limit is â‚¦ " . number_format($limit, 2) . ". Please choose a lower priced product or more savings/shares."
                 ], 422);
             }
 
@@ -196,7 +196,7 @@ class StoreOrderController extends Controller
             $financedTotal = round($financedTotal, 2);
             $totalProfit = round($financedTotal - $grandCost, 2);
 
-            // Build simple equal installment schedule over 6–12 months
+            // Build simple equal installment schedule over 6â€“12 months
             $schedule = [];
             $kobo = (int) round($financedTotal * 100);
             $per = intdiv($kobo, $months);
@@ -406,7 +406,7 @@ class StoreOrderController extends Controller
         $toApply = round($toApply, 2);
 
         if ($toApply < $minDueForNext) {
-            return response()->json(['message' => 'Minimum payment is ₦ ' . number_format($minDueForNext, 2)], 422);
+            return response()->json(['message' => 'Minimum payment is â‚¦ ' . number_format($minDueForNext, 2)], 422);
         }
         // Do not accept beyond total remaining
         if ($toApply > $totalRemaining) {

@@ -4,8 +4,8 @@
     <title>Loan Agreement Rejected</title>
 </head>
 <body>
-    <h3>Assalāmu ‘alaykum, {{ $member->name ?? 'Member' }}</h3>
-    <p>We pray this message finds you in good health and īmān.</p>
+    <h3>AssalÄmu â€˜alaykum, {{ $member->name ?? 'Member' }}</h3>
+    <p>We pray this message finds you in good health and Ä«mÄn.</p>
     <p>The signed loan agreement you uploaded for <strong>{{ $loan->qard_id_string }}</strong> was not accepted for the following reason:</p>
 
     <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 10px; margin: 15px 0; color: #991b1b;">

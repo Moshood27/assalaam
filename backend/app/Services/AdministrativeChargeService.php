@@ -133,7 +133,7 @@ class AdministrativeChargeService
             } else {
                 $actualAmount = $amount + $maintenanceCharge;
                 if ((float) $user->balance < $actualAmount) {
-                    throw new \Exception("Insufficient balance to cover the debit amount plus maintenance charge of ₦" . number_format($maintenanceCharge, 2));
+                    throw new \Exception("Insufficient balance to cover the debit amount plus maintenance charge of â‚¦" . number_format($maintenanceCharge, 2));
                 }
                 $user->decrement('balance', $actualAmount);
             }

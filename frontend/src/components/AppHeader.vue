@@ -7,9 +7,9 @@
             <span class="i-mdi-arrow-left text-2xl text-slate-700"></span>
           </button>
           <button v-else-if="user" @click="router.push('/profile')" class="flex items-center gap-3 min-w-0 group" aria-label="View profile">
-            <div class="w-10 h-10 rounded-full overflow-hidden bg-emerald-50 flex items-center justify-center text-emerald-700 font-bold text-xl shrink-0 shadow-sm group-active:scale-95 transition-transform border border-emerald-600/20">
+            <div class="w-10 h-10 rounded-full overflow-hidden bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-xl shrink-0 shadow-sm group-active:scale-95 transition-transform border border-blue-600/20">
               <img v-if="user && user.passport_url" :src="getImageUrl(user.passport_url)" alt="Profile" class="w-10 h-10 object-cover" />
-              <span v-else class="i-mdi-account text-2xl text-emerald-600/50"></span>
+              <span v-else class="i-mdi-account text-2xl text-blue-600/50"></span>
             </div>
             <div class="text-left min-w-0">
               <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none mb-1 opacity-80">Assalamu Alaikum,</p>
@@ -53,3 +53,5 @@ const props = defineProps({
 
 <style scoped>
 </style>
+
+

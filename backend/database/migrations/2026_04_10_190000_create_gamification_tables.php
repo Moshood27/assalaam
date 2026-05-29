@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('attaqwa_score')->default(0);
+            $table->integer('assalaam_score')->default(0);
         });
 
         Schema::create('user_badges', function (Blueprint $table) {
@@ -33,7 +33,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('user_badges');
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('attaqwa_score');
+            $table->dropColumn('assalaam_score');
         });
     }
 };

@@ -20,7 +20,7 @@
       <!-- Feature Disabled Alert -->
       <div v-if="!appStatusStore.features['gold-savings-beta']" class="bg-amber-50 border border-amber-200 p-8 rounded-[2rem] text-center space-y-4 shadow-sm">
         <div class="w-20 h-20 bg-amber-100 rounded-[2.5rem] flex items-center justify-center mx-auto text-4xl shadow-inner">
-          ✨
+          Ã¢Å“Â¨
         </div>
         <div>
           <h3 class="text-xl font-black text-slate-800">Exclusive Feature</h3>
@@ -46,7 +46,7 @@
           </div>
           <div class="mt-4 pt-4 border-t border-white/20">
             <p class="text-yellow-100 text-xs mb-1">Current Value</p>
-            <p class="text-2xl font-bold">₦ {{ formatMoney(goldData.current_value) }}</p>
+            <p class="text-2xl font-bold">Ã¢â€šÂ¦ {{ formatMoney(goldData.current_value) }}</p>
           </div>
         </div>
       </div>
@@ -55,8 +55,8 @@
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
         <div class="flex items-center justify-between mb-2 px-2">
           <h3 class="text-xs font-bold text-slate-400 uppercase">Price Trend (7 Days)</h3>
-          <div class="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+          <div class="flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+            <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
             LIVE
           </div>
         </div>
@@ -75,7 +75,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Market Price</p>
-            <p class="text-xl font-black text-slate-800">₦ {{ formatMoney(goldData.base_price) }} <span class="text-sm font-normal text-slate-400">/ gram</span></p>
+            <p class="text-xl font-black text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(goldData.base_price) }} <span class="text-sm font-normal text-slate-400">/ gram</span></p>
           </div>
           <button @click="fetchData" :disabled="loading" class="p-2 hover:bg-slate-50 rounded-full transition-colors text-yellow-600">
             <svg xmlns="http://www.w3.org/2000/svg" :class="['h-6 w-6', loading ? 'animate-spin' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,11 +86,11 @@
         <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
           <div>
             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Buying At</p>
-            <p class="font-bold text-emerald-600">₦ {{ formatMoney(goldData.buy_price) }}</p>
+            <p class="font-bold text-blue-600">Ã¢â€šÂ¦ {{ formatMoney(goldData.buy_price) }}</p>
           </div>
           <div>
             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Selling At</p>
-            <p class="font-bold text-amber-600">₦ {{ formatMoney(goldData.sell_price) }}</p>
+            <p class="font-bold text-amber-600">Ã¢â€šÂ¦ {{ formatMoney(goldData.sell_price) }}</p>
           </div>
         </div>
       </div>
@@ -101,13 +101,13 @@
         <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
           <div>
             <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Profit/Loss</p>
-            <p :class="['text-lg font-black', goldData.performance.total_profit_loss >= 0 ? 'text-emerald-600' : 'text-rose-600']">
-              ₦ {{ formatMoney(goldData.performance.total_profit_loss) }}
+            <p :class="['text-lg font-black', goldData.performance.total_profit_loss >= 0 ? 'text-blue-600' : 'text-rose-600']">
+              Ã¢â€šÂ¦ {{ formatMoney(goldData.performance.total_profit_loss) }}
             </p>
           </div>
           <div class="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between">
             <span class="text-[10px] text-slate-400 font-bold">ROI</span>
-            <span :class="['text-[10px] font-black px-1.5 py-0.5 rounded-md', goldData.performance.roi_percent >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600']">
+            <span :class="['text-[10px] font-black px-1.5 py-0.5 rounded-md', goldData.performance.roi_percent >= 0 ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600']">
               {{ goldData.performance.roi_percent > 0 ? '+' : '' }}{{ goldData.performance.roi_percent }}%
             </span>
           </div>
@@ -122,7 +122,7 @@
           </div>
           <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div 
-              :class="[goldData.zakat.is_eligible ? 'bg-emerald-500' : 'bg-amber-400', 'h-full rounded-full transition-all duration-500']"
+              :class="[goldData.zakat.is_eligible ? 'bg-blue-500' : 'bg-amber-400', 'h-full rounded-full transition-all duration-500']"
               :style="{ width: goldData.zakat.progress_percent + '%' }"
             ></div>
           </div>
@@ -138,7 +138,7 @@
       <!-- Zakat Report Modal -->
       <div v-if="showZakatReport" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-          <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-emerald-50/50">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-blue-50/50">
             <h3 class="text-lg font-black text-slate-800">Zakat Al-Maal Report</h3>
             <button @click="showZakatReport = false" class="p-2 hover:bg-white rounded-full transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,8 +149,8 @@
           
           <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
             <!-- Eligibility Status -->
-            <div :class="['p-4 rounded-2xl border flex items-start gap-3', goldData.zakat.is_eligible ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100']">
-              <div :class="['mt-1 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0', goldData.zakat.is_eligible ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400']">
+            <div :class="['p-4 rounded-2xl border flex items-start gap-3', goldData.zakat.is_eligible ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-100']">
+              <div :class="['mt-1 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0', goldData.zakat.is_eligible ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-400']">
                 <svg v-if="goldData.zakat.is_eligible" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
@@ -176,19 +176,19 @@
               <div class="bg-slate-50 rounded-2xl p-4 space-y-3">
                 <div class="flex justify-between text-sm">
                   <span class="text-slate-500">Savings & Shares</span>
-                  <span class="font-bold text-slate-800">₦{{ formatMoney(goldData.zakat.report.savings + goldData.zakat.report.shares) }}</span>
+                  <span class="font-bold text-slate-800">Ã¢â€šÂ¦{{ formatMoney(goldData.zakat.report.savings + goldData.zakat.report.shares) }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-slate-500">Gold Value</span>
-                  <span class="font-bold text-slate-800">₦{{ formatMoney(goldData.zakat.report.gold_value) }}</span>
+                  <span class="font-bold text-slate-800">Ã¢â€šÂ¦{{ formatMoney(goldData.zakat.report.gold_value) }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-slate-500">Wallet Balance</span>
-                  <span class="font-bold text-slate-800">₦{{ formatMoney(goldData.zakat.report.wallet_balance) }}</span>
+                  <span class="font-bold text-slate-800">Ã¢â€šÂ¦{{ formatMoney(goldData.zakat.report.wallet_balance) }}</span>
                 </div>
                 <div class="pt-2 border-t border-slate-200 flex justify-between">
                   <span class="font-bold text-slate-600">Total Zakatable Assets</span>
-                  <span class="font-black text-emerald-600">₦{{ formatMoney(goldData.zakat.report.base) }}</span>
+                  <span class="font-black text-blue-600">Ã¢â€šÂ¦{{ formatMoney(goldData.zakat.report.base) }}</span>
                 </div>
               </div>
             </div>
@@ -197,19 +197,19 @@
             <div class="flex items-center gap-4 bg-slate-50 rounded-2xl p-4">
               <div class="flex-1 text-center border-r border-slate-200">
                 <p class="text-[8px] font-bold text-slate-400 uppercase mb-1">Current Assets</p>
-                <p class="text-sm font-black text-slate-800">₦{{ formatMoney(goldData.zakat.report.base) }}</p>
+                <p class="text-sm font-black text-slate-800">Ã¢â€šÂ¦{{ formatMoney(goldData.zakat.report.base) }}</p>
               </div>
               <div class="flex-1 text-center">
                 <p class="text-[8px] font-bold text-slate-400 uppercase mb-1">Current Nisab (85g)</p>
-                <p class="text-sm font-black text-amber-600">₦{{ formatMoney(goldData.zakat.report.nisab) }}</p>
+                <p class="text-sm font-black text-amber-600">Ã¢â€šÂ¦{{ formatMoney(goldData.zakat.report.nisab) }}</p>
               </div>
             </div>
 
             <!-- Zakat Due -->
-            <div class="bg-emerald-600 rounded-2xl p-6 text-white text-center shadow-lg shadow-emerald-100">
-              <p class="text-xs font-bold text-emerald-100 uppercase mb-2">Estimated Zakat (2.5%)</p>
-              <h2 class="text-3xl font-black mb-1">₦ {{ formatMoney(goldData.zakat.report.zakat_due) }}</h2>
-              <p v-if="goldData.zakat.report.last_paid_at" class="text-[10px] text-emerald-200">
+            <div class="bg-blue-600 rounded-2xl p-6 text-white text-center shadow-lg shadow-blue-100">
+              <p class="text-xs font-bold text-blue-100 uppercase mb-2">Estimated Zakat (2.5%)</p>
+              <h2 class="text-3xl font-black mb-1">Ã¢â€šÂ¦ {{ formatMoney(goldData.zakat.report.zakat_due) }}</h2>
+              <p v-if="goldData.zakat.report.last_paid_at" class="text-[10px] text-blue-200">
                 Last paid: {{ formatDateShort(goldData.zakat.report.last_paid_at) }}
               </p>
             </div>
@@ -218,7 +218,7 @@
             <div v-if="goldData.zakat.report.is_ramadan" class="bg-amber-50 rounded-2xl p-4 border border-amber-100 flex items-center justify-between">
               <div>
                 <p class="text-[10px] font-bold text-amber-600 uppercase">Zakat Al-Fitr</p>
-                <p class="text-sm font-black text-slate-800">₦ {{ formatMoney(goldData.zakat.report.fitr_amount) }}</p>
+                <p class="text-sm font-black text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(goldData.zakat.report.fitr_amount) }}</p>
               </div>
               <button @click="handlePayFitr" :disabled="loading" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all">
                 Pay Fitr
@@ -231,7 +231,7 @@
               <div class="grid grid-cols-2 gap-2">
                 <button 
                   @click="zakatForm.gateway = 'wallet'"
-                  :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === 'wallet' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-600']"
+                  :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === 'wallet' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-600']"
                 >
                   WALLET
                 </button>
@@ -239,7 +239,7 @@
                   v-for="gw in enabledGateways" 
                   :key="gw"
                   @click="zakatForm.gateway = gw"
-                  :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === gw ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-600']"
+                  :class="['py-2 rounded-xl text-[10px] font-bold border transition-all', zakatForm.gateway === gw ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-600']"
                 >
                   {{ gw.toUpperCase() }}
                 </button>
@@ -249,7 +249,7 @@
             <!-- Transaction PIN -->
             <div v-if="zakatForm.gateway === 'wallet'">
               <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Transaction PIN</label>
-              <input v-model="zakatForm.pin" type="password" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-emerald-500" />
+              <input v-model="zakatForm.pin" type="password" maxlength="4" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
 
@@ -257,14 +257,14 @@
             <button 
               @click="handlePayZakat" 
               :disabled="loading || !goldData.zakat.is_eligible"
-              class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:grayscale transition-all active:scale-[0.98]"
+              class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 disabled:opacity-50 disabled:grayscale transition-all active:scale-[0.98]"
             >
               {{ loading ? 'Processing...' : 'Pay Zakat Now' }}
             </button>
             <a 
               :href="getZakatReportUrl()" 
               target="_blank"
-              class="w-full bg-white text-emerald-600 border border-emerald-200 py-3 rounded-2xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 no-underline"
+              class="w-full bg-white text-blue-600 border border-blue-200 py-3 rounded-2xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 no-underline"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -280,7 +280,7 @@
 
       <!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-4">
-        <button @click="activeTab = 'buy'" :class="['py-3 rounded-2xl font-bold transition-all', activeTab === 'buy' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200']">
+        <button @click="activeTab = 'buy'" :class="['py-3 rounded-2xl font-bold transition-all', activeTab === 'buy' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200']">
           Buy Gold
         </button>
         <button @click="activeTab = 'sell'" :class="['py-3 rounded-2xl font-bold transition-all', activeTab === 'sell' ? 'bg-amber-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200']">
@@ -292,25 +292,25 @@
        <!-- Buy Form -->
       <div v-if="activeTab === 'buy'" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
         <h3 class="font-bold text-slate-800">Buy Digital Gold</h3>
-        <p class="text-xs text-slate-500">Convert your wallet balance into gold. Minimum ₦1,000.</p>
+        <p class="text-xs text-slate-500">Convert your wallet balance into gold. Minimum Ã¢â€šÂ¦1,000.</p>
         
         <div>
-          <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Amount in Naira (₦)</label>
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Amount in Naira (Ã¢â€šÂ¦)</label>
           <div class="relative">
-            <input v-model="form.amount" type="number" placeholder="e.g. 5000" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-lg font-bold focus:ring-2 focus:ring-emerald-500" />
+            <input v-model="form.amount" type="number" placeholder="e.g. 5000" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-lg font-bold focus:ring-2 focus:ring-blue-500" />
             <p v-if="form.amount" class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
-              ≈ {{ ((form.amount * 0.995) / goldData.buy_price).toFixed(6) }} g
+              Ã¢â€°Ë† {{ ((form.amount * 0.995) / goldData.buy_price).toFixed(6) }} g
             </p>
           </div>
-          <p class="text-[10px] text-slate-400 mt-2 px-1">Includes 0.5% fee: ₦{{ (form.amount * 0.005).toFixed(2) }}</p>
+          <p class="text-[10px] text-slate-400 mt-2 px-1">Includes 0.5% fee: Ã¢â€šÂ¦{{ (form.amount * 0.005).toFixed(2) }}</p>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Transaction PIN</label>
-          <input v-model="form.pin" type="password" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-emerald-500" />
+          <input v-model="form.pin" type="password" maxlength="4" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-blue-500" />
         </div>
 
-        <button @click="handleBuy" :disabled="loading || !form.amount || !form.pin" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:shadow-none transition-all active:scale-[0.98]">
+        <button @click="handleBuy" :disabled="loading || !form.amount || !form.pin" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 disabled:opacity-50 disabled:shadow-none transition-all active:scale-[0.98]">
           {{ loading ? 'Processing...' : `Confirm Purchase` }}
         </button>
       </div>
@@ -328,15 +328,15 @@
           <div class="relative">
             <input v-model="form.grams" type="number" step="0.000001" placeholder="e.g. 0.05" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-lg font-bold focus:ring-2 focus:ring-amber-500" />
             <p v-if="form.grams" class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
-              ≈ ₦ {{ formatMoney(form.grams * goldData.sell_price * 0.995) }}
+              Ã¢â€°Ë† Ã¢â€šÂ¦ {{ formatMoney(form.grams * goldData.sell_price * 0.995) }}
             </p>
           </div>
-          <p class="text-[10px] text-slate-400 mt-2 px-1">Est. Credit: ₦{{ formatMoney(form.grams * goldData.sell_price * 0.995) }} (after 0.5% fee)</p>
+          <p class="text-[10px] text-slate-400 mt-2 px-1">Est. Credit: Ã¢â€šÂ¦{{ formatMoney(form.grams * goldData.sell_price * 0.995) }} (after 0.5% fee)</p>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Transaction PIN</label>
-          <input v-model="form.pin" type="password" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-amber-500" />
+          <input v-model="form.pin" type="password" maxlength="4" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-center text-2xl tracking-[1em] font-bold focus:ring-2 focus:ring-amber-500" />
         </div>
 
         <button @click="handleSell" :disabled="loading || !form.grams || !form.pin" class="w-full bg-amber-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-amber-100 disabled:opacity-50 disabled:shadow-none transition-all active:scale-[0.98]">
@@ -360,7 +360,7 @@
           
           <div v-for="tx in history" :key="tx.id" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', tx.amount > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600']">
+              <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', tx.amount > 0 ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600']">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path v-if="tx.amount > 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -372,10 +372,10 @@
               </div>
             </div>
             <div class="text-right">
-              <p :class="['font-bold text-sm', tx.amount > 0 ? 'text-emerald-600' : 'text-amber-600']">
+              <p :class="['font-bold text-sm', tx.amount > 0 ? 'text-blue-600' : 'text-amber-600']">
                 {{ tx.amount > 0 ? '+' : '' }}{{ Number(tx.units || 0).toFixed(6) }} g
               </p>
-              <p class="text-[10px] text-slate-400">₦ {{ formatMoney(Math.abs(tx.amount)) }}</p>
+              <p class="text-[10px] text-slate-400">Ã¢â€šÂ¦ {{ formatMoney(Math.abs(tx.amount)) }}</p>
             </div>
           </div>
         </div>
@@ -385,7 +385,7 @@
           <h3 class="font-bold text-slate-800 px-1">Zakat Purification History</h3>
           <div v-for="zh in zakatHistory" :key="zh.id" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -396,7 +396,7 @@
               </div>
             </div>
             <div class="text-right">
-              <p class="font-bold text-sm text-emerald-600">₦ {{ formatMoney(zh.amount) }}</p>
+              <p class="font-bold text-sm text-blue-600">Ã¢â€šÂ¦ {{ formatMoney(zh.amount) }}</p>
               <p class="text-[10px] text-slate-400 uppercase font-medium">Purified</p>
             </div>
           </div>
@@ -404,18 +404,18 @@
       </div>
 
       <!-- Sunnah Info -->
-      <div class="bg-emerald-50 rounded-3xl p-6 border border-emerald-100">
-        <h3 class="font-bold text-emerald-800 mb-2 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="bg-blue-50 rounded-3xl p-6 border border-blue-100">
+        <h3 class="font-bold text-blue-800 mb-2 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Why Gold?
         </h3>
-        <p class="text-xs text-emerald-700 leading-relaxed italic">
-          "The Messenger of Allah (ﷺ) said: A time will come over the people when nothing will be of use except a Dinar and a Dirham (gold and silver)." 
-          <span class="block mt-1 font-bold">— Musnad Ahmad</span>
+        <p class="text-xs text-blue-700 leading-relaxed italic">
+          "The Messenger of Allah (Ã¯Â·Âº) said: A time will come over the people when nothing will be of use except a Dinar and a Dirham (gold and silver)." 
+          <span class="block mt-1 font-bold">Ã¢â‚¬â€ Musnad Ahmad</span>
         </p>
-        <p class="text-[10px] text-emerald-600/80 mt-3 leading-relaxed">
+        <p class="text-[10px] text-blue-600/80 mt-3 leading-relaxed">
           Gold is a stable store of value and protects your wealth against inflation. In Islamic tradition, it is considered the most reliable form of currency.
         </p>
       </div>
@@ -524,7 +524,7 @@ const chartOptions = computed(() => ({
     theme: 'light',
     x: { show: true },
     y: {
-      formatter: (val) => `₦${val.toLocaleString()}`
+      formatter: (val) => `Ã¢â€šÂ¦${val.toLocaleString()}`
     }
   }
 }))
@@ -553,7 +553,7 @@ const fetchData = async () => {
 }
 
 const handleBuy = async () => {
-  if (!confirm(`Confirm buying gold for ₦${form.value.amount}?`)) return
+  if (!confirm(`Confirm buying gold for Ã¢â€šÂ¦${form.value.amount}?`)) return
   loading.value = true
   try {
     const res = await axios.post('/api/gold/buy', {
@@ -599,7 +599,7 @@ const handlePayZakat = async () => {
     alert('Please enter your transaction PIN')
     return
   }
-  if (!confirm(`Pay ₦${formatMoney(goldData.value.zakat.report.zakat_due)} Zakat?`)) return
+  if (!confirm(`Pay Ã¢â€šÂ¦${formatMoney(goldData.value.zakat.report.zakat_due)} Zakat?`)) return
   loading.value = true
   const gateway = zakatForm.value.gateway
   const callback_url = `${window.location.origin}/payment-callback?gateway=${gateway}`
@@ -631,7 +631,7 @@ const handlePayFitr = async () => {
     alert('Please enter your transaction PIN')
     return
   }
-  if (!confirm(`Pay ₦${formatMoney(goldData.value.zakat.report.fitr_amount)} Zakat Al-Fitr?`)) return
+  if (!confirm(`Pay Ã¢â€šÂ¦${formatMoney(goldData.value.zakat.report.fitr_amount)} Zakat Al-Fitr?`)) return
   loading.value = true
   const gateway = zakatForm.value.gateway
   const callback_url = `${window.location.origin}/payment-callback?gateway=${gateway}`
@@ -681,3 +681,5 @@ const formatDateShort = (dateStr) => {
 
 onMounted(fetchData)
 </script>
+
+

@@ -285,7 +285,7 @@ class SadaqahController extends Controller
         try {
             $user->notify(new \App\Notifications\PaymentNotification(
                 title: 'Contribution Successful',
-                message: "Your contribution of ₦" . number_format($amount, 2) . " to " . $project->name . " was successful. Jazakallah Khair.",
+                message: "Your contribution of â‚¦" . number_format($amount, 2) . " to " . $project->name . " was successful. Jazakallah Khair.",
                 amount: $amount,
                 reference: $reference,
                 source: 'sadaqah_contribution'

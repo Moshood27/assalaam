@@ -7,26 +7,26 @@
 
       <div v-else>
         <!-- Project Stats Card -->
-        <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-6 text-white shadow-xl">
+        <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-6 text-white shadow-xl">
           <div class="flex justify-between items-start">
             <div>
-              <p class="text-emerald-100 text-[10px] font-black uppercase tracking-widest">Management Fee</p>
+              <p class="text-blue-100 text-[10px] font-black uppercase tracking-widest">Management Fee</p>
               <p class="text-3xl font-extrabold mt-1">{{ Number(project?.management_fee_percent || 0).toLocaleString() }}%</p>
             </div>
             <div v-if="project?.is_unit_based" class="text-right">
-              <p class="text-emerald-100 text-[10px] font-black uppercase tracking-widest">Unit Price</p>
-              <p class="text-2xl font-extrabold mt-1 text-white">₦ {{ Number(project.unit_price).toLocaleString() }}</p>
+              <p class="text-blue-100 text-[10px] font-black uppercase tracking-widest">Unit Price</p>
+              <p class="text-2xl font-extrabold mt-1 text-white">Ã¢â€šÂ¦ {{ Number(project.unit_price).toLocaleString() }}</p>
             </div>
           </div>
           <div class="mt-4 grid grid-cols-2 gap-2">
             <div>
-              <p v-if="project?.target_amount" class="text-emerald-100 text-[11px]">Target: ₦ {{ Number(project.target_amount).toLocaleString() }}</p>
-              <p class="mt-1 text-emerald-50 text-[11px]">
+              <p v-if="project?.target_amount" class="text-blue-100 text-[11px]">Target: Ã¢â€šÂ¦ {{ Number(project.target_amount).toLocaleString() }}</p>
+              <p class="mt-1 text-blue-50 text-[11px]">
                 <span v-if="project?.started_at">Started: {{ formatDate(project.started_at) }}</span>
               </p>
             </div>
             <div v-if="project?.is_unit_based" class="text-right">
-              <p class="text-emerald-100 text-[11px]">Available: {{ project.available_units }} / {{ project.total_units }} units</p>
+              <p class="text-blue-100 text-[11px]">Available: {{ project.available_units }} / {{ project.total_units }} units</p>
             </div>
           </div>
         </div>
@@ -42,7 +42,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div class="card card-elevated p-4">
             <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">My Total Invested</p>
-            <p class="text-2xl font-extrabold text-slate-800 mt-1">₦ {{ Number(totalInvested).toLocaleString() }}</p>
+            <p class="text-2xl font-extrabold text-slate-800 mt-1">Ã¢â€šÂ¦ {{ Number(totalInvested).toLocaleString() }}</p>
             <p v-if="project?.is_unit_based" class="text-[10px] text-slate-400 font-bold mt-1 uppercase">{{ totalUnits }} Units owned</p>
           </div>
           <div class="card card-elevated p-4">
@@ -55,7 +55,7 @@
         <div class="card card-elevated">
           <div class="p-4 border-b flex items-center justify-between bg-slate-50/50">
             <h3 class="font-bold text-slate-800">Project Feed</h3>
-            <span class="badge bg-emerald-100 text-emerald-700 text-[9px] uppercase tracking-tighter px-2 py-0.5 rounded-full font-bold">Live Updates</span>
+            <span class="badge bg-blue-100 text-blue-700 text-[9px] uppercase tracking-tighter px-2 py-0.5 rounded-full font-bold">Live Updates</span>
           </div>
           <div v-if="!project?.updates?.length" class="p-8 text-center">
             <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -65,10 +65,10 @@
             <p class="text-slate-400 text-[11px] mt-1">Check back later for progress reports.</p>
           </div>
           <div v-else class="p-4 space-y-6">
-            <div v-for="update in project.updates" :key="update.id" class="relative pl-6 border-l-2 border-emerald-100 pb-2 last:pb-0">
-              <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-4 border-emerald-500"></div>
+            <div v-for="update in project.updates" :key="update.id" class="relative pl-6 border-l-2 border-blue-100 pb-2 last:pb-0">
+              <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-4 border-blue-500"></div>
               <div class="flex items-center justify-between mb-1">
-                <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600">{{ update.type }}</span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-blue-600">{{ update.type }}</span>
                 <span class="text-[10px] text-slate-400">{{ formatDateTime(update.created_at) }}</span>
               </div>
               <h4 class="font-bold text-slate-800 text-sm mb-1">{{ update.title }}</h4>
@@ -87,14 +87,14 @@
         <div class="card card-elevated">
           <div class="p-4 border-b flex items-center justify-between">
             <h3 class="font-bold text-slate-800">My Investments</h3>
-            <span class="text-[11px] text-slate-500">Total: ₦ {{ Number(totalInvested).toLocaleString() }}</span>
+            <span class="text-[11px] text-slate-500">Total: Ã¢â€šÂ¦ {{ Number(totalInvested).toLocaleString() }}</span>
           </div>
           <div v-if="investments.length === 0" class="p-6 text-center text-slate-500 text-sm">No investments yet.</div>
           <div v-else class="divide-y">
             <div v-for="inv in investments" :key="inv.id" class="p-4 flex items-center justify-between">
               <div>
-                <p class="font-semibold text-slate-700">₦ {{ Number(inv.amount).toLocaleString() }}</p>
-                <p v-if="project?.is_unit_based" class="text-[11px] text-emerald-600 font-bold">{{ inv.units }} Units</p>
+                <p class="font-semibold text-slate-700">Ã¢â€šÂ¦ {{ Number(inv.amount).toLocaleString() }}</p>
+                <p v-if="project?.is_unit_based" class="text-[11px] text-blue-600 font-bold">{{ inv.units }} Units</p>
                 <p class="text-[11px] text-slate-500">{{ formatDateTime(inv.created_at) }}</p>
               </div>
               <span class="text-[11px] text-slate-400 font-mono">{{ inv.reference }}</span>
@@ -111,20 +111,20 @@
             <div v-for="p in profits" :key="p.id" class="p-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="font-semibold text-slate-800">Net: ₦ {{ Number(p.net_distributable).toLocaleString() }}</p>
-                  <p class="text-[11px] text-slate-500">Gross ₦ {{ Number(p.gross_profit).toLocaleString() }} • Mgmt {{ Number(p.management_fee_percent).toLocaleString() }}% (₦ {{ Number(p.management_fee_amount).toLocaleString() }})</p>
+                  <p class="font-semibold text-slate-800">Net: Ã¢â€šÂ¦ {{ Number(p.net_distributable).toLocaleString() }}</p>
+                  <p class="text-[11px] text-slate-500">Gross Ã¢â€šÂ¦ {{ Number(p.gross_profit).toLocaleString() }} Ã¢â‚¬Â¢ Mgmt {{ Number(p.management_fee_percent).toLocaleString() }}% (Ã¢â€šÂ¦ {{ Number(p.management_fee_amount).toLocaleString() }})</p>
                 </div>
                 <p class="text-[11px] text-slate-500">{{ formatDateTime(p.created_at) }}</p>
               </div>
               <div class="mt-2 text-[12px]">
                 <div class="flex items-center justify-between">
                   <span class="text-slate-600">My expected share</span>
-                  <span class="font-bold text-slate-800">₦ {{ Number(p.my_expected_share || 0).toLocaleString() }}</span>
+                  <span class="font-bold text-slate-800">Ã¢â€šÂ¦ {{ Number(p.my_expected_share || 0).toLocaleString() }}</span>
                 </div>
                 <div class="flex items-center justify-between mt-1">
                   <span class="text-slate-600">My payout</span>
-                  <span v-if="p.my_payout" class="font-bold text-emerald-700">₦ {{ Number(p.my_payout.amount).toLocaleString() }}</span>
-                  <span v-else class="text-slate-400">—</span>
+                  <span v-if="p.my_payout" class="font-bold text-blue-700">Ã¢â€šÂ¦ {{ Number(p.my_payout.amount).toLocaleString() }}</span>
+                  <span v-else class="text-slate-400">Ã¢â‚¬â€</span>
                 </div>
                 <p v-if="p.note" class="mt-2 text-[11px] text-slate-500">Note: {{ p.note }}</p>
               </div>
@@ -160,14 +160,14 @@
         </div>
 
         <div class="p-6 space-y-6 text-slate-800">
-          <div class="bg-emerald-50 rounded-3xl p-4 flex items-center justify-between border border-emerald-100">
+          <div class="bg-blue-50 rounded-3xl p-4 flex items-center justify-between border border-blue-100">
              <div>
-                <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Unit Price</p>
-                <p class="text-2xl font-black text-emerald-900">₦ {{ Number(project.unit_price).toLocaleString() }}</p>
+                <p class="text-[10px] font-black text-blue-700 uppercase tracking-widest">Unit Price</p>
+                <p class="text-2xl font-black text-blue-900">Ã¢â€šÂ¦ {{ Number(project.unit_price).toLocaleString() }}</p>
              </div>
              <div class="text-right">
-                <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Available</p>
-                <p class="text-xl font-bold text-emerald-900">{{ project.available_units }} units</p>
+                <p class="text-[10px] font-black text-blue-700 uppercase tracking-widest">Available</p>
+                <p class="text-xl font-bold text-blue-900">{{ project.available_units }} units</p>
              </div>
           </div>
 
@@ -175,7 +175,7 @@
             <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Number of Units</label>
             <div class="flex items-center gap-4">
                <button @click="unitsToBuy > 1 && unitsToBuy--" class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl font-bold text-slate-600">-</button>
-               <input v-model.number="unitsToBuy" type="number" class="flex-1 h-12 rounded-2xl bg-slate-100 border-none text-center text-xl font-black focus:ring-2 focus:ring-emerald-500" />
+               <input v-model.number="unitsToBuy" type="number" class="flex-1 h-12 rounded-2xl bg-slate-100 border-none text-center text-xl font-black focus:ring-2 focus:ring-blue-500" />
                <button @click="unitsToBuy < project.available_units && unitsToBuy++" class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl font-bold text-slate-600">+</button>
             </div>
           </div>
@@ -186,7 +186,7 @@
                 <div class="grid grid-cols-2 gap-2">
                    <button v-for="gw in enabledGateways" :key="gw"
                            @click="selectedGateway = gw"
-                           :class="selectedGateway === gw ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-600'"
+                           :class="selectedGateway === gw ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'"
                            class="py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">
                       {{ gw }}
                    </button>
@@ -194,7 +194,7 @@
              </div>
              <div class="flex justify-between items-center mb-4">
                 <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Total Investment</span>
-                <span class="text-2xl font-black text-slate-900">₦ {{ Number(unitsToBuy * project.unit_price).toLocaleString() }}</span>
+                <span class="text-2xl font-black text-slate-900">Ã¢â€šÂ¦ {{ Number(unitsToBuy * project.unit_price).toLocaleString() }}</span>
              </div>
              <button @click="initiateUnitPurchase" :disabled="buying || unitsToBuy <= 0 || unitsToBuy > project.available_units" class="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2">
                 <span v-if="buying" class="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
@@ -307,3 +307,5 @@ const formatDateTime = (d) => {
 onMounted(fetchAll)
 watch(() => route.params.id, (v) => { id.value = Number(v); fetchAll() })
 </script>
+
+

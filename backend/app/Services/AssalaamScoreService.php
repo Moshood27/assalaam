@@ -8,7 +8,7 @@ use App\Models\UtilityTransaction;
 use App\Models\User;
 use Carbon\Carbon;
 
-class AttaqwaScoreService
+class AssalaamScoreService
 {
     public const WEIGHT_CONTRIBUTIONS = 40; // %
     public const WEIGHT_REPAYMENT = 40;     // %
@@ -59,7 +59,7 @@ class AttaqwaScoreService
         $result = $this->scoreForUser($user);
         $score = (int) $result['score'];
 
-        $user->attaqwa_score = $score;
+        $user->assalaam_score = $score;
         $user->save();
 
         $this->checkAndAwardBadges($user);

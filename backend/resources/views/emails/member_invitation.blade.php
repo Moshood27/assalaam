@@ -32,7 +32,7 @@
             <div class="brand">{{ config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $name }},</p>
+            <p class="salam">AssalÄmu â€˜alaykum {{ $name }},</p>
             <p>You have been invited to join <strong>{{ config('app.name') }}</strong>.</p>
 
             @if(!empty($customMessage))
@@ -53,7 +53,7 @@
                 <a href="mailto:{{ $supportEmail }}" class="btn">Contact Support</a>
             </p>
 
-            <p>Jazākumullāhu khayran,<br>{{ config('app.name') }}</p>
+            <p>JazÄkumullÄhu khayran,<br>{{ config('app.name') }}</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

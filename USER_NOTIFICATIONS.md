@@ -19,8 +19,8 @@ If you need backend setup and sending details, see PUSH_NOTIFICATIONS.md.
 
 By default, main.js registers the device and sends the token to the backend. To also surface messages to users and route on tap, add listeners for these events in the same Capacitor block:
 
-- pushNotificationReceived — fired when the app is in the foreground
-- pushNotificationActionPerformed — fired when the user taps a notification in the system tray (background/resumed)
+- pushNotificationReceived â€” fired when the app is in the foreground
+- pushNotificationActionPerformed â€” fired when the user taps a notification in the system tray (background/resumed)
 
 Example implementation (illustrative; place inside the existing isCapacitor && isLoggedIn block in frontend/src/main.js after the registration listeners):
 

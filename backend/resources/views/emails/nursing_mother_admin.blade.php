@@ -25,7 +25,7 @@
 <div class="wrapper">
     <div class="container">
         <div class="header">
-            <p class="brand">{{ config('app.name') }} • New Nursing Mother Grace Request</p>
+            <p class="brand">{{ config('app.name') }} â€¢ New Nursing Mother Grace Request</p>
         </div>
         <div class="content">
             <p>A member has applied for nursing mother grace. Please review the medical proof and approve or reject the request.</p>
@@ -53,7 +53,7 @@
             </table>
 
             <hr class="hr" />
-            <p class="muted">Open the admin dashboard → Members → Nursing Mother to review this request.</p>
+            <p class="muted">Open the admin dashboard â†’ Members â†’ Nursing Mother to review this request.</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. Internal notification.</p>

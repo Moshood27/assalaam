@@ -3,8 +3,8 @@
     <AppHeader title="Passbook" :showBack="true">
       <template #right>
         <div class="flex items-center gap-1">
-          <a :href="getDownloadUrl('pdf')" target="_blank" class="p-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">PDF</a>
-          <a :href="getDownloadUrl('csv')" target="_blank" class="p-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">CSV</a>
+          <a :href="getDownloadUrl('pdf')" target="_blank" class="p-2 text-xs font-bold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">PDF</a>
+          <a :href="getDownloadUrl('csv')" target="_blank" class="p-2 text-xs font-bold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">CSV</a>
         </div>
       </template>
     </AppHeader>
@@ -14,10 +14,10 @@
         {{ loadError }}
       </div>
       <!-- Yearly summary -->
-      <div v-if="!isLoading" class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-6 text-white shadow-xl">
+      <div v-if="!isLoading" class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-6 text-white shadow-xl">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-emerald-100 text-[10px] font-bold uppercase tracking-widest">Yearly Cumulative (₦)</p>
+            <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Yearly Cumulative (Ã¢â€šÂ¦)</p>
             <p class="text-3xl font-extrabold tracking-tight mt-1">{{ Number(grandTotal).toLocaleString() }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-3 py-2 text-xs">
@@ -27,9 +27,9 @@
             </select>
           </div>
         </div>
-        <p v-if="dividendAmount !== null" class="mt-2 text-[11px] text-emerald-100">
+        <p v-if="dividendAmount !== null" class="mt-2 text-[11px] text-blue-100">
           Est. Dividend ({{ selectedYear }}):
-          <span class="font-black text-white">₦ {{ Number(dividendAmount).toLocaleString() }}</span>
+          <span class="font-black text-white">Ã¢â€šÂ¦ {{ Number(dividendAmount).toLocaleString() }}</span>
         </p>
       </div>
       <div v-else class="rounded-[2rem] p-6 shadow-xl bg-slate-200/60 animate-pulse h-28"></div>
@@ -43,7 +43,7 @@
                 <th class="p-3 sticky left-0 bg-slate-800 z-10 border-r border-slate-700">Scheme</th>
                 <th class="p-3 text-center min-w-[64px] border-r border-slate-700 bg-slate-900/40">BF</th>
                 <th v-for="(m, i) in months" :key="i" class="p-3 text-center min-w-[64px] border-r border-slate-700">{{ m }}</th>
-                <th class="p-3 text-center bg-emerald-700">Total</th>
+                <th class="p-3 text-center bg-blue-700">Total</th>
               </tr>
             </thead>
             <tbody class="text-[11px]">
@@ -73,17 +73,17 @@
 
       <p class="text-[10px] text-gray-400 mt-4 px-2 italic text-center">Swipe left/right to view all months</p>
 
-      <div v-if="!isLoading && showAgm" class="card p-4 border-emerald-200 bg-emerald-50">
+      <div v-if="!isLoading && showAgm" class="card p-4 border-blue-200 bg-blue-50">
         <div class="flex items-center justify-between mb-2">
-          <p class="text-[10px] text-emerald-700 font-black uppercase tracking-widest">{{ selectedYear }} AGM Fee</p>
-          <span :class="agmPaid ? 'bg-emerald-200 text-emerald-800' : 'bg-yellow-200 text-yellow-800'"
+          <p class="text-[10px] text-blue-700 font-black uppercase tracking-widest">{{ selectedYear }} AGM Fee</p>
+          <span :class="agmPaid ? 'bg-blue-200 text-blue-800' : 'bg-yellow-200 text-yellow-800'"
                 class="px-2 py-1 rounded-full text-[10px] font-black uppercase">
             {{ agmPaid ? 'Paid' : 'Pending' }}
           </span>
         </div>
         <div class="flex items-center justify-between">
           <p class="text-slate-700 text-sm">Mandatory annual meeting fee</p>
-          <p class="text-slate-900 font-black">₦ {{ Number(agmAmount).toLocaleString() }}</p>
+          <p class="text-slate-900 font-black">Ã¢â€šÂ¦ {{ Number(agmAmount).toLocaleString() }}</p>
         </div>
       </div>
       <div v-else-if="!isLoading && !showAgm" class="hidden"></div>
@@ -190,3 +190,5 @@ onUnmounted(() => {
   -webkit-overflow-scrolling: touch;
 }
 </style>
+
+

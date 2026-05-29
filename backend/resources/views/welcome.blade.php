@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('brand.name', 'AT-TAQWA') }} - Ethical Islamic Fintech</title>
+    <title>{{ config('brand.name', 'AS-SALAAM') }} - Ethical Islamic Fintech</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,9 +18,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="{{ url('/') }}" class="flex items-center gap-2 group">
-                    <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg') }}" alt="Logo" class="h-8 w-auto dark:hidden transition-transform group-hover:scale-105">
-                    <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg') }}" alt="Logo" class="h-8 w-auto hidden dark:block transition-transform group-hover:scale-105">
-                    <span class="font-bold text-lg tracking-tight hidden sm:block uppercase">{{ config('brand.name', 'AT-TAQWA') }}</span>
+                    <img src="{{ asset('images/' . config('brand.slug', 'assalaam') . '-logo.svg') }}" alt="Logo" class="h-8 w-auto dark:hidden transition-transform group-hover:scale-105">
+                    <img src="{{ asset('images/' . config('brand.slug', 'assalaam') . '-logo-dark.svg') }}" alt="Logo" class="h-8 w-auto hidden dark:block transition-transform group-hover:scale-105">
+                    <span class="font-bold text-lg tracking-tight hidden sm:block uppercase">{{ config('brand.name', 'AS-SALAAM') }}</span>
                 </a>
 
                 <div class="hidden md:flex items-center gap-8">
@@ -32,7 +32,7 @@
 
                 <div class="flex items-center gap-4">
                     <div class="hidden sm:flex items-center gap-4">
-                        <a href="https://attaqwacooposg.com/app/" class="text-sm font-medium hover:text-primary-600 transition-colors">Member Login</a>
+                        <a href="https://viqsbot.com/app/" class="text-sm font-medium hover:text-primary-600 transition-colors">Member Login</a>
                         <a href="#download" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all">Get the App</a>
                     </div>
                     <button id="mobile-menu-button" class="md:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
@@ -49,7 +49,7 @@
             <a href="{{ url('/about-us') }}" class="block text-base font-medium text-slate-600 dark:text-slate-400">About</a>
             <a href="#download" class="block text-base font-medium text-slate-600 dark:text-slate-400">App</a>
             <hr class="border-slate-100 dark:border-slate-800">
-            <a href="https://attaqwacooposg.com/app" class="block text-base font-medium text-slate-600 dark:text-slate-400">Member Login</a>
+            <a href="https://viqsbot.com/app" class="block text-base font-medium text-slate-600 dark:text-slate-400">Member Login</a>
             <a href="#download" class="block text-base font-bold text-primary-600">Get the App</a>
         </div>
     </nav>
@@ -63,10 +63,10 @@
                     SHARIA COMPLIANT & SECURE
                 </div>
                 <h1 class="text-4xl sm:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]">
-                    Ethical Banking for <br class="hidden sm:block"> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-emerald-500">Your Future</span>
+                    Ethical Banking for <br class="hidden sm:block"> <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-blue-500">Your Future</span>
                 </h1>
                 <p class="text-lg sm:text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                    Join AT-TAQWA Islamic Cooperative. Manage your savings, invest in Halal ventures, and access interest-free loans—all in one secure platform.
+                    Join AS-SALAAM Islamic Cooperative. Manage your savings, invest in Halal ventures, and access interest-free loans—all in one secure platform.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <a href="#download" class="w-full sm:w-auto bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-primary-500/20 flex items-center justify-center gap-2">
@@ -105,10 +105,10 @@
     <section class="py-12 bg-slate-50 dark:bg-[#0d0d0d] border-y border-slate-200 dark:border-slate-800/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="shield-check" class="w-6 h-6 text-emerald-500"></i> Licensed</div>
-                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="award" class="w-6 h-6 text-emerald-500"></i> Ethical</div>
-                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="users" class="w-6 h-6 text-emerald-500"></i> Community</div>
-                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="lock" class="w-6 h-6 text-emerald-500"></i> Secure</div>
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="shield-check" class="w-6 h-6 text-blue-500"></i> Licensed</div>
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="award" class="w-6 h-6 text-blue-500"></i> Ethical</div>
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="users" class="w-6 h-6 text-blue-500"></i> Community</div>
+                <div class="flex items-center gap-2 font-bold text-xl uppercase tracking-widest"><i data-lucide="lock" class="w-6 h-6 text-blue-500"></i> Secure</div>
             </div>
         </div>
     </section>
@@ -137,14 +137,14 @@
 
                 <!-- Halal Investment -->
                 <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
-                    <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 mb-8 group-hover:scale-110 transition-transform duration-500">
+                    <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mb-8 group-hover:scale-110 transition-transform duration-500">
                         <i data-lucide="trending-up" class="w-8 h-8"></i>
                     </div>
                     <h3 class="text-2xl font-bold mb-4">Halal Investment</h3>
                     <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Put your money to work in vetted projects. Share profits based on the Mudarabah principle.</p>
                     <ul class="space-y-4">
-                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Ethical ventures</li>
-                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Transparent sharing</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Ethical ventures</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Transparent sharing</li>
                     </ul>
                 </div>
 
@@ -193,7 +193,7 @@
                         <i data-lucide="qr-code" class="w-8 h-8"></i>
                     </div>
                     <h3 class="text-2xl font-bold mb-4">Pay with QR</h3>
-                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Fast and secure payments to merchants using our "Pay with Attaqwa" QR system.</p>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Fast and secure payments to merchants using our "Pay with assalaam" QR system.</p>
                     <ul class="space-y-4">
                         <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Zero contact</li>
                         <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Trusted network</li>
@@ -208,7 +208,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-20">
                 <h2 class="text-3xl sm:text-4xl font-bold mb-4">Start Your Ethical Journey</h2>
-                <p class="text-slate-600 dark:text-slate-400">Joining AT-TAQWA is simple and transparent. Here's how you can get started today.</p>
+                <p class="text-slate-600 dark:text-slate-400">Joining AS-SALAAM is simple and transparent. Here's how you can get started today.</p>
             </div>
 
             <div class="relative">
@@ -246,24 +246,24 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 sm:p-16 border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center gap-16">
                 <div class="lg:w-1/2">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold mb-6 border border-emerald-200 dark:border-emerald-800">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold mb-6 border border-blue-200 dark:border-blue-800">
                         <i data-lucide="shield-check" class="w-3 h-3"></i>
                         SHARIA GOVERNANCE
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-bold mb-6">Built on Foundation of <span class="text-emerald-600">Trust & Integrity</span></h2>
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-6">Built on Foundation of <span class="text-blue-600">Trust & Integrity</span></h2>
                     <p class="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-                        At AT-TAQWA, we are committed to the highest standards of Islamic finance. Our operations are strictly supervised to ensure zero interest (Riba), avoidance of uncertainty (Gharar), and promotion of social justice.
+                        At AS-SALAAM, we are committed to the highest standards of Islamic finance. Our operations are strictly supervised to ensure zero interest (Riba), avoidance of uncertainty (Gharar), and promotion of social justice.
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
                             <div>
                                 <h4 class="font-bold text-sm">Sharia Audit</h4>
                                 <p class="text-xs text-slate-500">Regular compliance audits by experts.</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
                             <div>
                                 <h4 class="font-bold text-sm">Profit Sharing</h4>
                                 <p class="text-xs text-slate-500">Fair distribution via Mudarabah.</p>
@@ -344,7 +344,7 @@
                     <h2 class="text-3xl sm:text-4xl font-bold mb-8">Frequently Asked Questions</h2>
                     <div class="space-y-4">
                         <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                            <h4 class="text-lg font-bold mb-2">Is AT-TAQWA really interest-free?</h4>
+                            <h4 class="text-lg font-bold mb-2">Is AS-SALAAM really interest-free?</h4>
                             <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Yes. All our financial products are designed based on Sharia principles, which strictly prohibit Riba (interest). We use Mudarabah (profit sharing) and Qard Hasan (benevolent loans).</p>
                         </div>
                         <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
@@ -363,7 +363,7 @@
                     <div class="relative z-10">
                         <h3 class="text-3xl font-bold mb-6">Have more questions?</h3>
                         <p class="text-primary-100 mb-8">Our support team is ready to assist you with any inquiries about our services, membership, or Sharia compliance.</p>
-                        <form action="mailto:attaqwaosogbo@gmail.com" method="POST" enctype="text/plain" class="space-y-4">
+                        <form action="mailto:assalaamosogbo@gmail.com" method="POST" enctype="text/plain" class="space-y-4">
                             <input type="text" name="name" placeholder="Your Name" required class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
                             <input type="email" name="email" placeholder="Email Address" required class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
                             <textarea name="message" placeholder="How can we help?" rows="4" required class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 placeholder-primary-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"></textarea>
@@ -425,9 +425,9 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                 <div class="space-y-6">
                     <a href="{{ url('/') }}" class="flex items-center gap-2 group w-fit">
-                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo.svg') }}" alt="Logo" class="h-6 w-auto dark:hidden transition-transform group-hover:scale-105">
-                        <img src="{{ asset('images/' . config('brand.slug', 'attaqwa') . '-logo-dark.svg') }}" alt="Logo" class="h-6 w-auto hidden dark:block transition-transform group-hover:scale-105">
-                        <span class="font-bold text-lg uppercase tracking-tight">{{ config('brand.name', 'AT-TAQWA') }}</span>
+                        <img src="{{ asset('images/' . config('brand.slug', 'assalaam') . '-logo.svg') }}" alt="Logo" class="h-6 w-auto dark:hidden transition-transform group-hover:scale-105">
+                        <img src="{{ asset('images/' . config('brand.slug', 'assalaam') . '-logo-dark.svg') }}" alt="Logo" class="h-6 w-auto hidden dark:block transition-transform group-hover:scale-105">
+                        <span class="font-bold text-lg uppercase tracking-tight">{{ config('brand.name', 'AS-SALAAM') }}</span>
                     </a>
                     <p class="text-slate-500 text-sm leading-relaxed">
                         Ethical financial services empowered by community and Sharia principles. Join us today.
@@ -462,7 +462,7 @@
                         <li><a href="{{ url('/about-us') }}" class="hover:text-primary-600">About Us</a></li>
                         <li><a href="{{ url('/privacy-policy') }}" class="hover:text-primary-600">Privacy Policy</a></li>
                         <li><a href="{{ url('/terms') }}" class="hover:text-primary-600">Terms of Service</a></li>
-                        <li><a href="mailto:attaqwaosogbo@gmail.com" class="hover:text-primary-600">Contact Support</a></li>
+                        <li><a href="mailto:assalaamosogbo@gmail.com" class="hover:text-primary-600">Contact Support</a></li>
                     </ul>
                 </div>
 
@@ -483,11 +483,11 @@
 
             <div class="pt-12 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6">
                 <p class="text-sm text-slate-400">
-                    &copy; {{ date('Y') }} {{ config('brand.name', 'AT-TAQWA') }}. RC: 9518505
+                    &copy; {{ date('Y') }} {{ config('brand.name', 'AS-SALAAM') }}. RC: 9518505
                 </p>
                 <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-                    <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-emerald-500"></i> Secured</span>
-                    <span class="flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i> Sharia Compliant</span>
+                    <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-blue-500"></i> Secured</span>
+                    <span class="flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3 text-blue-500"></i> Sharia Compliant</span>
                 </div>
             </div>
         </div>

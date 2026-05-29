@@ -4,15 +4,15 @@
 
     <div class="p-4 space-y-6 max-w-md mx-auto">
       <!-- Wallet Balance -->
-      <div class="bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-[2rem] p-6 text-white shadow-xl">
-        <p class="text-emerald-100 text-[10px] font-bold uppercase tracking-widest">Wallet Balance</p>
-        <p class="text-3xl font-extrabold tracking-tight mt-1">₦ {{ Number(walletBalance).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
+      <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-6 text-white shadow-xl">
+        <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Wallet Balance</p>
+        <p class="text-3xl font-extrabold tracking-tight mt-1">Ã¢â€šÂ¦ {{ Number(walletBalance).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
       </div>
 
       <!-- Add Payment Item -->
       <div class="card card-elevated p-6">
         <p class="text-[11px] text-rose-500 font-bold mb-4 uppercase">
-          ⚠️ Click the "+" to split across multiple schemes
+          Ã¢Å¡Â Ã¯Â¸Â Click the "+" to split across multiple schemes
         </p>
         <div class="space-y-4">
           <div>
@@ -32,13 +32,13 @@
           </div>
           <div v-if="outstandingLoan" class="p-3 bg-amber-50 border border-amber-200 rounded-xl">
             <p class="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Outstanding Loan</p>
-            <p class="text-sm font-bold text-amber-900">₦ {{ Number(outstandingLoan.remaining_principal).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
+            <p class="text-sm font-bold text-amber-900">Ã¢â€šÂ¦ {{ Number(outstandingLoan.remaining_principal).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
             <p class="text-[9px] text-amber-600 mt-1">Payments will be applied to: {{ outstandingLoan.qard_id_string }}</p>
           </div>
           <div>
             <label class="lbl">Amount</label>
             <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Ã¢â€šÂ¦</span>
               <input v-model.number="inputAmount" type="number" inputmode="decimal" placeholder="0.00" class="inp pl-8 text-xl font-black" />
             </div>
           </div>
@@ -50,7 +50,7 @@
           </button>
         </div>
         <div class="mt-3 flex items-center gap-2">
-          <input id="fine" type="checkbox" v-model="isFine" class="accent-emerald-700">
+          <input id="fine" type="checkbox" v-model="isFine" class="accent-blue-700">
           <label for="fine" class="text-sm text-slate-700">Lateness/Apology Fine (Audit)</label>
         </div>
       </div>
@@ -58,17 +58,17 @@
       <!-- Payment Summary -->
       <h3 class="font-bold text-slate-800 mb-2 px-2">Payment Summary</h3>
       <div v-if="paymentList.length > 0" class="space-y-3">
-        <div v-for="(item, index) in paymentList" :key="index" class="card p-4 flex items-center justify-between border-l-4 border-emerald-700">
+        <div v-for="(item, index) in paymentList" :key="index" class="card p-4 flex items-center justify-between border-l-4 border-blue-700">
           <div>
             <div class="flex items-center flex-wrap gap-2">
               <p class="font-bold text-slate-800 text-sm">{{ item.scheme_name }}</p>
-              <span v-if="item.project_name" class="badge bg-emerald-100 text-emerald-700">Project: {{ item.project_name }}</span>
+              <span v-if="item.project_name" class="badge bg-blue-100 text-blue-700">Project: {{ item.project_name }}</span>
               <span v-if="item.category === 'fine'" class="badge badge-muted bg-rose-100 text-rose-700">Fine</span>
             </div>
             <p class="text-xs text-slate-500">Scheduled Payment</p>
           </div>
           <div class="flex items-center gap-4">
-            <p class="font-bold text-slate-800">₦ {{ Number(item.amount).toLocaleString() }}</p>
+            <p class="font-bold text-slate-800">Ã¢â€šÂ¦ {{ Number(item.amount).toLocaleString() }}</p>
             <button @click="removeFromList(index)" class="btn-muted text-rose-700 border-rose-200 hover:bg-rose-50 px-3 py-1 rounded-lg text-xs" aria-label="Remove from list">Remove</button>
           </div>
         </div>
@@ -81,42 +81,42 @@
       <div class="card card-elevated p-4">
         <div class="flex justify-between items-center mb-2">
           <span class="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Total Amount</span>
-          <span class="text-2xl font-black text-slate-900">₦ {{ Number(totalAmount).toLocaleString() }}</span>
+          <span class="text-2xl font-black text-slate-900">Ã¢â€šÂ¦ {{ Number(totalAmount).toLocaleString() }}</span>
         </div>
 
         <div class="space-y-2 mb-4">
           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Payment Source</p>
           
           <!-- Online Gateway -->
-          <div @click="source = 'gateway'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'gateway' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']">
+          <div @click="source = 'gateway'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'gateway' ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white']">
             <div class="flex items-center gap-3">
-              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'gateway' ? 'border-emerald-600' : 'border-slate-300']">
-                <div v-if="source === 'gateway'" class="w-2 h-2 rounded-full bg-emerald-600"></div>
+              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'gateway' ? 'border-blue-600' : 'border-slate-300']">
+                <div v-if="source === 'gateway'" class="w-2 h-2 rounded-full bg-blue-600"></div>
               </div>
               <span class="text-xs font-bold text-slate-700 uppercase">Online Payment</span>
             </div>
           </div>
 
           <!-- Wallet -->
-          <div @click="source = 'wallet'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'wallet' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']">
+          <div @click="source = 'wallet'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'wallet' ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white']">
             <div class="flex items-center gap-3">
-              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'wallet' ? 'border-emerald-600' : 'border-slate-300']">
-                <div v-if="source === 'wallet'" class="w-2 h-2 rounded-full bg-emerald-600"></div>
+              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'wallet' ? 'border-blue-600' : 'border-slate-300']">
+                <div v-if="source === 'wallet'" class="w-2 h-2 rounded-full bg-blue-600"></div>
               </div>
               <span class="text-xs font-bold text-slate-700 uppercase">Wallet</span>
             </div>
-            <span class="text-[10px] font-bold text-slate-500">₦ {{ Number(walletBalance).toLocaleString() }}</span>
+            <span class="text-[10px] font-bold text-slate-500">Ã¢â€šÂ¦ {{ Number(walletBalance).toLocaleString() }}</span>
           </div>
 
           <!-- Special Savings -->
-          <div v-if="specialSavingsBalance > 0" @click="source = 'special_savings'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'special_savings' ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']">
+          <div v-if="specialSavingsBalance > 0" @click="source = 'special_savings'" :class="['p-3 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all', source === 'special_savings' ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white']">
             <div class="flex items-center gap-3">
-              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'special_savings' ? 'border-emerald-600' : 'border-slate-300']">
-                <div v-if="source === 'special_savings'" class="w-2 h-2 rounded-full bg-emerald-600"></div>
+              <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center', source === 'special_savings' ? 'border-blue-600' : 'border-slate-300']">
+                <div v-if="source === 'special_savings'" class="w-2 h-2 rounded-full bg-blue-600"></div>
               </div>
-              <span class="text-xs font-bold text-emerald-700 uppercase">Special Savings</span>
+              <span class="text-xs font-bold text-blue-700 uppercase">Special Savings</span>
             </div>
-            <span class="text-[10px] font-bold text-emerald-600">₦ {{ Number(specialSavingsBalance).toLocaleString() }}</span>
+            <span class="text-[10px] font-bold text-blue-600">Ã¢â€šÂ¦ {{ Number(specialSavingsBalance).toLocaleString() }}</span>
           </div>
         </div>
 
@@ -128,11 +128,11 @@
               v-for="gw in enabledGateways" :key="gw"
               @click="selectedGateway = gw"
               type="button"
-              :class="['p-2.5 rounded-xl border-2 transition-all text-center relative overflow-hidden', selectedGateway === gw ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 bg-white']"
+              :class="['p-2.5 rounded-xl border-2 transition-all text-center relative overflow-hidden', selectedGateway === gw ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white']"
             >
-              <p class="font-bold text-[10px] uppercase" :class="selectedGateway === gw ? 'text-emerald-700' : 'text-slate-600'">{{ gw }}</p>
+              <p class="font-bold text-[10px] uppercase" :class="selectedGateway === gw ? 'text-blue-700' : 'text-slate-600'">{{ gw }}</p>
               <div v-if="selectedGateway === gw" class="absolute top-0.5 right-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-blue-600">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
                 </svg>
               </div>
@@ -140,7 +140,7 @@
           </div>
         </div>
         <button @click="initiatePayment" :disabled="paymentList.length === 0 || loading" class="btn-primary w-full py-4 text-lg">
-          {{ loading ? 'Processing…' : (source !== 'gateway' ? 'Allocate Fund' : 'Make Payment') }}
+          {{ loading ? 'ProcessingÃ¢â‚¬Â¦' : (source !== 'gateway' ? 'Allocate Fund' : 'Make Payment') }}
         </button>
       </div>
     </div>
@@ -401,3 +401,5 @@ onMounted(async () => {
   await Promise.all([loadSchemes(), loadProjects(), loadWallet()])
 })
 </script>
+
+

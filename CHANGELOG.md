@@ -48,12 +48,12 @@ All notable changes to this project will be documented in this file.
 - Updated composer.json to auto-publish monitoring assets on update.
 
 2026-04-04
-- Merchant QR payments ("Pay with Attaqwa") documented and integrated front and back.
+- Merchant QR payments ("Pay with assalaam") documented and integrated front and back.
   - Backend
     - Added MerchantPayController with endpoints:
-      - GET /api/merchant/pay/qr – generate a merchant QR payload (attaqwa:pay?...)
-      - POST /api/merchant/pay/resolve – resolve scanned QR to merchant details (handles branch disambiguation)
-      - POST /api/merchant/pay – execute payment (delegates to /api/wallet/transfer for PIN, balance checks, ledger entries)
+      - GET /api/merchant/pay/qr â€“ generate a merchant QR payload (assalaam:pay?...)
+      - POST /api/merchant/pay/resolve â€“ resolve scanned QR to merchant details (handles branch disambiguation)
+      - POST /api/merchant/pay â€“ execute payment (delegates to /api/wallet/transfer for PIN, balance checks, ledger entries)
     - Routes wired under authenticated group in backend/routes/api.php.
     - Docs: MERCHANT_API.md
   - Frontend (Vue + Capacitor)

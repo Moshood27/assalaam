@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">ATTAQWA</string>
-    <string name="title_activity_main">ATTAQWA</string>
-    <string name="package_name">com.attaqwa.com</string>
-    <string name="custom_url_scheme">com.attaqwa.com</string>
+    <string name="app_name">AS-SALAAM</string>
+    <string name="title_activity_main">AS-SALAAM</string>
+    <string name="package_name">com.assalaam.com</string>
+    <string name="custom_url_scheme">com.assalaam.com</string>
 </resources>

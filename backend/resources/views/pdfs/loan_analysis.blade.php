@@ -46,19 +46,19 @@
         <div class="summary-grid">
             <div class="summary-item">
                 <div class="summary-label">Total Borrowed</div>
-                <div class="summary-value">₦ {{ number_format($totals['loan_granted'], 2) }}</div>
+                <div class="summary-value">â‚¦ {{ number_format($totals['loan_granted'], 2) }}</div>
             </div>
             <div class="summary-item">
                 <div class="summary-label">Total Repaid</div>
-                <div class="summary-value">₦ {{ number_format($totals['amount_repaid'], 2) }}</div>
+                <div class="summary-value">â‚¦ {{ number_format($totals['amount_repaid'], 2) }}</div>
             </div>
             <div class="summary-item">
                 <div class="summary-label">Expected to Date</div>
-                <div class="summary-value">₦ {{ number_format($totals['expected_amount_to_pay'], 2) }}</div>
+                <div class="summary-value">â‚¦ {{ number_format($totals['expected_amount_to_pay'], 2) }}</div>
             </div>
             <div class="summary-item">
                 <div class="summary-label">Outstanding Balance</div>
-                <div class="summary-value" style="color: #e11d48;">₦ {{ number_format($totals['loan_balance'], 2) }}</div>
+                <div class="summary-value" style="color: #e11d48;">â‚¦ {{ number_format($totals['loan_balance'], 2) }}</div>
             </div>
         </div>
     </div>

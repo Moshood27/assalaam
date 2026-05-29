@@ -40,7 +40,7 @@
         <tbody>
             <tr>
                 <td>Total Savings ({{ $year }})</td>
-                <td class="right">₦ {{ number_format((float) $total_savings, 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) $total_savings, 2) }}</td>
             </tr>
             <tr>
                 <td>Dividend Rate</td>
@@ -48,7 +48,7 @@
             </tr>
             <tr>
                 <td>Estimated Dividend</td>
-                <td class="right">₦ {{ number_format((float) $dividend, 2) }}</td>
+                <td class="right">â‚¦ {{ number_format((float) $dividend, 2) }}</td>
             </tr>
         </tbody>
     </table>

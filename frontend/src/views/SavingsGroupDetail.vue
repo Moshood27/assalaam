@@ -11,7 +11,7 @@
       <!-- Group Header Card -->
       <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 relative overflow-hidden text-center">
         <div class="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-4">
-          {{ group.icon || '🤝' }}
+          {{ group.icon || 'Ã°Å¸Â¤Â' }}
         </div>
         <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">{{ group.name }}</h2>
         <p class="text-slate-500 text-xs mt-1 font-medium">{{ group.purpose || 'Community savings & investment group' }}</p>
@@ -19,7 +19,7 @@
         <div class="mt-6 flex items-center justify-center gap-4">
           <div class="text-center">
             <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Monthly</p>
-            <p class="text-lg font-bold text-slate-800">₦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
+            <p class="text-lg font-bold text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
           </div>
           <div class="w-px h-8 bg-slate-100"></div>
           <div class="text-center">
@@ -44,13 +44,13 @@
 
       <!-- Stats Grid -->
       <div class="grid grid-cols-2 gap-4">
-        <div class="bg-emerald-600 rounded-[2rem] p-5 text-white shadow-lg shadow-emerald-100">
+        <div class="bg-blue-600 rounded-[2rem] p-5 text-white shadow-lg shadow-blue-100">
           <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Total Group Value</p>
-          <p class="text-lg font-bold">₦ {{ formatMoney(stats.total_contributions) }}</p>
+          <p class="text-lg font-bold">Ã¢â€šÂ¦ {{ formatMoney(stats.total_contributions) }}</p>
         </div>
         <div class="bg-slate-900 rounded-[2rem] p-5 text-white shadow-lg shadow-slate-200">
           <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">My Contribution</p>
-          <p class="text-lg font-bold">₦ {{ formatMoney(stats.my_contributions) }}</p>
+          <p class="text-lg font-bold">Ã¢â€šÂ¦ {{ formatMoney(stats.my_contributions) }}</p>
         </div>
       </div>
 
@@ -104,7 +104,7 @@
           v-else 
           @click="joinGroup"
           :disabled="joining"
-          class="w-full bg-emerald-600 text-white p-5 rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-100 active:scale-95 transition-all"
+          class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-100 active:scale-95 transition-all"
         >
           {{ joining ? 'Joining...' : 'Join this Group' }}
         </button>
@@ -139,7 +139,7 @@
         <div v-else class="space-y-4">
           <div v-for="c in recentContributions" :key="c.id" class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+              <div class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               </div>
               <div>
@@ -147,7 +147,7 @@
                 <p class="text-[10px] text-slate-400">{{ formatDate(c.created_at) }}</p>
               </div>
             </div>
-            <p class="text-xs font-black text-emerald-600">+ ₦ {{ formatMoney(c.amount) }}</p>
+            <p class="text-xs font-black text-blue-600">+ Ã¢â€šÂ¦ {{ formatMoney(c.amount) }}</p>
           </div>
         </div>
       </div>
@@ -165,7 +165,7 @@
 
         <div class="bg-indigo-50 p-6 rounded-3xl mb-6 text-center">
           <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Amount Due</p>
-          <p class="text-3xl font-black text-indigo-700">₦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
+          <p class="text-3xl font-black text-indigo-700">Ã¢â€šÂ¦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
         </div>
 
         <p class="text-[11px] text-slate-500 mb-6 text-center leading-relaxed">
@@ -179,10 +179,10 @@
             class="w-full flex items-center justify-between bg-slate-900 text-white p-5 rounded-3xl active:scale-95 transition-all disabled:opacity-50"
           >
             <div class="flex items-center gap-3">
-              <div class="text-xl">💳</div>
+              <div class="text-xl">Ã°Å¸â€™Â³</div>
               <div class="text-left">
                 <p class="text-xs font-bold uppercase tracking-widest">Pay via Wallet</p>
-                <p class="text-[10px] opacity-60">Balance: ₦ {{ formatMoney(userBalance) }}</p>
+                <p class="text-[10px] opacity-60">Balance: Ã¢â€šÂ¦ {{ formatMoney(userBalance) }}</p>
               </div>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-40"><path d="m9 18 6-6-6-6"/></svg>
@@ -195,7 +195,7 @@
             class="w-full flex items-center justify-between bg-white border-2 border-slate-100 p-5 rounded-3xl active:scale-95 transition-all disabled:opacity-50"
           >
             <div class="flex items-center gap-3">
-              <div class="text-xl">🏦</div>
+              <div class="text-xl">Ã°Å¸ÂÂ¦</div>
               <div class="text-left">
                 <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Pay via {{ gw }}</p>
                 <p class="text-[10px] text-slate-400">Secure online payment</p>
@@ -439,3 +439,5 @@ const formatDate = (d) => {
 
 onMounted(fetchData)
 </script>
+
+

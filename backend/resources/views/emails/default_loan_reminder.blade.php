@@ -38,8 +38,8 @@
             <div class="brand">{{ config('app.name') }}</div>
         </div>
         <div class="content">
-            <p class="salam">Assalāmu ‘alaykum {{ $user->full_name }},</p>
-            <p>We pray this message finds you in good health and īmān. As a gentle reminder, you have outstanding Qard Hasan repayment(s) with {{ config('app.name') }}. Kindly review the summary below and, if able, make payment at your earliest convenience. May Allāh put barakah in your wealth and make repayment easy for you. Āmīn.</p>
+            <p class="salam">AssalÄmu â€˜alaykum {{ $user->full_name }},</p>
+            <p>We pray this message finds you in good health and Ä«mÄn. As a gentle reminder, you have outstanding Qard Hasan repayment(s) with {{ config('app.name') }}. Kindly review the summary below and, if able, make payment at your earliest convenience. May AllÄh put barakah in your wealth and make repayment easy for you. Ä€mÄ«n.</p>
 
             <div class="divider"></div>
 
@@ -49,9 +49,9 @@
                     <tr>
                         <th style="width:22%;">Loan ID</th>
                         <th style="width:20%;">Status</th>
-                        <th style="width:20%;">Principal (₦)</th>
-                        <th style="width:18%;">Paid (₦)</th>
-                        <th style="width:20%;">Outstanding (₦)</th>
+                        <th style="width:20%;">Principal (â‚¦)</th>
+                        <th style="width:18%;">Paid (â‚¦)</th>
+                        <th style="width:20%;">Outstanding (â‚¦)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,7 +66,7 @@
                 @endforeach
                     <tr class="total">
                         <td colspan="4">Total Outstanding</td>
-                        <td>₦{{ number_format($totalOutstanding, 2) }}</td>
+                        <td>â‚¦{{ number_format($totalOutstanding, 2) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -81,7 +81,7 @@
                 <a class="btn" href="mailto:{{ $supportEmail }}">Contact Support</a>
             </p>
 
-            <p>Jazākumullāhu khayran,<br>{{ config('app.name') }}</p>
+            <p>JazÄkumullÄhu khayran,<br>{{ config('app.name') }}</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

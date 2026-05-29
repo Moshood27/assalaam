@@ -331,7 +331,7 @@ class TakafulService
                             // Best-effort SMS
                             try {
                                 $sms = app(SmsService::class);
-                                $msg = 'Notice: Loan '.$locked->qard_id_string.' settled from Takaful ('.$reason.'). Amount: ₦'.number_format($stillRemaining, 2);
+                                $msg = 'Notice: Loan '.$locked->qard_id_string.' settled from Takaful ('.$reason.'). Amount: â‚¦'.number_format($stillRemaining, 2);
                                 $sms->send($g->phone ?? null, $msg);
                             } catch (\Throwable $e) {
                             }

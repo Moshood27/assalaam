@@ -1,6 +1,6 @@
 # Attendance & Apology Fine System
 
-This document explains how the attendance and apology (lateness) fine system works in Attaqwa Pay and outlines planned improvements.
+This document explains how the attendance and apology (lateness) fine system works in assalaam Pay and outlines planned improvements.
 
 ## 1. How Fines are Charged
 
@@ -9,7 +9,7 @@ The system automatically identifies and charges two types of fines related to me
 ### A. Apology (Lateness) Fine
 - **Trigger**: When a member marks attendance after the meeting's scheduled start time plus any **Grace Period** set by the admin.
 - **Grace Period**: Admins can set a grace period (e.g., 15 minutes) for each meeting. If the meeting starts at 10:00 AM and the grace period is 15 minutes, the lateness fine is only triggered after 10:15 AM.
-- **Amount**: Determined by the `apology_fine_amount` set on the specific `Meeting` record. If not set, it defaults to the system-wide `COOP_APOLOGY_FINE` (usually ₦100).
+- **Amount**: Determined by the `apology_fine_amount` set on the specific `Meeting` record. If not set, it defaults to the system-wide `COOP_APOLOGY_FINE` (usually â‚¦100).
 - **Process**:
     - If the member has sufficient wallet balance, the fine is deducted immediately.
     - If the balance is insufficient, the amount is added to the member's `outstanding_fines` balance.
@@ -17,7 +17,7 @@ The system automatically identifies and charges two types of fines related to me
 
 ### B. Absence Fine
 - **Trigger**: When the "Audit Attendance" script runs for a completed meeting.
-- **Amount**: Determined by the `fine_amount` set on the `Meeting` record. If not set, it defaults to the system-wide `COOP_ATTENDANCE_FINE` (usually ₦500).
+- **Amount**: Determined by the `fine_amount` set on the `Meeting` record. If not set, it defaults to the system-wide `COOP_ATTENDANCE_FINE` (usually â‚¦500).
 - **Process**:
     - Members who are not marked as "Present" or "Apology Paid" are charged.
     - Similar to lateness fines, it is either deducted from the balance or added to `outstanding_fines`.
@@ -48,7 +48,7 @@ Members can use the **"Make Payment"** screen in the mobile app:
 ### D. Admin Manual Actions
 Admins can manually manage member fines from the Filament Admin Panel (`UserResource`):
 - **Record Fine Payment**: If a member pays their fine in cash or via external transfer, an admin can record this payment. This creates a successful contribution record and automatically reduces the member's `outstanding_fines`.
-- **Waive All Fines**: In special cases (e.g., system errors or approved waivers), admins can clear all outstanding fines for a member with a single click. This sets the `outstanding_fines` balance to ₦0 and marks associated attendance records as paid/settled.
+- **Waive All Fines**: In special cases (e.g., system errors or approved waivers), admins can clear all outstanding fines for a member with a single click. This sets the `outstanding_fines` balance to â‚¦0 and marks associated attendance records as paid/settled.
 - **Bulk Waivers**: Admins can select multiple members in the "Members" list and use the "Waive Fines" bulk action to clear debts for all selected users.
 - **Fine Management Hub**: A dedicated resource (`Fine Management`) allows admins to view and filter all pending fines across the system. 
     - **Wipe All Fines**: A global action to clear ALL outstanding fines from ALL members in the entire system. This is useful for resetting the system at the start of a new session or after a system-wide adjustment.

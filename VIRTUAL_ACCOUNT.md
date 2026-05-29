@@ -1,6 +1,6 @@
 # Virtual Accounts (Dedicated NUBAN) in the Cooperative App
 
-This document explains how Virtual Accounts (also called Dedicated NUBANs in Nigeria) work end‑to‑end in this project: what they are, how members get one, how wallet top‑ups are credited automatically via webhooks, how funds are allocated to schemes, and how to configure and test the feature.
+This document explains how Virtual Accounts (also called Dedicated NUBANs in Nigeria) work endâ€‘toâ€‘end in this project: what they are, how members get one, how wallet topâ€‘ups are credited automatically via webhooks, how funds are allocated to schemes, and how to configure and test the feature.
 
 The implementation supports **two providers**: **Paystack** (primary) and **Flutterwave** (alternative). Members can generate accounts from either or both providers. The code is structured so that additional providers can be added in the future with minimal changes.
 
@@ -8,12 +8,12 @@ The implementation supports **two providers**: **Paystack** (primary) and **Flut
 ## What is a Virtual Account?
 - A Virtual Account is a bank account number (e.g., Wema/Providus/Titan) dedicated to a specific member.
 - When a member transfers NGN to their Virtual Account, the provider sends a webhook to our backend.
-- The backend verifies the notification and credits the member’s in‑app wallet automatically.
+- The backend verifies the notification and credits the memberâ€™s inâ€‘app wallet automatically.
 
 
-## High‑Level Flow
+## Highâ€‘Level Flow
 1. Member signs in and opens the Wallet screen.
-2. If they don’t yet have a Virtual Account, they can tap “Generate Account.”
+2. If they donâ€™t yet have a Virtual Account, they can tap â€œGenerate Account.â€
 3. Backend creates (or reuses) a Paystack Customer for the user, then requests/assigns a Dedicated Virtual Account (DVA).
 4. The DVA details (bank name, account number, account name) are stored against the user and shown in the app.
 5. Member transfers NGN from any bank to that account.
@@ -43,15 +43,15 @@ The implementation supports **two providers**: **Paystack** (primary) and **Flut
 
 - Controllers
   - Api\VirtualAccountController
-    - GET /api/virtual-account → returns the user’s DVA details.
-    - POST /api/virtual-account/assign → creates a Paystack customer (if missing) and assigns/fetches a DVA. Persists dva_* fields.
+    - GET /api/virtual-account â†’ returns the userâ€™s DVA details.
+    - POST /api/virtual-account/assign â†’ creates a Paystack customer (if missing) and assigns/fetches a DVA. Persists dva_* fields.
   - Api\WalletController
-    - GET /api/wallet → returns wallet balance, virtual_account block, and recent transactions.
-    - POST /api/wallet/topup/initiate → initializes a card payment via Paystack; webhook will credit on success.
-    - POST /api/wallet/allocate → debits wallet and creates scheme contributions instantly.
+    - GET /api/wallet â†’ returns wallet balance, virtual_account block, and recent transactions.
+    - POST /api/wallet/topup/initiate â†’ initializes a card payment via Paystack; webhook will credit on success.
+    - POST /api/wallet/allocate â†’ debits wallet and creates scheme contributions instantly.
   - Api\WebhookController
-    - POST /api/webhooks/paystack → verifies x-paystack-signature, then verifies the transaction with Paystack’s /transaction/verify API.
-    - If there are no pending “Contribution” records tied to the reference, it treats the event as a wallet top‑up (DVA or card), locates the member, credits wallet, and writes a WalletTransaction with source=paystack_dva for bank transfers.
+    - POST /api/webhooks/paystack â†’ verifies x-paystack-signature, then verifies the transaction with Paystackâ€™s /transaction/verify API.
+    - If there are no pending â€œContributionâ€ records tied to the reference, it treats the event as a wallet topâ€‘up (DVA or card), locates the member, credits wallet, and writes a WalletTransaction with source=paystack_dva for bank transfers.
 
 - Routes (backend/routes/api.php)
   - Public webhook: POST /api/webhooks/paystack
@@ -67,13 +67,13 @@ The implementation supports **two providers**: **Paystack** (primary) and **Flut
 ## Frontend Behavior (Vue)
 - Wallet.vue
   - Shows member balance and the Virtual Account section.
-  - If no account exists, shows a “Generate Account” button which calls POST /api/virtual-account/assign.
+  - If no account exists, shows a â€œGenerate Accountâ€ button which calls POST /api/virtual-account/assign.
   - Displays bank name, account name, and account number with a copy button.
-  - Provides “Fund Wallet (Card)” via /api/wallet/topup/initiate.
+  - Provides â€œFund Wallet (Card)â€ via /api/wallet/topup/initiate.
 - Profile.vue
-  - Shows a human‑friendly Virtual Account string (e.g., "9920•••••• - Wema Bank (John Doe)").
+  - Shows a humanâ€‘friendly Virtual Account string (e.g., "9920â€¢â€¢â€¢â€¢â€¢â€¢ - Wema Bank (John Doe)").
 - Dashboard.vue
-  - Shows “Add Money” shortcut to Wallet and recent activities.
+  - Shows â€œAdd Moneyâ€ shortcut to Wallet and recent activities.
 
 
 ## Configuration
@@ -123,7 +123,7 @@ Notes:
 
 
 ## Funding the Wallet
-There are two supported top‑up channels. Both are finalized by the webhook.
+There are two supported topâ€‘up channels. Both are finalized by the webhook.
 
 1) Bank Transfer to DVA (Recommended)
 - Member makes a transfer in NGN to their dedicated account.
@@ -131,13 +131,13 @@ There are two supported top‑up channels. Both are finalized by the webhook.
 - Our WebhookController:
   - Verifies x-paystack-signature using secret key.
   - Calls Paystack /transaction/verify/{reference} for extra safety.
-  - If no pending Contribution with that reference exists, attempts wallet top‑up:
+  - If no pending Contribution with that reference exists, attempts wallet topâ€‘up:
     - Finds the user by (in order):
       - customer_code (vd.customer.customer_code),
       - receiver account number (authorization.receiver_bank_account_number or authorization.account_number),
       - metadata.user_id (if provided).
-    - Converts amount kobo→naira, ensures NGN, ensures amount > 0.
-    - Ensures idempotency: if a WalletTransaction with same reference exists, it’s ignored.
+    - Converts amount koboâ†’naira, ensures NGN, ensures amount > 0.
+    - Ensures idempotency: if a WalletTransaction with same reference exists, itâ€™s ignored.
     - Increments user.balance and writes WalletTransaction with:
       - type=credit
       - source=paystack_dva (if channel=bank_transfer) or paystack_charge otherwise
@@ -149,7 +149,7 @@ There are two supported top‑up channels. Both are finalized by the webhook.
 - Our WebhookController:
   - Verifies verif-hash header against FLW_SECRET_HASH.
   - Calls Flutterwave /v3/transactions/{id}/verify for extra safety.
-  - If no pending Contribution or loan repayment with that reference exists, attempts wallet top‑up:
+  - If no pending Contribution or loan repayment with that reference exists, attempts wallet topâ€‘up:
     - Finds the user by (in order):
       - meta.user_id,
       - flw_dva_account_number (from bank_transfer_details.account_number),
@@ -159,7 +159,7 @@ There are two supported top‑up channels. Both are finalized by the webhook.
     - Ensures idempotency via unique reference on WalletTransaction.
     - Increments user.balance and writes WalletTransaction with source=flutterwave_dva.
 
-3) Card Top‑up (Fallback)
+3) Card Topâ€‘up (Fallback)
 - Client calls POST /api/wallet/topup/initiate with amount and optional callback_url.
 - Server initializes Paystack checkout and returns authorization_url; user completes on Paystack.
 - The same webhook path above will confirm and credit wallet on success (source=paystack_charge).
@@ -175,9 +175,9 @@ There are two supported top‑up channels. Both are finalized by the webhook.
   - Header: x-paystack-signature
   - Computed: hash_hmac('sha512', raw_body, PAYSTACK_SECRET_KEY)
   - Requests with missing/invalid signature are rejected (400).
-- Transaction Verification: every charge.success is verified again via Paystack’s /transaction/verify/{reference}.
+- Transaction Verification: every charge.success is verified again via Paystackâ€™s /transaction/verify/{reference}.
 - Amount & Currency Checks: webhook must indicate NGN and amount >= expected.
-- Idempotency: wallet_transactions.reference is unique, so replays won’t double‑credit.
+- Idempotency: wallet_transactions.reference is unique, so replays wonâ€™t doubleâ€‘credit.
 
 
 ## API Quick Reference (Authenticated unless noted)
@@ -232,29 +232,29 @@ curl -H "Authorization: Bearer <TOKEN>" \
   - Confirm PAYSTACK_WEBHOOK_URL matches the URL configured on Paystack Dashboard and is publicly reachable (use ngrok for local).
   - Check server logs for "Invalid Signature" (indicates secret mismatch) or network errors.
 - Duplicate credits
-  - The system guards with unique reference per WalletTransaction; if you still see duplication, verify your provider isn’t retrying with different references.
+  - The system guards with unique reference per WalletTransaction; if you still see duplication, verify your provider isnâ€™t retrying with different references.
 - Wrong member credited
-  - Confirm the Paystack customer_code is stored on the correct user and that the DVA account number matches. The webhook resolver checks customer_code → account_number → metadata.user_id.
+  - Confirm the Paystack customer_code is stored on the correct user and that the DVA account number matches. The webhook resolver checks customer_code â†’ account_number â†’ metadata.user_id.
 
 
 ## BVN and Verification Details
-- When assigning a virtual account, the backend can accept and persist a member’s BVN.
+- When assigning a virtual account, the backend can accept and persist a memberâ€™s BVN.
 - New fields on users table: bvn (string), bvn_verified_at (timestamp nullable), dva_verification_meta (json nullable).
 - API responses:
-  - GET /api/profile → includes bvn_assigned (boolean) and verification_details (e.g., "Wema Bank - 0123456789 (John Doe)").
-  - GET /api/virtual-account → includes bvn_assigned and verification_details alongside the account details.
-  - GET /api/wallet → virtual_account includes bvn_assigned and verification_details.
-  - GET /api/dashboard → virtual_account includes bvn_assigned and verification_details.
+  - GET /api/profile â†’ includes bvn_assigned (boolean) and verification_details (e.g., "Wema Bank - 0123456789 (John Doe)").
+  - GET /api/virtual-account â†’ includes bvn_assigned and verification_details alongside the account details.
+  - GET /api/wallet â†’ virtual_account includes bvn_assigned and verification_details.
+  - GET /api/dashboard â†’ virtual_account includes bvn_assigned and verification_details.
 - Controller behavior:
   - POST /api/virtual-account/assign now accepts optional: bvn, first_name, last_name, phone, preferred_bank.
   - BVN is stored if provided; verification meta is recorded for audit. If provider later returns verified status, bvn_verified_at can be populated by a separate process.
 - Frontend: Profile.vue already reads and displays bvn_assigned and verification_details in the Verification section.
 
 ## Notes on Providers (Paystack vs Monnify)
-- Cooperatives often choose Monnify due to flatter fees and multi‑bank DVAs, but Paystack is fully supported here.
+- Cooperatives often choose Monnify due to flatter fees and multiâ€‘bank DVAs, but Paystack is fully supported here.
 - To switch providers in the future:
-  - Replace the DVA assignment/fetch calls in VirtualAccountController with the provider’s equivalents.
-  - Adjust webhook parsing to the provider’s payload shape.
+  - Replace the DVA assignment/fetch calls in VirtualAccountController with the providerâ€™s equivalents.
+  - Adjust webhook parsing to the providerâ€™s payload shape.
   - Keep the same local data model (customer code, bank/account details) and WalletTransaction logic.
 
 
@@ -266,5 +266,5 @@ curl -H "Authorization: Bearer <TOKEN>" \
 
 
 ## Changelog
-- 2026‑03‑20: Initial documentation added describing the current Paystack DVA implementation.
-- 2026‑05‑10: Added Flutterwave DVA as alternative provider. New migration (flw_dva_* fields on users), FlutterwaveDvaService, POST /api/virtual-account/assign-flutterwave endpoint, webhook DVA lookup by flw_dva_account_number, flw_virtual_account block in wallet API, and frontend Wallet.vue Flutterwave DVA section.
+- 2026â€‘03â€‘20: Initial documentation added describing the current Paystack DVA implementation.
+- 2026â€‘05â€‘10: Added Flutterwave DVA as alternative provider. New migration (flw_dva_* fields on users), FlutterwaveDvaService, POST /api/virtual-account/assign-flutterwave endpoint, webhook DVA lookup by flw_dva_account_number, flw_virtual_account block in wallet API, and frontend Wallet.vue Flutterwave DVA section.

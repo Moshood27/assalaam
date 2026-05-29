@@ -42,11 +42,11 @@ class ProductResource extends Resource
                     ->rows(3)
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('cost_price')
-                    ->label('Cost Price (₦)')
+                    ->label('Cost Price (â‚¦)')
                     ->required()
                     ->numeric()
                     ->minValue(0.01)
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->step('0.01'),
                 Forms\Components\TextInput::make('markup_percent')
                     ->label('Markup %')
@@ -88,7 +88,7 @@ class ProductResource extends Resource
                         $cost = (float) ($get('cost_price') ?? ($record->cost_price ?? 0));
                         $pct = (float) ($get('markup_percent') ?? ($record->markup_percent ?? 0));
                         $sp = round($cost * (1 + max(0.0, $pct) / 100.0), 2);
-                        return '₦ ' . number_format($sp, 2);
+                        return 'â‚¦ ' . number_format($sp, 2);
                     })()),
             ])->columns(2);
     }

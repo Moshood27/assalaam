@@ -4,22 +4,22 @@
 
     <div class="p-4">
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         <p class="mt-4 text-slate-500 font-medium">Checking for meetings...</p>
       </div>
 
       <div v-else-if="!meeting" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 text-center">
-        <div class="text-5xl mb-4">🗓️</div>
+        <div class="text-5xl mb-4">Ã°Å¸â€”â€œÃ¯Â¸Â</div>
         <h2 class="text-xl font-bold text-slate-800">No active or upcoming meeting</h2>
         <p class="text-slate-500 mt-2 text-sm">There is no meeting currently active or scheduled for your branch.</p>
-        <button @click="fetchCurrentMeeting" class="mt-8 w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-100 uppercase tracking-widest text-xs active:scale-95 transition-all">Refresh</button>
+        <button @click="fetchCurrentMeeting" class="mt-8 w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-100 uppercase tracking-widest text-xs active:scale-95 transition-all">Refresh</button>
       </div>
 
       <div v-else>
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-4 overflow-hidden relative">
-           <div class="absolute -right-6 -top-6 w-20 h-20 bg-emerald-50 rounded-full opacity-50" />
+           <div class="absolute -right-6 -top-6 w-20 h-20 bg-blue-50 rounded-full opacity-50" />
           <div class="flex items-center justify-between mb-4 relative z-10">
-            <span v-if="meeting.status === 'ongoing'" class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full">Ongoing</span>
+            <span v-if="meeting.status === 'ongoing'" class="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-full">Ongoing</span>
             <span v-else class="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-full">Upcoming</span>
             <span class="text-slate-400 text-[10px] font-bold uppercase">{{ formatDate(meeting.date) }}</span>
           </div>
@@ -27,7 +27,7 @@
           <p class="text-slate-500 text-xs mt-1 relative z-10 leading-relaxed">{{ meeting.description }}</p>
           
           <div class="mt-4 flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest relative z-10">
-            <span>🕒 {{ meeting.start_time }} - {{ meeting.end_time }}</span>
+            <span>Ã°Å¸â€¢â€™ {{ meeting.start_time }} - {{ meeting.end_time }}</span>
           </div>
         </div>
 
@@ -38,14 +38,14 @@
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ meeting.status === 'scheduled' ? 'Starts In' : 'Ends In' }}</p>
             <p class="text-3xl font-black text-slate-800 tabular-nums tracking-tight">{{ timeRemaining || '--:--:--' }}</p>
           </div>
-          <div class="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl relative z-10">⏳</div>
+          <div class="h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl relative z-10">Ã¢ÂÂ³</div>
         </div>
 
         <!-- Already Marked -->
-        <div v-if="record && record.status === 'present'" class="bg-emerald-600 p-8 rounded-[2.5rem] text-center shadow-xl shadow-emerald-100 text-white">
-          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">✅</div>
+        <div v-if="record && record.status === 'present'" class="bg-blue-600 p-8 rounded-[2.5rem] text-center shadow-xl shadow-blue-100 text-white">
+          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">Ã¢Å“â€¦</div>
           <h3 class="text-xl font-black uppercase tracking-tight">Attendance Marked</h3>
-          <p class="text-emerald-50 text-xs mt-2 font-medium">You successfully marked your attendance at {{ formatTime(record.attended_at) }}.</p>
+          <p class="text-blue-50 text-xs mt-2 font-medium">You successfully marked your attendance at {{ formatTime(record.attended_at) }}.</p>
         </div>
 
         <!-- Excused -->
@@ -54,7 +54,7 @@
           record.status === 'excused' ? 'bg-blue-600 shadow-blue-100' : 'bg-slate-600 shadow-slate-100'
         ]">
           <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">
-            {{ record.status === 'excused' ? '🙏' : '⏳' }}
+            {{ record.status === 'excused' ? 'Ã°Å¸â„¢Â' : 'Ã¢ÂÂ³' }}
           </div>
           <h3 class="text-xl font-black uppercase tracking-tight">
             {{ record.status === 'excused' ? 'Apology Approved' : 'Apology Pending' }}
@@ -74,36 +74,36 @@
         <div v-else class="space-y-4">
           <div v-if="meeting.status === 'ongoing'" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <div class="flex items-center gap-2 mb-6">
-               <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-lg">🔑</div>
+               <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">Ã°Å¸â€â€˜</div>
                <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Verify Presence</h3>
             </div>
             
             <div class="space-y-6">
               <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Enter Meeting PIN</label>
-                <input v-model="pin" type="text" maxlength="10" placeholder="••••••" 
-                       class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl p-5 text-center text-3xl font-black tracking-[0.4em] focus:bg-white focus:border-emerald-500 focus:ring-0 transition-all placeholder:tracking-normal placeholder:text-slate-200" />
+                <input v-model="pin" type="text" maxlength="10" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" 
+                       class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl p-5 text-center text-3xl font-black tracking-[0.4em] focus:bg-white focus:border-blue-500 focus:ring-0 transition-all placeholder:tracking-normal placeholder:text-slate-200" />
                 <p class="text-[9px] text-slate-400 mt-2 text-center font-bold uppercase">The PIN is announced by the Imam or Chairman</p>
               </div>
 
               <div class="p-5 bg-slate-50 rounded-2xl flex items-center gap-4 border border-slate-100">
-                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm">📍</div>
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm">Ã°Å¸â€œÂ</div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[11px] font-black text-slate-800 uppercase tracking-tight">GPS Location</p>
                   <p class="text-[10px] text-slate-500 font-medium">Required radius: {{ meeting.radius_meters }}m</p>
                 </div>
-                <div v-if="locating" class="animate-spin rounded-full h-5 w-5 border-2 border-emerald-600 border-t-transparent"></div>
+                <div v-if="locating" class="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
                 <div v-else-if="location" class="flex flex-col items-end">
-                   <span class="text-emerald-600 text-[10px] font-black uppercase tracking-widest">Captured</span>
+                   <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest">Captured</span>
                    <button @click="getLocation" class="text-[9px] text-slate-400 font-bold underline mt-0.5 uppercase">Reset</button>
                 </div>
-                <button v-else @click="getLocation" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-100 active:scale-95 transition-all">Get</button>
+                <button v-else @click="getLocation" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-blue-100 active:scale-95 transition-all">Get</button>
               </div>
 
               <button @click="submitAttendance" :disabled="submitting || !pin || !location" 
-                      class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-100 flex items-center justify-center gap-3 uppercase tracking-widest text-xs disabled:opacity-50 disabled:shadow-none active:scale-[0.98] transition-all mt-4">
+                      class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-100 flex items-center justify-center gap-3 uppercase tracking-widest text-xs disabled:opacity-50 disabled:shadow-none active:scale-[0.98] transition-all mt-4">
                 <span v-if="submitting" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                <span v-else>📍 Mark Attendance</span>
+                <span v-else>Ã°Å¸â€œÂ Mark Attendance</span>
               </button>
             </div>
           </div>
@@ -111,7 +111,7 @@
         <!-- Apology Form -->
         <div v-if="canSubmitApology && !inGracePeriod && (!record || record.status === 'absent')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
              <div class="flex items-center gap-2 mb-4">
-               <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">📝</div>
+               <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">Ã°Å¸â€œÂ</div>
                <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Submit Apology</h3>
             </div>
             <p class="text-[11px] text-slate-500 mb-4">If you cannot attend or will be late, provide a reason here before the meeting starts to avoid fines.</p>
@@ -149,11 +149,11 @@
           </div>
 
           <!-- Grace Period Info -->
-          <div v-if="inGracePeriod && !record" class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 flex items-start gap-4">
-            <div class="text-2xl">🍼</div>
+          <div v-if="inGracePeriod && !record" class="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-start gap-4">
+            <div class="text-2xl">Ã°Å¸ÂÂ¼</div>
             <div>
-              <h4 class="text-xs font-black text-emerald-800 uppercase tracking-tight">Automatic Grace Period</h4>
-              <p class="text-[10px] text-emerald-600 font-medium mt-1">You are currently in the nursing mother grace period. You will not be charged for absence or lateness in this meeting.</p>
+              <h4 class="text-xs font-black text-blue-800 uppercase tracking-tight">Automatic Grace Period</h4>
+              <p class="text-[10px] text-blue-600 font-medium mt-1">You are currently in the nursing mother grace period. You will not be charged for absence or lateness in this meeting.</p>
             </div>
           </div>
         </div>
@@ -174,14 +174,14 @@
             <div v-for="item in history" :key="item.id" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
                <div :class="[
                  'w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm',
-                 item.status === 'present' ? 'bg-emerald-50 text-emerald-600' : 
+                 item.status === 'present' ? 'bg-blue-50 text-blue-600' : 
                  item.status === 'fine_paid' ? 'bg-orange-50 text-orange-600' :
                  item.status === 'excused' ? 'bg-blue-50 text-blue-600' :
                  item.status === 'pending_excuse' ? 'bg-slate-50 text-slate-600' :
                  item.status === 'fine_pending' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-400'
                ]">
-                 {{ item.status === 'present' ? '✅' : item.status === 'fine_paid' ? '💰' : 
-                    item.status === 'excused' ? '🙏' : item.status === 'pending_excuse' ? '⏳' : '❌' }}
+                 {{ item.status === 'present' ? 'Ã¢Å“â€¦' : item.status === 'fine_paid' ? 'Ã°Å¸â€™Â°' : 
+                    item.status === 'excused' ? 'Ã°Å¸â„¢Â' : item.status === 'pending_excuse' ? 'Ã¢ÂÂ³' : 'Ã¢ÂÅ’' }}
                </div>
                
                <div class="flex-1 min-w-0">
@@ -189,14 +189,14 @@
                  <div class="flex items-center gap-2 mt-0.5">
                     <span class="text-[9px] font-bold text-slate-400 uppercase">{{ formatDate(item.created_at) }}</span>
                     <span v-if="item.status === 'fine_pending'" class="text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full uppercase">Fine Pending</span>
-                    <span v-if="item.status === 'fine_paid'" class="text-[8px] font-black bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase">Fine Paid</span>
+                    <span v-if="item.status === 'fine_paid'" class="text-[8px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full uppercase">Fine Paid</span>
                  </div>
                </div>
                
                <div class="text-right">
                   <p :class="[
                     'text-[10px] font-black uppercase tracking-tight',
-                    item.status === 'present' ? 'text-emerald-600' : 
+                    item.status === 'present' ? 'text-blue-600' : 
                     item.status === 'fine_paid' ? 'text-orange-600' : 
                     item.status === 'excused' ? 'text-blue-600' :
                     item.status === 'pending_excuse' ? 'text-slate-600' : 'text-red-600'
@@ -204,7 +204,7 @@
                     {{ item.status.replace('_', ' ') }}
                   </p>
                   <p v-if="item.status === 'fine_pending' || item.status === 'fine_paid'" class="text-[9px] text-slate-400 font-bold mt-0.5">
-                    ₦{{ formatMoney(item.meeting?.fine_amount) }}
+                    Ã¢â€šÂ¦{{ formatMoney(item.meeting?.fine_amount) }}
                   </p>
                </div>
             </div>
@@ -441,3 +441,5 @@ onUnmounted(() => {
   if (countdownInterval.value) clearInterval(countdownInterval.value)
 })
 </script>
+
+

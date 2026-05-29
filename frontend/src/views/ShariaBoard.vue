@@ -4,7 +4,7 @@
 
     <div class="p-4 max-w-2xl mx-auto space-y-6">
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mb-4"></div>
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
         <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Loading Board...</p>
       </div>
 
@@ -14,10 +14,10 @@
       </div>
 
       <div v-else class="space-y-4">
-        <div class="card p-6 bg-emerald-700 text-white overflow-hidden relative">
+        <div class="card p-6 bg-blue-700 text-white overflow-hidden relative">
           <div class="relative z-10">
             <h2 class="text-2xl font-black mb-2">Sharia Governance</h2>
-            <p class="text-emerald-50 text-xs leading-relaxed opacity-90 mb-4">
+            <p class="text-blue-50 text-xs leading-relaxed opacity-90 mb-4">
               Our cooperative operates under the guidance of our esteemed Sharia Supervisory Board to ensure all transactions and project investments are 100% Sharia compliant.
             </p>
             <router-link to="/sharia-board/history" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm border border-white/10">
@@ -43,7 +43,7 @@
            <p class="text-slate-400 text-sm">Board members directory is being updated.</p>
         </div>
 
-        <div v-for="m in members" :key="m.id" class="card p-5 flex flex-col sm:flex-row gap-5 hover:border-emerald-200 transition-colors">
+        <div v-for="m in members" :key="m.id" class="card p-5 flex flex-col sm:flex-row gap-5 hover:border-blue-200 transition-colors">
           <div class="w-20 h-20 bg-slate-100 rounded-2xl flex-shrink-0 overflow-hidden border border-slate-100 shadow-sm self-center sm:self-start">
              <img v-if="m.photo_url" :src="getImageUrl(m.photo_url)" class="w-full h-full object-cover" />
              <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
@@ -54,7 +54,7 @@
           </div>
           <div class="flex-1 text-center sm:text-left">
             <h3 class="font-black text-slate-800 text-lg leading-tight">{{ m.name }}</h3>
-            <p class="text-emerald-600 text-xs font-black uppercase tracking-wider mb-3">{{ m.title || 'Member' }}</p>
+            <p class="text-blue-600 text-xs font-black uppercase tracking-wider mb-3">{{ m.title || 'Member' }}</p>
             <div v-if="m.bio" class="text-sm text-slate-500 leading-relaxed" v-html="m.bio"></div>
           </div>
         </div>
@@ -90,3 +90,5 @@ const load = async () => {
 
 onMounted(load)
 </script>
+
+

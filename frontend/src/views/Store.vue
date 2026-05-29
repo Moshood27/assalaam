@@ -4,14 +4,14 @@
       <template #right>
         <div class="flex items-center gap-1">
           <button class="relative p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="toggleCart()">
-            <span class="i-mdi-cart-outline text-2xl text-emerald-700"></span>
-            <span v-if="totalQty" class="absolute top-0 right-0 w-5 h-5 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ totalQty }}</span>
+            <span class="i-mdi-cart-outline text-2xl text-blue-700"></span>
+            <span v-if="totalQty" class="absolute top-0 right-0 w-5 h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ totalQty }}</span>
           </button>
           <button class="p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="$router.push('/store/orders')" title="Orders">
             <span class="i-mdi-file-document-outline text-2xl text-slate-600"></span>
           </button>
-          <button v-if="vendor && vendor.id" class="p-2 hover:bg-emerald-50 rounded-xl transition-colors" @click="$router.push('/vendor/dashboard')" title="Vendor Portal">
-            <span class="i-mdi-store-outline text-2xl text-emerald-700"></span>
+          <button v-if="vendor && vendor.id" class="p-2 hover:bg-blue-50 rounded-xl transition-colors" @click="$router.push('/vendor/dashboard')" title="Vendor Portal">
+            <span class="i-mdi-store-outline text-2xl text-blue-700"></span>
           </button>
           <button v-else class="p-2 hover:bg-slate-100 rounded-xl transition-colors" @click="$router.push('/vendor/apply')" title="Become a Vendor">
             <span class="i-mdi-store-plus-outline text-2xl text-slate-400"></span>
@@ -26,33 +26,33 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h2 class="text-2xl font-black text-slate-800 uppercase leading-tight">Coop Store</h2>
-            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600">Premium member shopping</p>
+            <p class="text-[10px] font-black uppercase tracking-widest text-blue-600">Premium member shopping</p>
           </div>
           <div class="flex items-center gap-2">
-            <button class="p-2 hover:bg-emerald-50 rounded-xl transition-colors text-emerald-700" @click="toggleCart()" title="View Cart">
+            <button class="p-2 hover:bg-blue-50 rounded-xl transition-colors text-blue-700" @click="toggleCart()" title="View Cart">
               <span class="i-mdi-cart-outline text-2xl"></span>
-              <span v-if="totalQty" class="absolute -top-1 -right-1 w-5 h-5 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ totalQty }}</span>
+              <span v-if="totalQty" class="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">{{ totalQty }}</span>
             </button>
           </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3">
           <div class="flex-1 relative group">
-            <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search for products, electronics..." class="w-full bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 focus:bg-white p-4 pl-12 rounded-[1.5rem] outline-none transition-all font-medium text-slate-800 shadow-inner" />
-            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+            <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search for products, electronics..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 pl-12 rounded-[1.5rem] outline-none transition-all font-medium text-slate-800 shadow-inner" />
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
           </div>
           <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
-            <select v-model="selectedCategory" @change="load(1)" class="h-14 px-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:border-emerald-500 transition-colors appearance-none min-w-[140px]">
+            <select v-model="selectedCategory" @change="load(1)" class="h-14 px-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:border-blue-500 transition-colors appearance-none min-w-[140px]">
               <option :value="0">All Categories</option>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
-            <select v-model="sortBy" @change="load(1)" class="h-14 px-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:border-emerald-500 transition-colors appearance-none min-w-[120px]">
+            <select v-model="sortBy" @change="load(1)" class="h-14 px-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:border-blue-500 transition-colors appearance-none min-w-[120px]">
               <option value="newest">Newest</option>
               <option value="price_asc">Price: Low-High</option>
               <option value="price_desc">Price: High-Low</option>
-              <option value="name_asc">A–Z</option>
+              <option value="name_asc">AÃ¢â‚¬â€œZ</option>
             </select>
           </div>
         </div>
@@ -61,7 +61,7 @@
       <!-- Products Grid -->
       <section>
         <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4">
-          <div class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-600 rounded-full animate-spin"></div>
+          <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin"></div>
           <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Updating catalog...</p>
         </div>
         <div v-else-if="error" class="bg-rose-50 border border-rose-100 p-6 rounded-[2rem] text-center">
@@ -70,30 +70,30 @@
         </div>
         <div v-else>
           <div v-if="!items.length" class="bg-white rounded-[2rem] p-20 text-center border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">🛍️</div>
+            <div class="text-5xl mb-4">Ã°Å¸â€ºÂÃ¯Â¸Â</div>
             <h3 class="text-lg font-black text-slate-800 uppercase mb-1">No products found</h3>
             <p class="text-sm text-slate-500">Try adjusting your search or category filters.</p>
           </div>
           
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-for="p in items" :key="p.id" class="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300 overflow-hidden flex flex-col">
+            <div v-for="p in items" :key="p.id" class="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 overflow-hidden flex flex-col">
               <!-- Product Image Area -->
               <div class="aspect-square relative overflow-hidden bg-slate-50" @click="openQuick(p)">
                 <img v-if="p.image_url" :src="getImageUrl(p.image_url)" alt="image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-6xl">📦</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-6xl">Ã°Å¸â€œÂ¦</div>
                 
                 <!-- Badges overlay -->
                 <div class="absolute top-4 left-4 flex flex-col gap-2">
-                  <span v-if="isNew(p.created_at)" class="bg-emerald-600 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg shadow-emerald-900/20">New</span>
+                  <span v-if="isNew(p.created_at)" class="bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg shadow-blue-900/20">New</span>
                   <span v-if="!p.is_approved" class="bg-amber-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg shadow-amber-900/20">Pending</span>
                 </div>
                 
                 <!-- Quick action overlay -->
-                <div class="absolute inset-0 bg-emerald-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div class="absolute inset-0 bg-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                    <button @click.stop="openQuick(p)" class="w-12 h-12 bg-white text-slate-800 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
                       <span class="i-mdi-eye-outline text-xl"></span>
                    </button>
-                   <button v-if="!cart[p.id] && (!p.track_stock || p.stock_quantity > 0)" @click.stop="addToCart(p)" class="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
+                   <button v-if="!cart[p.id] && (!p.track_stock || p.stock_quantity > 0)" @click.stop="addToCart(p)" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
                       <span class="i-mdi-cart-plus text-xl"></span>
                    </button>
                 </div>
@@ -102,11 +102,11 @@
               <!-- Product Info -->
               <div class="p-6 flex-1 flex flex-col">
                 <div class="flex items-center justify-between gap-4 mb-2">
-                  <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest truncate">{{ p.category?.name || 'General' }}</span>
-                  <div class="text-lg font-black text-slate-900 whitespace-nowrap">₦ {{ money(p.selling_price) }}</div>
+                  <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest truncate">{{ p.category?.name || 'General' }}</span>
+                  <div class="text-lg font-black text-slate-900 whitespace-nowrap">Ã¢â€šÂ¦ {{ money(p.selling_price) }}</div>
                 </div>
                 
-                <h3 class="text-base font-bold text-slate-800 mb-1 group-hover:text-emerald-700 transition-colors cursor-pointer line-clamp-1" @click="openQuick(p)">{{ p.name }}</h3>
+                <h3 class="text-base font-bold text-slate-800 mb-1 group-hover:text-blue-700 transition-colors cursor-pointer line-clamp-1" @click="openQuick(p)">{{ p.name }}</h3>
                 
                 <div v-if="p.vendor" class="flex items-center gap-2 mb-3">
                   <div class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[8px] text-slate-400 font-bold">V</div>
@@ -118,7 +118,7 @@
                 <div class="mt-auto space-y-3">
                    <div v-if="p.track_stock" class="flex items-center gap-2">
                       <div class="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-emerald-500 rounded-full" :style="{ width: Math.min(100, (p.stock_quantity / 10) * 100) + '%' }"></div>
+                        <div class="h-full bg-blue-500 rounded-full" :style="{ width: Math.min(100, (p.stock_quantity / 10) * 100) + '%' }"></div>
                       </div>
                       <span v-if="p.stock_quantity > 0" class="text-[9px] font-black text-slate-400 uppercase">{{ p.stock_quantity }} Left</span>
                       <span v-else class="text-[9px] font-black text-rose-500 uppercase">Out of Stock</span>
@@ -131,16 +131,16 @@
                             <span class="i-mdi-minus text-[10px]"></span>
                           </button>
                           <span class="text-xs font-black text-slate-800">{{ cart[p.id].qty }}</span>
-                          <button class="w-8 h-8 flex items-center justify-center bg-white text-slate-500 hover:text-emerald-600 rounded-lg shadow-sm transition-all active:scale-90 disabled:opacity-30" @click="incQty(p.id)" :disabled="p.track_stock && cart[p.id].qty >= p.stock_quantity">
+                          <button class="w-8 h-8 flex items-center justify-center bg-white text-slate-500 hover:text-blue-600 rounded-lg shadow-sm transition-all active:scale-90 disabled:opacity-30" @click="incQty(p.id)" :disabled="p.track_stock && cart[p.id].qty >= p.stock_quantity">
                             <span class="i-mdi-plus text-[10px]"></span>
                           </button>
                         </div>
                       </template>
-                      <button v-else-if="!p.track_stock || p.stock_quantity > 0" class="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-900/10" @click="addToCart(p)">Add to Cart</button>
+                      <button v-else-if="!p.track_stock || p.stock_quantity > 0" class="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-900/10" @click="addToCart(p)">Add to Cart</button>
                       <button v-else disabled class="flex-1 h-12 bg-slate-100 text-slate-400 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed">Sold Out</button>
                       
                       <div v-if="isAdmin && (!p.is_approved || p.vendor_id)" class="flex gap-1">
-                        <button v-if="!p.is_approved" @click="approveProduct(p)" class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all" title="Approve">
+                        <button v-if="!p.is_approved" @click="approveProduct(p)" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all" title="Approve">
                           <span class="i-mdi-check text-xl"></span>
                         </button>
                          <button v-if="p.is_approved && p.vendor_id" @click="rejectProduct(p)" class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all" title="Reject">
@@ -164,7 +164,7 @@
       <section v-if="showCart" class="bg-white rounded-[2.5rem] p-6 shadow-xl border border-slate-100 animate-in slide-in-from-bottom duration-500">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl">
               <span class="i-mdi-cart-outline"></span>
             </div>
             <div>
@@ -183,11 +183,11 @@
             <div v-for="ci in cartList" :key="ci.id" class="flex items-center gap-4 p-4 rounded-[1.5rem] bg-slate-50 border border-slate-100 group transition-all">
               <div class="w-16 h-16 rounded-xl bg-white overflow-hidden border border-slate-200 shrink-0">
                 <img v-if="ci.image_url" :src="getImageUrl(ci.image_url)" class="w-full h-full object-cover" />
-                <div v-else class="w-full h-full flex items-center justify-center text-slate-200">📦</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-slate-200">Ã°Å¸â€œÂ¦</div>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-bold text-slate-800 truncate mb-0.5">{{ ci.name }}</div>
-                <div class="text-sm font-black text-emerald-700">₦ {{ money(ci.selling_price) }}</div>
+                <div class="text-sm font-black text-blue-700">Ã¢â€šÂ¦ {{ money(ci.selling_price) }}</div>
               </div>
               <div class="flex flex-col items-end gap-2">
                 <div class="flex items-center bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
@@ -195,7 +195,7 @@
                     <span class="i-mdi-minus text-[10px]"></span>
                   </button>
                   <span class="w-8 text-center text-[10px] font-black text-slate-800">{{ ci.qty }}</span>
-                  <button class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors" @click="incQty(ci.id)" :disabled="ci.track_stock && ci.qty >= ci.stock_quantity">
+                  <button class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors" @click="incQty(ci.id)" :disabled="ci.track_stock && ci.qty >= ci.stock_quantity">
                     <span class="i-mdi-plus text-[10px]"></span>
                   </button>
                 </div>
@@ -207,19 +207,19 @@
           <div class="p-6 bg-slate-900 rounded-[2rem] text-white">
             <div class="flex items-center justify-between mb-4">
               <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">Subtotal</span>
-              <span class="text-2xl font-black">₦ {{ money(subtotal) }}</span>
+              <span class="text-2xl font-black">Ã¢â€šÂ¦ {{ money(subtotal) }}</span>
             </div>
 
             <div class="space-y-4">
               <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Order Note (optional)</label>
-                <textarea v-model="orderNote" rows="2" placeholder="Instructions for the vendor..." class="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-emerald-500 transition-colors"></textarea>
+                <textarea v-model="orderNote" rows="2" placeholder="Instructions for the vendor..." class="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-blue-500 transition-colors"></textarea>
               </div>
 
               <!-- Financing Option -->
               <div v-if="hasInsufficient" class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-lg">💳</div>
+                  <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-lg">Ã°Å¸â€™Â³</div>
                   <div>
                     <p class="text-xs font-black uppercase tracking-widest text-amber-500">Murabaha Financing</p>
                     <p class="text-[10px] text-slate-400">Insufficient balance. Buy on credit.</p>
@@ -248,25 +248,25 @@
                   </div>
                   
                   <div class="text-[10px] text-slate-400 leading-relaxed px-1">
-                    Est. Total: <span class="text-white font-bold">₦ {{ money(creditEstimateTotal) }}</span> • 
-                    Monthly: <span class="text-white font-bold">₦ {{ money(creditMonthly) }}</span>
-                    <div v-if="eligData" class="mt-1 text-emerald-400 font-bold uppercase tracking-widest">Limit: ₦ {{ money(eligData.limit) }}</div>
+                    Est. Total: <span class="text-white font-bold">Ã¢â€šÂ¦ {{ money(creditEstimateTotal) }}</span> Ã¢â‚¬Â¢ 
+                    Monthly: <span class="text-white font-bold">Ã¢â€šÂ¦ {{ money(creditMonthly) }}</span>
+                    <div v-if="eligData" class="mt-1 text-blue-400 font-bold uppercase tracking-widest">Limit: Ã¢â€šÂ¦ {{ money(eligData.limit) }}</div>
                   </div>
 
                   <div class="flex items-start gap-3 p-2 bg-white/5 rounded-xl">
-                    <input type="checkbox" v-model="agreedToTerms" class="mt-1 rounded border-white/20 text-emerald-500 focus:ring-emerald-500 bg-transparent" />
+                    <input type="checkbox" v-model="agreedToTerms" class="mt-1 rounded border-white/20 text-blue-500 focus:ring-blue-500 bg-transparent" />
                     <label class="text-[9px] text-slate-400 leading-tight">I agree to the Murabahah Financing Terms and authorize the Coop to purchase for resale.</label>
                   </div>
 
                   <button @click="creditCheckout()" :disabled="placing || !totalQty || !creditValid || exceedsLimit || !agreedToTerms" class="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black uppercase tracking-wider transition-all disabled:opacity-30 disabled:grayscale">
                     Apply & Buy on Credit
                   </button>
-                  <p v-if="exceedsLimit" class="text-center text-rose-500 text-[9px] font-black uppercase mt-1">Exceeds limit (₦{{ money(eligData?.limit) }})</p>
+                  <p v-if="exceedsLimit" class="text-center text-rose-500 text-[9px] font-black uppercase mt-1">Exceeds limit (Ã¢â€šÂ¦{{ money(eligData?.limit) }})</p>
                 </template>
               </div>
 
               <!-- Standard Checkout -->
-              <button @click="checkout()" :disabled="placing || !totalQty || hasInsufficient" class="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all active:scale-95 disabled:opacity-30 flex items-center justify-center gap-3">
+              <button @click="checkout()" :disabled="placing || !totalQty || hasInsufficient" class="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.5rem] font-black uppercase tracking-wider shadow-lg shadow-blue-900/20 transition-all active:scale-95 disabled:opacity-30 flex items-center justify-center gap-3">
                 <span v-if="placing && purchaseMode === 'cash'" class="i-mdi-loading animate-spin text-2xl"></span>
                 <span v-else class="i-mdi-check-circle-outline text-2xl"></span>
                 {{ hasInsufficient ? 'Insufficient Balance' : 'Confirm & Pay Now' }}
@@ -275,7 +275,7 @@
           </div>
           
           <div v-if="placeError" class="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold text-center">{{ placeError }}</div>
-          <div v-if="placeSuccess" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold text-center">{{ placeSuccess }}</div>
+          <div v-if="placeSuccess" class="p-4 rounded-2xl bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold text-center">{{ placeSuccess }}</div>
         </div>
       </section>
     </div>
@@ -293,7 +293,7 @@
         <div class="p-6 pt-2 sm:pt-6">
           <div class="flex items-start justify-between mb-6">
             <div class="flex-1">
-              <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 block">{{ selectedProduct.category?.name || 'Product Details' }}</span>
+              <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 block">{{ selectedProduct.category?.name || 'Product Details' }}</span>
               <h2 class="text-2xl font-black text-slate-800 leading-tight">{{ selectedProduct.name }}</h2>
             </div>
             <button @click="closeQuick()" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors">
@@ -304,13 +304,13 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="aspect-square rounded-3xl bg-slate-50 overflow-hidden border border-slate-100">
                <img v-if="selectedProduct.image_url" :src="getImageUrl(selectedProduct.image_url)" alt="image" class="w-full h-full object-cover" />
-               <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-5xl">📦</div>
+               <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-5xl">Ã°Å¸â€œÂ¦</div>
             </div>
             
             <div class="flex flex-col">
-              <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 mb-4">
-                <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Selling Price</p>
-                <p class="text-3xl font-black text-emerald-700">₦ {{ money(selectedProduct.selling_price) }}</p>
+              <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 mb-4">
+                <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Selling Price</p>
+                <p class="text-3xl font-black text-blue-700">Ã¢â€šÂ¦ {{ money(selectedProduct.selling_price) }}</p>
               </div>
 
               <div class="space-y-4">
@@ -337,11 +337,11 @@
 
           <!-- Admin Actions -->
           <div v-if="isAdmin" class="flex items-center gap-3 mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">🛡️</div>
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">Ã°Å¸â€ºÂ¡Ã¯Â¸Â</div>
             <div class="flex-1">
               <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Admin Control</p>
               <div class="flex gap-2 mt-1">
-                <button v-if="!selectedProduct.is_approved" class="text-[10px] font-black uppercase text-emerald-700 hover:underline" @click="approveProduct(selectedProduct)">Approve Now</button>
+                <button v-if="!selectedProduct.is_approved" class="text-[10px] font-black uppercase text-blue-700 hover:underline" @click="approveProduct(selectedProduct)">Approve Now</button>
                 <button v-else-if="selectedProduct.vendor_id" class="text-[10px] font-black uppercase text-rose-700 hover:underline" @click="rejectProduct(selectedProduct)">Mark Pending</button>
               </div>
             </div>
@@ -354,12 +354,12 @@
                 <span class="i-mdi-minus text-lg"></span>
               </button>
               <input v-model.number="quickQty" type="number" min="1" :max="selectedProduct.track_stock ? selectedProduct.stock_quantity : undefined" class="w-12 text-center bg-transparent font-black text-lg text-slate-800 border-none focus:ring-0" />
-              <button class="w-11 h-11 flex items-center justify-center bg-white rounded-xl text-slate-400 hover:text-emerald-600 shadow-sm transition-all active:scale-90" @click="quickQty = Math.min((selectedProduct.track_stock ? selectedProduct.stock_quantity : 999), (Number(quickQty)||1)+1)">
+              <button class="w-11 h-11 flex items-center justify-center bg-white rounded-xl text-slate-400 hover:text-blue-600 shadow-sm transition-all active:scale-90" @click="quickQty = Math.min((selectedProduct.track_stock ? selectedProduct.stock_quantity : 999), (Number(quickQty)||1)+1)">
                 <span class="i-mdi-plus text-lg"></span>
               </button>
             </div>
             
-            <button class="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all active:scale-95 flex items-center justify-center gap-2" @click="addQuickToCart()">
+            <button class="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg shadow-blue-900/20 transition-all active:scale-95 flex items-center justify-center gap-2" @click="addQuickToCart()">
               <span class="i-mdi-cart-plus text-xl"></span>
               Add to Cart
             </button>
@@ -576,7 +576,7 @@ const exceedsLimit = computed(() => {
 
 // Murabaha (credit) controls
 const creditMonths = ref(12)
-const creditProfit = ref(0.12) // 12% default within 10–15%
+const creditProfit = ref(0.12) // 12% default within 10Ã¢â‚¬â€œ15%
 const creditEstimateTotal = computed(() => {
   const rate = Number(creditProfit.value || 0)
   const base = Number(subtotal.value || 0)
@@ -700,3 +700,5 @@ onMounted(() => { restoreCart(); load(1); loadWallet(); loadCategories(); loadSt
   overflow: hidden;
 }
 </style>
+
+

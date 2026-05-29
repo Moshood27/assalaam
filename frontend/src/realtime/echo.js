@@ -20,9 +20,9 @@ function resolveConfig() {
     if (localHosts.includes(wsHost)) {
         // Fallback to backend hostname or brand domain to work in APK
         try {
-            wsHost = new URL(import.meta?.env?.VITE_BACKEND_ORIGIN || import.meta?.env?.VITE_API_URL || 'https://attaqwacooposg.com').hostname
+            wsHost = new URL(import.meta?.env?.VITE_BACKEND_ORIGIN || import.meta?.env?.VITE_API_URL || 'https://viqsbot.com').hostname
         } catch {
-            wsHost = 'attaqwacooposg.com'
+            wsHost = 'viqsbot.com'
         }
     }
     const wsPort = Number(import.meta?.env?.VITE_REVERB_PORT || (isSecure ? 443 : 8080))
@@ -73,3 +73,5 @@ export function getEcho() {
 
     return echoInstance
 }
+
+

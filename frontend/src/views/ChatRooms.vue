@@ -149,14 +149,14 @@ onBeforeUnmount(() => {
       <div class="p-4 border-b">
         <div class="flex justify-between items-center mb-3">
           <div class="flex items-center space-x-2">
-            <button @click="$router.push('/dashboard')" class="p-1 -ml-1 text-gray-500 hover:text-emerald-600 transition" title="Back to Dashboard">
+            <button @click="$router.push('/dashboard')" class="p-1 -ml-1 text-gray-500 hover:text-blue-600 transition" title="Back to Dashboard">
               <span class="material-icons">arrow_back</span>
             </button>
             <h2 class="text-xl font-bold dark:text-white">Chat</h2>
           </div>
           <button v-if="user?.is_admin" 
                   @click="showBroadcastModal = true"
-                  class="p-1 text-emerald-600 hover:bg-emerald-50 rounded-full transition"
+                  class="p-1 text-blue-600 hover:bg-blue-50 rounded-full transition"
                   title="Send Broadcast">
             <span class="material-icons">campaign</span>
           </button>
@@ -165,7 +165,7 @@ onBeforeUnmount(() => {
           <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
           <input v-model="searchQuery" 
                  placeholder="Search chats..." 
-                 class="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                 class="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
       <div class="flex-1 overflow-y-auto">
@@ -175,26 +175,26 @@ onBeforeUnmount(() => {
           <p class="text-sm text-gray-500 mb-4">{{ searchQuery ? 'No chats match your search' : 'No active chats yet' }}</p>
           <button v-if="!searchQuery" 
                   @click="startSupportChat"
-                  class="w-full py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition">
+                  class="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition">
             Start Support Chat
           </button>
         </div>
         <div v-else v-for="room in filteredRooms" :key="room.id" 
              @click="isMember(room) ? selectedRoomId = room.id : null"
              :class="['p-4 border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition relative group', 
-                      selectedRoomId === room.id ? 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-l-emerald-600' : '',
+                      selectedRoomId === room.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-600' : '',
                       !isMember(room) ? 'opacity-80' : '']">
           
           <button v-if="isMember(room)" @click.stop="togglePin(room.id)" 
                   :class="['absolute right-2 top-2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition opacity-0 group-hover:opacity-100', 
-                           pinnedRoomIds.includes(room.id) ? 'opacity-100 text-emerald-600' : 'text-gray-400']">
+                           pinnedRoomIds.includes(room.id) ? 'opacity-100 text-blue-600' : 'text-gray-400']">
             <span class="material-icons text-xs">{{ pinnedRoomIds.includes(room.id) ? 'push_pin' : 'push_pin' }}</span>
           </button>
 
           <div class="flex items-center space-x-3">
             <div :class="['w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0', 
                           room.type === 'official' ? 'bg-amber-100 text-amber-700' : 
-                          room.type === 'support' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700']">
+                          room.type === 'support' ? 'bg-blue-100 text-blue-700' : 'bg-blue-100 text-blue-700']">
               <span v-if="room.type === 'official'" class="material-icons text-xl">gavel</span>
               <span v-else-if="room.type === 'support'" class="material-icons text-xl">help_outline</span>
               <span v-else>{{ room.name?.[0] || 'C' }}</span>
@@ -213,10 +213,10 @@ onBeforeUnmount(() => {
               <div class="flex justify-between items-center">
                 <p v-if="isMember(room)" class="text-xs text-gray-500 truncate">{{ room.last_message?.body || 'No messages yet' }}</p>
                 <button v-else @click.stop="joinRoom(room)" 
-                        class="px-3 py-1 bg-emerald-600 text-white text-[10px] rounded-lg font-bold hover:bg-emerald-700 transition">
+                        class="px-3 py-1 bg-blue-600 text-white text-[10px] rounded-lg font-bold hover:bg-blue-700 transition">
                   Join Room
                 </button>
-                <div v-if="isMember(room) && room.unread_count" class="ml-2 px-1.5 py-0.5 bg-emerald-600 text-white text-[10px] rounded-full font-bold">
+                <div v-if="isMember(room) && room.unread_count" class="ml-2 px-1.5 py-0.5 bg-blue-600 text-white text-[10px] rounded-full font-bold">
                   {{ room.unread_count }}
                 </div>
               </div>
@@ -245,7 +245,7 @@ onBeforeUnmount(() => {
         </p>
         <textarea v-model="broadcastBody" 
                   placeholder="Type your announcement here..." 
-                  class="w-full h-32 p-3 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-lg resize-none mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                  class="w-full h-32 p-3 bg-gray-100 dark:bg-gray-700 dark:text-white rounded-lg resize-none mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         <div class="flex justify-end space-x-3">
           <button @click="showBroadcastModal = false" 
                   class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
@@ -253,7 +253,7 @@ onBeforeUnmount(() => {
           </button>
           <button @click="sendBroadcast" 
                   :disabled="sendingBroadcast || !broadcastBody.trim()"
-                  class="px-4 py-2 bg-emerald-600 text-white rounded-lg disabled:opacity-50 flex items-center">
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center">
             <span v-if="sendingBroadcast" class="material-icons animate-spin text-sm mr-2">sync</span>
             {{ sendingBroadcast ? 'Sending...' : 'Send Broadcast' }}
           </button>
@@ -267,3 +267,5 @@ onBeforeUnmount(() => {
 .text-48 { font-size: 48px; }
 .text-64 { font-size: 64px; }
 </style>
+
+

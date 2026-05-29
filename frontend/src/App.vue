@@ -288,7 +288,7 @@ onBeforeUnmount(() => {
       v-if="isLoggedIn && !(isMobile && isInputFocused)"
       @click="toggleSupportChat"
       aria-label="Open Support Chat"
-      class="fixed bottom-32 right-6 z-50 bg-emerald-600 text-white shadow-xl shadow-emerald-200 rounded-full w-14 h-14 flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
+      class="fixed bottom-32 right-6 z-50 bg-blue-600 text-white shadow-xl shadow-blue-200 rounded-full w-14 h-14 flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all mb-[env(safe-area-inset-bottom)]"
     >
       <svg v-if="!showChat" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
         <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .621-.504 1.125-1.125 1.125h-1.5a1.125 1.125 0 0 1-1.125-1.125v-4.25c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125Zm-16.5 0v4.25c0 .621.504 1.125 1.125 1.125h1.5a1.125 1.125 0 0 0 1.125-1.125v-4.25c0-.621-.504-1.125-1.125-1.125h-1.5a1.125 1.125 0 0 0-1.125 1.125ZM12 3c4.97 0 9 4.03 9 9.375v.125c0 .414-.336.75-.75.75h-1.5a.75.75 0 0 1-.75-.75V12c0-4.142-3.358-7.5-7.5-7.5S4.5 7.858 4.5 12v.5c0 .414-.336.75-.75.75h-1.5a.75.75 0 0 1-.75-.75v-.125C1.5 7.03 5.53 3 12 3Z" />
@@ -334,3 +334,5 @@ onBeforeUnmount(() => {
 
 <style scoped>
 </style>
+
+

@@ -2,7 +2,7 @@
 
 This document explains the administrative management of cooperative branches, member assignment, and branch-wide communication tools.
 
-Last updated: 2026‑04‑09
+Last updated: 2026â€‘04â€‘09
 
 ## Overview
 Branches are the primary organizational units of the cooperative. Members are assigned to exactly one branch, and branch-level administration includes managing location data, member outreach, and branch-specific login for the mobile app.

@@ -63,7 +63,7 @@ class ProjectResource extends Resource
                         Forms\Components\TextInput::make('unit_price')
                             ->label('Unit Price')
                             ->numeric()
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->visible(fn (callable $get) => $get('is_unit_based'))
                             ->required(fn (callable $get) => $get('is_unit_based')),
                         Forms\Components\TextInput::make('total_units')
@@ -87,7 +87,7 @@ class ProjectResource extends Resource
                         Forms\Components\TextInput::make('target_amount')
                             ->label('Target Amount')
                             ->numeric()
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->default(0)
                             ->required(),
                         Forms\Components\TextInput::make('management_fee_percent')
@@ -127,7 +127,7 @@ class ProjectResource extends Resource
                 Tables\Actions\Action::make('downloadDistribution')
                     ->label('Profit Dist.')
                     ->icon('heroicon-o-document-arrow-down')
-                    ->color('emerald')
+                    ->color('blue')
                     ->url(fn (Project $record) => route('download-project-distribution', [
                         'id' => $record->id,
                         'token' => auth()->user()->createToken('FilamentProjectReport', ['*'], now()->addMinutes(5))->plainTextToken

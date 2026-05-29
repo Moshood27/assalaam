@@ -5,7 +5,7 @@
     <div class="p-4 space-y-6">
       <!-- Actions Section -->
       <div class="grid grid-cols-2 gap-4">
-        <a :href="getDownloadUrl('/api/download-membership-enrolment')" target="_blank" class="bg-emerald-700 text-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform text-center">
+        <a :href="getDownloadUrl('/api/download-membership-enrolment')" target="_blank" class="bg-blue-700 text-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform text-center">
           <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -13,7 +13,7 @@
           </div>
           <span class="text-xs font-bold">Enrolment Form</span>
         </a>
-        <a :href="getDownloadUrl('/api/download-imam-attestation')" target="_blank" class="bg-teal-700 text-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform text-center">
+        <a :href="getDownloadUrl('/api/download-imam-attestation')" target="_blank" class="bg-indigo-700 text-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform text-center">
           <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -25,14 +25,14 @@
 
       <!-- Membership Data Sections -->
       <div v-for="section in membershipSections" :key="section.title" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
-        <h3 class="text-xs font-black text-emerald-700 uppercase tracking-widest mb-4 flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <h3 class="text-xs font-black text-blue-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
           {{ section.title }}
         </h3>
         <div class="space-y-4">
           <div v-for="field in section.fields" :key="field.label" class="flex flex-col gap-1">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{{ field.label }}</label>
-            <p class="text-sm font-bold text-slate-800">{{ profile[field.key] || '—' }}</p>
+            <p class="text-sm font-bold text-slate-800">{{ profile[field.key] || 'Ã¢â‚¬â€' }}</p>
           </div>
         </div>
       </div>
@@ -150,3 +150,5 @@ const getDownloadUrl = (endpoint) => {
   @apply flex items-center justify-between max-w-lg mx-auto;
 }
 </style>
+
+

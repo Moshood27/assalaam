@@ -1,19 +1,19 @@
 App icon and splash assets
 
-Place the following high‑resolution images in this folder so Capacitor can generate all required platform sizes:
+Place the following highâ€‘resolution images in this folder so Capacitor can generate all required platform sizes:
 
-- icon.png — 1024x1024 PNG without rounded corners or transparency effects required by platform guidelines.
-- splash.png — 2732x2732 PNG. Keep important content centered; the edges may be cropped depending on device aspect ratio.
+- icon.png â€” 1024x1024 PNG without rounded corners or transparency effects required by platform guidelines.
+- splash.png â€” 2732x2732 PNG. Keep important content centered; the edges may be cropped depending on device aspect ratio.
 
 No design yet? Generate compliant placeholders
 - From the project root, run: npm run assets:placeholders
 - This will create opaque PNGs with the correct sizes (no rounded corners, no transparency) in assets/.
 - If files already exist, the generator will skip them.
 
-Branded ATTAQWA design assets (auto‑generated)
+Branded assalaam design assets (autoâ€‘generated)
 - From the project root, run: npm run cap:assets
 - This runs a pre-step that overwrites assets/icon.png and assets/splash.png with branded versions based on BRAND_SLUG/VITE_BRAND_SLUG.
-- With the default configuration (frontend/.env sets VITE_BRAND_SLUG=attaqwa), the icon has a white badge with the ATTAQWA wordmark and the splash shows centered ATTAQWA text on green.
+- With the default configuration (frontend/.env sets VITE_BRAND_SLUG=assalaam), the icon has a white badge with the assalaam wordmark and the splash shows centered assalaam text on green.
 - Then proceed to sync platforms.
 
 How to generate platform assets (after placing the images or generating placeholders):

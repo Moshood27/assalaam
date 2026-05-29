@@ -8,7 +8,7 @@
 
     <div class="prose dark:prose-invert max-w-none space-y-6 text-slate-600 dark:text-slate-400 leading-relaxed">
         <p>
-            We value your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have about your information when using the {{ config('brand.name', 'AT-TAQWA') }} website, portal and services.
+            We value your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have about your information when using the {{ config('brand.name', 'AS-SALAAM') }} website, portal and services.
         </p>
         <section>
             <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">1. Information We Collect</h2>
@@ -49,7 +49,7 @@
             <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">6. Contact Us</h2>
             <p>
                 If you have any questions about this Privacy Policy, please reach us via email at
-                <a href="mailto:attaqwaosogbo@gmail.com" class="text-primary-600 hover:underline transition-colors font-medium">attaqwaosogbo@gmail.com</a>.
+                <a href="mailto:assalaamosogbo@gmail.com" class="text-primary-600 hover:underline transition-colors font-medium">assalaamosogbo@gmail.com</a>.
             </p>
         </section>
     </div>

@@ -139,7 +139,7 @@
                     <h4 class="text-[10px] font-bold uppercase text-gray-500 mb-2 px-1">Financial Actions (Amanah)</h4>
                     <button wire:click="sendTransactionCard(5000, 'Contribution Payment')" class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center">
                         <x-heroicon-o-credit-card class="w-4 h-4 mr-2 text-amber-500" />
-                        Send Payment Request (₦5k)
+                        Send Payment Request (â‚¦5k)
                     </button>
                     <button wire:click="sendApprovalRequest('Loan Agreement Approval')" class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center">
                         <x-heroicon-o-pencil-square class="w-4 h-4 mr-2 text-primary-500" />

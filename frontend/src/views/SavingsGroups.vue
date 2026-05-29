@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-slate-50 pb-24">
     <AppHeader title="Group Savings" :showBack="true">
       <template #right>
-        <button @click="$router.push('/savings-groups/create')" class="p-2 -mr-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors" title="Create Group">
+        <button @click="$router.push('/savings-groups/create')" class="p-2 -mr-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors" title="Create Group">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </template>
@@ -55,7 +55,7 @@
       <div v-else>
         <div v-if="activeTab === 'my'">
           <div v-if="myGroups.length === 0" class="text-center py-16 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">🤝</div>
+            <div class="text-5xl mb-4">Ã°Å¸Â¤Â</div>
             <p class="text-slate-500 text-sm mb-6">You haven't joined any group yet.</p>
             <button @click="activeTab = 'discover'" class="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-bold shadow-lg shadow-indigo-100">Browse Groups</button>
           </div>
@@ -71,7 +71,7 @@
 
         <div v-if="activeTab === 'invitations'">
           <div v-if="invitations.length === 0" class="text-center py-16 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">📧</div>
+            <div class="text-5xl mb-4">Ã°Å¸â€œÂ§</div>
             <p class="text-slate-500 text-sm">No pending invitations.</p>
           </div>
           <div v-else class="space-y-4">
@@ -87,7 +87,7 @@
 
         <div v-if="activeTab === 'discover'">
           <div v-if="discoverGroups.length === 0" class="text-center py-16 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">🌍</div>
+            <div class="text-5xl mb-4">Ã°Å¸Å’Â</div>
             <p class="text-slate-500 text-sm">No public groups available right now.</p>
           </div>
           <div v-else class="space-y-4">
@@ -162,3 +162,5 @@ onMounted(() => {
   fetchMyGroups()
 })
 </script>
+
+

@@ -57,7 +57,7 @@ class UserAccountUpdated implements ShouldBroadcastNow, ShouldRescue
                 'takaful' => (float) ($this->user->takaful_balance ?? 0),
                 'outstanding_fines' => (float) $this->user->outstanding_fines,
                 'loan_limit' => $isDefaulter ? 0.0 : (float) ($eligibility['eligibility_adjusted'] ?? 0),
-                'attaqwa_score' => (int) $this->user->attaqwa_score,
+                'assalaam_score' => (int) $this->user->assalaam_score,
             ],
             'message' => $this->message,
             'action' => $this->action,

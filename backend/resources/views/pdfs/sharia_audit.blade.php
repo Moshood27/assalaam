@@ -17,7 +17,7 @@
 <body>
     <div class="header">
         <div class="title">Sharia Audit Report</div>
-        <div>At-Taqwa Osogbo CICS Ltd</div>
+        <div>AS-SALAAM Osogbo CICS Ltd</div>
         <div>Period: {{ $from }} to {{ $to }}</div>
     </div>
 
@@ -28,21 +28,21 @@
                 <td style="border: none; width: 50%; vertical-align: top;">
                     <strong>Islamic Financing (Murabahah):</strong><br>
                     Total Contracts: {{ $murabahah['count'] }}<br>
-                    Total Value: ₦{{ number_format($murabahah['total_value'], 2) }}<br>
-                    Expected Profit: ₦{{ number_format($murabahah['total_profit'], 2) }}<br>
+                    Total Value: â‚¦{{ number_format($murabahah['total_value'], 2) }}<br>
+                    Expected Profit: â‚¦{{ number_format($murabahah['total_profit'], 2) }}<br>
                     <br>
                     <strong>Investment Projects (Mudarabah/Musharakah):</strong><br>
                     Active/New Projects: {{ $projects['count'] }}<br>
-                    Total Capital Goal: ₦{{ number_format($projects['total_capital'], 2) }}<br>
+                    Total Capital Goal: â‚¦{{ number_format($projects['total_capital'], 2) }}<br>
                     <br>
                     <strong>Welfare Pool (Takaful):</strong><br>
                     Settlements: {{ $takaful['count'] }}<br>
-                    Total Settled: ₦{{ number_format($takaful['total_amount'], 2) }}<br>
+                    Total Settled: â‚¦{{ number_format($takaful['total_amount'], 2) }}<br>
                 </td>
                 <td style="border: none; width: 50%; vertical-align: top;">
                     <strong>Social Responsibility:</strong><br>
                     Charity Disbursements: {{ $charity_disbursements['count'] }}<br>
-                    Total Disbursed: ₦{{ number_format($charity_disbursements['total_amount'], 2) }}<br>
+                    Total Disbursed: â‚¦{{ number_format($charity_disbursements['total_amount'], 2) }}<br>
                     <br>
                     <strong>Audit Metrics:</strong><br>
                     Total Audit Logs: {{ $total_audits }}<br>
@@ -59,7 +59,7 @@
     <div style="margin: 20px 0; padding: 15px; border: 2px solid #059669; background-color: #ecfdf5; border-radius: 8px;">
         <h3 style="margin-top: 0; color: #059669; text-align: center;">SHARIA COMPLIANCE CERTIFICATE</h3>
         <p style="text-align: justify; line-height: 1.6;">
-            We, the Sharia Advisory Board of At-Taqwa Osogbo CICS Ltd, having reviewed the cooperative's operations,
+            We, the Sharia Advisory Board of AS-SALAAM Osogbo CICS Ltd, having reviewed the cooperative's operations,
             investments, and Murabahah contracts for the period of <strong>{{ $from }}</strong> to <strong>{{ $to }}</strong>,
             hereby certify that based on the audit logs and internal reports presented, the activities of the
             cooperative have been conducted in accordance with the principles of Sharia.

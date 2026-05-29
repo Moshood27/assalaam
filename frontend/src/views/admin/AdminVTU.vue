@@ -66,21 +66,21 @@
 
       <!-- Summary -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
-        <div class="card p-4 border-emerald-200 bg-emerald-50">
-          <p class="text-xs uppercase text-emerald-700 font-bold">Total Transactions</p>
-          <p class="text-2xl font-extrabold text-emerald-900">{{ summary.count || 0 }}</p>
+        <div class="card p-4 border-blue-200 bg-blue-50">
+          <p class="text-xs uppercase text-blue-700 font-bold">Total Transactions</p>
+          <p class="text-2xl font-extrabold text-blue-900">{{ summary.count || 0 }}</p>
         </div>
         <div class="card p-4 border-sky-200 bg-sky-50">
           <p class="text-xs uppercase text-sky-700 font-bold">Gross Amount</p>
-          <p class="text-2xl font-extrabold text-sky-900">₦ {{ money(summary.amount) }}</p>
+          <p class="text-2xl font-extrabold text-sky-900">Ã¢â€šÂ¦ {{ money(summary.amount) }}</p>
         </div>
         <div class="card p-4 border-amber-200 bg-amber-50">
           <p class="text-xs uppercase text-amber-700 font-bold">Cost Price</p>
-          <p class="text-2xl font-extrabold text-amber-900">₦ {{ money(summary.cost_price) }}</p>
+          <p class="text-2xl font-extrabold text-amber-900">Ã¢â€šÂ¦ {{ money(summary.cost_price) }}</p>
         </div>
         <div class="card p-4 border-indigo-200 bg-indigo-50">
           <p class="text-xs uppercase text-indigo-700 font-bold">Profit</p>
-          <p class="text-2xl font-extrabold text-indigo-900">₦ {{ money(summary.profit) }}</p>
+          <p class="text-2xl font-extrabold text-indigo-900">Ã¢â€šÂ¦ {{ money(summary.profit) }}</p>
         </div>
       </div>
 
@@ -107,17 +107,17 @@
               <td class="td capitalize">{{ tx.type }}</td>
               <td class="td uppercase">{{ tx.network }}</td>
               <td class="td">{{ tx.phone_number }}</td>
-              <td class="td text-right">₦ {{ money(tx.amount) }}</td>
-              <td class="td text-right">₦ {{ money(tx.cost_price) }}</td>
-              <td class="td text-right font-bold" :class="tx.profit >= 0 ? 'text-emerald-700' : 'text-rose-700'">₦ {{ money(tx.profit) }}</td>
+              <td class="td text-right">Ã¢â€šÂ¦ {{ money(tx.amount) }}</td>
+              <td class="td text-right">Ã¢â€šÂ¦ {{ money(tx.cost_price) }}</td>
+              <td class="td text-right font-bold" :class="tx.profit >= 0 ? 'text-blue-700' : 'text-rose-700'">Ã¢â€šÂ¦ {{ money(tx.profit) }}</td>
               <td class="td">
                 <span :class="badgeClass(tx.status)" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase">{{ tx.status }}</span>
               </td>
               <td class="td">
                 <div class="leading-tight">
-                  <p class="font-semibold text-slate-800">{{ tx.user?.name || '—' }}</p>
+                  <p class="font-semibold text-slate-800">{{ tx.user?.name || 'Ã¢â‚¬â€' }}</p>
                   <p class="text-[10px] text-slate-500">{{ tx.user?.email }}</p>
-                  <p class="text-[10px] text-slate-400">ID: {{ tx.user?.membership_number || '—' }}</p>
+                  <p class="text-[10px] text-slate-400">ID: {{ tx.user?.membership_number || 'Ã¢â‚¬â€' }}</p>
                 </div>
               </td>
               <td class="td font-mono text-[11px] text-slate-600">{{ tx.reference }}</td>
@@ -157,7 +157,7 @@ const client = axiosBase.create ? axiosBase.create() : axiosBase
 
 const money = (v) => Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const fmtDate = (d) => new Date(d).toLocaleString()
-const badgeClass = (status) => status === 'success' ? 'bg-emerald-100 text-emerald-700' : (status === 'failed' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700')
+const badgeClass = (status) => status === 'success' ? 'bg-blue-100 text-blue-700' : (status === 'failed' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700')
 
 const buildParams = () => {
   const p = new URLSearchParams({ page: String(page.value), per_page: String(perPage), summary: '1' })
@@ -207,3 +207,5 @@ onMounted(load)
 .card { @apply bg-white rounded-2xl border border-slate-200; }
 .card-elevated { @apply shadow-sm; }
 </style>
+
+

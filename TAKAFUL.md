@@ -1,12 +1,12 @@
-# Takaful (Member Welfare Pool) – Feature Guide
+# Takaful (Member Welfare Pool) â€“ Feature Guide
 
 Applicable date: 2026-04-04
 
 
 ## 1) Concept Overview
-- Takaful is a cooperative, non-refundable welfare pool funded by small monthly member contributions (default ₦200/month).
-- Purpose: If a member with an active Qard Hasan loan passes away or suffers a major loss, the system attempts to settle the member’s remaining principal from the pool, protecting both the cooperative and the member’s family.
-- Scope: Only principal on active Qard Hasan loans is settled. Pool pays when it has enough balance to fully clear a given loan’s outstanding principal.
+- Takaful is a cooperative, non-refundable welfare pool funded by small monthly member contributions (default â‚¦200/month).
+- Purpose: If a member with an active Qard Hasan loan passes away or suffers a major loss, the system attempts to settle the memberâ€™s remaining principal from the pool, protecting both the cooperative and the memberâ€™s family.
+- Scope: Only principal on active Qard Hasan loans is settled. Pool pays when it has enough balance to fully clear a given loanâ€™s outstanding principal.
 
 
 ## 2) Data Model Snapshot
@@ -15,12 +15,12 @@ The backend includes dedicated models and fields to support Takaful.
 - TakafulPoolEntry
   - Ledger of the shared pool.
   - Fields: direction (credit|debit), amount, reference, meta (JSON), timestamps.
-  - Helper: balance() – returns current net balance (credits – debits).
+  - Helper: balance() â€“ returns current net balance (credits â€“ debits).
 
 - TakafulContribution
-  - Records each member’s monthly contribution by period (e.g., "2026-04").
+  - Records each memberâ€™s monthly contribution by period (e.g., "2026-04").
   - Fields: user_id, period, amount, status (success|pending|failed), reference, meta, timestamps.
-  - Unique constraint: (user_id, period) – one row per member per period.
+  - Unique constraint: (user_id, period) â€“ one row per member per period.
 
 - User flags
   - users.deceased_at (nullable timestamp)
@@ -28,7 +28,7 @@ The backend includes dedicated models and fields to support Takaful.
   - These are set by admins to trigger pool settlement attempts of active Qard Hasan loans.
 
 - WalletTransaction (existing)
-  - Used when debiting a member’s wallet for a contribution.
+  - Used when debiting a memberâ€™s wallet for a contribution.
   - For Takaful debits, source=takaful_contribution and unique reference is recorded.
 
 - QardHasan and QardHasanRepayment (existing)
@@ -68,14 +68,14 @@ Example (.env)
 
 ## 5) Member Flows (Frontend + API)
 - Frontend route: /takaful (Member Welfare Pool)
-  - Shows current period, monthly amount, whether paid this period, member’s lifetime contributions total, and the global pool balance.
+  - Shows current period, monthly amount, whether paid this period, memberâ€™s lifetime contributions total, and the global pool balance.
   - Allows immediate "Pay now" if not yet paid this month.
 
 - Member APIs (protected)
   - GET /api/takaful/summary
     - Returns: period, monthly_amount, paid_this_period (bool), my_total_contributions, pool_balance.
   - GET /api/takaful/contributions
-    - Paginated list (page, per_page) of the member’s contributions (period, amount, status, reference, created_at).
+    - Paginated list (page, per_page) of the memberâ€™s contributions (period, amount, status, reference, created_at).
   - POST /api/takaful/pay-now
     - Optional body: { period?: 'YYYY-MM', amount?: number }
     - Debits wallet immediately and credits pool; creates or updates the success record for that period.
@@ -116,15 +116,15 @@ Notes
 ## 7) Settlement Logic (How payouts work)
 - Trigger: Admin marks a member as deceased or suffered major loss.
 - Engine: App\Services\TakafulService::settleMemberLoans(User, reason)
-  - Finds the member’s QardHasan loans with status=active.
+  - Finds the memberâ€™s QardHasan loans with status=active.
   - For each loan:
     - Computes remaining principal (principal_amount - paid_amount).
-    - Checks the live pool balance; if enough to fully cover that loan’s remainder, proceeds; otherwise, leaves the loan untouched (skipped_insufficient_pool).
+    - Checks the live pool balance; if enough to fully cover that loanâ€™s remainder, proceeds; otherwise, leaves the loan untouched (skipped_insufficient_pool).
     - Inside a database transaction: creates a QardHasanRepayment for the remaining amount, updates paid_amount, sets status to completed when fully covered, debits the pool via a TakafulPoolEntry (direction=debit), and writes a ShariahAuditLog entry.
   - Returns a summary: list of loans settled or skipped, total_settled, pool_before, pool_after.
 
 Important notes
-- Partial settlements for a single loan are not attempted; the pool must be sufficient to clear the loan’s remaining principal at the time.
+- Partial settlements for a single loan are not attempted; the pool must be sufficient to clear the loanâ€™s remaining principal at the time.
 - Pool balance is recalculated before each loan to reflect prior debits within the same run.
 
 
@@ -146,7 +146,7 @@ Idempotency
 
 
 ## 9) Security & Validation
-- All member endpoints require sanctum auth and the inactivity middleware, matching the app’s standard protection.
+- All member endpoints require sanctum auth and the inactivity middleware, matching the appâ€™s standard protection.
 - Admin endpoints require is_admin=true.
 - Inputs are validated (e.g., period format YYYY-MM, numeric amount, existing user_id).
 - Pool ledger and contributions queries allow optional filters but are read-only; writes are controlled and transactional.
@@ -208,7 +208,7 @@ C. Settlement after marking a member as deceased
 - Takaful: Cooperative welfare scheme based on mutual assistance.
 - Pool: The collective fund against which settlements are paid.
 - Contribution (Takaful): The monthly non-refundable payment made by members.
-- Settlement: Paying off the outstanding principal of a member’s Qard Hasan loan from the pool due to qualifying events.
+- Settlement: Paying off the outstanding principal of a memberâ€™s Qard Hasan loan from the pool due to qualifying events.
 - Period: A month token in YYYY-MM format.
 
 
@@ -216,5 +216,5 @@ C. Settlement after marking a member as deceased
 - Add admin UI pages to visualize the pool ledger, filter by member, and trigger manual batch charges.
 - Add automated retries to attempt charging pending contributions after wallet top-ups.
 - Notify guarantors or next-of-kin on settlement outcomes (policy-dependent).
-- Introduce configurable per-member policy toggles or exclusions where required by the cooperative’s by‑laws.
+- Introduce configurable per-member policy toggles or exclusions where required by the cooperativeâ€™s byâ€‘laws.
 - Add export endpoints (CSV/PDF) for pool ledger and monthly summaries.

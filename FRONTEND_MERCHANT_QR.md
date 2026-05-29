@@ -1,15 +1,15 @@
-Frontend guide: Pay with Attaqwa (Merchant QR)
+Frontend guide: Pay with assalaam (Merchant QR)
 
 Date: 2026-04-04
 
 Overview
-- This guide explains how members use the mobile app to receive and pay via “Pay with Attaqwa” QR codes.
+- This guide explains how members use the mobile app to receive and pay via â€œPay with assalaamâ€ QR codes.
 - It complements MERCHANT_API.md (backend API and payload format). See: MERCHANT_API.md.
 
-What’s included
+Whatâ€™s included
 - Two new member screens in the Vue app:
   - MerchantReceive.vue: Generate a QR for others to scan. Optional amount and note.
-  - MerchantPay.vue: Scan or paste a QR payload, confirm the merchant, enter amount and 4‑digit PIN, and pay.
+  - MerchantPay.vue: Scan or paste a QR payload, confirm the merchant, enter amount and 4â€‘digit PIN, and pay.
 - Native QR scanning using @capacitor-mlkit/barcode-scanning (Android and iOS).
 
 Prerequisites
@@ -39,21 +39,21 @@ Runtime permissions
 Usage flows
 A) MerchantReceive (member acting as a merchant)
 - Optional inputs: amount (suggested), note (<= 120 chars).
-- Tap “Generate QR” to receive a scannable payload using the backend endpoint GET /api/merchant/pay/qr.
-- The QR string follows the custom scheme: attaqwa:pay?... (see MERCHANT_API.md for details).
+- Tap â€œGenerate QRâ€ to receive a scannable payload using the backend endpoint GET /api/merchant/pay/qr.
+- The QR string follows the custom scheme: assalaam:pay?... (see MERCHANT_API.md for details).
 - Show the QR for the payer to scan, or copy/share the payload as text.
 
 B) MerchantPay (member paying a merchant)
-- Tap “Scan QR” to open the camera and scan a QR code payload. Alternatively, paste a payload string.
+- Tap â€œScan QRâ€ to open the camera and scan a QR code payload. Alternatively, paste a payload string.
 - The app calls POST /api/merchant/pay/resolve to:
   - Validate payload structure and resolve the merchant.
   - Handle branch disambiguation if a membership number is reused across branches (UI will prompt for branch).
 - Enter amount if not prefilled by the QR. Enter a short note (optional).
-- Enter 4‑digit transaction PIN.
-- On “Pay”, the app calls POST /api/merchant/pay which delegates to /api/wallet/transfer for PIN verification, balance checks, and ledger entries.
+- Enter 4â€‘digit transaction PIN.
+- On â€œPayâ€, the app calls POST /api/merchant/pay which delegates to /api/wallet/transfer for PIN verification, balance checks, and ledger entries.
 
 Amount precedence
-- Explicit amount entered in MerchantPay overrides the QR’s amount.
+- Explicit amount entered in MerchantPay overrides the QRâ€™s amount.
 - If neither is provided, the backend returns 422 (Amount is required).
 
 Error handling (typical cases)
@@ -63,12 +63,12 @@ Error handling (typical cases)
 - 403/409/422 from /api/wallet/transfer: Invalid PIN, insufficient balance, etc.
 
 Mobile build tips
-- If the scanner view doesn’t appear on Android:
+- If the scanner view doesnâ€™t appear on Android:
   - Run npx cap sync android after npm install.
   - Ensure Google Play Services is up-to-date on the test device.
 - If iOS build fails after adding the plugin:
   - Open ios/App in Xcode, resolve Swift package updates if prompted, then Clean Build Folder and rebuild.
-- If the camera permission prompt doesn’t show on iOS:
+- If the camera permission prompt doesnâ€™t show on iOS:
   - Confirm NSCameraUsageDescription exists in Info.plist (already added in this repo at frontend/ios/App/App/Info.plist).
 
 Developer notes

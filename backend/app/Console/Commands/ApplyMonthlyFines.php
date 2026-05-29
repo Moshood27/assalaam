@@ -72,7 +72,7 @@ class ApplyMonthlyFines extends Command
 
                 if (!$fineExists) {
                     if ($dryRun) {
-                        $this->line("[DRY-RUN] User {$user->id} ({$user->name}): Lateness fine of ₦" . number_format($fineAmount, 2) . " would be added.");
+                        $this->line("[DRY-RUN] User {$user->id} ({$user->name}): Lateness fine of â‚¦" . number_format($fineAmount, 2) . " would be added.");
                         $finesAppliedCount++;
                         continue;
                     }
@@ -91,7 +91,7 @@ class ApplyMonthlyFines extends Command
                         $token = $user->fcm_token ?: ($user->device_token ?? null);
                         if ($token) {
                             $title = 'Lateness Fine Applied';
-                            $body = "A lateness fine of ₦" . number_format($fineAmount, 2) . " has been added to your account for not contributing in the previous month.";
+                            $body = "A lateness fine of â‚¦" . number_format($fineAmount, 2) . " has been added to your account for not contributing in the previous month.";
                             $push->send($token, $title, $body, [
                                 'type' => 'lateness_fine',
                                 'amount' => (string) $fineAmount,

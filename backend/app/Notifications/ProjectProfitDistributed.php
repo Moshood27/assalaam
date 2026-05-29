@@ -26,7 +26,7 @@ class ProjectProfitDistributed extends Notification
         return [
             'type' => 'project_profit_distributed',
             'title' => 'Profit Distributed',
-            'message' => 'You received ₦'.number_format($this->amount, 2).' from '.$this->profit->project->name,
+            'message' => 'You received â‚¦'.number_format($this->amount, 2).' from '.$this->profit->project->name,
             'amount' => $this->amount,
             'project_id' => $this->profit->project_id,
             'project_profit_id' => $this->profit->id,

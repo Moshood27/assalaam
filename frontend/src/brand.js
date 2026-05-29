@@ -1,6 +1,6 @@
 // Simple brand helper for dynamic logos and titles
-const slug = (import.meta?.env?.VITE_BRAND_SLUG || 'assalam').toLowerCase()
-const defaultName = slug === 'attaqwa' ? 'ATTAQWA CO-OPERATIVE' : 'ASSALAM CO-OPERATIVE'
+const slug = (import.meta?.env?.VITE_BRAND_SLUG || 'assalaam').toLowerCase()
+const defaultName = slug === 'attaqwa' ? 'ATTAQWA CO-OPERATIVE' : 'AS-SALAAM CO-OPERATIVE'
 const name = String(import.meta?.env?.VITE_APP_NAME || defaultName)
 
 // Respect Vite base for correct paths in Capacitor (base: './') and web (base: '/app/')
@@ -20,3 +20,5 @@ export const brand = {
 }
 
 export default brand
+
+

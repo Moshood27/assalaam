@@ -46,7 +46,7 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ->label('Lateness Fine Paid'),
                 Forms\Components\TextInput::make('lateness_fine_amount')
                     ->numeric()
-                    ->prefix('₦'),
+                    ->prefix('â‚¦'),
                 Forms\Components\Section::make('Excuse Details')
                     ->schema([
                         Forms\Components\Select::make('excuse_type')
@@ -184,7 +184,7 @@ class AttendanceRecordsRelationManager extends RelationManager
                         ]);
 
                         $record->user->notifyMember(
-                            "🙏 Excuse Approved",
+                            "ðŸ™ Excuse Approved",
                             "Your excuse for meeting '{$record->meeting->name}' has been approved. You will not be charged any fine.",
                             [
                                 'type' => 'excuse_approved',
@@ -209,7 +209,7 @@ class AttendanceRecordsRelationManager extends RelationManager
                         ]);
 
                         $record->user->notifyMember(
-                            "❌ Excuse Rejected",
+                            "âŒ Excuse Rejected",
                             "Your excuse for meeting '{$record->meeting->name}' was not approved. You may be charged an absence fine if the meeting is audited.",
                             [
                                 'type' => 'excuse_rejected',

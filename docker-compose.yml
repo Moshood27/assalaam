@@ -1,14 +1,16 @@
 services:
   proxy:
     image: nginx:1.25-alpine
-    container_name: attaqwa-nginx
+    # container_name removed to avoid conflict
     restart: unless-stopped
+    ports:
+      - "8080:80" # Access this second project via port 8080
     volumes:
       - ./backend:/var/www/html
       - ./frontend/dist:/var/www/html/public/app
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
     networks:
-      - attaqwa-network
+      - assalam-network
       - gateway-network
     depends_on:
       - app
@@ -17,22 +19,20 @@ services:
     build:
       context: ./backend
       dockerfile: ../docker/php/Dockerfile
-    container_name: attaqwa-app
     restart: unless-stopped
     env_file: [ ".env" ]
     volumes:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     networks:
-      - attaqwa-network
+      - assalam-network
       - gateway-network
     depends_on:
-      db: # Updated from mysql to db
+      db:
         condition: service_healthy
 
-  db: # Service name now matches your .env DB_HOST=db
+  db:
     image: mysql:8.4
-    container_name: attaqwa-db # Using 'db' to avoid 'mysql' name conflict
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
@@ -40,26 +40,26 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - old-db-data:/var/lib/mysql # Points to the volume with your data
+      # Use a unique folder name to avoid the "Lock Error 11"
+      - ./mysql_data_v2:/var/lib/mysql
     networks:
-      - attaqwa-network
+      - assalam-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USERNAME}", "-p${DB_PASSWORD}"]
       interval: 10s
+      timeout: 5s
       retries: 5
 
   redis:
     image: redis:alpine
-    container_name: attaqwa-redis
     command: redis-server --requirepass ${REDIS_PASSWORD:-ANIbaba1122?}
     networks:
-      - attaqwa-network
+      - assalam-network
 
   worker:
     build:
       context: ./backend
       dockerfile: ../docker/php/Dockerfile
-    container_name: attaqwa-worker
     restart: unless-stopped
     command: php artisan horizon
     env_file: [ ".env" ]
@@ -67,17 +67,15 @@ services:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     networks:
-      - attaqwa-network
-      - gateway-network
+      - assalam-network
     depends_on:
-      - db # Updated from mysql to db
+      - db
       - app
 
   reverb:
     build:
       context: ./backend
       dockerfile: ../docker/php/Dockerfile
-    container_name: attaqwa-reverb
     restart: unless-stopped
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     env_file:
@@ -86,19 +84,12 @@ services:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     networks:
-      - attaqwa-network
-      - gateway-network
+      - assalam-network
     depends_on:
       - app
 
 networks:
-  attaqwa-network:
+  assalam-network: # Fixed typo in name
     driver: bridge
   gateway-network:
     external: true
-
-volumes:
-  # This tells Docker to use the existing volume 'coop2_db-data'
-  old-db-data:
-    external: true
-    name: coop2_db-data

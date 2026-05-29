@@ -781,7 +781,7 @@ class UtilityController extends Controller
         // Best-effort SMS notification
         try {
             $sms = app(\App\Services\SmsService::class);
-            $msg = 'Airtime purchased: ₦'.number_format($amount, 2).' for '.($tx->phone_number).'. Ref: '.$reference.'. Bal: ₦'.number_format((float)$user->balance, 2);
+            $msg = 'Airtime purchased: â‚¦'.number_format($amount, 2).' for '.($tx->phone_number).'. Ref: '.$reference.'. Bal: â‚¦'.number_format((float)$user->balance, 2);
             $sms->send($user->phone ?? null, $msg);
         } catch (\Throwable $e) {
             // ignore SMS errors
@@ -1156,7 +1156,7 @@ class UtilityController extends Controller
         try {
             $sms = app(\App\Services\SmsService::class);
             $debit = round((float) $tx->amount, 2); // includes convenience fee
-            $msg = 'Data purchased: ₦'.number_format($debit, 2).' '.strtoupper($tx->network).' ('.($bundleCode).') for '.($tx->phone_number).'. Ref: '.$reference.'. Bal: ₦'.number_format((float)$user->balance, 2);
+            $msg = 'Data purchased: â‚¦'.number_format($debit, 2).' '.strtoupper($tx->network).' ('.($bundleCode).') for '.($tx->phone_number).'. Ref: '.$reference.'. Bal: â‚¦'.number_format((float)$user->balance, 2);
             $sms->send($user->phone ?? null, $msg);
         } catch (\Throwable $e) {
             // ignore SMS errors
@@ -1726,7 +1726,7 @@ class UtilityController extends Controller
             $sms = app(\App\Services\SmsService::class);
             $token = $body['metertoken'] ?? ($body['mainToken'] ?? ($body['token'] ?? ($body['purchased_code'] ?? ($body['data']['token'] ?? null))));
             $tokenMsg = $token ? " Token: $token." : "";
-            $msg = 'Electricity vend: ₦'.number_format($totalDebit, 2).' to meter '.($meter).' ('.strtoupper($serviceId).').'.$tokenMsg.' Ref: '.$reference.'. Bal: ₦'.number_format((float)$user->balance, 2);
+            $msg = 'Electricity vend: â‚¦'.number_format($totalDebit, 2).' to meter '.($meter).' ('.strtoupper($serviceId).').'.$tokenMsg.' Ref: '.$reference.'. Bal: â‚¦'.number_format((float)$user->balance, 2);
             $sms->send($user->phone ?? null, $msg);
         } catch (\Throwable $e) {}
 
@@ -2068,7 +2068,7 @@ class UtilityController extends Controller
         $user->refresh();
         try {
             $sms = app(\App\Services\SmsService::class);
-            $msg = 'Cable subscription: ₦'.number_format($totalDebit, 2).' for '.strtoupper($service).' ('.($bundleCode).') on '.($smartcard).'. Ref: '.$reference.'. Bal: ₦'.number_format((float)$user->balance, 2);
+            $msg = 'Cable subscription: â‚¦'.number_format($totalDebit, 2).' for '.strtoupper($service).' ('.($bundleCode).') on '.($smartcard).'. Ref: '.$reference.'. Bal: â‚¦'.number_format((float)$user->balance, 2);
             $sms->send($user->phone ?? null, $msg);
         } catch (\Throwable $e) {}
 
