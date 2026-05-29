@@ -19,6 +19,8 @@ class SchemeResource extends Resource
     protected static ?string $model = Scheme::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static ?string $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 100;
 
     public static function form(Form $form): Form
     {
@@ -29,7 +31,7 @@ class SchemeResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('min_amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required(),
                 Forms\Components\Toggle::make('active')
                     ->label('Active')
@@ -92,22 +94,26 @@ class SchemeResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_scheme');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_scheme');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_scheme');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_scheme');
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('update_scheme');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('update_scheme');
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_scheme');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('delete_scheme');
     }
 
     public static function getPages(): array

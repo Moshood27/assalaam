@@ -20,6 +20,8 @@ class BranchResource extends Resource
     protected static ?string $model = Branch::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static ?string $navigationGroup = 'User Management';
+    protected static ?int $navigationSort = 20;
 
     public static function form(Form $form): Form
     {
@@ -143,22 +145,26 @@ class BranchResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_branch');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_branch');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_branches');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_branches');
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('create_branches'); // Assuming create/manage branches permission
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_branches'); // Assuming create/manage branches permission
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_records');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->can('delete_records');
     }
 
     public static function getPages(): array

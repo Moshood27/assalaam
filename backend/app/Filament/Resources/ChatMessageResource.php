@@ -102,4 +102,24 @@ class ChatMessageResource extends Resource
             'index' => Pages\ListChatMessages::route('/'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('view_any_chat_message');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('create_chat_message');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->can('update_chat_message');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->can('delete_chat_message');
+    }
 }

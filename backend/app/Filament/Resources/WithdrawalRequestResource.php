@@ -29,8 +29,9 @@ class WithdrawalRequestResource extends Resource
     protected static ?string $model = WithdrawalRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-
+    protected static ?string $navigationGroup = 'Financial Management';
     protected static ?string $navigationLabel = 'Withdrawals';
+    protected static ?int $navigationSort = 55;
 
     public static function form(Form $form): Form
     {
@@ -228,7 +229,7 @@ class WithdrawalRequestResource extends Resource
                         // Notify member via preferences
                         $user = $record->user?->fresh();
                         if ($user) {
-                            $msg = 'Withdrawal paid: ₦'.number_format((float)$record->amount, 2).' to bank '.$record->bank_name.' (Acct '.$record->account_number.'). Ref: '.$record->reference;
+                            $msg = 'Withdrawal paid: â‚¦'.number_format((float)$record->amount, 2).' to bank '.$record->bank_name.' (Acct '.$record->account_number.'). Ref: '.$record->reference;
                             $user->notifyMember('Withdrawal Paid', $msg, [
                                 'type' => 'withdrawal_paid',
                                 'amount' => (float)$record->amount,
@@ -272,7 +273,7 @@ class WithdrawalRequestResource extends Resource
                         // Notify member via preferences
                         $user = $record->user?->fresh();
                         if ($user) {
-                            $msg = 'Withdrawal declined: ₦'.number_format((float)$record->amount, 2).'. Reason: '.$reason.' Ref: '.$record->reference;
+                            $msg = 'Withdrawal declined: â‚¦'.number_format((float)$record->amount, 2).'. Reason: '.$reason.' Ref: '.$record->reference;
                             $user->notifyMember('Withdrawal Declined', $msg, [
                                 'type' => 'withdrawal_declined',
                                 'amount' => (float)$record->amount,
@@ -349,7 +350,7 @@ class WithdrawalRequestResource extends Resource
                             foreach ($admins as $admin) {
                                 $admin->notifyMember(
                                     'High-Value Withdrawal Approval Required',
-                                    "A withdrawal of ₦" . number_format((float)$record->amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
+                                    "A withdrawal of â‚¦" . number_format((float)$record->amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
                                     [
                                         'type' => 'high_value_withdrawal_approval',
                                         'withdrawal_id' => $record->id,
@@ -380,22 +381,26 @@ class WithdrawalRequestResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_withdrawal_request');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_withdrawal_request');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_withdrawal_request');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_withdrawal_request');
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('update_withdrawal_request');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('update_withdrawal_request');
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_withdrawal_request');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->can('delete_withdrawal_request');
     }
 
     public static function getEloquentQuery(): Builder
