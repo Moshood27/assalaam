@@ -119,32 +119,43 @@ class MigrateLoanRepaymentsSeeder extends Seeder
             return null;
         }
 
+        // Detect which date column exists in the legacy loan table
+        $columns = DB::getSchemaBuilder()->getColumnListing('loan');
+        $dateCol = 'id'; // fallback
+        foreach (['releasedate', 'release_date', 'disbursed_at', 'created_at'] as $possible) {
+            if (in_array($possible, $columns)) {
+                $dateCol = $possible;
+                break;
+            }
+        }
+
         // Build base query: loans for this member by memberid (memberno column does not exist in legacy loan table)
         $base = DB::table('loan')
             ->where('memberid', (int)($legacyMember->id ?? 0));
 
         // Prefer the latest (closest) loan created on/before the repayment date and not cancelled/rejected
-        $preferred = (clone $base)
-            ->whereNotIn('status', ['Cancelled','Rejected','cancelled','rejected'])
-            ->where(function ($q) use ($paidAt) {
-                $q->whereNull('created_at')->orWhere('created_at', '<=', $paidAt);
-            })
-            ->orderBy('created_at', 'desc')
-            ->first();
+        $preferredQuery = (clone $base)
+            ->whereNotIn('status', ['Cancelled', 'Rejected', 'cancelled', 'rejected']);
 
-        $legacyLoan = $preferred;
+        if ($dateCol !== 'id') {
+            $preferredQuery->where(function ($q) use ($paidAt, $dateCol) {
+                $q->whereNull($dateCol)->orWhere($dateCol, '<=', $paidAt);
+            });
+        }
+
+        $legacyLoan = $preferredQuery->orderBy($dateCol, 'desc')->first();
 
         if (!$legacyLoan) {
             // Any non-cancelled loan regardless of date (oldest first)
             $legacyLoan = (clone $base)
-                ->whereNotIn('status', ['Cancelled','Rejected','cancelled','rejected'])
-                ->orderBy('created_at', 'asc')
+                ->whereNotIn('status', ['Cancelled', 'Rejected', 'cancelled', 'rejected'])
+                ->orderBy($dateCol, 'asc')
                 ->first();
         }
         if (!$legacyLoan) {
             // As last resort, any loan row
             $legacyLoan = (clone $base)
-                ->orderBy('created_at', 'asc')
+                ->orderBy($dateCol, 'asc')
                 ->first();
         }
         if (!$legacyLoan) {
