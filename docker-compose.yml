@@ -68,7 +68,7 @@ services:
       dockerfile: ../docker/php/Dockerfile
     restart: unless-stopped
     command: php artisan horizon
-    env_file: [ ".env" ]
+    env_file: [ "./backend/.env" ]
     environment:
       - LANG=C.UTF-8
       - LC_ALL=C.UTF-8
@@ -88,7 +88,7 @@ services:
     restart: unless-stopped
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - LANG=C.UTF-8
       - LC_ALL=C.UTF-8

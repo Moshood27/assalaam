@@ -1,0 +1,1 @@
+import{C as e}from"./index-Cmuo8c_W.js";var t=class extends e{async show(e){}async hide(e){}};export{t as SplashScreenWeb};
