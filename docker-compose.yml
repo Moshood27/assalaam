@@ -11,7 +11,7 @@ services:
       - ./frontend/dist:/var/www/html/public/app
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
     networks:
-      - assalam-network
+      - assalaam-network
       - gateway-network
     depends_on:
       - app
@@ -26,7 +26,7 @@ services:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     networks:
-      - assalam-network
+      - assalaam-network
       - gateway-network
     depends_on:
       mysql:
@@ -44,7 +44,7 @@ services:
       # Use a unique folder name to avoid the "Lock Error 11"
       - ./mysql_data_v2:/var/lib/mysql
     networks:
-      - assalam-network
+      - assalaam-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USERNAME}", "--password=${DB_PASSWORD}"]
       interval: 10s
@@ -56,7 +56,7 @@ services:
     image: redis:alpine
     command: redis-server --requirepass ${REDIS_PASSWORD:-ANIbaba1122?}
     networks:
-      - assalam-network
+      - assalaam-network
 
   worker:
     build:
@@ -69,7 +69,7 @@ services:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     networks:
-      - assalam-network
+      - assalaam-network
     depends_on:
       - mysql
       - app
@@ -86,12 +86,12 @@ services:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     networks:
-      - assalam-network
+      - assalaam-network
     depends_on:
       - app
 
 networks:
-  assalam-network: # Fixed typo in name
+  assalaam-network: # Fixed typo in name
     driver: bridge
   gateway-network:
     external: true

@@ -137,14 +137,14 @@
 
                 <!-- Halal Investment -->
                 <div class="group p-8 rounded-[2.5rem] bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-500">
-                    <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 mb-8 group-hover:scale-110 transition-transform duration-500">
+                    <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 mb-8 group-hover:scale-110 transition-transform duration-500">
                         <i data-lucide="trending-up" class="w-8 h-8"></i>
                     </div>
                     <h3 class="text-2xl font-bold mb-4">Halal Investment</h3>
                     <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Put your money to work in vetted projects. Share profits based on the Mudarabah principle.</p>
                     <ul class="space-y-4">
-                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Ethical ventures</li>
-                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Transparent sharing</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Ethical ventures</li>
+                        <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Transparent sharing</li>
                     </ul>
                 </div>
 
@@ -193,7 +193,7 @@
                         <i data-lucide="qr-code" class="w-8 h-8"></i>
                     </div>
                     <h3 class="text-2xl font-bold mb-4">Pay with QR</h3>
-                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Fast and secure payments to merchants using our "Pay with assalaam" QR system.</p>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">Fast and secure payments to merchants using our "Pay with AS-SALAAM" QR system.</p>
                     <ul class="space-y-4">
                         <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Zero contact</li>
                         <li class="flex items-center gap-3 text-sm font-medium text-slate-500"><div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Trusted network</li>
@@ -208,7 +208,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-20">
                 <h2 class="text-3xl sm:text-4xl font-bold mb-4">Start Your Ethical Journey</h2>
-                <p class="text-slate-600 dark:text-slate-400">Joining AS-SALAAM is simple and transparent. Here's how you can get started today.</p>
+                <p class="text-slate-600 dark:text-slate-400">Joining AT-TAQWA is simple and transparent. Here's how you can get started today.</p>
             </div>
 
             <div class="relative">
@@ -246,24 +246,24 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-slate-900 rounded-[3rem] p-8 sm:p-16 border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center gap-16">
                 <div class="lg:w-1/2">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold mb-6 border border-blue-200 dark:border-blue-800">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold mb-6 border border-emerald-200 dark:border-emerald-800">
                         <i data-lucide="shield-check" class="w-3 h-3"></i>
                         SHARIA GOVERNANCE
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-bold mb-6">Built on Foundation of <span class="text-blue-600">Trust & Integrity</span></h2>
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-6">Built on Foundation of <span class="text-emerald-600">Trust & Integrity</span></h2>
                     <p class="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-                        At AS-SALAAM, we are committed to the highest standards of Islamic finance. Our operations are strictly supervised to ensure zero interest (Riba), avoidance of uncertainty (Gharar), and promotion of social justice.
+                        At AT-TAQWA, we are committed to the highest standards of Islamic finance. Our operations are strictly supervised to ensure zero interest (Riba), avoidance of uncertainty (Gharar), and promotion of social justice.
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <div class="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
                             <div>
                                 <h4 class="font-bold text-sm">Sharia Audit</h4>
                                 <p class="text-xs text-slate-500">Regular compliance audits by experts.</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
-                            <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <div class="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>
                             <div>
                                 <h4 class="font-bold text-sm">Profit Sharing</h4>
                                 <p class="text-xs text-slate-500">Fair distribution via Mudarabah.</p>
@@ -344,7 +344,7 @@
                     <h2 class="text-3xl sm:text-4xl font-bold mb-8">Frequently Asked Questions</h2>
                     <div class="space-y-4">
                         <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                            <h4 class="text-lg font-bold mb-2">Is AS-SALAAM really interest-free?</h4>
+                            <h4 class="text-lg font-bold mb-2">Is AT-TAQWA really interest-free?</h4>
                             <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Yes. All our financial products are designed based on Sharia principles, which strictly prohibit Riba (interest). We use Mudarabah (profit sharing) and Qard Hasan (benevolent loans).</p>
                         </div>
                         <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
@@ -483,11 +483,11 @@
 
             <div class="pt-12 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6">
                 <p class="text-sm text-slate-400">
-                    &copy; {{ date('Y') }} {{ config('brand.name', 'AS-SALAAM') }}. RC: 9518505
+                    &copy; {{ date('Y') }} {{ config('brand.name', 'AT-TAQWA') }}. RC: 9518505
                 </p>
                 <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-                    <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-blue-500"></i> Secured</span>
-                    <span class="flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3 text-blue-500"></i> Sharia Compliant</span>
+                    <span class="flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-emerald-500"></i> Secured</span>
+                    <span class="flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i> Sharia Compliant</span>
                 </div>
             </div>
         </div>

@@ -5,5 +5,5 @@ return [
     'slug' => env('BRAND_SLUG', 'assalaam'),
 
     // Human readable brand name. Defaults to APP_NAME if provided
-    'name' => env('APP_NAME', 'assalaam CO-OPERATIVE'),
+    'name' => env('APP_NAME', 'AS-SALAAM CO-OPERATIVE'),
 ];

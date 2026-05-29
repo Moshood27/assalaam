@@ -1,377 +1,344 @@
 
-    Directory:
-    W:\home\moshiano\development\assalaam\backend\database\migrations
+    Directory: W:\home\moshiano\development\assalaam\node_modules
 Mode                 LastWriteTime         Length Name
 ----                 -------------         ------ ----
-------         5/29/2026   1:37 PM            867 2026_04_20_140000_add_member_
-                                                  and_recipient_type_to_expense
-                                                  _entries.php
-------         5/29/2026   1:37 PM           1522 0001_01_01_000000_create_user
-                                                  s_table.php
-------         5/29/2026   1:37 PM           1309 2026_03_21_104700_create_goal
-                                                  _bookings_table.php
-------         5/29/2026   1:37 PM            878 2026_04_13_123000_add_admin_c
-                                                  harge_fields_to_users_table.p
-                                                  hp
-------         5/29/2026   1:37 PM           2257 2026_04_12_215000_create_atte
-                                                  ndance_system_tables.php
-------         5/29/2026   1:37 PM           1128 2026_04_10_212748_add_legacy_
-                                                  fields_to_users_and_beneficia
-                                                  ries.php
-------         5/29/2026   1:37 PM           1602 2026_04_01_200500_add_bank_de
-                                                  tails_to_users.php
-------         5/29/2026   1:37 PM            731 2026_05_10_180000_add_flutter
-                                                  wave_dva_fields_to_users.php
-------         5/29/2026   1:37 PM            830 2026_03_14_000110_create_qard
-                                                  _hasan_repayments_table.php
-------         5/29/2026   1:37 PM            679 2026_04_19_210953_add_device_
-                                                  uuid_to_attendance_records_ta
-                                                  ble.php
-------         5/29/2026   1:22 PM           1111 2026_04_10_160200_add_vendor_
-                                                  fields_to_store_order_items.p
-                                                  hp
-------         5/29/2026   1:37 PM           2555 2026_03_14_000200_create_coop
-                                                  _tables.php
-------         5/29/2026   1:37 PM            921 2026_04_10_150254_create_shar
-                                                  ia_board_members_table.php
-------         5/29/2026   1:37 PM           3005 2026_04_19_210000_add_cascade
-                                                  _to_user_foreign_keys.php
-------         5/29/2026   1:37 PM            781 2026_04_21_133923_add_special
-                                                  _savings_balance_to_users_tab
-                                                  le.php
-------         5/29/2026   1:37 PM           2678 2026_04_25_113000_ensure_preg
-                                                  nancy_and_excuse_columns_are_
-                                                  added.php
-------         5/29/2026   1:37 PM            916 2026_04_03_203600_create_taka
-                                                  ful_contributions_table.php
-------         5/29/2026   1:37 PM           1081 2026_04_12_000000_create_tran
-                                                  saction_approvals_table.php
-------         5/29/2026   1:37 PM           2187 2026_04_14_125839_add_legacy_
-                                                  balance_columns_to_users_tabl
-                                                  e.php
-------         5/29/2026   1:37 PM           2161 2026_04_03_202900_add_autosav
-                                                  e_fields_to_users.php
-------         5/29/2026   1:37 PM            967 2026_04_11_150951_create_savi
-                                                  ngs_group_members_table.php
-------         5/29/2026   1:37 PM           1022 2026_03_28_160500_add_voting_
-                                                  open_notified_at_to_agm_sessi
-                                                  ons_table.php
-------         5/29/2026   1:37 PM           3796 2026_04_24_205451_add_pregnan
-                                                  cy_and_excuse_to_attendance_s
-                                                  ystem.php
-------         5/29/2026   1:37 PM           1979 2026_03_21_011900_add_status_
-                                                  to_qard_hasan_guarantors_tabl
-                                                  e.php
-------         5/29/2026   1:37 PM           4823 2026_05_13_140000_move_virtua
-                                                  l_account_fields_to_separate_
-                                                  table.php
-------         5/29/2026   5:02 PM           6513 2026_04_13_134803_add_missing
-                                                  _profile_fields_to_users_tabl
-                                                  e.php
-------         5/29/2026   1:37 PM            802 2026_04_10_170100_create_proj
-                                                  ect_proposal_comments_table.p
-                                                  hp
-------         5/29/2026   1:37 PM            634 2026_04_10_212712_create_gold
-                                                  _schemes_seeder_migration.php
-------         5/29/2026   1:37 PM            716 2026_04_11_151252_add_group_s
-                                                  avings_scheme_to_schemes_tabl
-                                                  e.php
-------         5/29/2026   1:37 PM            726 2026_05_15_154203_add_descrip
-                                                  tion_to_features_table.php
-------         5/29/2026   1:37 PM            659 2026_05_16_102351_cleanup_per
-                                                  _user_feature_flags.php
-------         5/29/2026   1:37 PM           1869 0001_01_01_000002_create_jobs
-                                                  _table.php
-------         5/29/2026   1:37 PM            783 2026_04_11_151120_add_savings
-                                                  _group_id_to_contributions_ta
-                                                  ble.php
-------         5/29/2026   1:37 PM            675 2026_03_29_045500_add_transac
-                                                  tion_pin_to_users_table.php
-------         5/29/2026   1:37 PM           2201 2026_04_19_204000_enhance_exp
-                                                  ense_entries_table.php
-------         5/29/2026   1:37 PM           3018 2026_04_30_185000_expand_ledg
-                                                  er_and_models.php
-------         5/29/2026   1:37 PM            584 2026_04_18_110445_add_fine_pe
-                                                  nding_to_attendance_records_s
-                                                  tatus.php
-------         5/29/2026   1:37 PM           1735 2026_03_20_194800_fix_contrib
-                                                  utions_reference_index.php
-------         5/29/2026   4:56 PM           1736 2026_04_12_215521_migrate_mee
-                                                  ting_branches_to_pivot.php
-------         5/29/2026   1:37 PM           1012 2026_04_10_142525_create_sada
-                                                  qah_contributions_table.php
-------         5/29/2026   1:37 PM           1743 2026_03_25_091500_add_indexes
-                                                  _to_transactions_tables.php
-------         5/29/2026   1:37 PM            548 2026_05_13_000000_add_monnify
-                                                  _fields_to_users.php
-------         5/29/2026   1:37 PM           1460 2026_03_18_151800_add_indexes
-                                                  _to_contributions.php
-------         5/29/2026   1:37 PM            906 2026_04_25_115800_sync_pregna
-                                                  ncy_grace_status.php
-------         5/29/2026   1:37 PM           1731 2026_03_15_152500_add_paystac
-                                                  k_fields_to_users.php
-------         5/29/2026   1:37 PM           1008 2026_03_15_134800_create_pers
-                                                  onal_access_tokens_table.php
-------         5/29/2026   1:37 PM            771 2026_04_06_173000_add_stock_t
-                                                  o_products_table.php
-------         5/29/2026   1:37 PM            756 2026_04_18_120941_add_status_
-                                                  and_processed_at_to_charity_l
-                                                  edger_table.php
-------         5/29/2026   1:37 PM            654 2026_04_13_174823_create_sett
-                                                  ings_table.php
-------         5/29/2026   1:37 PM            954 2026_03_28_112400_create_fcm_
-                                                  tokens_table.php
-------         5/29/2026   1:37 PM           1119 2026_03_24_175600_create_stor
-                                                  e_order_items_table.php
-------         5/29/2026   1:37 PM            878 2026_03_21_012200_create_agm_
-                                                  votes_table.php
-------         5/29/2026   1:37 PM            669 2026_04_03_203700_add_takaful
-                                                  _flags_to_users.php
-------         5/29/2026   1:37 PM           1175 2026_03_31_101500_create_proj
-                                                  ect_profit_payouts.php
-------         5/29/2026   1:37 PM            739 2026_04_03_203500_create_taka
-                                                  ful_pool_entries_table.php
-------         5/29/2026   1:37 PM           1050 2026_05_07_102523_create_chat
-                                                  _rooms_table.php
-------         5/29/2026   1:37 PM            879 2026_04_20_125517_add_migrati
-                                                  on_dates_to_qard_hasans_table
-                                                  .php
-------         5/29/2026   1:37 PM            558 2026_05_16_090446_add_cached_
-                                                  wallet_totals_to_users_table.
-                                                  php
-------         5/29/2026   1:37 PM            849 2026_05_05_110430_add_attachm
-                                                  ent_and_type_to_support_messa
-                                                  ges_table.php
-------         5/29/2026   1:37 PM            686 2026_05_06_140408_add_meeting
-                                                  _attendance_count_to_qard_has
-                                                  ans_table.php
-------         5/29/2026   1:37 PM            988 2026_04_07_111628_create_bree
-                                                  zy_sessions_table.php
-------         5/29/2026   1:37 PM            967 2026_03_19_140900_create_inco
-                                                  me_entries_table.php
-------         5/29/2026   1:22 PM           1356 2026_04_10_160000_create_vend
-                                                  ors_table.php
-------         5/29/2026   1:37 PM            902 0001_01_01_000001_create_cach
-                                                  e_table.php
-------         5/29/2026   1:22 PM            890 2026_04_10_193000_fixup_produ
-                                                  ct_and_vendor_approvals.php
-------         5/29/2026   1:37 PM            795 2026_04_07_140624_create_whit
-                                                  elisted_ips_table.php
-------         5/29/2026   1:37 PM            788 2026_05_02_135550_add_ledger_
-                                                  journal_id_to_takaful_contrib
-                                                  utions.php
-------         5/29/2026   1:37 PM           2180 2026_03_21_010500_create_prod
-                                                  ucts_table.php
-------         5/29/2026   1:37 PM            835 2026_03_20_113600_add_passpor
-                                                  t_path_to_users_table.php
-------         5/29/2026   1:37 PM            777 2026_04_01_191000_add_withdra
-                                                  wable_to_wallet_transactions.
-                                                  php
-------         5/29/2026   1:37 PM           1474 2026_03_17_163300_add_loan_gu
-                                                  arantors_and_defaulter_flag.p
-                                                  hp
-------         5/29/2026   1:37 PM           3865 2026_04_30_183000_create_doub
-                                                  le_entry_ledger_tables.php
-------         5/29/2026   1:37 PM            642 2026_04_07_154500_add_user_id
-                                                  _to_takaful_pool_entries_tabl
-                                                  e.php
-------         5/29/2026   1:37 PM           2137 2026_04_06_130157_create_tele
-                                                  scope_entries_table.php
-------         5/29/2026   1:37 PM           6657 2026_04_07_171200_create_perm
-                                                  ission_tables.php
-------         5/29/2026   1:37 PM            914 2026_03_21_012500_add_device_
-                                                  token_to_users.php
-------         5/29/2026   1:37 PM            707 2026_03_15_131500_add_is_admi
-                                                  n_to_users.php
-------         5/29/2026   1:37 PM           1227 2026_03_14_000100_create_qard
-                                                  _hasans_table.php
-------         5/29/2026   1:37 PM            607 2026_05_07_153000_create_chat
-                                                  _canned_responses_table.php
-------         5/29/2026   1:37 PM           1826 2026_05_16_103122_convert_fea
-                                                  ture_values_to_json.php
-------         5/29/2026   1:37 PM            712 2026_05_08_160319_add_activit
-                                                  y_fields_to_users_table.php
-------         5/29/2026   1:37 PM            660 2026_03_15_180100_create_noti
-                                                  fications_table.php
-------         5/29/2026   1:37 PM           6974 2026_04_13_131945_add_detaile
-                                                  d_fields_to_member_applicatio
-                                                  ns_and_users.php
-------         5/29/2026   1:37 PM            679 2026_04_14_092949_add_discrep
-                                                  ancy_reported_at_to_users_tab
-                                                  le.php
-------         5/29/2026   1:22 PM            972 2026_04_11_150000_add_approva
-                                                  l_fields_to_vendors.php
-------         5/29/2026   1:37 PM           1200 2026_04_27_165743_rename_preg
-                                                  nancy_columns_to_nursing_moth
-                                                  er.php
-------         5/29/2026   1:22 PM            658 2026_04_10_160100_add_vendor_
-                                                  id_to_products_table.php
-------         5/29/2026   1:37 PM            754 2026_03_21_012100_create_agm_
-                                                  candidates_table.php
-------         5/29/2026   1:37 PM            760 2026_04_06_165555_create_cate
-                                                  gories_table.php
-------         5/29/2026   1:37 PM           1143 2026_04_19_214716_add_latenes
-                                                  s_fine_to_attendance_records.
-                                                  php
-------         5/29/2026   1:37 PM            778 2026_04_05_222414_add_order_i
-                                                  d_to_utility_transactions_tab
-                                                  le.php
-------         5/29/2026   1:37 PM            864 2026_04_09_131750_add_notific
-                                                  ation_preferences_to_users_ta
-                                                  ble.php
-------         5/29/2026   1:37 PM            831 2026_04_10_170000_add_sharia_
-                                                  fields_to_project_proposals.p
-                                                  hp
-------         5/29/2026   1:37 PM            691 2026_04_23_133000_add_categor
-                                                  y_to_contributions.php
-------         5/29/2026   1:37 PM            988 2026_03_24_175500_create_stor
-                                                  e_orders_table.php
-------         5/29/2026   1:37 PM           1140 2026_04_10_190000_create_gami
-                                                  fication_tables.php
-------         5/29/2026   1:37 PM           1104 2026_04_11_170000_create_shar
-                                                  ia_disputes_table.php
-------         5/29/2026   1:37 PM            606 2026_05_17_123500_add_soft_de
-                                                  letes_to_schemes_table.php
-------         5/29/2026   1:37 PM           1191 2026_04_04_170000_add_attachm
-                                                  ents_to_projects.php
-------         5/29/2026   1:37 PM            570 2026_05_15_174409_create_webh
-                                                  ook_calls_table.php
-------         5/29/2026   1:37 PM            940 2026_03_21_165300_add_address
-                                                  _to_users_table.php
-------         5/29/2026   1:37 PM           1318 2026_04_13_161737_update_atte
-                                                  ndance_system_remove_apology_
-                                                  add_reminder.php
-------         5/29/2026   4:55 PM            832 2026_04_12_215142_create_bran
-                                                  ch_meeting_table.php
-------         5/29/2026   1:37 PM            689 2026_03_20_213000_add_phone_t
-                                                  o_users_table.php
-------         5/29/2026   1:37 PM            987 2026_03_21_104600_create_savi
-                                                  ngs_goals_table.php
-------         5/29/2026   1:37 PM           1061 2026_04_11_150824_create_savi
-                                                  ngs_groups_table.php
-------         5/29/2026   1:37 PM            745 2026_04_11_162000_add_zakat_t
-                                                  racking_to_users_table.php
-------         5/29/2026   1:37 PM           1062 2026_05_07_102652_create_chat
-                                                  _room_members_table.php
-------         5/29/2026   1:37 PM            903 2026_03_21_151900_add_fcm_tok
-                                                  en_to_users_table.php
-------         5/29/2026   1:37 PM            886 2026_04_10_214048_change_unit
-                                                  s_to_decimal_in_contributions
-                                                  _and_project_investments_tabl
-                                                  es.php
-------         5/29/2026   1:37 PM           1298 2026_04_01_203000_create_with
-                                                  drawal_requests.php
-------         5/29/2026   1:37 PM            749 2026_04_07_185247_add_coordin
-                                                  ates_to_branches_table.php
-------         5/29/2026   1:37 PM           1067 2026_04_22_102215_add_default
-                                                  ed_status_to_qard_hasans_tabl
-                                                  e.php
-------         5/29/2026   1:37 PM            731 2026_05_15_153603_create_feat
-                                                  ures_table.php
-------         5/29/2026   1:37 PM           1942 2026_04_07_222400_add_agreeme
-                                                  nt_rejection_reason_to_qard_h
-                                                  asans_table.php
-------         5/29/2026   1:37 PM           1287 2026_04_28_121500_create_loan
-                                                  _penalties_table.php
-------         5/29/2026   1:37 PM            695 2026_03_21_012000_create_agm_
-                                                  sessions_table.php
-------         5/29/2026   1:37 PM            653 2026_04_19_214533_add_missing
-                                                  _roles_for_expense_module.php
-------         5/29/2026   1:37 PM            734 2026_04_06_165747_add_categor
-                                                  y_id_to_products_table.php
-------         5/29/2026   1:37 PM            819 2026_05_13_150000_add_opay_fi
-                                                  elds_to_user_virtual_accounts
-                                                  .php
-------         5/29/2026   1:37 PM            588 2026_04_17_151236_create_admi
-                                                  nistrative_charges_table.php
-------         5/29/2026   1:37 PM            758 2026_04_07_131552_create_acti
-                                                  vity_log_table.php
-------         5/29/2026   1:37 PM           1100 2026_04_10_142349_create_sada
-                                                  qah_projects_table.php
-------         5/29/2026   1:37 PM           1048 2026_04_17_174500_add_user_id
-                                                  _to_member_applications_and_f
-                                                  ix_user_approval_default.php
-------         5/29/2026   1:37 PM           1326 2026_03_28_182500_add_bvn_and
-                                                  _verification_to_users.php
-------         5/29/2026   1:37 PM           1499 2026_05_07_102945_create_chat
-                                                  _messages_table.php
-------         5/29/2026   1:37 PM            694 2026_03_14_000120_create_char
-                                                  ity_ledger_table.php
-------         5/29/2026   1:37 PM           1000 2026_04_12_221000_add_pending
-                                                  _fines_to_attendance_system.p
-                                                  hp
-------         5/29/2026   1:37 PM           1173 2026_03_18_180500_create_util
-                                                  ity_transactions_table.php
-------         5/29/2026   1:37 PM           1396 2026_04_10_153850_add_notific
-                                                  ation_tracking_to_shura_table
-                                                  s.php
-------         5/29/2026   1:37 PM            709 2026_03_15_124500_add_active_
-                                                  to_schemes_table.php
-------         5/29/2026   1:37 PM           1670 2026_04_10_153500_create_proj
-                                                  ect_proposals_table.php
-------         5/29/2026   1:37 PM           1032 2026_04_23_120000_increase_at
-                                                  tendance_radius.php
-------         5/29/2026   1:37 PM           4076 2026_04_30_184000_add_ledger_
-                                                  references_to_models.php
-------         5/29/2026   1:37 PM           2390 2026_05_16_080000_add_scaling
-                                                  _optimizations_columns.php
-------         5/29/2026   1:37 PM            916 2026_04_10_154630_create_juni
-                                                  or_accounts_table.php
-------         5/29/2026   1:37 PM            658 2026_03_14_000130_create_shar
-                                                  iah_audit_logs_table.php
-------         5/29/2026   5:02 PM           1793 2026_04_13_154000_add_imam_si
-                                                  gnature_and_missing_user_docs
-                                                  .php
-------         5/29/2026   1:37 PM           3414 2026_03_30_131500_create_proj
-                                                  ects_and_investments.php
-------         5/29/2026   1:37 PM           1232 2026_04_10_161000_add_approva
-                                                  l_to_products_table.php
-------         5/29/2026   1:37 PM            480 2026_03_31_103500_create_proj
-                                                  ect_profit_payouts.php
-------         5/29/2026   1:37 PM            843 2026_04_19_205116_add_payout_
-                                                  fields_to_expense_entries.php
-------         5/29/2026   1:37 PM            866 2026_03_31_223800_create_supp
-                                                  ort_messages_table.php
-------         5/29/2026   1:37 PM            948 2026_04_10_154509_create_bene
-                                                  ficiaries_table.php
-------         5/29/2026   1:37 PM            971 2026_04_10_153000_update_agm_
-                                                  voting_weighted.php
-------         5/29/2026   1:37 PM            608 2026_04_10_212550_add_gold_ba
-                                                  lance_to_users_table.php
-------         5/29/2026   1:37 PM            845 2026_03_15_153000_create_wall
-                                                  et_transactions_table.php
-------         5/29/2026   1:37 PM            674 2026_04_23_131305_add_grace_p
-                                                  eriod_to_meetings_table.php
-------         5/29/2026   1:37 PM            916 2026_05_21_163625_add_batch_u
-                                                  uid_to_activity_log_table.php
-------         5/29/2026   1:37 PM           1026 2026_04_06_183439_add_agreeme
-                                                  nt_docs_to_qard_hasans_table.
-                                                  php
-------         5/29/2026   1:37 PM            756 2026_04_14_085625_add_migrati
-                                                  on_fields_to_users_table.php
-------         5/29/2026   1:37 PM            969 2026_03_19_141100_create_expe
-                                                  nse_entries_table.php
-------         5/29/2026   1:37 PM           1294 2026_04_10_170500_add_quorum_
-                                                  and_certificate_to_shura_tabl
-                                                  es.php
-------         5/29/2026   1:37 PM            668 2026_04_17_140000_add_push_to
-                                                  kens_to_member_applications_t
-                                                  able.php
-------         5/29/2026   1:37 PM           1704 2026_03_31_120900_create_memb
-                                                  er_applications_table.php
-------         5/29/2026   1:37 PM           1690 2026_04_01_180000_add_nudge_a
-                                                  nd_escalation_to_qard_hasan_g
-                                                  uarantors.php
-------         5/29/2026   1:37 PM            757 2026_04_14_173349_add_takaful
-                                                  _balance_to_users_table.php
-------         5/29/2026   1:37 PM           2003 2026_03_15_173700_update_memb
-                                                  ership_number_unique_index.ph
-                                                  p
-------         5/29/2026   1:37 PM           1151 2026_04_01_171500_add_admin_a
-                                                  pproval_and_rejection_to_qard
-                                                  _hasans.php
-------         5/29/2026   1:37 PM            694 2026_04_04_140500_add_takaful
-                                                  _policy_flags_to_users.php
-------         5/29/2026   1:37 PM           1961 2026_04_10_180000_update_proj
-                                                  ects_for_tracking_and_units.p
-                                                  hp
+d-----         5/29/2026   3:18 PM                color-string
+d-----         5/29/2026   3:18 PM                gradle-to-js
+d-----         5/29/2026   3:18 PM                plist
+d-----         5/29/2026   3:17 PM                end-of-stream
+d-----         5/29/2026   3:18 PM                undici-types
+d-----         5/29/2026   3:18 PM                is-wsl
+d-----         5/29/2026   3:18 PM                get-caller-file
+d-----         5/29/2026   3:18 PM                domhandler
+d-----         5/29/2026   3:18 PM                detect-libc
+d-----         5/29/2026   3:18 PM                camelcase-keys
+d-----         5/29/2026   3:18 PM                camelcase
+d-----         5/29/2026   3:18 PM                inherits
+d-----         5/29/2026   3:18 PM                read-pkg-up
+d-----         5/29/2026   3:17 PM                fill-range
+d-----         5/29/2026   3:18 PM                is-path-cwd
+d-----         5/29/2026   3:18 PM                strip-bom
+d-----         5/29/2026   3:18 PM                conventional-changelog-writer
+d-----         5/29/2026   3:18 PM                expand-template
+d-----         5/29/2026   3:18 PM                conventional-changelog-preset
+                                                  -loader
+d-----         5/29/2026   3:18 PM                jsonparse
+d-----         5/29/2026   3:17 PM                decamelize
+d-----         5/29/2026   3:18 PM                semver
+d-----         5/29/2026   3:17 PM                @babel
+d-----         5/29/2026   3:18 PM                is-path-inside
+d-----         5/29/2026   3:17 PM                @prettier
+d-----         5/29/2026   3:18 PM                path-exists
+d-----         5/29/2026   3:19 PM                chevrotain
+d-----         5/29/2026   3:18 PM                regexp-to-ast
+d-----         5/29/2026   3:18 PM                is-fullwidth-code-point
+d-----         5/29/2026   3:18 PM                color
+d-----         5/29/2026   3:18 PM                handlebars
+d-----         5/29/2026   3:18 PM                ignore
+d-----         5/29/2026   3:18 PM                node-addon-api
+d-----         5/29/2026   3:18 PM                prebuild-install
+d-----         5/29/2026   3:17 PM                to-regex-range
+d-----         5/29/2026   3:18 PM                sisteransi
+d-----         5/29/2026   3:18 PM                base64-js
+d-----         5/29/2026   3:18 PM                trim-newlines
+d-----         5/29/2026   3:18 PM                chalk
+d-----         5/29/2026   3:18 PM                add-stream
+d-----         5/29/2026   3:17 PM                shebang-command
+d-----         5/29/2026   3:18 PM                css-select
+d-----         5/29/2026   3:18 PM                graceful-fs
+d-----         5/29/2026   3:19 PM                lodash
+d-----         5/29/2026   3:18 PM                elementtree
+d-----         5/29/2026   3:18 PM                is-plain-obj
+d-----         5/29/2026   3:18 PM                aggregate-error
+d-----         5/29/2026   3:18 PM                is-docker
+d-----         5/29/2026   3:18 PM                supports-preserve-symlinks-fl
+                                                  ag
+d-----         5/29/2026   3:18 PM                xmlbuilder
+d-----         5/29/2026   3:18 PM                gitconfiglocal
+d-----         5/29/2026   3:18 PM                tempy
+d-----         5/29/2026   3:18 PM                readable-stream
+d-----         5/29/2026   3:18 PM                resolve
+d-----         5/29/2026   3:18 PM                slash
+d-----         5/29/2026   3:18 PM                is-stream
+d-----         5/29/2026   3:17 PM                chownr
+d-----         5/29/2026   3:19 PM                typescript
+d-----         5/29/2026   3:18 PM                mkdirp
+d-----         5/29/2026   3:18 PM                clean-stack
+d-----         5/29/2026   3:18 PM                get-pkg-repo
+d-----         5/29/2026   3:18 PM                json-parse-better-errors
+d-----         5/29/2026   3:17 PM                @trapezedev
+d-----         5/29/2026   3:18 PM                streamx
+d-----         5/29/2026   3:18 PM                minipass
+d-----         5/29/2026   3:18 PM                isarray
+d-----         5/29/2026   3:18 PM                dargs
+d-----         5/29/2026   3:18 PM                json-stringify-safe
+d-----         5/29/2026   3:18 PM                p-limit
+d-----         5/29/2026   3:18 PM                reusify
+d-----         5/29/2026   3:18 PM                queue-microtask
+d-----         5/29/2026   3:18 PM                picocolors
+d-----         5/29/2026   3:18 PM                node-abi
+d-----         5/29/2026   3:18 PM                ansi-styles
+d-----         5/29/2026   3:18 PM                process-nextick-args
+d-----         5/29/2026   3:18 PM                debug
+d-----         5/29/2026   3:18 PM                hosted-git-info
+d-----         5/29/2026   3:18 PM                sax
+d-----         5/29/2026   3:17 PM                is-glob
+d-----         5/29/2026   3:18 PM                dot-prop
+d-----         5/29/2026   3:18 PM                crypto-random-string
+d-----         5/29/2026   3:18 PM                error-ex
+d-----         5/29/2026   3:18 PM                ts-node
+d-----         5/29/2026   3:18 PM                is-arrayish
+d-----         5/29/2026   3:18 PM                wordwrap
+d-----         5/29/2026   3:18 PM                function-bind
+d-----         5/29/2026   3:18 PM                conventional-changelog-angula
+                                                  r
+d-----         5/29/2026   3:18 PM                meow
+d-----         5/29/2026   3:17 PM                inflight
+d-----         5/29/2026   3:18 PM                quick-lru
+d-----         5/29/2026   3:18 PM                lodash.ismatch
+d-----         5/29/2026   3:18 PM                xpath
+d-----         5/29/2026   3:18 PM                rimraf
+d-----         5/29/2026   3:18 PM                xtend
+d-----         5/29/2026   3:18 PM                read-pkg
+d-----         5/29/2026   3:18 PM                globby
+d-----         5/29/2026   3:17 PM                @xml-tools
+d-----         5/29/2026   3:18 PM                tree-kill
+d-----         5/29/2026   3:18 PM                require-main-filename
+d-----         5/29/2026   3:18 PM                buffer
+d-----         5/29/2026   3:18 PM                fastq
+d-----         5/29/2026   3:17 PM                through2
+d-----         5/29/2026   3:18 PM                minimist-options
+d-----         5/29/2026   3:18 PM                yn
+d-----         5/29/2026   3:18 PM                entities
+d-----         5/29/2026   3:18 PM                conventional-commits-filter
+d-----         5/29/2026   3:17 PM                @ionic
+d-----         5/29/2026   3:18 PM                path-scurry
+d-----         5/29/2026   3:18 PM                tunnel-agent
+d-----         5/29/2026   3:17 PM                @paralleldrive
+d-----         5/29/2026   3:18 PM                picomatch
+d-----         5/29/2026   3:18 PM                tr46
+d-----         5/29/2026   3:17 PM                @noble
+d-----         5/29/2026   3:18 PM                v8-compile-cache-lib
+d-----         5/29/2026   3:18 PM                conventional-commits-parser
+d-----         5/29/2026   3:18 PM                validate-npm-package-license
+d-----         5/29/2026   3:17 PM                @capacitor
+d-----         5/29/2026   3:18 PM                temp-dir
+d-----         5/29/2026   3:18 PM                indent-string
+d-----         5/29/2026   3:18 PM                boolbase
+d-----         5/29/2026   3:18 PM                escalade
+d-----         5/29/2026   3:18 PM                minimatch
+d-----         5/29/2026   3:18 PM                set-blocking
+d-----         5/29/2026   3:18 PM                napi-build-utils
+d-----         5/29/2026   3:18 PM                node-html-parser
+d-----         5/29/2026   3:18 PM                tweetnacl
+d-----         5/29/2026   3:18 PM                tar-fs
+d-----         5/29/2026   3:18 PM                dateformat
+d-----         5/29/2026   3:18 PM                fs-extra
+d-----         5/29/2026   3:18 PM                engine.io-parser
+d-----         5/29/2026   3:18 PM                bare-url
+d-----         5/29/2026   3:18 PM                unique-string
+d-----         5/29/2026   3:18 PM                webidl-conversions
+d-----         5/29/2026   3:18 PM                acorn-walk
+d-----         5/29/2026   3:18 PM                mimic-response
+d-----         5/29/2026   3:18 PM                he
+d-----         5/29/2026   3:18 PM                conventional-changelog-core
+d-----         5/29/2026   3:18 PM                string_decoder
+d-----         5/29/2026   3:18 PM                hasown
+d-----         5/29/2026   3:19 PM                .bin
+d-----         5/29/2026   3:17 PM                is-extglob
+d-----         5/29/2026   3:18 PM                lru-cache
+d-----         5/29/2026   3:18 PM                dom-serializer
+d-----         5/29/2026   3:18 PM                spdx-license-ids
+d-----         5/29/2026   3:18 PM                events-universal
+d-----         5/29/2026   3:18 PM                text-extensions
+d-----         5/29/2026   3:18 PM                git-remote-origin-url
+d-----         5/29/2026   3:18 PM                balanced-match
+d-----         5/29/2026   3:18 PM                stream-buffers
+d-----         5/29/2026   3:18 PM                which
+d-----         5/29/2026   3:18 PM                commander
+d-----         5/29/2026   3:18 PM                micromatch
+d-----         5/29/2026   3:18 PM                ini
+d-----         5/29/2026   3:18 PM                array-union
+d-----         5/29/2026   3:18 PM                conventional-changelog-atom
+d-----         5/29/2026   3:18 PM                domelementtype
+d-----         5/29/2026   3:18 PM                make-error
+d-----         5/29/2026   3:17 PM                escape-string-regexp
+d-----         5/29/2026   3:18 PM                locate-path
+d-----         5/29/2026   3:18 PM                dezalgo
+d-----         5/29/2026   3:18 PM                xcode
+d-----         5/29/2026   3:18 PM                braces
+d-----         5/29/2026   3:17 PM                has-flag
+d-----         5/29/2026   3:17 PM                @socket.io
+d-----         5/29/2026   3:18 PM                split
+d-----         5/29/2026   3:18 PM                min-indent
+d-----         5/29/2026   3:17 PM                at-least-node
+d-----         5/29/2026   3:18 PM                JSONStream
+d-----         5/29/2026   3:18 PM                require-directory
+d-----         5/29/2026   3:18 PM                bplist-parser
+d-----         5/29/2026   3:18 PM                util-deprecate
+d-----         5/29/2026   3:17 PM                buffer-crc32
+d-----         5/29/2026   3:18 PM                conventional-changelog-jquery
+d-----         5/29/2026   3:17 PM                wrap-ansi
+d-----         5/29/2026   3:18 PM                tslib
+d-----         5/29/2026   3:18 PM                whatwg-url
+d-----         5/29/2026   3:17 PM                run-parallel
+d-----         5/29/2026   3:18 PM                path-type
+d-----         5/29/2026   3:18 PM                brace-expansion
+d-----         5/29/2026   3:18 PM                socket.io-parser
+d-----         5/29/2026   3:18 PM                open
+d-----         5/29/2026   3:18 PM                native-run
+d-----         5/29/2026   3:18 PM                tar-stream
+d-----         5/29/2026   3:18 PM                simple-get
+d-----         5/29/2026   3:18 PM                bare-os
+d-----         5/29/2026   3:18 PM                yauzl
+d-----         5/29/2026   3:18 PM                tmp
+d-----         5/29/2026   3:17 PM                slice-ansi
+d-----         5/29/2026   3:18 PM                glob
+d-----         5/29/2026   3:18 PM                decompress-response
+d-----         5/29/2026   3:18 PM                fs.realpath
+d-----         5/29/2026   3:18 PM                tar
+d-----         5/29/2026   3:18 PM                load-json-file
+d-----         5/29/2026   3:18 PM                pend
+d-----         5/29/2026   3:18 PM                fd-slicer
+d-----         5/29/2026   3:18 PM                conventional-changelog-ember
+d-----         5/29/2026   3:18 PM                split2
+d-----         5/29/2026   3:18 PM                prompts
+d-----         5/29/2026   3:18 PM                strip-ansi
+d-----         5/29/2026   3:20 PM                sharp
+d-----         5/29/2026   3:17 PM                once
+d-----         5/29/2026   3:18 PM                is-obj
+d-----         5/29/2026   3:18 PM                del
+d-----         5/29/2026   3:18 PM                formidable
+d-----         5/29/2026   3:17 PM                ms
+d-----         5/29/2026   3:18 PM                socket.io-client
+d-----         5/29/2026   3:18 PM                prettier
+d-----         5/29/2026   3:18 PM                astral-regex
+d-----         5/29/2026   3:18 PM                fast-fifo
+d-----         5/29/2026   3:18 PM                mkdirp-classic
+d-----         5/29/2026   3:18 PM                spdx-correct
+d-----         5/29/2026   3:18 PM                teex
+d-----         5/29/2026   3:17 PM                @jridgewell
+d-----         5/29/2026   3:18 PM                bl
+d-----         5/29/2026   3:18 PM                uglify-js
+d-----         5/29/2026   3:18 PM                json-parse-even-better-errors
+d-----         5/29/2026   3:18 PM                rc
+d-----         5/29/2026   3:18 PM                normalize-package-data
+d-----         5/29/2026   3:17 PM                fs-minipass
+d-----         5/29/2026   3:18 PM                find-up
+d-----         5/29/2026   3:17 PM                @xmldom
+d-----         5/29/2026   3:18 PM                untildify
+d-----         5/29/2026   3:18 PM                css-what
+d-----         5/29/2026   3:18 PM                is-core-module
+d-----         5/29/2026   3:17 PM                @nodelib
+d-----         5/29/2026   3:18 PM                conventional-changelog
+d-----         5/29/2026   3:18 PM                hard-rejection
+d-----         5/29/2026   3:18 PM                conventional-changelog-eslint
+d-----         5/29/2026   3:18 PM                cliui
+d-----         5/29/2026   3:18 PM                arrify
+d-----         5/29/2026   3:18 PM                decamelize-keys
+d-----         5/29/2026   3:18 PM                q
+d-----         5/29/2026   3:18 PM                js-tokens
+d-----         5/29/2026   3:18 PM                diff
+d-----         5/29/2026   3:18 PM                define-lazy-prop
+d-----         5/29/2026   3:17 PM                is-number
+d-----         5/29/2026   3:18 PM                array-ify
+d-----         5/29/2026   3:18 PM                engine.io-client
+d-----         5/29/2026   3:17 PM                path-is-absolute
+d-----         5/29/2026   3:17 PM                path-parse
+d-----         5/29/2026   3:18 PM                conventional-changelog-conven
+                                                  tionalcommits
+d-----         5/29/2026   3:18 PM                xmlhttprequest-ssl
+d-----         5/29/2026   3:18 PM                lines-and-columns
+d-----         5/29/2026   3:17 PM                merge2
+d-----         5/29/2026   3:18 PM                uuid
+d-----         5/29/2026   3:18 PM                dir-glob
+d-----         5/29/2026   3:18 PM                minizlib
+d-----         5/29/2026   3:17 PM                strip-json-comments
+d-----         5/29/2026   3:18 PM                create-require
+d-----         5/29/2026   3:18 PM                simple-swizzle
+d-----         5/29/2026   3:18 PM                conventional-changelog-codemi
+                                                  rror
+d-----         5/29/2026   3:18 PM                ieee754
+d-----         5/29/2026   3:18 PM                lodash.merge
+d-----         5/29/2026   3:18 PM                yallist
+d-----         5/29/2026   3:18 PM                shebang-regex
+d-----         5/29/2026   3:18 PM                xml2js
+d-----         5/29/2026   3:18 PM                isexe
+d-----         5/29/2026   3:18 PM                string-width
+d-----         5/29/2026   3:18 PM                strip-indent
+d-----         5/29/2026   3:18 PM                laravel-echo
+d-----         5/29/2026   3:17 PM                pify
+d-----         5/29/2026   3:18 PM                redent
+d-----         5/29/2026   3:18 PM                spdx-exceptions
+d-----         5/29/2026   3:18 PM                color-convert
+d-----         5/29/2026   3:18 PM                path-key
+d-----         5/29/2026   3:18 PM                p-map
+d-----         5/29/2026   3:18 PM                concat-map
+d-----         5/29/2026   3:17 PM                @hutson
+d-----         5/29/2026   3:18 PM                replace
+d-----         5/29/2026   3:18 PM                compare-func
+d-----         5/29/2026   3:18 PM                arg
+d-----         5/29/2026   3:18 PM                ansi-regex
+d-----         5/29/2026   3:18 PM                source-map
+d-----         5/29/2026   3:18 PM                git-raw-commits
+d-----         5/29/2026   3:17 PM                @tsconfig
+d-----         5/29/2026   3:17 PM                @cspotcode
+d-----         5/29/2026   3:18 PM                env-paths
+d-----         5/29/2026   3:18 PM                jsonfile
+d-----         5/29/2026   3:17 PM                @types
+d-----         5/29/2026   3:18 PM                domutils
+d-----         5/29/2026   3:18 PM                fast-glob
+d-----         5/29/2026   3:18 PM                deep-extend
+d-----         5/29/2026   3:18 PM                map-obj
+d-----         5/29/2026   3:18 PM                glob-parent
+d-----         5/29/2026   3:18 PM                git-semver-tags
+d-----         5/29/2026   3:18 PM                b4a
+d-----         5/29/2026   3:18 PM                bplist-creator
+d-----         5/29/2026   3:18 PM                through
+d-----         5/29/2026   3:18 PM                fs-constants
+d-----         5/29/2026   3:18 PM                yargs-parser
+d-----         5/29/2026   3:18 PM                asap
+d-----         5/29/2026   3:18 PM                node-fetch
+d-----         5/29/2026   3:18 PM                supports-color
+d-----         5/29/2026   3:18 PM                cross-spawn
+d-----         5/29/2026   3:18 PM                signal-exit
+d-----         5/29/2026   3:18 PM                modify-values
+d-----         5/29/2026   3:18 PM                neo-async
+d-----         5/29/2026   3:18 PM                ws
+d-----         5/29/2026   3:18 PM                type-fest
+d-----         5/29/2026   3:18 PM                p-locate
+d-----         5/29/2026   3:18 PM                pump
+d-----         5/29/2026   3:18 PM                conventional-changelog-expres
+                                                  s
+d-----         5/29/2026   3:18 PM                minimist
+d-----         5/29/2026   3:18 PM                text-decoder
+d-----         5/29/2026   3:19 PM                pusher-js
+d-----         5/29/2026   3:18 PM                xml-js
+d-----         5/29/2026   3:18 PM                emoji-regex
+d-----         5/29/2026   3:17 PM                parse-json
+d-----         5/29/2026   3:18 PM                bare-events
+d-----         5/29/2026   3:18 PM                which-module
+d-----         5/29/2026   3:18 PM                github-from-package
+d-----         5/29/2026   3:18 PM                conventional-changelog-jshint
+d-----         5/29/2026   3:18 PM                p-try
+d-----         5/29/2026   3:18 PM                simple-concat
+d-----         5/29/2026   3:18 PM                acorn
+d-----         5/29/2026   3:18 PM                y18n
+d-----         5/29/2026   3:18 PM                spdx-expression-parse
+d-----         5/29/2026   3:18 PM                simple-plist
+d-----         5/29/2026   3:18 PM                kleur
+d-----         5/29/2026   3:18 PM                yargs
+d-----         5/29/2026   3:17 PM                wrappy
+d-----         5/29/2026   3:17 PM                universalify
+d-----         5/29/2026   3:17 PM                color-name
+d-----         5/29/2026   3:18 PM                safe-buffer
+d-----         5/29/2026   3:18 PM                bare-path
+d-----         5/29/2026   3:18 PM                bare-stream
+d-----         5/29/2026   3:18 PM                kind-of
+d-----         5/29/2026   3:18 PM                mergexml
+d-----         5/29/2026   3:18 PM                core-util-is
+d-----         5/29/2026   3:18 PM                nth-check
+d-----         5/29/2026   3:18 PM                is-text-path
+d-----         5/29/2026   3:18 PM                big-integer
+d-----         5/29/2026   3:18 PM                bare-fs
+------         5/29/2026   3:20 PM         207256 .package-lock.json

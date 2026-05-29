@@ -665,7 +665,7 @@ class ProfileController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'Opening balances verified successfully. Welcome to assalaam Pay!',
+            'message' => 'Opening balances verified successfully. Welcome to AS-SALAAM Pay!',
             'verified_at' => $user->verified_at,
         ]);
     }

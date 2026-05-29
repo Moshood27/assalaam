@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="360" height="90" viewBox="0 0 360 90" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">ATTAQWA CO-OPERATIVE Logo (Dark)</title>
-  <desc id="desc">Dark theme logo for ATTAQWA CO-OPERATIVE</desc>
+  <title id="title">AS-SALAAM CO-OPERATIVE Logo (Dark)</title>
+  <desc id="desc">Dark theme logo for AS-SALAAM CO-OPERATIVE</desc>
   <defs>
     <linearGradient id="g1d" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#10b981"/>
@@ -16,7 +16,7 @@
   </g>
   <!-- Wordmark -->
   <g font-family="Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-weight="800" letter-spacing="4">
-    <text x="88" y="38" font-size="28" fill="#ffffff">ATTAQWA</text>
+    <text x="88" y="38" font-size="28" fill="#ffffff">AS-SALAAM</text>
     <text x="88" y="68" font-size="18" font-weight="700" letter-spacing="6" fill="#bbf7d0">CO-OPERATIVE</text>
   </g>
 </svg>

@@ -165,7 +165,7 @@ class MigrationImport extends Page implements HasForms
         $count = 0;
 
         foreach ($users as $user) {
-            $message = "Welcome to assalaam Mobile App! Your digital account is ready. Log in with your phone number and verify your opening balance. Download the app today.";
+            $message = "Welcome to AS-SALAAM Mobile App! Your digital account is ready. Log in with your phone number and verify your opening balance. Download the app today.";
             if ($smsService->send($user->phone, $message)) {
                 $count++;
             }
@@ -246,7 +246,7 @@ class MigrationImport extends Page implements HasForms
 
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->stream();
-        }, 'assalaam_Migration_Report_' . now()->format('Y-m-d') . '.pdf');
+        }, 'As-Salaam_Migration_Report_' . now()->format('Y-m-d') . '.pdf');
     }
 
     public function importMembers()

@@ -13,7 +13,7 @@ class AdminNotificationListener extends Component
     {
         Notification::make()
             ->title('New Member Registered!')
-            ->body(($data['user']['name'] ?? 'A new member') . ' has just joined assalaam.')
+            ->body(($data['user']['name'] ?? 'A new member') . ' has just joined AS-SALAAM.')
             ->success()
             ->send();
     }

@@ -7,15 +7,15 @@ Important: Most Capacitor commands should be run from the repo root unless expli
 
 ## Project layout (relevant to build/sync)
 - Repo root
-  - capacitor.config.json â†’ points to `webDir: frontend/dist` and platform paths
-  - package.json â†’ contains Capacitor scripts (cap:add, cap:sync, cap:open, cap:assets)
-  - assets/ â†’ source images for icons and splash (icon.png 1024Ã—1024, splash.png 2732Ã—2732)
+  - capacitor.config.json → points to `webDir: frontend/dist` and platform paths
+  - package.json → contains Capacitor scripts (cap:add, cap:sync, cap:open, cap:assets)
+  - assets/ → source images for icons and splash (icon.png 1024×1024, splash.png 2732×2732)
 - frontend/
-  - package.json â†’ Vite build scripts for the web app
-  - dist/ â†’ built web assets (created by `npm run build`)
-  - android/ â†’ Android project
-  - ios/ â†’ iOS project
-  - public/manifest.webmanifest â†’ PWA manifest used for generating PWA icons
+  - package.json → Vite build scripts for the web app
+  - dist/ → built web assets (created by `npm run build`)
+  - android/ → Android project
+  - ios/ → iOS project
+  - public/manifest.webmanifest → PWA manifest used for generating PWA icons
 
 
 ## Prerequisites
@@ -25,7 +25,7 @@ Important: Most Capacitor commands should be run from the repo root unless expli
 - If using WSL2: run Android Studio/Xcode on the host OS, not inside WSL. Build the web in WSL if you like, but open and run the native IDEs on Windows/macOS.
 
 
-## Oneâ€‘time setup (per machine)
+## One‑time setup (per machine)
 From the repo root:
 1) Install root dependencies
    - npm install
@@ -35,17 +35,17 @@ From the repo root:
    - Android: npm run cap:add:android
    - iOS (macOS only): npm run cap:add:ios
 4) Provide/generate app assets (icons & splash)
-   - Place images at repo root: assets/icon.png (1024Ã—1024), assets/splash.png (2732Ã—2732)
+   - Place images at repo root: assets/icon.png (1024×1024), assets/splash.png (2732×2732)
    - Generate all platform assets from root: npm run cap:assets
-   - If youâ€™re in frontend/: npm --prefix .. run cap:assets
+   - If you’re in frontend/: npm --prefix .. run cap:assets
 
-Note: Thereâ€™s an additional guide focused on asset generation in `frontend/GENERATE_ASSETS.md`.
+Note: There’s an additional guide focused on asset generation in `frontend/GENERATE_ASSETS.md`.
 
 
-## Dayâ€‘toâ€‘day workflow
+## Day‑to‑day workflow
 You typically do this when you want to test new frontend code in the native apps.
 
-Option A â€” Run everything from the repo root
+Option A — Run everything from the repo root
 1) Build the web app (outputs to frontend/dist)
    - npm --prefix frontend run build
 2) Sync web assets and native projects
@@ -54,9 +54,9 @@ Option A â€” Run everything from the repo root
    - Android Studio: npm run cap:open:android
    - Xcode (macOS): npm run cap:open:ios
 4) Build and run from the IDE
-   - Use Android Studioâ€™s Run/Debug, or Xcodeâ€™s build/run for simulators/devices.
+   - Use Android Studio’s Run/Debug, or Xcode’s build/run for simulators/devices.
 
-Option B â€” If you are already inside the frontend/ folder
+Option B — If you are already inside the frontend/ folder
 1) Build the web app
    - npm run build
 2) Sync from the repo root using prefix
@@ -68,15 +68,15 @@ Option B â€” If you are already inside the frontend/ folder
 
 ## Quick reference: scripts
 (Defined in the repo root package.json)
-- cap:add:android â†’ npx cap add android
-- cap:add:ios â†’ npx cap add ios
-- cap:sync â†’ npx cap sync
-- cap:open:android â†’ npx cap open android
-- cap:open:ios â†’ npx cap open ios
-- cap:assets â†’ npx @capacitor/assets generate --androidProject frontend/android --iosProject frontend/ios/App --pwaManifestPath frontend/public/manifest.webmanifest
-- cap:assets:android â†’ npx @capacitor/assets generate --android --androidProject frontend/android
-- cap:assets:ios â†’ npx @capacitor/assets generate --ios --iosProject frontend/ios/App
-- cap:assets:pwa â†’ npx @capacitor/assets generate --pwa --pwaManifestPath frontend/public/manifest.webmanifest
+- cap:add:android → npx cap add android
+- cap:add:ios → npx cap add ios
+- cap:sync → npx cap sync
+- cap:open:android → npx cap open android
+- cap:open:ios → npx cap open ios
+- cap:assets → npx @capacitor/assets generate --androidProject frontend/android --iosProject frontend/ios/App --pwaManifestPath frontend/public/manifest.webmanifest
+- cap:assets:android → npx @capacitor/assets generate --android --androidProject frontend/android
+- cap:assets:ios → npx @capacitor/assets generate --ios --iosProject frontend/ios/App
+- cap:assets:pwa → npx @capacitor/assets generate --pwa --pwaManifestPath frontend/public/manifest.webmanifest
 
 
 ## Typical full cycle (fresh changes)
@@ -88,19 +88,19 @@ From the repo root:
 
 
 ## Troubleshooting
-- cap:sync says â€œUnable to find node_modules/@capacitor/androidâ€
+- cap:sync says “Unable to find node_modules/@capacitor/android”
   - Run npm install at the repo root. The Capacitor CLI and platform packages are installed there.
 - Android builds but shows outdated UI
   - Ensure you rebuilt the web: npm --prefix frontend run build, then re-run npm run cap:sync.
-- Assets (icons/splash) donâ€™t appear updated
+- Assets (icons/splash) don’t appear updated
   - Re-run npm run cap:assets (from root). Make sure assets/icon.png and assets/splash.png exist and meet the size requirements.
-- iOS build errors on nonâ€‘macOS
+- iOS build errors on non‑macOS
   - iOS builds require macOS with Xcode. Use Android on Windows/Linux.
 
 
 ## Notes on paths
-The repoâ€™s capacitor.config.json sets:
-- webDir: frontend/dist â†’ cap sync copies this into the native projects
+The repo’s capacitor.config.json sets:
+- webDir: frontend/dist → cap sync copies this into the native projects
 - android.path: frontend/android
 - ios.path: frontend/ios
 
@@ -131,19 +131,19 @@ Use these steps when you want to clean Gradle caches, re-sync Capacitor, and bui
 - frontend/android/app/build/outputs/apk/debug/app-debug.apk
 
 Notes
-- If you get a â€œPermission deniedâ€ on ./gradlew, run: chmod +x gradlew
+- If you get a “Permission denied” on ./gradlew, run: chmod +x gradlew
 - Ensure Java 17 and Android SDK are installed and available to Gradle (Android Studio handles this).
 
 
-## assalaam splash and app icon (quick steps)
-The project now generates and uses assalaam-branded splash and icons by default.
+## AS-SALAAM splash and app icon (quick steps)
+The project now generates and uses AS-SALAAM-branded splash and icons by default.
 
-- To regenerate the assalaam splash/logo and sync them into Android and iOS projects in one step:
+- To regenerate the AS-SALAAM splash/logo and sync them into Android and iOS projects in one step:
 
   npm run mobile:assets:sync
 
   This runs the following under the hood:
-  - Pre-step: node scripts/generate-branded-assets.mjs --force (creates assets/icon.png and assets/splash.png with assalaam wordmark and brand color)
+  - Pre-step: node scripts/generate-branded-assets.mjs --force (creates assets/icon.png and assets/splash.png with AS-SALAAM wordmark and brand color)
   - Generate sizes: npx @capacitor/assets generate (writes platform-specific resources under frontend/android and frontend/ios)
   - Sync: npx cap sync (copies web and refreshed assets into native projects)
 
@@ -156,7 +156,7 @@ The project now generates and uses assalaam-branded splash and icons by default.
   npm run assets:brand:assalam
 
 Notes
-- The brand is controlled by BRAND_SLUG/VITE_BRAND_SLUG env vars. The default in frontend/.env is assalaam, so you donâ€™t need to set anything for assalaam.
+- The brand is controlled by BRAND_SLUG/VITE_BRAND_SLUG env vars. The default in frontend/.env is assalaam, so you don’t need to set anything for AS-SALAAM.
 - Alternatively, you can override via CLI: node scripts/generate-branded-assets.mjs --force --brand assalam
 - The mobile app hides the splash screen on startup (see frontend/src/App.vue using SplashScreen.hide()), so the splash is connected to the app lifecycle.
 - If you only target one platform:
