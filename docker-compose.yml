@@ -29,10 +29,10 @@ services:
       - assalam-network
       - gateway-network
     depends_on:
-      db:
+      mysql:
         condition: service_healthy
 
-  db:
+  mysql:
     image: mysql:8.4
     restart: unless-stopped
     environment:
@@ -71,7 +71,7 @@ services:
     networks:
       - assalam-network
     depends_on:
-      - db
+      - mysql
       - app
 
   reverb:

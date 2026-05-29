@@ -13,10 +13,14 @@ RUN apk add --no-cache \
     icu-libs \
     mysql-client \
     curl \
-    libxml2-dev
+    curl-dev \
+    libxml2-dev \
+    libsodium-dev \
+    oniguruma-dev
 
 # 2. Configure and install PHP extensions
-# Cleaned up redundancy and added pcntl for Laravel Reverb
+# Cleaned up redundancy and added pcntl/posix for Laravel Reverb & Horizon
+# Added redis extension for better performance/reliability
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
@@ -26,7 +30,13 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         intl \
         pcntl \
         posix \
-    && docker-php-ext-enable opcache
+        sodium \
+        mbstring \
+        xml \
+        curl \
+    && apk add --no-cache $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis opcache
 
 # 3. Install Composer
 # Note: No backslash on the line above this. COPY must be its own command.
