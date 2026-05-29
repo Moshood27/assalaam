@@ -50,10 +50,9 @@ class QardHasanResource extends Resource
     protected static ?string $model = QardHasan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-
     protected static ?string $navigationGroup = 'Loan Management';
-
     protected static ?string $navigationLabel = 'Manage Loans';
+    protected static ?int $navigationSort = 60;
 
     public static function form(Form $form): Form
     {
@@ -88,7 +87,7 @@ class QardHasanResource extends Resource
                         }
                     }),
                 Forms\Components\MultiSelect::make('guarantor_ids')
-                    ->label('Guarantors (2–3, not in default)')
+                    ->label('Guarantors (2â€“3, not in default)')
                     ->options(function (callable $get) {
                         $selectedUserId = $get('user_id');
 
@@ -112,7 +111,7 @@ class QardHasanResource extends Resource
                     ->hint('Auto-generated at create time'),
                 Forms\Components\TextInput::make('principal_amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required()
                     ->disabled()
                     ->dehydrated()
@@ -142,7 +141,7 @@ class QardHasanResource extends Resource
                     }),
                 Forms\Components\TextInput::make('per_installment')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required()
                     ->disabled()
                     ->dehydrated()
@@ -156,7 +155,7 @@ class QardHasanResource extends Resource
                 Forms\Components\TextInput::make('admin_fee_flat')
                     ->label('Admin Fee (Flat)')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->default(0),
                 Forms\Components\TextInput::make('admin_fee_pct')
                     ->label('Admin Fee (%)')
@@ -165,7 +164,7 @@ class QardHasanResource extends Resource
                     ->default(0),
                 Forms\Components\TextInput::make('paid_amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->default(0)
                     ->disabled()
                     ->dehydrated(),
@@ -443,7 +442,7 @@ class QardHasanResource extends Resource
                             foreach ($admins as $admin) {
                                 $admin->notifyMember(
                                     'High-Value Loan Approval Required',
-                                    "A loan of ₦" . number_format($record->principal_amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
+                                    "A loan of â‚¦" . number_format($record->principal_amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
                                     [
                                         'type' => 'high_value_loan_approval',
                                         'loan_id' => $record->id,
@@ -917,7 +916,7 @@ class QardHasanResource extends Resource
                                 $modeText = 'Manual Bank Transfer';
                             }
                             $locationText = ($mode === 'manual') ? 'your bank account' : 'your wallet';
-                            $msg = 'Loan disbursed: ₦'.number_format($credit, 2).' to '.$locationText.' ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: ₦'.number_format((float) ($record->user->balance ?? 0), 2);
+                            $msg = 'Loan disbursed: â‚¦'.number_format($credit, 2).' to '.$locationText.' ('.$modeText.'). Loan ID: '.($record->qard_id_string).'. Bal: â‚¦'.number_format((float) ($record->user->balance ?? 0), 2);
                             $record->user->notifyMember('Loan Disbursed', $msg, [
                                 'type' => 'loan_disbursed',
                                 'loan_id' => $record->id,
@@ -1048,7 +1047,7 @@ class QardHasanResource extends Resource
                     ->form([
                         Forms\Components\TextInput::make('amount')
                             ->numeric()
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->required()
                             ->default(fn (QardHasan $record) => max(0, $record->principal_amount - $record->paid_amount)),
                         Forms\Components\DateTimePicker::make('paid_at')
@@ -1218,7 +1217,8 @@ class QardHasanResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_qard_hasan');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_qard_hasan');
     }
 
     public static function canCreate(): bool
@@ -1230,12 +1230,14 @@ class QardHasanResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('update_qard_hasan');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('update_qard_hasan');
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_qard_hasan');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->can('delete_qard_hasan');
     }
 
     public static function getEloquentQuery(): Builder

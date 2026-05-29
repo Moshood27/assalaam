@@ -14,10 +14,9 @@ class LoanRequestResource extends Resource
     protected static ?string $model = QardHasan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
     protected static ?string $navigationGroup = 'Loan Management';
-
     protected static ?string $navigationLabel = 'Loan Requests';
+    protected static ?int $navigationSort = 61;
 
     protected static ?string $slug = 'loan-requests';
 
@@ -47,21 +46,25 @@ class LoanRequestResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_qard_hasan');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_qard_hasan');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_qard_hasan');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_qard_hasan');
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('update_qard_hasan');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('update_qard_hasan');
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_qard_hasan');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->can('delete_qard_hasan');
     }
 }

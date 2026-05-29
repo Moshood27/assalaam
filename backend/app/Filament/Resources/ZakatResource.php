@@ -21,8 +21,8 @@ class ZakatResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-sparkles';
-
-    protected static ?string $navigationGroup = 'Financials';
+    protected static ?string $navigationGroup = 'Financial Management';
+    protected static ?int $navigationSort = 58;
 
     protected static ?string $modelLabel = 'Zakat Tracker';
 
@@ -223,6 +223,12 @@ class ZakatResource extends Resource
         return [
             'index' => Pages\ListZakats::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_user');
     }
 
     public static function getEloquentQuery(): Builder

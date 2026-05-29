@@ -22,6 +22,8 @@ class ContributionResource extends Resource
     protected static ?string $model = Contribution::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Financial Management';
+    protected static ?int $navigationSort = 50;
 
     public static function form(Form $form): Form
     {
@@ -66,7 +68,7 @@ class ContributionResource extends Resource
                             ->label('Amount')
                             ->numeric()
                             ->minValue(0.01)
-                            ->prefix('₦')
+                            ->prefix('â‚¦')
                             ->required(),
                     ]),
 
@@ -91,7 +93,7 @@ class ContributionResource extends Resource
                     ->hiddenOn('create'),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
-                    ->prefix('₦')
+                    ->prefix('â‚¦')
                     ->required()
                     ->hiddenOn('create'),
 
@@ -188,22 +190,26 @@ class ContributionResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_contribution');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_contribution');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_contribution');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_contribution');
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('update_contribution');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('update_contribution');
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_contribution');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->can('delete_contribution');
     }
 
     public static function getEloquentQuery(): Builder
