@@ -49,7 +49,7 @@
 
           <div class="sm:col-span-2">
             <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Your Branch</label>
-            <SearchableSelect v-model="form.branch_id" :items="branches" placeholder="Select your branch" searchPlaceholder="Search branchesÃ¢â‚¬Â¦" />
+            <SearchableSelect v-model="form.branch_id" :items="branches" placeholder="Select your branch" searchPlaceholder="Search branches..." />
           </div>
 
           <div class="relative group">
@@ -292,7 +292,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </span>
-              <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+              <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
             </div>
           </div>
 
@@ -304,14 +304,14 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </span>
-              <input v-model="form.confirm_password" :type="showPassword ? 'text' : 'password'" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
+              <input v-model="form.confirm_password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" class="input pl-12 h-14 font-semibold bg-slate-50/50 border-slate-200/60" />
             </div>
           </div>
 
           <div class="sm:col-span-2 flex flex-col sm:flex-row gap-4 pt-4">
             <button @click="handleStart" :disabled="loadingStart" class="flex-1 h-14 text-lg rounded-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50">
               <span v-if="loadingStart" class="inline-block animate-spin border-3 border-white/30 border-t-white rounded-full w-6 h-6 mr-2 align-middle"></span>
-              <span>{{ loadingStart ? 'SubmittingÃ¢â‚¬Â¦' : 'Next: Upload Documents' }}</span>
+              <span>{{ loadingStart ? 'Submitting...' : 'Next: Upload Documents' }}</span>
             </button>
             <button @click="goLogin" type="button" class="h-14 px-8 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold transition-all">Back to Login</button>
           </div>
@@ -368,7 +368,7 @@
           <div class="flex flex-col sm:flex-row gap-4 pt-4">
             <button @click="handleUpload" :disabled="loadingUpload" class="flex-1 h-14 text-lg rounded-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50">
               <span v-if="loadingUpload" class="inline-block animate-spin border-3 border-white/30 border-t-white rounded-full w-6 h-6 mr-2 align-middle"></span>
-              <span>{{ loadingUpload ? 'UploadingÃ¢â‚¬Â¦' : 'Upload & Continue' }}</span>
+              <span>{{ loadingUpload ? 'Uploading...' : 'Upload & Continue' }}</span>
             </button>
             <button @click="() => step = 1" type="button" class="h-14 px-8 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold transition-all">Back</button>
           </div>
@@ -488,7 +488,7 @@
       <div class="relative w-full max-w-md bg-slate-50 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div class="p-6 bg-white border-b flex items-center justify-between text-left">
           <h2 class="text-xl font-bold text-slate-800">Contact Support</h2>
-          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“â€¢</button>
+          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“•</button>
         </div>
         <div class="p-6 text-left">
           <SupportContacts />

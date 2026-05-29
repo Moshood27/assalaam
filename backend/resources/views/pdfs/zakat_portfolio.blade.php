@@ -23,7 +23,7 @@
 
     <div class="summary-box">
         <strong>Zakat Collection Summary</strong><br>
-        Total Zakat Collected: â‚¦ {{ number_format($total_zakat_collected, 2) }}<br>
+        Total Zakat Collected: ₦ {{ number_format($total_zakat_collected, 2) }}<br>
         Total Contributing Members: {{ $members_count }}
     </div>
 
@@ -32,7 +32,7 @@
             <tr>
                 <th>Member Name</th>
                 <th>Member #</th>
-                <th class="right">Total Paid (â‚¦)</th>
+                <th class="right">Total Paid (₦)</th>
                 <th>Last Payment</th>
                 <th class="right">Tx Count</th>
             </tr>

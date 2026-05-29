@@ -22,7 +22,7 @@
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                         <tr class="bg-gray-50 dark:bg-gray-800/60">
                             <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Surplus for the Period</th>
-                            <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['surplus'] ?? 0, 2) }}</th>
+                            <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['surplus'] ?? 0, 2) }}</th>
                         </tr>
                         <tr>
                             <td colspan="2" class="px-5 py-2 text-xs text-gray-500 dark:text-gray-400">Appropriations</td>
@@ -35,7 +35,7 @@
                                         <span class="text-gray-500 dark:text-gray-400">({{ number_format($line['percent'], 2) }}%)</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -46,11 +46,11 @@
                     <tfoot class="bg-gray-50 dark:bg-gray-800/60">
                         <tr>
                             <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Total Appropriations</th>
-                            <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['total_appropriated'] ?? 0, 2) }}</th>
+                            <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['total_appropriated'] ?? 0, 2) }}</th>
                         </tr>
                         <tr>
                             <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Carried Forward</th>
-                            <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['carried_forward'] ?? 0, 2) }}</th>
+                            <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['carried_forward'] ?? 0, 2) }}</th>
                         </tr>
                     </tfoot>
                 </table>

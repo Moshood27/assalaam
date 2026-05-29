@@ -10,7 +10,7 @@
       <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-7 text-white shadow-lg relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full" />
         <p class="text-blue-100 text-sm font-medium mb-1 relative z-10">Total Junior Savings</p>
-        <h2 class="text-3xl font-black relative z-10">Ã¢â€šÂ¦ {{ formatMoney(totalBalance) }}</h2>
+        <h2 class="text-3xl font-black relative z-10">₦ {{ formatMoney(totalBalance) }}</h2>
       </div>
 
       <div class="bg-blue-50/50 border border-blue-100 text-blue-900 rounded-2xl p-4 flex gap-3">
@@ -35,7 +35,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
               </button>
               <div class="text-right">
-                <p class="text-lg font-black text-slate-900">Ã¢â€šÂ¦ {{ formatMoney(acc.balance) }}</p>
+                <p class="text-lg font-black text-slate-900">₦ {{ formatMoney(acc.balance) }}</p>
                 <p v-if="acc.locked_until" class="text-[10px] text-slate-400 font-bold uppercase" :class="isLocked(acc) ? 'text-red-500' : 'text-green-500'">
                   {{ isLocked(acc) ? 'Locked until ' + formatDate(acc.locked_until) : 'Unlocked (' + formatDate(acc.locked_until) + ')' }}
                 </p>
@@ -105,12 +105,12 @@
         
         <div class="bg-blue-50 p-4 rounded-2xl mb-6 flex justify-between items-center">
           <span class="text-xs font-bold text-blue-800 uppercase tracking-wider">Your Wallet Balance</span>
-          <span class="font-black text-blue-900">Ã¢â€šÂ¦ {{ formatMoney(walletBalance) }}</span>
+          <span class="font-black text-blue-900">₦ {{ formatMoney(walletBalance) }}</span>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="lbl">Amount to Save (Ã¢â€šÂ¦)</label>
+            <label class="lbl">Amount to Save (₦)</label>
             <input v-model.number="depositAmount" type="number" min="1" class="inp" placeholder="0.00" />
           </div>
           <div class="grid grid-cols-2 gap-3 mt-6">
@@ -134,12 +134,12 @@
         
         <div class="bg-slate-50 p-4 rounded-2xl mb-6 flex justify-between items-center">
           <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Junior Balance</span>
-          <span class="font-black text-slate-900">Ã¢â€šÂ¦ {{ formatMoney(activeAccount?.balance) }}</span>
+          <span class="font-black text-slate-900">₦ {{ formatMoney(activeAccount?.balance) }}</span>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="lbl">Amount to Withdraw (Ã¢â€šÂ¦)</label>
+            <label class="lbl">Amount to Withdraw (₦)</label>
             <input v-model.number="withdrawAmount" type="number" min="1" class="inp" placeholder="0.00" />
           </div>
           <div class="grid grid-cols-2 gap-3 mt-6">
@@ -170,7 +170,7 @@
             </div>
             <div class="text-right">
               <p class="text-sm font-black" :class="tx.type === 'debit' ? 'text-green-600' : 'text-blue-600'">
-                {{ tx.type === 'debit' ? '+' : '-' }} Ã¢â€šÂ¦ {{ formatMoney(tx.amount) }}
+                {{ tx.type === 'debit' ? '+' : '-' }} ₦ {{ formatMoney(tx.amount) }}
               </p>
             </div>
           </div>

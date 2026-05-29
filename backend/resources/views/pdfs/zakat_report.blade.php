@@ -71,19 +71,19 @@
                 <tbody>
                     <tr>
                         <td>Savings & Shares</td>
-                        <td class="right">â‚¦ {{ number_format($savings + $shares, 2) }}</td>
+                        <td class="right">₦ {{ number_format($savings + $shares, 2) }}</td>
                     </tr>
                     <tr>
                         <td>Gold Holdings ({{ number_format($user->gold_balance ?? 0, 4) }}g)</td>
-                        <td class="right">â‚¦ {{ number_format($gold_value, 2) }}</td>
+                        <td class="right">₦ {{ number_format($gold_value, 2) }}</td>
                     </tr>
                     <tr>
                         <td>Available Wallet Balance</td>
-                        <td class="right">â‚¦ {{ number_format($wallet_balance, 2) }}</td>
+                        <td class="right">₦ {{ number_format($wallet_balance, 2) }}</td>
                     </tr>
                     <tr class="font-bold">
                         <td style="border-top: 2px solid #e2e8f0; color: #1e293b;">Total Zakatable Wealth</td>
-                        <td class="right" style="border-top: 2px solid #e2e8f0; color: #059669;">â‚¦ {{ number_format($base, 2) }}</td>
+                        <td class="right" style="border-top: 2px solid #e2e8f0; color: #059669;">₦ {{ number_format($base, 2) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -94,21 +94,21 @@
             <table>
                 <tr>
                     <td style="width: 50%;">Current Gold Nisab (85g)</td>
-                    <td class="right font-bold text-amber">â‚¦ {{ number_format($nisab, 2) }}</td>
+                    <td class="right font-bold text-amber">₦ {{ number_format($nisab, 2) }}</td>
                 </tr>
                 <tr>
                     <td>Surplus over Nisab</td>
-                    <td class="right font-bold text-blue">â‚¦ {{ number_format(max(0, $base - $nisab), 2) }}</td>
+                    <td class="right font-bold text-blue">₦ {{ number_format(max(0, $base - $nisab), 2) }}</td>
                 </tr>
             </table>
             <p class="muted" style="margin-top: 10px;">
-                * The Nisab is calculated based on the current market value of 85 grams of 24k gold (â‚¦{{ number_format($gold_price ?? 0, 2) }}/g).
+                * The Nisab is calculated based on the current market value of 85 grams of 24k gold (₦{{ number_format($gold_price ?? 0, 2) }}/g).
             </p>
         </div>
 
         <div class="total-box">
             <div class="total-label">Estimated Zakat Due (2.5%)</div>
-            <div class="total-amount">â‚¦ {{ number_format($zakat_due, 2) }}</div>
+            <div class="total-amount">₦ {{ number_format($zakat_due, 2) }}</div>
         </div>
 
         <div class="footer">

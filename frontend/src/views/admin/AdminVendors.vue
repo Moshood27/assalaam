@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-50 pb-24">
     <header class="p-4 bg-white border-b flex items-center justify-between sticky top-0 z-10">
-      <h1 class="text-lg sm:text-xl font-bold text-slate-800">Admin â€¢ Vendor Management</h1>
+      <h1 class="text-lg sm:text-xl font-bold text-slate-800">Admin • Vendor Management</h1>
       <button class="text-sm font-bold text-slate-500" @click="$router.back()">Back</button>
     </header>
 
@@ -21,11 +21,11 @@
       <!-- Vendors Tab -->
       <section v-if="tab === 'vendors'" class="space-y-4 animate-in fade-in duration-300">
         <div class="flex items-center gap-2">
-          <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search vendorsâ€¦" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm w-full" />
+          <input v-model="q" @keyup.enter="load(1)" type="search" placeholder="Search vendors..." class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm w-full" />
           <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0" @click="load(1)">Search</button>
         </div>
 
-        <div v-if="loading" class="text-slate-500 text-sm py-8 text-center">Loading vendorsâ€¦</div>
+        <div v-if="loading" class="text-slate-500 text-sm py-8 text-center">Loading vendors...</div>
         <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
         <div v-else>
           <div v-if="!items.length" class="text-slate-500 text-sm py-12 text-center bg-white rounded-xl border border-dashed border-slate-300">No vendors found.</div>
@@ -59,7 +59,7 @@
 
       <!-- Settlements Tab -->
       <section v-if="tab === 'settlements'" class="space-y-4 animate-in fade-in duration-300">
-        <div v-if="loading" class="text-slate-500 text-sm py-8 text-center">Loading settlementsâ€¦</div>
+        <div v-if="loading" class="text-slate-500 text-sm py-8 text-center">Loading settlements...</div>
         <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-lg text-sm">{{ error }}</div>
         <div v-else>
           <div v-if="!items.length" class="text-slate-500 text-sm py-12 text-center bg-white rounded-xl border border-dashed border-slate-300">No settlement requests found.</div>
@@ -67,9 +67,9 @@
             <div v-for="s in items" :key="s.id" class="p-4 bg-white border rounded-xl shadow-sm space-y-3">
               <div class="flex justify-between items-start">
                 <div>
-                  <h3 class="font-bold text-slate-800 text-lg">â‚¦{{ formatMoney(s.amount) }}</h3>
+                  <h3 class="font-bold text-slate-800 text-lg">₦{{ formatMoney(s.amount) }}</h3>
                   <p class="text-xs text-slate-500">Requested by {{ s.user?.name || 'Unknown' }}</p>
-                  <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold">{{ s.reference }} â€¢ {{ formatDate(s.created_at) }}</p>
+                  <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold">{{ s.reference }} • {{ formatDate(s.created_at) }}</p>
                 </div>
                 <div class="flex flex-col items-end gap-1 shrink-0">
                   <span :class="statusClass(s.status)" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border">
@@ -81,7 +81,7 @@
               <div class="bg-slate-50 p-3 rounded-xl text-[11px] text-slate-600 border border-slate-100 shadow-inner">
                 <div class="font-black text-slate-400 uppercase text-[9px] mb-1 tracking-widest">Bank Payout Info</div>
                 <p class="font-bold text-slate-700">{{ s.account_name }}</p>
-                <p>{{ s.bank_name }} â€¢ {{ s.account_number }}</p>
+                <p>{{ s.bank_name }} • {{ s.account_number }}</p>
                 <div v-if="s.reason && s.status === 'declined'" class="mt-2 text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-100 text-[10px]">
                   <span class="font-black uppercase tracking-tighter mr-1">Reason:</span> {{ s.reason }}
                 </div>
@@ -110,7 +110,7 @@
         <div class="p-6">
           <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-xl mb-4">âœ•</div>
           <h3 class="text-lg font-black text-slate-800 mb-1">Decline Request</h3>
-          <p class="text-sm text-slate-500 mb-4">Provide a reason for declining â‚¦{{ formatMoney(prompting.amount) }}.</p>
+          <p class="text-sm text-slate-500 mb-4">Provide a reason for declining ₦{{ formatMoney(prompting.amount) }}.</p>
           <textarea v-model="declineReason" class="w-full border border-slate-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" rows="3" placeholder="e.g. Incomplete verification, Name mismatch..."></textarea>
           
           <div class="flex gap-3 mt-6">
@@ -189,7 +189,7 @@ const toggleActive = async (v) => {
 }
 
 const approveSettlement = async (s) => {
-  if (!confirm(`Confirm â‚¦${formatMoney(s.amount)} settlement marked as paid? This will deduct from member's wallet.`)) return
+  if (!confirm(`Confirm ₦${formatMoney(s.amount)} settlement marked as paid? This will deduct from member's wallet.`)) return
   try {
     await axios.post(`/api/admin/vendors/settlements/${s.id}/approve`)
     load(page.value)

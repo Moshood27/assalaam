@@ -64,12 +64,12 @@
                                 <td class="px-2 py-3 text-center text-gray-600 dark:text-gray-400">
                                     {{ $row['date_granted'] ? ($row['date_granted'] instanceof \Carbon\Carbon ? $row['date_granted']->format('d/m/Y') : \Illuminate\Support\Carbon::parse($row['date_granted'])->format('d/m/Y')) : 'N/A' }}
                                 </td>
-                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">â‚¦{{ number_format($row['loan_granted'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">â‚¦{{ number_format($row['amount_repaid'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100 font-semibold">â‚¦{{ number_format($row['expected_amount_to_pay'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums @if($row['amount_defaulted'] > 0) text-red-600 font-bold @endif">â‚¦{{ number_format($row['amount_defaulted'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums font-bold text-primary-600">â‚¦{{ number_format($row['loan_balance'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">â‚¦{{ number_format($row['savings_balance'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($row['loan_granted'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($row['amount_repaid'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100 font-semibold">₦{{ number_format($row['expected_amount_to_pay'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums @if($row['amount_defaulted'] > 0) text-red-600 font-bold @endif">₦{{ number_format($row['amount_defaulted'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums font-bold text-primary-600">₦{{ number_format($row['loan_balance'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($row['savings_balance'], 2) }}</td>
                                 <td class="px-2 py-3 text-center text-gray-600 dark:text-gray-400">{{ $row['phone_number'] }}</td>
                                 <td class="px-2 py-3 text-center">
                                     <span @class([
@@ -93,12 +93,12 @@
                         <tfoot class="bg-gray-50/50 dark:bg-gray-800/40 border-t border-gray-200 dark:border-gray-800">
                             <tr class="font-bold text-gray-900 dark:text-gray-100">
                                 <td colspan="3" class="px-2 py-3 text-center uppercase tracking-wider">Total</td>
-                                <td class="px-2 py-3 text-right tabular-nums">â‚¦{{ number_format($report['totals']['loan_granted'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums">â‚¦{{ number_format($report['totals']['amount_repaid'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums">â‚¦{{ number_format($report['totals']['expected_amount_to_pay'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums text-red-600">â‚¦{{ number_format($report['totals']['amount_defaulted'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums text-primary-600">â‚¦{{ number_format($report['totals']['loan_balance'], 2) }}</td>
-                                <td class="px-2 py-3 text-right tabular-nums">â‚¦{{ number_format($report['totals']['savings_balance'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums">₦{{ number_format($report['totals']['loan_granted'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums">₦{{ number_format($report['totals']['amount_repaid'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums">₦{{ number_format($report['totals']['expected_amount_to_pay'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums text-red-600">₦{{ number_format($report['totals']['amount_defaulted'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums text-primary-600">₦{{ number_format($report['totals']['loan_balance'], 2) }}</td>
+                                <td class="px-2 py-3 text-right tabular-nums">₦{{ number_format($report['totals']['savings_balance'], 2) }}</td>
                                 <td colspan="2"></td>
                             </tr>
                         </tfoot>

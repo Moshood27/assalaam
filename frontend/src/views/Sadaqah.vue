@@ -56,8 +56,8 @@
             
             <div class="space-y-2">
               <div class="flex justify-between text-[11px] font-bold">
-                <span class="text-blue-600">Ã¢â€šÂ¦ {{ formatMoney(p.raised_amount) }} raised</span>
-                <span class="text-slate-400">Target: Ã¢â€šÂ¦ {{ formatMoney(p.target_amount) }}</span>
+                <span class="text-blue-600">₦ {{ formatMoney(p.raised_amount) }} raised</span>
+                <span class="text-slate-400">Target: ₦ {{ formatMoney(p.target_amount) }}</span>
               </div>
               <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div 

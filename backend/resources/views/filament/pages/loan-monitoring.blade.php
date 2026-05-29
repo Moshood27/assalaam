@@ -18,8 +18,8 @@
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Email</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Loans</th>
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Received At</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (â‚¦)</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (â‚¦)</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (₦)</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (₦)</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Actions</th>
                     </tr>
                 </thead>
@@ -72,8 +72,8 @@
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Branch</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Loans</th>
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Default Since</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (â‚¦)</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (â‚¦)</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (₦)</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (₦)</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Actions</th>
                     </tr>
                 </thead>

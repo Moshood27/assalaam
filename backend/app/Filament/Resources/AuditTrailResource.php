@@ -146,8 +146,8 @@ class AuditTrailResource extends Resource
 
                                 // Format currency for amount fields
                                 if (str_contains($key, 'amount') || $key === 'balance') {
-                                    $oldVal = 'â‚¦' . number_format((float)$oldVal, 2);
-                                    $newVal = 'â‚¦' . number_format((float)$newVal, 2);
+                                    $oldVal = '₦' . number_format((float)$oldVal, 2);
+                                    $newVal = '₦' . number_format((float)$newVal, 2);
                                 }
 
                                 $changes[] = ucfirst(str_replace('_', ' ', $key)) . ": {$oldVal} â†’ {$newVal}";

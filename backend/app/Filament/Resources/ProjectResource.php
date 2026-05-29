@@ -63,7 +63,7 @@ class ProjectResource extends Resource
                         Forms\Components\TextInput::make('unit_price')
                             ->label('Unit Price')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->visible(fn (callable $get) => $get('is_unit_based'))
                             ->required(fn (callable $get) => $get('is_unit_based')),
                         Forms\Components\TextInput::make('total_units')
@@ -87,7 +87,7 @@ class ProjectResource extends Resource
                         Forms\Components\TextInput::make('target_amount')
                             ->label('Target Amount')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->default(0)
                             ->required(),
                         Forms\Components\TextInput::make('management_fee_percent')

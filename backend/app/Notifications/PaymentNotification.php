@@ -37,7 +37,7 @@ class PaymentNotification extends Notification implements ShouldQueue
             ->line($this->message);
 
         if (!empty($this->amount)) {
-            $mail->line('Amount: â‚¦'.number_format((float) $this->amount, 2));
+            $mail->line('Amount: ₦'.number_format((float) $this->amount, 2));
         }
         if (!empty($this->reference)) {
             $mail->line('Reference: '.$this->reference);

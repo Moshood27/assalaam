@@ -36,7 +36,7 @@ class LoanPaymentReminder extends Notification implements ShouldQueue
             ->greeting('AssalÄmu â€˜alaykum ' . ($notifiable->full_name ?: $notifiable->name) . ',')
             ->line('We pray this message finds you in good health and Ä«mÄn.')
             ->line('This is a gentle reminder regarding your outstanding Qard Hasan repayment.')
-            ->line('Amount to pay: â‚¦' . number_format($this->amountToPay, 2))
+            ->line('Amount to pay: ₦' . number_format($this->amountToPay, 2))
             ->line('Due Date: ' . $this->dueDateText)
             ->action('View My Account', url('/loans'))
             ->line('Fulfilling financial obligations is an important part of our faith. May AllÄh put barakah in your wealth and make repayment easy for you. Ä€mÄ«n.')
@@ -47,7 +47,7 @@ class LoanPaymentReminder extends Notification implements ShouldQueue
     {
         return [
             'title' => 'Qard Hasan Repayment Reminder',
-            'body' => 'AssalÄmu â€˜alaykum, your Qard Hasan repayment of â‚¦' . number_format($this->amountToPay, 2) . ' is due (' . $this->dueDateText . '). JazÄkumullÄhu khayran.',
+            'body' => 'AssalÄmu â€˜alaykum, your Qard Hasan repayment of ₦' . number_format($this->amountToPay, 2) . ' is due (' . $this->dueDateText . '). JazÄkumullÄhu khayran.',
             'data' => [
                 'type' => 'loan_reminder',
                 'amount' => $this->amountToPay,
@@ -60,7 +60,7 @@ class LoanPaymentReminder extends Notification implements ShouldQueue
         return [
             'type' => 'loan_reminder',
             'title' => 'Qard Hasan Repayment Reminder',
-            'message' => 'AssalÄmu â€˜alaykum, your repayment of â‚¦' . number_format($this->amountToPay, 2) . ' is due (' . $this->dueDateText . ').',
+            'message' => 'AssalÄmu â€˜alaykum, your repayment of ₦' . number_format($this->amountToPay, 2) . ' is due (' . $this->dueDateText . ').',
             'amount' => $this->amountToPay,
             'due_date' => $this->dueDateText,
         ];

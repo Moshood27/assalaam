@@ -16,7 +16,7 @@
           <p class="font-bold text-slate-800">{{ p.name }}</p>
           <p class="text-[11px] text-slate-500 mt-1">
             Mgmt fee: <span class="font-semibold text-slate-700">{{ Number(p.management_fee_percent || 0).toLocaleString() }}%</span>
-            <span v-if="p.target_amount" class="ml-2">Target: Ã¢â€šÂ¦{{ Number(p.target_amount).toLocaleString() }}</span>
+            <span v-if="p.target_amount" class="ml-2">Target: ₦{{ Number(p.target_amount).toLocaleString() }}</span>
           </p>
           <p class="text-[11px] text-slate-500 mt-1">
             <span v-if="p.started_at">Started: {{ formatDate(p.started_at) }}</span>

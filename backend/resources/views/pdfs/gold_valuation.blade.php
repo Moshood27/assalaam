@@ -23,9 +23,9 @@
 
     <div class="summary-box">
         <strong>Market Valuation Summary</strong><br>
-        Current Gold Price: â‚¦ {{ number_format($current_gold_price, 2) }} / gram<br>
+        Current Gold Price: ₦ {{ number_format($current_gold_price, 2) }} / gram<br>
         Total Weight Held: {{ number_format($total_weight_grams, 4) }} grams<br>
-        <strong>Total Market Value: â‚¦ {{ number_format($total_market_value, 2) }}</strong>
+        <strong>Total Market Value: ₦ {{ number_format($total_market_value, 2) }}</strong>
     </div>
 
     <div style="font-weight: bold; margin-top: 20px;">Top 10 Gold Holders</div>
@@ -34,7 +34,7 @@
             <tr>
                 <th>Member Name</th>
                 <th class="right">Weight (grams)</th>
-                <th class="right">Estimated Value (â‚¦)</th>
+                <th class="right">Estimated Value (₦)</th>
             </tr>
         </thead>
         <tbody>

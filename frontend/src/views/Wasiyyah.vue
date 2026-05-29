@@ -34,7 +34,7 @@
               <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">Ã°Å¸â€˜Â¤</div>
               <div>
                 <h3 class="font-bold text-slate-800">{{ b.name }}</h3>
-                <p class="text-xs text-slate-500 font-medium">{{ b.relationship }} Ã¢â‚¬Â¢ {{ b.percentage }}% Allocation ({{ b.asset_type === 'all' ? 'General' : b.asset_type }})</p>
+                <p class="text-xs text-slate-500 font-medium">{{ b.relationship }} • {{ b.percentage }}% Allocation ({{ b.asset_type === 'all' ? 'General' : b.asset_type }})</p>
               </div>
             </div>
             <div class="flex gap-2">

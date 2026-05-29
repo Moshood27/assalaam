@@ -187,8 +187,8 @@
 
     <div class="section-title">SECTION A:</div>
     <p>Borrower's Name <span class="underline" style="min-width: 400px;">{{ $user->full_name }}</span></p>
-    <p>Amount Requested: <span class="underline" style="min-width: 200px;">â‚¦{{ number_format($loan->principal_amount, 2) }}</span></p>
-    <p>Amount granted: <span class="underline" style="min-width: 200px;">â‚¦{{ number_format($loan->principal_amount, 2) }}</span></p>
+    <p>Amount Requested: <span class="underline" style="min-width: 200px;">₦{{ number_format($loan->principal_amount, 2) }}</span></p>
+    <p>Amount granted: <span class="underline" style="min-width: 200px;">₦{{ number_format($loan->principal_amount, 2) }}</span></p>
     <p>Date: <span class="underline" style="min-width: 200px;">{{ $loan->approved_at ? $loan->approved_at->format('d/m/Y') : now()->format('d/m/Y') }}</span></p>
 
     <p style="font-size: 8pt; margin-top: 10px;">
@@ -276,8 +276,8 @@
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CARD NO <span class="underline" style="min-width: 80px;">{{ $guarantor->membership_number }}</span>
         </div>
         <p>NAME: <span class="underline" style="min-width: 300px;">{{ $guarantor->full_name }}</span></p>
-        <p>SHARES: <span class="underline" style="min-width: 200px;">â‚¦{{ number_format($gEligibility['shares'] ?? 0, 2) }}</span></p>
-        <p>SAVINGS: <span class="underline" style="min-width: 200px;">â‚¦{{ number_format($gEligibility['savings'] ?? 0, 2) }}</span></p>
+        <p>SHARES: <span class="underline" style="min-width: 200px;">₦{{ number_format($gEligibility['shares'] ?? 0, 2) }}</span></p>
+        <p>SAVINGS: <span class="underline" style="min-width: 200px;">₦{{ number_format($gEligibility['savings'] ?? 0, 2) }}</span></p>
 
         <div style="font-weight: bold; font-size: 8pt; margin-top: 5px;">LOAN STATUS</div>
         <table>

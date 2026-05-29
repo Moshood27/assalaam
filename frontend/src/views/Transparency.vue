@@ -13,15 +13,15 @@
         </div>
         <div v-else-if="error" class="text-rose-700 bg-rose-50 border border-rose-100 p-4 rounded-2xl text-sm">{{ error }}</div>
         <div v-else class="space-y-3">
-          <div class="text-4xl font-black text-slate-900 tracking-tighter">Ã¢â€šÂ¦ {{ money(data.total_assets) }}</div>
+          <div class="text-4xl font-black text-slate-900 tracking-tighter">₦ {{ money(data.total_assets) }}</div>
           <div class="flex gap-4">
             <div class="flex flex-col">
               <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Projects</span>
-              <span class="font-bold text-blue-700 text-sm">Ã¢â€šÂ¦ {{ money(data.projects_total) }}</span>
+              <span class="font-bold text-blue-700 text-sm">₦ {{ money(data.projects_total) }}</span>
             </div>
             <div class="flex flex-col">
               <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Cash</span>
-              <span class="font-bold text-slate-700 text-sm">Ã¢â€šÂ¦ {{ money(data.cash_total) }}</span>
+              <span class="font-bold text-slate-700 text-sm">₦ {{ money(data.cash_total) }}</span>
             </div>
           </div>
         </div>
@@ -48,7 +48,7 @@
                   </div>
                   <div>
                     <div class="font-black text-slate-800 text-sm tracking-tight">{{ row.name }}</div>
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ row.status }} Ã¢â‚¬Â¢ Ã¢â€šÂ¦ {{ money(row.amount) }}</div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ row.status }} • ₦ {{ money(row.amount) }}</div>
                   </div>
                 </div>
                 <div class="text-xs font-black text-blue-700 bg-white px-2 py-1 rounded-lg border border-slate-100">{{ row.percent.toFixed(2) }}%</div>

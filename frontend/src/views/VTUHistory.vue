@@ -40,7 +40,7 @@
               {{ statusIcon(tx.status) }}
             </div>
             <div>
-              <p class="text-sm font-bold text-slate-800 capitalize">{{ tx.type }} Ã¢â‚¬â€ {{ tx.network }}</p>
+              <p class="text-sm font-bold text-slate-800 capitalize">{{ tx.type }} — {{ tx.network }}</p>
               <p class="text-[10px] text-slate-500">{{ tx.phone_number }}</p>
               <p class="text-[10px] text-slate-400">Ref: {{ tx.reference }}</p>
               <p v-if="tx.type === 'electricity' && getToken(tx)" class="mt-1 p-2 bg-blue-50 text-blue-800 rounded-lg text-xs font-mono font-bold border border-blue-100">
@@ -49,7 +49,7 @@
             </div>
           </div>
           <div class="text-right">
-            <p class="font-bold">Ã¢â€šÂ¦ {{ formatMoney(tx.amount) }}</p>
+            <p class="font-bold">₦ {{ formatMoney(tx.amount) }}</p>
             <p class="text-[10px] text-slate-400">{{ new Date(tx.created_at).toLocaleString() }}</p>
           </div>
         </div>
@@ -80,7 +80,7 @@ const filters = ref({ type: '', status: '' })
 
 const formatMoney = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const badgeClass = (status) => status === 'success' ? 'bg-blue-100 text-blue-700' : (status === 'failed' ? 'bg-rose-100 text-rose-700' : 'bg-yellow-100 text-yellow-700')
-const statusIcon = (status) => status === 'success' ? 'Ã¢Å“â€œ' : (status === 'failed' ? 'Ã¢Å“â€¢' : 'Ã¢Å’â€º')
+const statusIcon = (status) => status === 'success' ? 'Ã¢Å“â€œ' : (status === 'failed' ? 'Ã¢Å“•' : 'Ã¢Å’â€º')
 
 const getToken = (tx) => {
   if (tx.type !== 'electricity' || !tx.provider_response) return null

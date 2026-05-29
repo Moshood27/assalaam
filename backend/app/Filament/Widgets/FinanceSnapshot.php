@@ -54,23 +54,23 @@ class FinanceSnapshot extends BaseWidget
 
         return [
             Card::make('Gold Reserves', number_format($totalGold, 4) . ' g')
-                ->description('â‚¦' . number_format($goldValue, 2) . ' @ sell price')
+                ->description('₦' . number_format($goldValue, 2) . ' @ sell price')
                 ->color('warning')
                 ->icon('heroicon-o-archive-box'),
-            Card::make('Active Loans Portfolio', 'â‚¦' . number_format((float) $activePortfolio, 2))
+            Card::make('Active Loans Portfolio', '₦' . number_format((float) $activePortfolio, 2))
                 ->description('Outstanding principal (Active)')
                 ->color('warning'),
-            Card::make('Total Collections (MTD)', 'â‚¦' . number_format((float) $mtd, 2))
+            Card::make('Total Collections (MTD)', '₦' . number_format((float) $mtd, 2))
                 ->description('Successful contributions this month')
                 ->color('success'),
-            Card::make('Member Wallets (Liability)', 'â‚¦' . number_format($totalLiability, 2))
+            Card::make('Member Wallets (Liability)', '₦' . number_format($totalLiability, 2))
                 ->description('Total liquidity owed to members')
                 ->color('danger'),
-            Card::make('Takaful Pool', 'â‚¦' . number_format($poolBalance, 2))
+            Card::make('Takaful Pool', '₦' . number_format($poolBalance, 2))
                 ->description('Funds available for loan settlements')
                 ->color('info'),
             Card::make('Pending Withdrawals', $pendingWithdrawals)
-                ->description('â‚¦' . number_format($pendingAmount, 2) . ' awaiting processing')
+                ->description('₦' . number_format($pendingAmount, 2) . ' awaiting processing')
                 ->color($pendingWithdrawals > 0 ? 'danger' : 'gray'),
             Card::make('Overdue Loans', $overdueCount)
                 ->description('Members at risk of default')

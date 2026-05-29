@@ -43,7 +43,7 @@ class ShariaDisputeResource extends Resource
                             ->content(fn ($record): string => $record->user?->email ?? '-'),
                         Forms\Components\Placeholder::make('order_total')
                             ->label('Order Total')
-                            ->content(fn ($record): string => $record->order ? 'â‚¦ ' . number_format($record->order->total_amount, 2) : '-'),
+                            ->content(fn ($record): string => $record->order ? '₦ ' . number_format($record->order->total_amount, 2) : '-'),
                         Forms\Components\TextInput::make('reason')
                             ->disabled(),
                         Forms\Components\Textarea::make('description')
@@ -61,7 +61,7 @@ class ShariaDisputeResource extends Resource
                                 Forms\Components\TextInput::make('quantity')
                                     ->disabled(),
                                 Forms\Components\TextInput::make('line_total')
-                                    ->label('Total (â‚¦)')
+                                    ->label('Total (₦)')
                                     ->formatStateUsing(fn ($state) => number_format($state, 2))
                                     ->disabled(),
                             ])

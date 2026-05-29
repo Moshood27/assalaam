@@ -46,7 +46,7 @@ class AttendanceRecordsRelationManager extends RelationManager
                     ->label('Lateness Fine Paid'),
                 Forms\Components\TextInput::make('lateness_fine_amount')
                     ->numeric()
-                    ->prefix('â‚¦'),
+                    ->prefix('₦'),
                 Forms\Components\Section::make('Excuse Details')
                     ->schema([
                         Forms\Components\Select::make('excuse_type')

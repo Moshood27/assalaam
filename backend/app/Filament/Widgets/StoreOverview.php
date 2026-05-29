@@ -16,7 +16,7 @@ class StoreOverview extends BaseWidget
         $outOfStock = Product::where('track_stock', true)->where('stock_quantity', '<=', 0)->count();
 
         return [
-            Stat::make('Total Store Sales', 'â‚¦ ' . number_format($totalSales, 2))
+            Stat::make('Total Store Sales', '₦ ' . number_format($totalSales, 2))
                 ->description('Combined cash and active financing')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),

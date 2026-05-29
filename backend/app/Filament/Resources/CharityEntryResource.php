@@ -51,7 +51,7 @@ class CharityEntryResource extends Resource
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
                     ->required()
-                    ->prefix('â‚¦'),
+                    ->prefix('₦'),
                 Forms\Components\Textarea::make('note')
                     ->maxLength(255)
                     ->columnSpanFull(),
@@ -146,7 +146,7 @@ class CharityEntryResource extends Resource
                         TextInput::make('amount')
                             ->numeric()
                             ->required()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->helperText('Enter the amount to disburse (will be stored as negative)'),
                         Textarea::make('note')
                             ->placeholder('e.g. Distributed to needy member for medical bills')

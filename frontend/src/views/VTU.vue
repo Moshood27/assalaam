@@ -11,7 +11,7 @@
       <!-- Balance Card -->
       <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-7 text-white shadow-xl transform transition-all active:scale-95">
         <p class="text-blue-100 text-sm font-medium">Available Wallet Balance</p>
-        <h2 class="text-4xl font-bold mt-1 tracking-tight">Ã¢â€šÂ¦ {{ formatMoney(balance) }}</h2>
+        <h2 class="text-4xl font-bold mt-1 tracking-tight">₦ {{ formatMoney(balance) }}</h2>
       </div>
 
       <!-- Tab Switcher -->
@@ -38,7 +38,7 @@
           <input v-model="airtime.phone" type="tel" placeholder="0803 000 0000" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500" />
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (Ã¢â€šÂ¦)</label>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (₦)</label>
           <input v-model.number="airtime.amount" type="number" min="50" placeholder="e.g. 100" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500" />
         </div>
         <button @click="buyAirtime" :disabled="loadingAirtime || !canBuyAirtime" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
@@ -72,11 +72,11 @@
           <select v-model="dataForm.bundleCode" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
             <option disabled value="">Choose a plan...</option>
             <option v-for="b in bundles" :key="b.code" :value="b.code">
-              {{ b.name }} Ã¢â‚¬â€ Ã¢â€šÂ¦ {{ formatMoney(b.amount) }}
+              {{ b.name }} — ₦ {{ formatMoney(b.amount) }}
             </option>
           </select>
           <p v-if="selectedBundle" class="mt-2 text-xs text-slate-500 ml-1 italic text-center">
-            Total to be debited: <span class="font-bold text-blue-700">Ã¢â€šÂ¦ {{ formatMoney(selectedBundle.total_debit) }}</span>
+            Total to be debited: <span class="font-bold text-blue-700">₦ {{ formatMoney(selectedBundle.total_debit) }}</span>
           </p>
         </div>
         <button @click="buyData" :disabled="loadingData || !canBuyData" class="btn-primary w-full py-4 rounded-2xl active:scale-95">
@@ -125,7 +125,7 @@
           </p>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (Ã¢â€šÂ¦)</label>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Amount (₦)</label>
           <input v-model.number="electricity.amount" type="number" min="100" placeholder="e.g. 1000" class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-500" />
           <p class="mt-2 text-[10px] text-slate-500 italic ml-1">Note: A small convenience fee may apply.</p>
         </div>
@@ -171,11 +171,11 @@
           <select v-model="cable.bundleCode" class="w-full bg-slate-50 p-4 rounded-xl border-slate-200 text-sm outline-none focus:border-blue-500">
             <option disabled value="">Choose a package...</option>
             <option v-for="b in tvBundles" :key="b.code" :value="b.code">
-              {{ b.name }} Ã¢â‚¬â€ Ã¢â€šÂ¦ {{ formatMoney(b.amount) }}
+              {{ b.name }} — ₦ {{ formatMoney(b.amount) }}
             </option>
           </select>
           <p v-if="selectedTvBundle" class="mt-2 text-xs text-slate-500 ml-1 italic text-center">
-            Total to be debited: <span class="font-bold text-blue-700">Ã¢â€šÂ¦ {{ formatMoney(selectedTvBundle.total_debit) }}</span>
+            Total to be debited: <span class="font-bold text-blue-700">₦ {{ formatMoney(selectedTvBundle.total_debit) }}</span>
           </p>
         </div>
         <div>

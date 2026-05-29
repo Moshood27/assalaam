@@ -28,21 +28,21 @@
                 <td style="border: none; width: 50%; vertical-align: top;">
                     <strong>Islamic Financing (Murabahah):</strong><br>
                     Total Contracts: {{ $murabahah['count'] }}<br>
-                    Total Value: â‚¦{{ number_format($murabahah['total_value'], 2) }}<br>
-                    Expected Profit: â‚¦{{ number_format($murabahah['total_profit'], 2) }}<br>
+                    Total Value: ₦{{ number_format($murabahah['total_value'], 2) }}<br>
+                    Expected Profit: ₦{{ number_format($murabahah['total_profit'], 2) }}<br>
                     <br>
                     <strong>Investment Projects (Mudarabah/Musharakah):</strong><br>
                     Active/New Projects: {{ $projects['count'] }}<br>
-                    Total Capital Goal: â‚¦{{ number_format($projects['total_capital'], 2) }}<br>
+                    Total Capital Goal: ₦{{ number_format($projects['total_capital'], 2) }}<br>
                     <br>
                     <strong>Welfare Pool (Takaful):</strong><br>
                     Settlements: {{ $takaful['count'] }}<br>
-                    Total Settled: â‚¦{{ number_format($takaful['total_amount'], 2) }}<br>
+                    Total Settled: ₦{{ number_format($takaful['total_amount'], 2) }}<br>
                 </td>
                 <td style="border: none; width: 50%; vertical-align: top;">
                     <strong>Social Responsibility:</strong><br>
                     Charity Disbursements: {{ $charity_disbursements['count'] }}<br>
-                    Total Disbursed: â‚¦{{ number_format($charity_disbursements['total_amount'], 2) }}<br>
+                    Total Disbursed: ₦{{ number_format($charity_disbursements['total_amount'], 2) }}<br>
                     <br>
                     <strong>Audit Metrics:</strong><br>
                     Total Audit Logs: {{ $total_audits }}<br>

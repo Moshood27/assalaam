@@ -13,7 +13,7 @@
       
       <div class="flex items-center justify-center gap-3 bg-slate-50 p-4 rounded-2xl">
         <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-700 border-t-transparent"></div>
-        <p class="text-xs font-medium text-slate-600">Finalizing top-upÃ¢â‚¬Â¦</p>
+        <p class="text-xs font-medium text-slate-600">Finalizing top-up...</p>
       </div>
 
       <p class="text-[10px] text-slate-400 mt-8 italic">You will be redirected to your wallet shortly.</p>

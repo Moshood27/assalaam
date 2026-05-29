@@ -10,7 +10,7 @@
       <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-7 text-white shadow-lg relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full"></div>
         <p class="text-blue-100 text-sm font-medium mb-1 relative z-10">Available Wallet Balance</p>
-        <h2 class="text-3xl font-black relative z-10">Ã¢â€šÂ¦ {{ formatMoney(balance) }}</h2>
+        <h2 class="text-3xl font-black relative z-10">₦ {{ formatMoney(balance) }}</h2>
       </div>
 
       <div class="bg-blue-50/50 border border-blue-100 text-blue-900 rounded-2xl p-4 flex gap-3">
@@ -29,7 +29,7 @@
             <div>
               <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Savings Goal</p>
               <h3 class="text-lg font-bold text-slate-800">{{ g.title }}</h3>
-              <p class="text-xs text-slate-500 font-medium mt-0.5">Target: Ã¢â€šÂ¦ {{ formatMoney(g.target_amount) }} Ã¢â‚¬Â¢ Saved: Ã¢â€šÂ¦ {{ formatMoney(g.saved_amount) }}</p>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">Target: ₦ {{ formatMoney(g.target_amount) }} • Saved: ₦ {{ formatMoney(g.saved_amount) }}</p>
             </div>
             <span :class="badgeClass(g.status)" class="badge">{{ g.status }}</span>
           </div>
@@ -69,7 +69,7 @@
             <input v-model="form.title" placeholder="e.g., Umrah 2026" class="inp" />
           </div>
           <div>
-            <label class="lbl">Target Amount (Ã¢â€šÂ¦)</label>
+            <label class="lbl">Target Amount (₦)</label>
             <input v-model.number="form.target_amount" type="number" min="1" class="inp" placeholder="0.00" />
           </div>
           <div>
@@ -97,12 +97,12 @@
         
         <div class="bg-blue-50 p-4 rounded-2xl mb-6 flex justify-between items-center">
           <span class="text-xs font-bold text-blue-800 uppercase tracking-wider">Wallet Balance</span>
-          <span class="font-black text-blue-900">Ã¢â€šÂ¦ {{ formatMoney(balance) }}</span>
+          <span class="font-black text-blue-900">₦ {{ formatMoney(balance) }}</span>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="lbl">Amount to Deposit (Ã¢â€šÂ¦)</label>
+            <label class="lbl">Amount to Deposit (₦)</label>
             <input v-model.number="depositAmount" type="number" min="1" class="inp" placeholder="0.00" />
           </div>
           <div class="grid grid-cols-2 gap-3 mt-6">
@@ -207,7 +207,7 @@ async function viewGoal(g) {
   try {
     const { data } = await axios.get(`/api/goals/${g.id}`)
     const details = data.goal
-    const msg = `Title: ${details.title}\nTarget: Ã¢â€šÂ¦ ${formatMoney(details.target_amount)}\nSaved: Ã¢â€šÂ¦ ${formatMoney(details.saved_amount)}\nStatus: ${details.status}\nProgress: ${details.progress}%`
+    const msg = `Title: ${details.title}\nTarget: ₦ ${formatMoney(details.target_amount)}\nSaved: ₦ ${formatMoney(details.saved_amount)}\nStatus: ${details.status}\nProgress: ${details.progress}%`
     alert(msg)
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to load goal')
@@ -225,7 +225,7 @@ async function bookTravel(g) {
       partner_name: partner,
       package: pkg || undefined,
     })
-    alert(`Booking recorded with ${data?.booking?.partner_name}. Commission: Ã¢â€šÂ¦ ${formatMoney(data?.commission_amount)}`)
+    alert(`Booking recorded with ${data?.booking?.partner_name}. Commission: ₦ ${formatMoney(data?.commission_amount)}`)
     await load()
   } catch (e) {
     alert(e?.response?.data?.message || 'Failed to record booking')

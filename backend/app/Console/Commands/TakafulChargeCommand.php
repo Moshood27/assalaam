@@ -39,10 +39,10 @@ class TakafulChargeCommand extends Command
 
         $this->line('Processed: ' . $result['processed']);
         $this->line('Created  : ' . $result['created']);
-        $this->line('Charged  : â‚¦' . number_format($result['charged'], 2));
+        $this->line('Charged  : ₦' . number_format($result['charged'], 2));
         $this->line('Skipped (existing): ' . $result['skipped_existing']);
         $this->line('Insufficient funds: ' . $result['insufficient_funds']);
-        $this->line('Pool balance after: â‚¦' . number_format($result['balance'], 2));
+        $this->line('Pool balance after: ₦' . number_format($result['balance'], 2));
 
         $this->info('Done.');
         return 0;

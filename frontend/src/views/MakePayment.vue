@@ -6,13 +6,13 @@
       <!-- Wallet Balance -->
       <div class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-6 text-white shadow-xl">
         <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Wallet Balance</p>
-        <p class="text-3xl font-extrabold tracking-tight mt-1">Ã¢â€šÂ¦ {{ Number(walletBalance).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
+        <p class="text-3xl font-extrabold tracking-tight mt-1">₦ {{ Number(walletBalance).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
       </div>
 
       <!-- Add Payment Item -->
       <div class="card card-elevated p-6">
         <p class="text-[11px] text-rose-500 font-bold mb-4 uppercase">
-          Ã¢Å¡Â Ã¯Â¸Â Click the "+" to split across multiple schemes
+          ⚠️ Click the "+" to split across multiple schemes
         </p>
         <div class="space-y-4">
           <div>
@@ -32,13 +32,13 @@
           </div>
           <div v-if="outstandingLoan" class="p-3 bg-amber-50 border border-amber-200 rounded-xl">
             <p class="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Outstanding Loan</p>
-            <p class="text-sm font-bold text-amber-900">Ã¢â€šÂ¦ {{ Number(outstandingLoan.remaining_principal).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
+            <p class="text-sm font-bold text-amber-900">₦ {{ Number(outstandingLoan.remaining_principal).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</p>
             <p class="text-[9px] text-amber-600 mt-1">Payments will be applied to: {{ outstandingLoan.qard_id_string }}</p>
           </div>
           <div>
             <label class="lbl">Amount</label>
             <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Ã¢â€šÂ¦</span>
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
               <input v-model.number="inputAmount" type="number" inputmode="decimal" placeholder="0.00" class="inp pl-8 text-xl font-black" />
             </div>
           </div>
@@ -68,7 +68,7 @@
             <p class="text-xs text-slate-500">Scheduled Payment</p>
           </div>
           <div class="flex items-center gap-4">
-            <p class="font-bold text-slate-800">Ã¢â€šÂ¦ {{ Number(item.amount).toLocaleString() }}</p>
+            <p class="font-bold text-slate-800">₦ {{ Number(item.amount).toLocaleString() }}</p>
             <button @click="removeFromList(index)" class="btn-muted text-rose-700 border-rose-200 hover:bg-rose-50 px-3 py-1 rounded-lg text-xs" aria-label="Remove from list">Remove</button>
           </div>
         </div>
@@ -81,7 +81,7 @@
       <div class="card card-elevated p-4">
         <div class="flex justify-between items-center mb-2">
           <span class="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Total Amount</span>
-          <span class="text-2xl font-black text-slate-900">Ã¢â€šÂ¦ {{ Number(totalAmount).toLocaleString() }}</span>
+          <span class="text-2xl font-black text-slate-900">₦ {{ Number(totalAmount).toLocaleString() }}</span>
         </div>
 
         <div class="space-y-2 mb-4">
@@ -105,7 +105,7 @@
               </div>
               <span class="text-xs font-bold text-slate-700 uppercase">Wallet</span>
             </div>
-            <span class="text-[10px] font-bold text-slate-500">Ã¢â€šÂ¦ {{ Number(walletBalance).toLocaleString() }}</span>
+            <span class="text-[10px] font-bold text-slate-500">₦ {{ Number(walletBalance).toLocaleString() }}</span>
           </div>
 
           <!-- Special Savings -->
@@ -116,7 +116,7 @@
               </div>
               <span class="text-xs font-bold text-blue-700 uppercase">Special Savings</span>
             </div>
-            <span class="text-[10px] font-bold text-blue-600">Ã¢â€šÂ¦ {{ Number(specialSavingsBalance).toLocaleString() }}</span>
+            <span class="text-[10px] font-bold text-blue-600">₦ {{ Number(specialSavingsBalance).toLocaleString() }}</span>
           </div>
         </div>
 
@@ -140,7 +140,7 @@
           </div>
         </div>
         <button @click="initiatePayment" :disabled="paymentList.length === 0 || loading" class="btn-primary w-full py-4 text-lg">
-          {{ loading ? 'ProcessingÃ¢â‚¬Â¦' : (source !== 'gateway' ? 'Allocate Fund' : 'Make Payment') }}
+          {{ loading ? 'Processing...' : (source !== 'gateway' ? 'Allocate Fund' : 'Make Payment') }}
         </button>
       </div>
     </div>

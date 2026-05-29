@@ -10,7 +10,7 @@
       </div>
       <p class="text-[11px] text-slate-500 mt-0.5 font-medium truncate">Invested in: <span class="text-indigo-600 uppercase">{{ group.project?.name || 'General Projects' }}</span></p>
       <div class="flex items-center gap-2 mt-2">
-        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full font-bold text-slate-600 uppercase tracking-tighter">Ã¢â€šÂ¦ {{ formatMoney(group.monthly_contribution_amount) }}/mo</span>
+        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full font-bold text-slate-600 uppercase tracking-tighter">₦ {{ formatMoney(group.monthly_contribution_amount) }}/mo</span>
         <span class="text-[10px] bg-blue-50 px-2 py-0.5 rounded-full font-bold text-blue-700 uppercase tracking-tighter">{{ group.active_members_count || 0 }} Members</span>
       </div>
     </div>

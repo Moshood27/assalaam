@@ -42,9 +42,9 @@
 
           <div v-if="proposal.target_amount" class="pt-4 border-t border-slate-100">
             <div class="text-[10px] font-black uppercase text-slate-400">Target Investment Amount</div>
-            <div class="text-2xl font-black text-blue-700">Ã¢â€šÂ¦ {{ Number(proposal.target_amount).toLocaleString() }}</div>
+            <div class="text-2xl font-black text-blue-700">₦ {{ Number(proposal.target_amount).toLocaleString() }}</div>
           </div>
-          <div class="text-[10px] text-slate-400 font-bold uppercase">Proposed by {{ proposal.user?.name }} Ã¢â‚¬Â¢ {{ formatDate(proposal.created_at) }}</div>
+          <div class="text-[10px] text-slate-400 font-bold uppercase">Proposed by {{ proposal.user?.name }} • {{ formatDate(proposal.created_at) }}</div>
         </section>
 
         <!-- Voting Section -->

@@ -41,7 +41,7 @@
         <p class="salam">AssalÄmu â€˜alaykum {{ $loan->user->full_name }},</p>
         <p>AlhamdulillÄh, your Qard Hasan has been disbursed successfully. The amount below has been credited to your cooperative wallet.</p>
 
-        <p class="amount">+ â‚¦{{ number_format($creditedAmount, 2) }}</p>
+        <p class="amount">+ ₦{{ number_format($creditedAmount, 2) }}</p>
 
         <table class="meta" role="presentation" cellspacing="0" cellpadding="0">
             <tr>
@@ -50,11 +50,11 @@
             </tr>
             <tr>
                 <th>Principal Amount</th>
-                <td>â‚¦{{ number_format($loan->principal_amount, 2) }}</td>
+                <td>₦{{ number_format($loan->principal_amount, 2) }}</td>
             </tr>
             <tr>
                 <th>Credited to Wallet</th>
-                <td>â‚¦{{ number_format($creditedAmount, 2) }}</td>
+                <td>₦{{ number_format($creditedAmount, 2) }}</td>
             </tr>
             <tr>
                 <th>Status</th>
@@ -67,7 +67,7 @@
             @if(!empty($loan->user?->balance))
             <tr>
                 <th>Current Wallet Balance</th>
-                <td>â‚¦{{ number_format((float) $loan->user->balance, 2) }}</td>
+                <td>₦{{ number_format((float) $loan->user->balance, 2) }}</td>
             </tr>
             @endif
         </table>

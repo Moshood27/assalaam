@@ -54,7 +54,7 @@ class TakafulContributionResource extends Resource
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('amount')
-                    ->label('Amount (â‚¦)')
+                    ->label('Amount (₦)')
                     ->money('ngn', true)
                     ->sortable(),
                 BadgeColumn::make('status')
@@ -116,7 +116,7 @@ class TakafulContributionResource extends Resource
                         Forms\Components\TextInput::make('amount')
                             ->numeric()
                             ->label('Amount (optional)')
-                            ->prefix('â‚¦'),
+                            ->prefix('₦'),
                         Forms\Components\Select::make('user_id')
                             ->label('Only Member (optional)')
                             ->relationship('user', 'name')
@@ -146,7 +146,7 @@ class TakafulContributionResource extends Resource
                         }
                         Notification::make()
                             ->title('Takaful charge '.($dry ? '(dry-run)' : 'completed'))
-                            ->body("Processed: {$result['processed']} | Created: {$result['created']} | Charged: â‚¦".number_format((float)$result['charged'], 2)." | Insufficient: {$result['insufficient_funds']} | Balance: â‚¦".number_format((float)$result['balance'], 2))
+                            ->body("Processed: {$result['processed']} | Created: {$result['created']} | Charged: ₦".number_format((float)$result['charged'], 2)." | Insufficient: {$result['insufficient_funds']} | Balance: ₦".number_format((float)$result['balance'], 2))
                             ->success()
                             ->send();
                     })

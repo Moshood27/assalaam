@@ -27,7 +27,7 @@
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Monthly Contribution (Ã¢â€šÂ¦)</label>
+            <label class="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Monthly Contribution (₦)</label>
             <input 
               v-model.number="form.monthly_contribution_amount" 
               type="number" 

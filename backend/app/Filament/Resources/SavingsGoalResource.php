@@ -37,18 +37,18 @@ class SavingsGoalResource extends Resource
                     ->required()
                     ->maxLength(120),
                 Forms\Components\TextInput::make('target_amount')
-                    ->label('Target Amount (â‚¦)')
+                    ->label('Target Amount (₦)')
                     ->numeric()
                     ->minValue(0.01)
                     ->step('0.01')
-                    ->prefix('â‚¦')
+                    ->prefix('₦')
                     ->required(),
                 Forms\Components\TextInput::make('saved_amount')
-                    ->label('Saved Amount (â‚¦)')
+                    ->label('Saved Amount (₦)')
                     ->numeric()
                     ->minValue(0)
                     ->step('0.01')
-                    ->prefix('â‚¦')
+                    ->prefix('₦')
                     ->default(0),
                 Forms\Components\DatePicker::make('target_date')
                     ->native(false)

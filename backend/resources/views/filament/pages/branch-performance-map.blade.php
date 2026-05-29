@@ -25,7 +25,7 @@
         {{-- Aggregate Totals --}}
         <div id="agg" class="flex flex-wrap items-center gap-4 p-4 bg-white rounded-xl shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
             <div class="text-sm"><span class="text-gray-500">Branches:</span> <span id="agg-branches" class="font-semibold">0</span></div>
-            <div class="text-sm"><span class="text-gray-500">Total Savings:</span> <span id="agg-savings" class="font-semibold">â‚¦0.00</span></div>
+            <div class="text-sm"><span class="text-gray-500">Total Savings:</span> <span id="agg-savings" class="font-semibold">₦0.00</span></div>
             <div class="text-sm"><span class="text-gray-500">Avg Default Rate:</span> <span id="agg-default" class="font-semibold">0%</span></div>
         </div>
 
@@ -66,7 +66,7 @@
                     try { return Number(n).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch { return n }
                 };
                 document.getElementById('agg-branches').textContent = String(validBranches.length);
-                document.getElementById('agg-savings').textContent = `â‚¦ ${fmt(totalSavings)}`;
+                document.getElementById('agg-savings').textContent = `₦ ${fmt(totalSavings)}`;
                 document.getElementById('agg-default').textContent = `${(avgDefault || 0).toFixed(2)}%`;
 
                 const map = new google.maps.Map(mapContainer, {
@@ -116,7 +116,7 @@
 
                     const p1 = document.createElement('p');
                     p1.className = 'mb-1';
-                    p1.innerHTML = `<strong>Total Savings:</strong> â‚¦${savingsFmt}`;
+                    p1.innerHTML = `<strong>Total Savings:</strong> ₦${savingsFmt}`;
                     popupContent.appendChild(p1);
 
                     const p2 = document.createElement('p');

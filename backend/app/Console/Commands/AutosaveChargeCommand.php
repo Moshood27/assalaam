@@ -84,7 +84,7 @@ class AutosaveChargeCommand extends Command
             ];
 
             if ($dryRun) {
-                $this->line("[DRY-RUN] Would charge user {$user->id} â‚¦".number_format($amount, 2)." ref=$reference");
+                $this->line("[DRY-RUN] Would charge user {$user->id} ₦".number_format($amount, 2)." ref=$reference");
                 continue;
             }
 
@@ -118,7 +118,7 @@ class AutosaveChargeCommand extends Command
                     'amount' => $amount,
                     'status' => $status,
                 ]);
-                $this->info("User {$user->id} autosave initiated: â‚¦".number_format($amount, 2)." ref=$reference status=$status");
+                $this->info("User {$user->id} autosave initiated: ₦".number_format($amount, 2)." ref=$reference status=$status");
             } catch (\Throwable $e) {
                 // Mark last run to avoid reattempt spamming in the same minute; next day will retry
                 $user->autosave_last_run_at = Carbon::now($tz);

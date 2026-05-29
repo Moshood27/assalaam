@@ -25,7 +25,7 @@ class QardHasanRepaymentsRelationManager extends RelationManager
                     ->disabled(),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
-                    ->prefix('â‚¦')
+                    ->prefix('₦')
                     ->disabled(),
                 Forms\Components\TextInput::make('status')
                     ->disabled(),

@@ -231,28 +231,28 @@ function sendFinAction(type) {
     send('peer_transfer', {
        body: input.value,
        type: 'peer_transfer',
-       metadata: { amount: 'Ã¢â€šÂ¦5,000.00', note: 'Contribution for Sadaqah', status: 'completed' }
+       metadata: { amount: '₦5,000.00', note: 'Contribution for Sadaqah', status: 'completed' }
     })
   } else if (type === 'peer_request') {
     input.value = "Salam, I'm requesting the payment for the lunch we had."
     send('peer_request', {
        body: input.value,
        type: 'peer_request',
-       metadata: { amount: 'Ã¢â€šÂ¦2,500.00', purpose: 'Lunch sharing', status: 'pending' }
+       metadata: { amount: '₦2,500.00', purpose: 'Lunch sharing', status: 'pending' }
     })
   } else if (type === 'bill_payment') {
     input.value = "Salam, I've paid the electricity bill for our branch."
     send('bill_payment', {
        body: input.value,
        type: 'bill_payment',
-       metadata: { bill_type: 'Electricity', amount: 'Ã¢â€šÂ¦12,000.00', status: 'completed', paid_at: new Date().toLocaleString() }
+       metadata: { bill_type: 'Electricity', amount: '₦12,000.00', status: 'completed', paid_at: new Date().toLocaleString() }
     })
   } else if (type === 'mudarabah_update') {
     input.value = "Assalamu Alaikum, here is the update for our ongoing Rice Farming Mudarabah project."
     send('mudarabah_update', {
        body: input.value,
        type: 'mudarabah_update',
-       metadata: { project_name: 'Rice Farming (Batch B)', roi: '15.5%', amount: 'Ã¢â€šÂ¦45,200.00', status: 'distributed' }
+       metadata: { project_name: 'Rice Farming (Batch B)', roi: '15.5%', amount: '₦45,200.00', status: 'distributed' }
     })
   } else if (type === 'approval') {
     input.value = "Please review and sign the Qard Hasan loan agreement."
@@ -327,7 +327,7 @@ function hasBadge(user, type) {
           <p class="text-xs text-gray-500 dark:text-gray-400">
             {{ room?.type }}
             <span v-if="room?.metadata?.assigned_staff_id" class="ml-2 text-blue-600 font-medium">
-              Ã¢â‚¬Â¢ Assigned to Staff
+              • Assigned to Staff
             </span>
           </p>
         </div>

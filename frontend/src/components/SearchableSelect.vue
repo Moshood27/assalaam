@@ -49,7 +49,7 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
   modelValue: [String, Number],
   placeholder: { type: String, default: 'Select an option' },
-  searchPlaceholder: { type: String, default: 'SearchÃ¢â‚¬Â¦' },
+  searchPlaceholder: { type: String, default: 'Search...' },
   labelField: { type: String, default: 'name' },
   valueField: { type: String, default: 'id' },
   label: { type: String, default: '' }

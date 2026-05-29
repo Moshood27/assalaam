@@ -34,7 +34,7 @@
 
           <button @click="handleRegister" :disabled="loading" class="btn-primary w-full h-12 text-base">
             <span v-if="loading" class="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
-            <span>{{ loading ? 'CreatingÃ¢â‚¬Â¦' : 'Create account' }}</span>
+            <span>{{ loading ? 'Creating...' : 'Create account' }}</span>
           </button>
 
           <p v-if="error" class="text-center text-rose-600 text-sm">{{ error }}</p>
@@ -66,7 +66,7 @@
       <div class="relative w-full max-w-md bg-slate-50 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div class="p-6 bg-white border-b flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-800">Admin Support</h2>
-          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“â€¢</button>
+          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“•</button>
         </div>
         <div class="p-6">
           <SupportContacts />

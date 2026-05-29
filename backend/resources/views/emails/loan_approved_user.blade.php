@@ -8,7 +8,7 @@
     <p>We pray this message finds you in good health and Ä«mÄn.</p>
     <p>We are pleased to inform you that your Qard Hasan request <strong>{{ $loan->qard_id_string }}</strong> has been approved.</p>
 
-    <p>Before we can disburse the funds (â‚¦{{ number_format($loan->principal_amount, 2) }}), we require you to sign the loan agreement.</p>
+    <p>Before we can disburse the funds (₦{{ number_format($loan->principal_amount, 2) }}), we require you to sign the loan agreement.</p>
 
     <p><strong>Instructions:</strong></p>
     <ol>

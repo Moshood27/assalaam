@@ -29,7 +29,7 @@ class RepaymentsRelationManager extends RelationManager
                     ->disabled(fn ($record) => $record !== null),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
-                    ->prefix('â‚¦')
+                    ->prefix('₦')
                     ->required()
                     ->disabled(fn ($record) => $record !== null),
                 Forms\Components\DateTimePicker::make('paid_at')

@@ -159,7 +159,7 @@ class LoanMonitoring extends Page
             $push = app(\App\Services\PushService::class);
             $token = $user->fcm_token ?: ($user->device_token ?? null);
             $title = 'Loan Repayment Reminder';
-            $body = 'You have outstanding loan balance of â‚¦' . number_format($totalOutstanding, 2) . '. Please make a repayment.';
+            $body = 'You have outstanding loan balance of ₦' . number_format($totalOutstanding, 2) . '. Please make a repayment.';
             $push->send($token, $title, $body, [
                 'type' => 'loan_reminder',
                 'total_outstanding' => (float) $totalOutstanding,

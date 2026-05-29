@@ -106,14 +106,14 @@ onMounted(load)
 
     <div class="bg-white rounded shadow p-4">
       <h2 class="font-semibold mb-3">My Qard Hasan</h2>
-      <div v-if="loading">LoadingÃ¢â‚¬Â¦</div>
+      <div v-if="loading">Loading...</div>
       <div v-else class="space-y-3">
         <div v-for="q in list" :key="q.id" class="border rounded p-3">
           <div class="flex items-center justify-between">
             <div>
               <div class="text-xs uppercase text-slate-400 font-bold">ID: {{ q.qard_id_string }}</div>
               <div class="font-semibold">Principal: {{ Number(q.principal_amount).toLocaleString() }} | Paid: {{ Number(q.paid_amount).toLocaleString() }}</div>
-              <div class="text-sm text-slate-600">Status: {{ q.status }} Ã¢â‚¬Â¢ {{ q.total_installments }} installments Ã¢â‚¬Â¢ {{ q.interval }}</div>
+              <div class="text-sm text-slate-600">Status: {{ q.status }} • {{ q.total_installments }} installments • {{ q.interval }}</div>
             </div>
             <div class="text-right text-xs text-slate-500">
               Admin fee flat: {{ q.admin_fee_flat }} | %: {{ q.admin_fee_pct }}

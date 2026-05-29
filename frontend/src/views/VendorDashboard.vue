@@ -38,7 +38,7 @@
             </div>
             <div class="text-right">
               <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Available to Payout</p>
-              <p class="text-2xl font-black text-blue-700">â‚¦{{ formatMoney(stats.available_balance) }}</p>
+              <p class="text-2xl font-black text-blue-700">₦{{ formatMoney(stats.available_balance) }}</p>
             </div>
           </div>
 
@@ -50,7 +50,7 @@
           <div class="p-8 pt-0 grid grid-cols-2 gap-4">
              <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100/50">
                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Lifetime Earnings</p>
-               <p class="text-xl font-black text-slate-800">â‚¦{{ formatMoney(stats.total_earned) }}</p>
+               <p class="text-xl font-black text-slate-800">₦{{ formatMoney(stats.total_earned) }}</p>
              </div>
              <div class="bg-blue-600 p-4 rounded-3xl flex flex-col justify-center items-center text-center cursor-pointer hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95" @click="$router.push('/vendor/settlements')">
                <span class="text-[9px] font-black text-white uppercase tracking-widest">Request Settlement</span>
@@ -108,7 +108,7 @@
           <div v-else class="space-y-3">
             <div v-for="act in activities" :key="act.id" class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4">
               <div :class="act.type === 'payout' ? 'bg-blue-50 text-blue-600' : 'bg-blue-50 text-blue-600'" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold">
-                {{ act.type === 'payout' ? 'â‚¦' : 'ðŸ“¦' }}
+                {{ act.type === 'payout' ? '₦' : 'ðŸ“¦' }}
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-slate-800 truncate">{{ act.title }}</p>
@@ -116,7 +116,7 @@
               </div>
               <div class="text-right">
                 <p :class="act.amount > 0 ? 'text-blue-700' : 'text-slate-800'" class="text-sm font-black">
-                  {{ act.amount > 0 ? '+' : '' }}â‚¦{{ formatMoney(Math.abs(act.amount)) }}
+                  {{ act.amount > 0 ? '+' : '' }}₦{{ formatMoney(Math.abs(act.amount)) }}
                 </p>
               </div>
             </div>

@@ -62,11 +62,11 @@
             <div class="flex justify-between items-end">
               <div>
                 <p class="text-[10px] text-slate-400 font-bold uppercase">Raised so far</p>
-                <p class="text-2xl font-black text-blue-600">Ã¢â€šÂ¦ {{ formatMoney(project.raised_amount) }}</p>
+                <p class="text-2xl font-black text-blue-600">₦ {{ formatMoney(project.raised_amount) }}</p>
               </div>
               <div class="text-right">
                 <p class="text-[10px] text-slate-400 font-bold uppercase">Target</p>
-                <p class="text-sm font-bold text-slate-600">Ã¢â€šÂ¦ {{ formatMoney(project.target_amount) }}</p>
+                <p class="text-sm font-bold text-slate-600">₦ {{ formatMoney(project.target_amount) }}</p>
               </div>
             </div>
 
@@ -95,7 +95,7 @@
               <p class="text-sm font-bold text-slate-800">{{ c.user?.name || 'Anonymous' }}</p>
               <p class="text-[10px] text-slate-400">{{ formatDate(c.created_at) }}</p>
             </div>
-            <p class="text-sm font-black text-blue-600">Ã¢â€šÂ¦ {{ formatMoney(c.amount) }}</p>
+            <p class="text-sm font-black text-blue-600">₦ {{ formatMoney(c.amount) }}</p>
           </div>
         </div>
       </div>
@@ -108,12 +108,12 @@
             <div class="flex justify-between items-center mb-1">
               <label class="text-[10px] font-bold text-slate-400 uppercase">Amount (NGN)</label>
               <div v-if="balance !== null" class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">
-                Wallet: Ã¢â€šÂ¦ {{ formatMoney(balance) }}
+                Wallet: ₦ {{ formatMoney(balance) }}
               </div>
             </div>
             <div>
               <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">Ã¢â€šÂ¦</span>
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">₦</span>
                 <input 
                   type="number" 
                   v-model="form.amount"

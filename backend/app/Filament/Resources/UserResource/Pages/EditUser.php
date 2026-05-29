@@ -22,7 +22,7 @@ class EditUser extends EditRecord
                         \Filament\Forms\Components\TextInput::make('amount')
                             ->label('Fine Amount')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->required(),
                         \Filament\Forms\Components\TextInput::make('note')
                             ->label('Reason')
@@ -54,7 +54,7 @@ class EditUser extends EditRecord
                         \Filament\Forms\Components\TextInput::make('amount')
                             ->label('Amount Paid')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->default(fn () => (float)$this->getRecord()->outstanding_fines)
                             ->required(),
                         \Filament\Forms\Components\TextInput::make('note')

@@ -74,8 +74,8 @@
           <div v-for="item in [
             { label: 'Email Address', value: profile.email, icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
             { label: 'Membership ID', value: profile.membership_id, icon: 'M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm5 3h-3a2 2 0 01-2-2V5' },
-            { label: 'Phone Number', value: profile.phone || 'Ã¢â‚¬â€', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
-            { label: 'Current Branch', value: profile.branch_name || 'Ã¢â‚¬â€', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' }
+            { label: 'Phone Number', value: profile.phone || '—', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
+            { label: 'Current Branch', value: profile.branch_name || '—', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' }
           ]" :key="item.label" class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 group transition-colors hover:border-blue-200">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors shadow-sm">
@@ -96,7 +96,7 @@
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">Residential Address</p>
-            <p class="text-sm font-bold text-slate-800 leading-relaxed">{{ profile.address || 'Ã¢â‚¬â€' }}</p>
+            <p class="text-sm font-bold text-slate-800 leading-relaxed">{{ profile.address || '—' }}</p>
           </div>
 
           <!-- Nursing Mother Status (Women Only) -->
@@ -157,7 +157,7 @@
             <div class="flex flex-wrap gap-2">
               <div v-for="badge in profile.badges" :key="badge.id" 
                    class="flex items-center gap-2 bg-blue-50 border border-blue-100 px-3 py-2 rounded-xl group relative cursor-help">
-                <span class="text-lg" v-if="badge.type === 'consistency_savings_12'">Ã°Å¸â€œâ€¦</span>
+                <span class="text-lg" v-if="badge.type === 'consistency_savings_12'">Ã°Å¸â€œ...</span>
                 <span class="text-lg" v-else-if="badge.type === 'early_loan_repayment'">Ã°Å¸Å¡â‚¬</span>
                 <span class="text-lg" v-else-if="badge.type === 'savings_milestone_100k'">Ã°Å¸â€™Â°</span>
                 <span class="text-lg" v-else-if="badge.type === 'vtu_power_user'">Ã¢Å¡Â¡</span>
@@ -204,9 +204,9 @@
           </div>
           <div class="bg-slate-50 p-3 rounded-xl">
             <p class="text-[10px] text-slate-400 font-bold uppercase">Verification Details</p>
-            <p class="font-bold text-slate-800 text-sm">{{ profile.verification_details || 'Ã¢â‚¬â€' }}</p>
+            <p class="font-bold text-slate-800 text-sm">{{ profile.verification_details || '—' }}</p>
             <div class="mt-1 text-xs text-slate-600">
-              <div>KYC Provider: <span class="font-semibold">{{ (profile.kyc && profile.kyc.provider) || 'Ã¢â‚¬â€' }}</span>
+              <div>KYC Provider: <span class="font-semibold">{{ (profile.kyc && profile.kyc.provider) || '—' }}</span>
                 <span v-if="profile.kyc && profile.kyc.score" class="ml-1">(score: {{ Number(profile.kyc.score).toFixed(2) }})</span>
               </div>
               <div v-if="profile.kyc && profile.kyc.status">KYC Status: <span class="font-semibold">{{ profile.kyc.status }}</span></div>
@@ -361,14 +361,14 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <button @click="resolveBank" :disabled="bankBusy || !bankForm.bank_code || bankDigits.length!==10" class="px-4 py-2 rounded-xl text-white font-bold" :class="bankBusy ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">{{ bankBusy ? 'ResolvingÃ¢â‚¬Â¦' : 'Resolve Account Name' }}</button>
+            <button @click="resolveBank" :disabled="bankBusy || !bankForm.bank_code || bankDigits.length!==10" class="px-4 py-2 rounded-xl text-white font-bold" :class="bankBusy ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">{{ bankBusy ? 'Resolving...' : 'Resolve Account Name' }}</button>
             <span v-if="bankMessage" :class="bankError ? 'text-rose-700' : 'text-blue-700'" class="text-[12px]">{{ bankMessage }}</span>
           </div>
           <div v-if="resolvedName" class="p-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-800">
             Resolved Name: <span class="font-bold">{{ resolvedName }}</span>
           </div>
           <div v-if="resolvedName" class="flex items-center gap-2">
-            <button @click="saveBank" :disabled="bankBusy" class="px-4 py-2 rounded-xl text-white font-bold" :class="bankBusy ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">{{ bankBusy ? 'SavingÃ¢â‚¬Â¦' : 'Save Bank Details' }}</button>
+            <button @click="saveBank" :disabled="bankBusy" class="px-4 py-2 rounded-xl text-white font-bold" :class="bankBusy ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">{{ bankBusy ? 'Saving...' : 'Save Bank Details' }}</button>
             <button @click="clearResolved" :disabled="bankBusy" class="px-4 py-2 rounded-xl text-blue-700 font-bold bg-blue-50 hover:bg-blue-100">Change</button>
           </div>
           <p class="text-[10px] text-slate-500">We verify your bank account via Paystack/Flutterwave to prevent errors. YouÃ¢â‚¬â„¢ll see the registered account name before saving.</p>
@@ -424,7 +424,7 @@
           </div>
           <div>
             <label class="text-[10px] text-slate-400 font-bold uppercase">Current Password</label>
-            <input v-model="emailForm.password" type="password" class="mt-1 w-full border rounded-xl p-3" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" />
+            <input v-model="emailForm.password" type="password" class="mt-1 w-full border rounded-xl p-3" placeholder="••••••••" />
             <p v-if="emailErrors.password" class="text-red-600 text-xs mt-1">{{ emailErrors.password }}</p>
           </div>
           <button @click="updateEmail" :disabled="emailSaving" class="w-full h-12 rounded-xl font-bold text-white" :class="emailSaving ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">
@@ -479,17 +479,17 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase">New PIN (4 digits)</label>
-              <input v-model="pinForm.new_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" />
+              <input v-model="pinForm.new_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3" placeholder="••••" />
               <p v-if="pinErrors.new_pin" class="text-red-600 text-xs mt-1">{{ pinErrors.new_pin }}</p>
             </div>
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase">Confirm PIN</label>
-              <input v-model="pinForm.confirm_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" />
+              <input v-model="pinForm.confirm_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3" placeholder="••••" />
               <p v-if="pinErrors.confirm_pin" class="text-red-600 text-xs mt-1">{{ pinErrors.confirm_pin }}</p>
             </div>
           </div>
           <button @click="setPin" :disabled="pinSaving" class="w-full h-12 rounded-xl font-bold text-white" :class="pinSaving ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">
-            {{ pinSaving ? 'SavingÃ¢â‚¬Â¦' : 'Save PIN' }}
+            {{ pinSaving ? 'Saving...' : 'Save PIN' }}
           </button>
 
           <!-- Forgot PIN flow -->
@@ -497,7 +497,7 @@
             <div class="flex items-center justify-between">
               <p class="text-[11px] text-amber-800 font-bold uppercase tracking-widest">Forgot PIN?</p>
               <button @click="requestPinReset" :disabled="resetBusy" class="text-[11px] font-bold text-blue-700 underline">
-                {{ resetBusy ? 'SendingÃ¢â‚¬Â¦' : 'Send Reset Code' }}
+                {{ resetBusy ? 'Sending...' : 'Send Reset Code' }}
               </button>
             </div>
             <p v-if="resetSentTo" class="text-[11px] text-amber-700 mt-1">Code sent to: {{ resetSentTo }} (expires in ~10 minutes)</p>
@@ -508,15 +508,15 @@
               </div>
               <div>
                 <label class="text-[10px] text-slate-500 font-bold uppercase">New PIN</label>
-                <input v-model="resetForm.new_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" />
+                <input v-model="resetForm.new_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="••••" />
               </div>
               <div>
                 <label class="text-[10px] text-slate-500 font-bold uppercase">Confirm</label>
-                <input v-model="resetForm.confirm_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" />
+                <input v-model="resetForm.confirm_pin" type="password" inputmode="numeric" pattern="\\d*" maxlength="4" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="••••" />
               </div>
             </div>
             <div class="mt-2 flex items-center gap-2">
-              <button @click="confirmPinReset" :disabled="resetBusy" class="px-4 py-2 rounded-xl text-white font-bold" :class="resetBusy ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">{{ resetBusy ? 'ResettingÃ¢â‚¬Â¦' : 'Reset PIN' }}</button>
+              <button @click="confirmPinReset" :disabled="resetBusy" class="px-4 py-2 rounded-xl text-white font-bold" :class="resetBusy ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">{{ resetBusy ? 'Resetting...' : 'Reset PIN' }}</button>
               <span v-if="resetMessage" class="text-[12px]" :class="resetError ? 'text-rose-700' : 'text-blue-700'">{{ resetMessage }}</span>
             </div>
           </div>

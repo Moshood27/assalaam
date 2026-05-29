@@ -27,7 +27,7 @@
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
             <div class="card p-3 border-blue-200 bg-blue-50">
               <p class="text-xs uppercase text-blue-700 font-bold">Pool Balance</p>
-              <p class="text-2xl font-extrabold text-blue-900">Ã¢â€šÂ¦ {{ money(summary.pool_balance) }}</p>
+              <p class="text-2xl font-extrabold text-blue-900">₦ {{ money(summary.pool_balance) }}</p>
             </div>
             <div class="card p-3 border-sky-200 bg-sky-50">
               <p class="text-xs uppercase text-sky-700 font-bold">Contrib Count</p>
@@ -35,11 +35,11 @@
             </div>
             <div class="card p-3 border-amber-200 bg-amber-50">
               <p class="text-xs uppercase text-amber-700 font-bold">Contrib Total</p>
-              <p class="text-2xl font-extrabold text-amber-900">Ã¢â€šÂ¦ {{ money(summary.contributions?.sum || 0) }}</p>
+              <p class="text-2xl font-extrabold text-amber-900">₦ {{ money(summary.contributions?.sum || 0) }}</p>
             </div>
             <div class="card p-3 border-indigo-200 bg-indigo-50">
               <p class="text-xs uppercase text-indigo-700 font-bold">Status</p>
-              <p class="text-sm text-indigo-900">Ã¢Å“â€¦ {{ summary.contributions?.by_status?.success || 0 }} Ã¢â‚¬Â¢ Ã¢Å’â€º {{ summary.contributions?.by_status?.pending || 0 }} Ã¢â‚¬Â¢ Ã¢Å“â€¢ {{ summary.contributions?.by_status?.failed || 0 }}</p>
+              <p class="text-sm text-indigo-900">Ã¢Å“... {{ summary.contributions?.by_status?.success || 0 }} • Ã¢Å’â€º {{ summary.contributions?.by_status?.pending || 0 }} • Ã¢Å“• {{ summary.contributions?.by_status?.failed || 0 }}</p>
             </div>
           </div>
           <div class="mt-4 flex flex-wrap gap-2">
@@ -70,7 +70,7 @@
             </div>
           </div>
           <div class="mt-3 flex gap-2">
-            <button class="btn-primary" @click="triggerCharge" :disabled="loading.charge">{{ loading.charge ? 'ProcessingÃ¢â‚¬Â¦' : 'Run' }}</button>
+            <button class="btn-primary" @click="triggerCharge" :disabled="loading.charge">{{ loading.charge ? 'Processing...' : 'Run' }}</button>
             <button class="btn-muted" @click="resetCharge">Reset</button>
           </div>
           <div v-if="chargeResult" class="mt-3 text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 whitespace-pre-wrap font-mono">
@@ -130,7 +130,7 @@
             <tr v-for="row in ledgerRows" :key="row.id" class="border-b last:border-b-0">
               <td class="td">{{ fmtDate(row.created_at) }}</td>
               <td class="td capitalize">{{ row.direction }}</td>
-              <td class="td text-right">Ã¢â€šÂ¦ {{ money(row.amount) }}</td>
+              <td class="td text-right">₦ {{ money(row.amount) }}</td>
               <td class="td font-mono text-[11px] text-slate-600">{{ row.reference }}</td>
               <td class="td">{{ row.meta?.user_id || '' }}</td>
               <td class="td">{{ row.meta?.period || '' }}</td>
@@ -152,13 +152,13 @@
           <span class="text-sm text-slate-600">Page {{ page }}</span>
         </div>
         <div class="text-sm text-slate-600">
-          <span>Credits: Ã¢â€šÂ¦ {{ money(ledgerSummary.credits) }}</span>
-          <span class="mx-2">Ã¢â‚¬Â¢</span>
-          <span>Debits: Ã¢â€šÂ¦ {{ money(ledgerSummary.debits) }}</span>
-          <span class="mx-2">Ã¢â‚¬Â¢</span>
-          <span>Net: Ã¢â€šÂ¦ {{ money(ledgerSummary.net) }}</span>
-          <span class="mx-2">Ã¢â‚¬Â¢</span>
-          <span>Pool Balance: Ã¢â€šÂ¦ {{ money(ledgerSummary.pool_balance) }}</span>
+          <span>Credits: ₦ {{ money(ledgerSummary.credits) }}</span>
+          <span class="mx-2">•</span>
+          <span>Debits: ₦ {{ money(ledgerSummary.debits) }}</span>
+          <span class="mx-2">•</span>
+          <span>Net: ₦ {{ money(ledgerSummary.net) }}</span>
+          <span class="mx-2">•</span>
+          <span>Pool Balance: ₦ {{ money(ledgerSummary.pool_balance) }}</span>
         </div>
       </div>
     </div>
@@ -238,7 +238,7 @@ const triggerCharge = async () => {
     }
     const { data } = await client.post('/api/admin/takaful/charge', payload, { headers: authHeaders() })
     chargeResult.value = data
-    alert(`Charge ${data.dry_run ? 'dry-run ' : ''}completed. Processed: ${data.processed}, Created: ${data.created}, Charged: Ã¢â€šÂ¦ ${money(data.charged)}`)
+    alert(`Charge ${data.dry_run ? 'dry-run ' : ''}completed. Processed: ${data.processed}, Created: ${data.created}, Charged: ₦ ${money(data.charged)}`)
     await loadSummary(); await reloadLedger()
   } catch (e) {
     const msg = e?.response?.data?.message || 'Failed to run charge'

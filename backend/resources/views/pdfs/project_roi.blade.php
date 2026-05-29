@@ -26,10 +26,10 @@
             <tr>
                 <th>Project Name</th>
                 <th>Status</th>
-                <th class="right">Invested (â‚¦)</th>
-                <th class="right">Gross Profit (â‚¦)</th>
-                <th class="right">Coop Fee (â‚¦)</th>
-                <th class="right">Distributable (â‚¦)</th>
+                <th class="right">Invested (₦)</th>
+                <th class="right">Gross Profit (₦)</th>
+                <th class="right">Coop Fee (₦)</th>
+                <th class="right">Distributable (₦)</th>
                 <th class="right">ROI %</th>
             </tr>
         </thead>

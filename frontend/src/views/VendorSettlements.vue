@@ -29,7 +29,7 @@
         <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-40" />
         <div class="relative z-10">
           <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Withdrawable Balance</p>
-          <h2 class="text-3xl font-black text-slate-800 uppercase leading-tight">â‚¦{{ formatMoney(availableBalance) }}</h2>
+          <h2 class="text-3xl font-black text-slate-800 uppercase leading-tight">₦{{ formatMoney(availableBalance) }}</h2>
           
           <div class="mt-6">
             <button 
@@ -39,7 +39,7 @@
             >
               Request Payout
             </button>
-            <p v-if="availableBalance < 100" class="text-[10px] text-center text-slate-400 mt-2 font-bold uppercase">Minimum settlement: â‚¦100.00</p>
+            <p v-if="availableBalance < 100" class="text-[10px] text-center text-slate-400 mt-2 font-bold uppercase">Minimum settlement: ₦100.00</p>
           </div>
         </div>
       </div>
@@ -62,7 +62,7 @@
               {{ getStatusIcon(s.status) }}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-slate-800 truncate">â‚¦{{ formatMoney(s.amount) }}</p>
+              <p class="text-sm font-bold text-slate-800 truncate">₦{{ formatMoney(s.amount) }}</p>
               <p class="text-[10px] text-slate-500 font-medium">{{ formatDate(s.created_at) }}</p>
             </div>
             <div class="text-right">
@@ -86,15 +86,15 @@
         <div class="bg-blue-50 p-4 rounded-2xl mb-6">
           <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">To Bank Account</p>
           <p class="text-sm font-bold text-slate-800">{{ vendor.settlement_bank_name }}</p>
-          <p class="text-xs text-slate-500">{{ vendor.settlement_account_number }} â€¢ {{ vendor.settlement_account_name }}</p>
+          <p class="text-xs text-slate-500">{{ vendor.settlement_account_number }} • {{ vendor.settlement_account_name }}</p>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Amount to Withdraw (â‚¦)</label>
+            <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Amount to Withdraw (₦)</label>
             <input v-model.number="form.amount" type="number" step="0.01" :max="availableBalance" class="w-full mt-1 px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-blue-500 outline-none transition-colors font-black text-xl text-slate-800" placeholder="0.00" />
             <div class="flex justify-between mt-1 px-1">
-               <span class="text-[9px] text-slate-400 font-bold uppercase">Max: â‚¦{{ formatMoney(availableBalance) }}</span>
+               <span class="text-[9px] text-slate-400 font-bold uppercase">Max: ₦{{ formatMoney(availableBalance) }}</span>
                <button @click="form.amount = availableBalance" class="text-[9px] text-blue-700 font-black uppercase">Withdraw All</button>
             </div>
           </div>

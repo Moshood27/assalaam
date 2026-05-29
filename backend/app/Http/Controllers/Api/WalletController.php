@@ -523,7 +523,7 @@ class WalletController extends Controller
         $user->refresh();
 
         // Notify member via preferences
-        $user->notifyMember('Scheme Allocation', 'Wallet debit: â‚¦'.number_format($total, 2).' allocated to schemes. Ref: '.$reference.'. New bal: â‚¦'.number_format((float)$user->balance, 2), [
+        $user->notifyMember('Scheme Allocation', 'Wallet debit: ₦'.number_format($total, 2).' allocated to schemes. Ref: '.$reference.'. New bal: ₦'.number_format((float)$user->balance, 2), [
             'type' => 'wallet_allocation',
             'amount' => $total,
             'reference' => $reference,
@@ -656,7 +656,7 @@ class WalletController extends Controller
         $user->refresh();
 
         // Notify member
-        $user->notifyMember('Special Savings Transfer', 'Special Savings debit: â‚¦'.number_format($total, 2).' moved to other schemes. Ref: '.$reference, [
+        $user->notifyMember('Special Savings Transfer', 'Special Savings debit: ₦'.number_format($total, 2).' moved to other schemes. Ref: '.$reference, [
             'type' => 'special_savings_move',
             'amount' => $total,
             'reference' => $reference,
@@ -830,7 +830,7 @@ class WalletController extends Controller
         }
 
         // Notify members via preferences
-        $msgFrom = 'Wallet debit: â‚¦'.number_format($amount, 2).' sent to '.$recipient->full_name.' ('.$recipient->membership_number.'). Ref: '.$groupRef.'. New bal: â‚¦'.number_format((float)$finalSenderBal, 2);
+        $msgFrom = 'Wallet debit: ₦'.number_format($amount, 2).' sent to '.$recipient->full_name.' ('.$recipient->membership_number.'). Ref: '.$groupRef.'. New bal: ₦'.number_format((float)$finalSenderBal, 2);
         $sender->notifyMember('Wallet Transfer Sent', $msgFrom, [
             'type' => 'p2p_transfer_sent',
             'amount' => $amount,
@@ -839,7 +839,7 @@ class WalletController extends Controller
             'balance' => (float)$finalSenderBal,
         ], ['mail', 'sms', 'push', 'database']); // respect prefs but we can force certain channels if we wanted
 
-        $msgTo = 'Wallet credit: â‚¦'.number_format($amount, 2).' received from '.$sender->full_name.' ('.$sender->membership_number.'). Ref: '.$groupRef.'.';
+        $msgTo = 'Wallet credit: ₦'.number_format($amount, 2).' received from '.$sender->full_name.' ('.$sender->membership_number.'). Ref: '.$groupRef.'.';
         $recipient->notifyMember('Wallet Transfer Received', $msgTo, [
             'type' => 'p2p_transfer_received',
             'amount' => $amount,
@@ -974,14 +974,14 @@ class WalletController extends Controller
             $user->getAuthorizedAdmins()->each(function ($admin) use ($user, $amount, $reference, $req) {
                 $admin->notifyMember(
                     "New Withdrawal Request",
-                    "Member {$user->full_name} requested â‚¦" . number_format($amount, 2) . " (Ref: {$reference}).",
+                    "Member {$user->full_name} requested ₦" . number_format($amount, 2) . " (Ref: {$reference}).",
                     ['type' => 'withdrawal_request', 'request_id' => $req->id]
                 );
             });
         } catch (\Throwable $e) {}
 
         // Notify member via preferences
-        $user->notifyMember('Withdrawal Request', 'Withdrawal request received: â‚¦'.number_format($amount, 2).'. Ref: '.$reference.'.', [
+        $user->notifyMember('Withdrawal Request', 'Withdrawal request received: ₦'.number_format($amount, 2).'. Ref: '.$reference.'.', [
             'type' => 'withdrawal_request_initiated',
             'amount' => $amount,
             'reference' => $reference,
@@ -1038,7 +1038,7 @@ class WalletController extends Controller
         $wr->save();
 
         // Notify member via preferences
-        $user->notifyMember('Withdrawal Cancelled', 'Withdrawal cancelled: â‚¦'.number_format((float)$wr->amount, 2).'. Ref: '.$wr->reference.'.', [
+        $user->notifyMember('Withdrawal Cancelled', 'Withdrawal cancelled: ₦'.number_format((float)$wr->amount, 2).'. Ref: '.$wr->reference.'.', [
             'type' => 'withdrawal_cancelled',
             'amount' => (float)$wr->amount,
             'reference' => $wr->reference,

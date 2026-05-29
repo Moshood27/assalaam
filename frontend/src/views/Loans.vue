@@ -3,7 +3,7 @@
     <AppHeader title="Qard Hasan Records" :showBack="true" />
 
     <div class="container-app py-4">
-      <div v-if="loading" class="text-center text-slate-500 py-10">LoadingÃ¢â‚¬Â¦</div>
+      <div v-if="loading" class="text-center text-slate-500 py-10">Loading...</div>
       <div v-else-if="error" class="card p-4 text-rose-700 bg-rose-50 border-rose-200">{{ error }}</div>
 
       <div v-else class="space-y-4">
@@ -29,7 +29,7 @@
                   <div class="flex items-center justify-between mb-6 relative z-10">
                     <div>
                       <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Available Credit Limit</p>
-                      <h2 class="text-3xl font-black mt-1">Ã¢â€šÂ¦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</h2>
+                      <h2 class="text-3xl font-black mt-1">₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</h2>
                     </div>
                     <div class="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-blue-500/30">
                       Ã°Å¸â€™Â°
@@ -39,15 +39,15 @@
                   <div class="grid grid-cols-3 gap-4 border-t border-white/10 pt-6 relative z-10">
                     <div>
                       <p class="text-[10px] text-slate-400 font-bold uppercase">Savings</p>
-                      <p class="text-sm font-bold">Ã¢â€šÂ¦ {{ n(eligibility.savings) }}</p>
+                      <p class="text-sm font-bold">₦ {{ n(eligibility.savings) }}</p>
                     </div>
                     <div>
                       <p class="text-[10px] text-slate-400 font-bold uppercase">Shares</p>
-                      <p class="text-sm font-bold">Ã¢â€šÂ¦ {{ n(eligibility.shares) }}</p>
+                      <p class="text-sm font-bold">₦ {{ n(eligibility.shares) }}</p>
                     </div>
                     <div>
                       <p class="text-[10px] text-slate-400 font-bold uppercase">Base</p>
-                      <p class="text-sm font-bold">Ã¢â€šÂ¦ {{ n(eligibility.base) }}</p>
+                      <p class="text-sm font-bold">₦ {{ n(eligibility.base) }}</p>
                     </div>
                   </div>
                 </div>
@@ -69,7 +69,7 @@
 
                   <div v-if="eligibility.meeting_attendance_count !== undefined" class="card p-4 flex items-center gap-4">
                     <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-xl shadow-inner border border-amber-100">
-                      Ã°Å¸â€œâ€¦
+                      Ã°Å¸â€œ...
                     </div>
                     <div>
                       <p class="text-[10px] text-slate-400 font-bold uppercase">Attendance</p>
@@ -96,9 +96,9 @@
                         <label class="text-[11px] text-slate-500 font-black uppercase tracking-widest">Requested Amount</label>
                         <div class="relative">
                           <input v-model.number="createForm.amount" type="number" min="1" :max="Number(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility)" class="input pl-10 h-12" placeholder="e.g. 100000"/>
-                          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">Ã¢â€šÂ¦</span>
+                          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₦</span>
                         </div>
-                        <p class="text-[9px] text-slate-400 font-black mt-1 uppercase tracking-wider">Available: Ã¢â€šÂ¦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
+                        <p class="text-[9px] text-slate-400 font-black mt-1 uppercase tracking-wider">Available: ₦ {{ n(eligibility.eligibility_with_score || eligibility.eligibility_adjusted || eligibility.eligibility) }}</p>
                       </div>
 
                       <div class="space-y-2">
@@ -144,7 +144,7 @@
                               @input="searchGuarantors(createForm['guarantor' + i])"
                             />
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xl grayscale group-focus-within:grayscale-0 transition-all">
-                              {{ createForm['guarantor' + i] ? 'Ã¢Å“â€¦' : 'Ã°Å¸â€˜Â¤' }}
+                              {{ createForm['guarantor' + i] ? 'Ã¢Å“...' : 'Ã°Å¸â€˜Â¤' }}
                             </span>
                             <button v-if="createForm['guarantor' + i]" @click="createForm['guarantor' + i] = ''" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 transition-colors">
                               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -168,7 +168,7 @@
                                     <p class="text-sm font-black text-slate-800">{{ member.name }}</p>
                                     <span v-if="!member.is_eligible" class="text-[8px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">{{ member.reason }}</span>
                                   </div>
-                                  <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{{ member.membership_number }} Ã¢â‚¬Â¢ {{ member.branch }}</p>
+                                  <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{{ member.membership_number }} • {{ member.branch }}</p>
                                 </div>
                                 <span v-if="member.is_eligible" class="text-blue-500 opacity-0 group-hover:opacity-100 transition-all text-xs font-black">Add Ã¢Å¾Å“</span>
                                 <span v-else class="text-rose-400 text-[10px] font-bold">Ineligible</span>
@@ -191,11 +191,11 @@
                       <div class="flex items-center justify-between mb-4">
                         <div>
                           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Repayment Amount</p>
-                          <p class="text-xl font-black text-slate-800">Ã¢â€šÂ¦ {{ n(createForm.amount) }}</p>
+                          <p class="text-xl font-black text-slate-800">₦ {{ n(createForm.amount) }}</p>
                         </div>
                         <div class="text-right">
                           <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Installment</p>
-                          <p class="text-lg font-bold text-slate-600">Ã¢â€šÂ¦ {{ n(createForm.amount / (createForm.total_installments || 1)) }}</p>
+                          <p class="text-lg font-bold text-slate-600">₦ {{ n(createForm.amount / (createForm.total_installments || 1)) }}</p>
                         </div>
                       </div>
 
@@ -256,8 +256,8 @@
                         </div>
                         <div>
                           <p class="font-black text-slate-800">{{ req.member?.name || 'Member' }}</p>
-                          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ req.member?.branch || 'Branch' }} Ã¢â‚¬Â¢ {{ req.qard_id_string }}</p>
-                          <p class="text-xs font-bold text-slate-600 mt-1">Requested: <span class="text-slate-900">Ã¢â€šÂ¦ {{ n(req.principal_amount) }}</span></p>
+                          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ req.member?.branch || 'Branch' }} • {{ req.qard_id_string }}</p>
+                          <p class="text-xs font-bold text-slate-600 mt-1">Requested: <span class="text-slate-900">₦ {{ n(req.principal_amount) }}</span></p>
                         </div>
                       </div>
 
@@ -296,7 +296,7 @@
           <div class="p-5 flex items-center justify-between bg-slate-50/50 border-b border-slate-100">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner border transition-transform group-hover:scale-110" :class="loan.is_completed ? 'bg-blue-50 border-blue-100' : (['defaulted', 'rejected'].includes(loan.status) ? 'bg-rose-50 border-rose-100' : 'bg-white border-slate-200')">
-                {{ loan.is_completed ? 'Ã¢Å“â€¦' : (loan.status === 'defaulted' ? 'Ã¢Å¡Â Ã¯Â¸Â' : (loan.status === 'rejected' ? 'Ã¢ÂÅ’' : 'Ã°Å¸â€™Â³')) }}
+                {{ loan.is_completed ? 'Ã¢Å“...' : (loan.status === 'defaulted' ? '⚠️' : (loan.status === 'rejected' ? 'Ã¢ÂÅ’' : 'Ã°Å¸â€™Â³')) }}
               </div>
               <div>
                 <h3 class="font-black text-slate-800">Qard Hasan Loan</h3>
@@ -319,8 +319,8 @@
                   <p class="text-xl font-black text-slate-800">{{ Math.round((loan.paid_amount / loan.principal_amount) * 100) }}% <span class="text-xs text-slate-400 font-bold">Repaid</span></p>
                 </div>
                 <div class="text-right">
-                  <p v-if="loan.overdue_amount > 0" class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Expected to Pay: Ã¢â€šÂ¦ {{ n(loan.overdue_amount) }}</p>
-                  <p class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Ã¢â€šÂ¦ {{ n(loan.paid_amount) }} / Ã¢â€šÂ¦ {{ n(loan.principal_amount) }}</p>
+                  <p v-if="loan.overdue_amount > 0" class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Expected to Pay: ₦ {{ n(loan.overdue_amount) }}</p>
+                  <p class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">₦ {{ n(loan.paid_amount) }} / ₦ {{ n(loan.principal_amount) }}</p>
                 </div>
               </div>
               <div class="h-3 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
@@ -330,14 +330,14 @@
               </div>
               <div class="flex justify-between mt-2">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Started: {{ new Date(loan.created_at).toLocaleDateString() }}</p>
-                <p class="text-[10px] text-rose-500 font-black uppercase tracking-widest" v-if="!loan.is_completed">Ã¢â€šÂ¦ {{ n(loan.remaining_principal ?? (loan.principal_amount - loan.paid_amount)) }} Remaining</p>
+                <p class="text-[10px] text-rose-500 font-black uppercase tracking-widest" v-if="!loan.is_completed">₦ {{ n(loan.remaining_principal ?? (loan.principal_amount - loan.paid_amount)) }} Remaining</p>
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-3xl border border-slate-100">
               <div>
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Installment</p>
-                <p class="text-lg font-black text-slate-800">Ã¢â€šÂ¦ {{ n(loan.per_installment) }}</p>
+                <p class="text-lg font-black text-slate-800">₦ {{ n(loan.per_installment) }}</p>
                 <p class="text-[10px] text-slate-500 font-bold uppercase mt-1">{{ loan.total_installments }} Ãƒâ€” {{ loan.interval }}</p>
               </div>
               <div class="text-right border-l border-slate-200 pl-6" v-if="loan.status !== 'rejected'">
@@ -397,7 +397,7 @@
                 </a>
 
                 <div v-if="loan.agreement_verified_at" class="h-11 bg-blue-500 text-white rounded-xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-blue-100">
-                  <span>Ã¢Å“â€¦</span> Verified
+                  <span>Ã¢Å“...</span> Verified
                 </div>
                 <div v-else-if="loan.signed_agreement" class="h-11 bg-white border border-amber-200 rounded-xl flex items-center justify-center gap-2 text-[11px] font-black text-amber-600 uppercase tracking-widest italic relative">
                    <div class="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
@@ -418,7 +418,7 @@
               </div>
               
               <p v-if="loan.agreement_rejection_reason" class="p-3 bg-rose-100 border border-rose-200 rounded-xl text-[10px] text-rose-700 font-bold italic">
-                Ã¢Å¡Â Ã¯Â¸Â Rejected: {{ loan.agreement_rejection_reason }}
+                ⚠️ Rejected: {{ loan.agreement_rejection_reason }}
               </p>
             </div>
 
@@ -432,7 +432,7 @@
               <div class="flex flex-col sm:flex-row gap-3">
                 <div class="relative flex-1">
                   <input type="number" min="0.01" step="0.01" class="input h-12 pl-10" :disabled="loan.is_completed || paying[loan.id]" v-model.number="payAmount[loan.id]" placeholder="Enter amount" />
-                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">Ã¢â€šÂ¦</span>
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₦</span>
                 </div>
                 <select class="input h-12 sm:w-40 appearance-none bg-slate-50 border-slate-100" v-model="paySource[loan.id]" :disabled="loan.is_completed || paying[loan.id]">
                   <option value="auto">Auto (Smart)</option>
@@ -456,7 +456,7 @@
                   <li v-for="r in loan.repayments.slice(0,3)" :key="r.id" class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
                     <div class="flex items-center gap-2">
                        <span class="text-blue-500">Ã°Å¸â€™Â°</span>
-                       <span class="text-xs font-black text-slate-800">Ã¢â€šÂ¦ {{ n(r.amount) }}</span>
+                       <span class="text-xs font-black text-slate-800">₦ {{ n(r.amount) }}</span>
                     </div>
                     <span class="text-[10px] text-slate-400 font-bold">{{ formatRepaymentDate(r) }}</span>
                   </li>
@@ -812,7 +812,7 @@ const createLoan = async () => {
 
     if (data?.instant_approved) {
       const credited = Number(data?.credited_amount || 0)
-      createMsg.value = data?.message || `Mashallah! Instant approval! Ã¢â€šÂ¦ ${n(credited)} has been credited to your wallet.`
+      createMsg.value = data?.message || `Mashallah! Instant approval! ₦ ${n(credited)} has been credited to your wallet.`
     } else {
       createMsg.value = data?.message || 'Mashallah! Loan application submitted successfully. Awaiting guarantor approvals and admin review. You will be notified when the agreement document is ready for signing.'
     }
@@ -878,9 +878,9 @@ const pay = async (loan) => {
     await load()
 
     if (data?.summary?.capped) {
-      payMsg.value[loan.id] = `Payment was capped to Ã¢â€šÂ¦ ${n(data.summary.amount_applied)} (remaining principal).`
+      payMsg.value[loan.id] = `Payment was capped to ₦ ${n(data.summary.amount_applied)} (remaining principal).`
     } else {
-      payMsg.value[loan.id] = `Payment of Ã¢â€šÂ¦ ${n(data.summary?.amount_applied || amt)} recorded successfully.`
+      payMsg.value[loan.id] = `Payment of ₦ ${n(data.summary?.amount_applied || amt)} recorded successfully.`
     }
     showNotice('Success', payMsg.value[loan.id], 'success')
     payAmount.value[loan.id] = ''
@@ -927,7 +927,7 @@ const acceptGuarantor = async (req) => {
         reason: 'Sign as Guarantor',
         title: 'Guarantor Approval',
         subtitle: req?.qard_id_string ? `Loan ${req.qard_id_string}` : 'Confirm approval',
-        description: `Approve loan of Ã¢â€šÂ¦ ${n(req?.principal_amount)} by ${req?.member?.name || 'member'}?`,
+        description: `Approve loan of ₦ ${n(req?.principal_amount)} by ${req?.member?.name || 'member'}?`,
       })
       if (!ok) {
         showNotice('Authentication required', 'Biometric verification was cancelled or failed. Unable to sign as guarantor.', 'error')

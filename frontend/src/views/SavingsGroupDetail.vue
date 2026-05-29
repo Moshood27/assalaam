@@ -19,7 +19,7 @@
         <div class="mt-6 flex items-center justify-center gap-4">
           <div class="text-center">
             <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Monthly</p>
-            <p class="text-lg font-bold text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
+            <p class="text-lg font-bold text-slate-800">₦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
           </div>
           <div class="w-px h-8 bg-slate-100"></div>
           <div class="text-center">
@@ -46,11 +46,11 @@
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-blue-600 rounded-[2rem] p-5 text-white shadow-lg shadow-blue-100">
           <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Total Group Value</p>
-          <p class="text-lg font-bold">Ã¢â€šÂ¦ {{ formatMoney(stats.total_contributions) }}</p>
+          <p class="text-lg font-bold">₦ {{ formatMoney(stats.total_contributions) }}</p>
         </div>
         <div class="bg-slate-900 rounded-[2rem] p-5 text-white shadow-lg shadow-slate-200">
           <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">My Contribution</p>
-          <p class="text-lg font-bold">Ã¢â€šÂ¦ {{ formatMoney(stats.my_contributions) }}</p>
+          <p class="text-lg font-bold">₦ {{ formatMoney(stats.my_contributions) }}</p>
         </div>
       </div>
 
@@ -147,7 +147,7 @@
                 <p class="text-[10px] text-slate-400">{{ formatDate(c.created_at) }}</p>
               </div>
             </div>
-            <p class="text-xs font-black text-blue-600">+ Ã¢â€šÂ¦ {{ formatMoney(c.amount) }}</p>
+            <p class="text-xs font-black text-blue-600">+ ₦ {{ formatMoney(c.amount) }}</p>
           </div>
         </div>
       </div>
@@ -165,7 +165,7 @@
 
         <div class="bg-indigo-50 p-6 rounded-3xl mb-6 text-center">
           <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Amount Due</p>
-          <p class="text-3xl font-black text-indigo-700">Ã¢â€šÂ¦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
+          <p class="text-3xl font-black text-indigo-700">₦ {{ formatMoney(group.monthly_contribution_amount) }}</p>
         </div>
 
         <p class="text-[11px] text-slate-500 mb-6 text-center leading-relaxed">
@@ -182,7 +182,7 @@
               <div class="text-xl">Ã°Å¸â€™Â³</div>
               <div class="text-left">
                 <p class="text-xs font-bold uppercase tracking-widest">Pay via Wallet</p>
-                <p class="text-[10px] opacity-60">Balance: Ã¢â€šÂ¦ {{ formatMoney(userBalance) }}</p>
+                <p class="text-[10px] opacity-60">Balance: ₦ {{ formatMoney(userBalance) }}</p>
               </div>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-40"><path d="m9 18 6-6-6-6"/></svg>

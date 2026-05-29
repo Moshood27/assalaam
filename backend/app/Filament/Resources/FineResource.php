@@ -59,7 +59,7 @@ class FineResource extends Resource
                     ->label('Lateness Fine Paid'),
                 Forms\Components\TextInput::make('lateness_fine_amount')
                     ->numeric()
-                    ->prefix('â‚¦'),
+                    ->prefix('₦'),
             ]);
     }
 
@@ -143,7 +143,7 @@ class FineResource extends Resource
 
                         $record->user?->notifyMember(
                             'Fine Paid',
-                            'Your fine of â‚¦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been marked as paid.',
+                            'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been marked as paid.',
                             ['type' => 'fine_paid']
                         );
 
@@ -182,7 +182,7 @@ class FineResource extends Resource
 
                         $record->user?->notifyMember(
                             'Fine Waived',
-                            'Your fine of â‚¦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been waived.',
+                            'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been waived.',
                             ['type' => 'fine_waived']
                         );
 
@@ -216,7 +216,7 @@ class FineResource extends Resource
 
                                     $record->user?->notifyMember(
                                         'Fine Paid',
-                                        'Your fine of â‚¦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been marked as paid.',
+                                        'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been marked as paid.',
                                         ['type' => 'fine_paid']
                                     );
                                 }
@@ -249,7 +249,7 @@ class FineResource extends Resource
 
                                     $record->user?->notifyMember(
                                         'Fine Waived',
-                                        'Your fine of â‚¦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been waived.',
+                                        'Your fine of ₦'.number_format($total, 2).' for meeting "'.$record->meeting->name.'" has been waived.',
                                         ['type' => 'fine_waived']
                                     );
                                 }

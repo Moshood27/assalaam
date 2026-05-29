@@ -10,7 +10,7 @@
     </AppHeader>
 
     <div class="container-app py-4 space-y-6">
-      <div v-if="loading" class="text-center text-slate-500 py-10">Loading analysisÃ¢â‚¬Â¦</div>
+      <div v-if="loading" class="text-center text-slate-500 py-10">Loading analysis...</div>
       <div v-else-if="error" class="card p-4 text-rose-700 bg-rose-50 border-rose-200">{{ error }}</div>
 
       <div v-else class="space-y-6">
@@ -35,15 +35,15 @@
               <div class="grid grid-cols-2 gap-4">
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Principal</p>
-                   <p class="text-sm font-bold text-slate-700">Ã¢â€šÂ¦ {{ n(loan.principal_amount) }}</p>
+                   <p class="text-sm font-bold text-slate-700">₦ {{ n(loan.principal_amount) }}</p>
                 </div>
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Paid</p>
-                   <p class="text-sm font-bold text-blue-600">Ã¢â€šÂ¦ {{ n(loan.paid_amount) }}</p>
+                   <p class="text-sm font-bold text-blue-600">₦ {{ n(loan.paid_amount) }}</p>
                 </div>
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Remaining</p>
-                   <p class="text-sm font-bold text-rose-600">Ã¢â€šÂ¦ {{ n(loan.remaining_principal) }}</p>
+                   <p class="text-sm font-bold text-rose-600">₦ {{ n(loan.remaining_principal) }}</p>
                 </div>
                 <div v-if="loan.next_due_at">
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Next Due</p>
@@ -51,7 +51,7 @@
                 </div>
                 <div v-if="loan.next_installment_amount && loan.status === 'active'">
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Next Amount</p>
-                   <p class="text-sm font-bold text-amber-600">Ã¢â€šÂ¦ {{ n(loan.next_installment_amount) }}</p>
+                   <p class="text-sm font-bold text-amber-600">₦ {{ n(loan.next_installment_amount) }}</p>
                 </div>
                 <div>
                    <p class="text-[9px] text-slate-400 font-bold uppercase">Interval</p>
@@ -63,7 +63,7 @@
                  <p class="text-[9px] text-slate-400 font-bold uppercase mb-1">Guarantors</p>
                  <div class="flex flex-wrap gap-1">
                    <span v-for="g in loan.guarantors" :key="g.id" class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full border border-slate-200">
-                     {{ g.name }} <span v-if="g.branch" class="text-[8px] opacity-75">Ã¢â‚¬Â¢ {{ g.branch.name }}</span>
+                     {{ g.name }} <span v-if="g.branch" class="text-[8px] opacity-75">• {{ g.branch.name }}</span>
                    </span>
                  </div>
               </div>
@@ -210,12 +210,12 @@ const trendChartOptions = computed(() => ({
   },
   yaxis: {
     labels: {
-      formatter: (val) => 'Ã¢â€šÂ¦' + Number(val).toLocaleString(),
+      formatter: (val) => '₦' + Number(val).toLocaleString(),
       style: { fontSize: '10px' }
     }
   },
   tooltip: {
-    y: { formatter: (val) => 'Ã¢â€šÂ¦' + n(val) }
+    y: { formatter: (val) => '₦' + n(val) }
   }
 }))
 

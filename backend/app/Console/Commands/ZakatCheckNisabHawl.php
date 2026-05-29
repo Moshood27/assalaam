@@ -116,7 +116,7 @@ class ZakatCheckNisabHawl extends Command
     protected function notifyZakatDue(User $user, $assets, $nisab, $rate)
     {
         $zakatDue = round($assets * $rate, 2);
-        $currency = config('cooperative.currency', 'â‚¦');
+        $currency = config('cooperative.currency', '₦');
 
         $title = "Zakat Due Report";
         $message = "Your total assets ({$currency}" . number_format($assets) . ") have remained above the Nisab ({$currency}" . number_format($nisab) . ") for a full lunar year. Your estimated Zakat is {$currency}" . number_format($zakatDue) . ". Visit the Gold Savings screen to view the report and pay.";

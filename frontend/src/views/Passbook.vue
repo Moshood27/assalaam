@@ -17,7 +17,7 @@
       <div v-if="!isLoading" class="bg-gradient-to-br from-blue-700 to-blue-900 rounded-[2rem] p-6 text-white shadow-xl">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Yearly Cumulative (Ã¢â€šÂ¦)</p>
+            <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Yearly Cumulative (₦)</p>
             <p class="text-3xl font-extrabold tracking-tight mt-1">{{ Number(grandTotal).toLocaleString() }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-3 py-2 text-xs">
@@ -29,7 +29,7 @@
         </div>
         <p v-if="dividendAmount !== null" class="mt-2 text-[11px] text-blue-100">
           Est. Dividend ({{ selectedYear }}):
-          <span class="font-black text-white">Ã¢â€šÂ¦ {{ Number(dividendAmount).toLocaleString() }}</span>
+          <span class="font-black text-white">₦ {{ Number(dividendAmount).toLocaleString() }}</span>
         </p>
       </div>
       <div v-else class="rounded-[2rem] p-6 shadow-xl bg-slate-200/60 animate-pulse h-28"></div>
@@ -83,7 +83,7 @@
         </div>
         <div class="flex items-center justify-between">
           <p class="text-slate-700 text-sm">Mandatory annual meeting fee</p>
-          <p class="text-slate-900 font-black">Ã¢â€šÂ¦ {{ Number(agmAmount).toLocaleString() }}</p>
+          <p class="text-slate-900 font-black">₦ {{ Number(agmAmount).toLocaleString() }}</p>
         </div>
       </div>
       <div v-else-if="!isLoading && !showAgm" class="hidden"></div>

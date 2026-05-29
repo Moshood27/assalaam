@@ -51,7 +51,7 @@ class ProjectProfitResource extends Resource
                         Forms\Components\TextInput::make('gross_profit')
                             ->label('Gross Profit')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->default(0)
                             ->required()
                             ->reactive()
@@ -81,13 +81,13 @@ class ProjectProfitResource extends Resource
                         Forms\Components\TextInput::make('management_fee_amount')
                             ->label('Management Fee (Amount)')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->disabled()
                             ->dehydrated(false),
                         Forms\Components\TextInput::make('net_distributable')
                             ->label('Net Distributable')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->disabled()
                             ->dehydrated(false),
                         Forms\Components\Textarea::make('note')->columnSpanFull(),

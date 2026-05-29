@@ -29,7 +29,7 @@
               v-model="form.branch_id"
               :items="branches"
               placeholder="Select your branch"
-              searchPlaceholder="Search branchesÃ¢â‚¬Â¦"
+              searchPlaceholder="Search branches..."
             />
           </div>
 
@@ -53,7 +53,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </span>
-              <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" class="input pl-12 pr-14 h-14 text-lg font-semibold bg-slate-50/50 border-slate-200/60" />
+              <input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" class="input pl-12 pr-14 h-14 text-lg font-semibold bg-slate-50/50 border-slate-200/60" />
               <button @click="showPassword = !showPassword" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-1" aria-label="Toggle password visibility">
                 <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.076m3.313-3.313A9.959 9.959 0 0112 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-1.447 0-2.811-.31-4.04-.864m1.107-1.107l1.107-1.107m2.774-2.774l.553-.553m2.21-2.21l.553-.553" />
@@ -86,7 +86,7 @@
           <div class="space-y-4 pt-2">
             <button @click="handleLogin" :disabled="loading" class="w-full h-14 text-lg rounded-2xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
               <span v-if="loading" class="inline-block animate-spin border-3 border-white/30 border-t-white rounded-full w-6 h-6 mr-2 align-middle"></span>
-              <span>{{ loading ? 'Signing inÃ¢â‚¬Â¦' : 'Sign In' }}</span>
+              <span>{{ loading ? 'Signing in...' : 'Sign In' }}</span>
             </button>
 
             <button v-if="biometricSupported && canBiometricQuickLogin" @click="handleQuickLogin" :disabled="quickLoading" class="w-full h-14 text-lg bg-blue-50 hover:bg-blue-100/80 text-blue-700 border-2 border-blue-100 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50">
@@ -143,7 +143,7 @@
       <div class="relative w-full max-w-md bg-slate-50 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div class="p-6 bg-white border-b flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-800">Contact Support</h2>
-          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“â€¢</button>
+          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“•</button>
         </div>
         <div class="p-6">
           <SupportContacts />

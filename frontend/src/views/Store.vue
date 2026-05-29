@@ -103,7 +103,7 @@
               <div class="p-6 flex-1 flex flex-col">
                 <div class="flex items-center justify-between gap-4 mb-2">
                   <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest truncate">{{ p.category?.name || 'General' }}</span>
-                  <div class="text-lg font-black text-slate-900 whitespace-nowrap">Ã¢â€šÂ¦ {{ money(p.selling_price) }}</div>
+                  <div class="text-lg font-black text-slate-900 whitespace-nowrap">₦ {{ money(p.selling_price) }}</div>
                 </div>
                 
                 <h3 class="text-base font-bold text-slate-800 mb-1 group-hover:text-blue-700 transition-colors cursor-pointer line-clamp-1" @click="openQuick(p)">{{ p.name }}</h3>
@@ -187,7 +187,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-bold text-slate-800 truncate mb-0.5">{{ ci.name }}</div>
-                <div class="text-sm font-black text-blue-700">Ã¢â€šÂ¦ {{ money(ci.selling_price) }}</div>
+                <div class="text-sm font-black text-blue-700">₦ {{ money(ci.selling_price) }}</div>
               </div>
               <div class="flex flex-col items-end gap-2">
                 <div class="flex items-center bg-white rounded-lg p-1 border border-slate-100 shadow-sm">
@@ -207,7 +207,7 @@
           <div class="p-6 bg-slate-900 rounded-[2rem] text-white">
             <div class="flex items-center justify-between mb-4">
               <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">Subtotal</span>
-              <span class="text-2xl font-black">Ã¢â€šÂ¦ {{ money(subtotal) }}</span>
+              <span class="text-2xl font-black">₦ {{ money(subtotal) }}</span>
             </div>
 
             <div class="space-y-4">
@@ -248,9 +248,9 @@
                   </div>
                   
                   <div class="text-[10px] text-slate-400 leading-relaxed px-1">
-                    Est. Total: <span class="text-white font-bold">Ã¢â€šÂ¦ {{ money(creditEstimateTotal) }}</span> Ã¢â‚¬Â¢ 
-                    Monthly: <span class="text-white font-bold">Ã¢â€šÂ¦ {{ money(creditMonthly) }}</span>
-                    <div v-if="eligData" class="mt-1 text-blue-400 font-bold uppercase tracking-widest">Limit: Ã¢â€šÂ¦ {{ money(eligData.limit) }}</div>
+                    Est. Total: <span class="text-white font-bold">₦ {{ money(creditEstimateTotal) }}</span> • 
+                    Monthly: <span class="text-white font-bold">₦ {{ money(creditMonthly) }}</span>
+                    <div v-if="eligData" class="mt-1 text-blue-400 font-bold uppercase tracking-widest">Limit: ₦ {{ money(eligData.limit) }}</div>
                   </div>
 
                   <div class="flex items-start gap-3 p-2 bg-white/5 rounded-xl">
@@ -261,7 +261,7 @@
                   <button @click="creditCheckout()" :disabled="placing || !totalQty || !creditValid || exceedsLimit || !agreedToTerms" class="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black uppercase tracking-wider transition-all disabled:opacity-30 disabled:grayscale">
                     Apply & Buy on Credit
                   </button>
-                  <p v-if="exceedsLimit" class="text-center text-rose-500 text-[9px] font-black uppercase mt-1">Exceeds limit (Ã¢â€šÂ¦{{ money(eligData?.limit) }})</p>
+                  <p v-if="exceedsLimit" class="text-center text-rose-500 text-[9px] font-black uppercase mt-1">Exceeds limit (₦{{ money(eligData?.limit) }})</p>
                 </template>
               </div>
 
@@ -310,7 +310,7 @@
             <div class="flex flex-col">
               <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 mb-4">
                 <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Selling Price</p>
-                <p class="text-3xl font-black text-blue-700">Ã¢â€šÂ¦ {{ money(selectedProduct.selling_price) }}</p>
+                <p class="text-3xl font-black text-blue-700">₦ {{ money(selectedProduct.selling_price) }}</p>
               </div>
 
               <div class="space-y-4">

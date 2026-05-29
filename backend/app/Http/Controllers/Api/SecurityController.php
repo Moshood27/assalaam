@@ -188,7 +188,7 @@ class SecurityController extends Controller
         $title = 'Transaction Authorization';
         $message = "Your OTP for {$type} is {$code}. It expires in 10 minutes.";
         if (!empty($validated['amount'])) {
-            $message = "Your OTP for {$type} of â‚¦" . number_format($validated['amount'], 2) . " is {$code}. It expires in 10 minutes.";
+            $message = "Your OTP for {$type} of ₦" . number_format($validated['amount'], 2) . " is {$code}. It expires in 10 minutes.";
         }
 
         // Determine channel: push is prioritized for transactions as per instructions

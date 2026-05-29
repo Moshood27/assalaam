@@ -30,16 +30,16 @@
                     @foreach($r['accounts'] as $name => $row)
                         <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
                             <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $name }}</td>
-                            <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($row['debit'] ?? 0, 2) }}</td>
-                            <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($row['credit'] ?? 0, 2) }}</td>
+                            <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($row['debit'] ?? 0, 2) }}</td>
+                            <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($row['credit'] ?? 0, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot class="bg-gray-50 dark:bg-gray-800/60">
                     <tr>
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Total</th>
-                        <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['total_debit'] ?? 0, 2) }}</th>
-                        <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['total_credit'] ?? 0, 2) }}</th>
+                        <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['total_debit'] ?? 0, 2) }}</th>
+                        <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['total_credit'] ?? 0, 2) }}</th>
                     </tr>
                 </tfoot>
             </table>

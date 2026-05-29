@@ -70,7 +70,7 @@
               </div>
               <div class="flex items-center justify-between mt-1 pt-3 border-t border-slate-100">
                 <div class="text-[9px] text-slate-400 font-bold uppercase">By {{ p.user?.name || 'Unknown' }}</div>
-                <div v-if="p.target_amount" class="text-[10px] font-black text-blue-700">Ã¢â€šÂ¦ {{ Number(p.target_amount).toLocaleString() }}</div>
+                <div v-if="p.target_amount" class="text-[10px] font-black text-blue-700">₦ {{ Number(p.target_amount).toLocaleString() }}</div>
               </div>
             </li>
           </ul>

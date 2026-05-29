@@ -34,7 +34,7 @@ class ProcessAdministrativeCharges extends Command
         $this->line('Charges Accrued: ' . $stats['accrued']);
         $this->line('Auto-Deductions Successful: ' . $stats['auto_deducted']);
         $this->line('Auto-Deductions Failed (Insufficient Funds): ' . $stats['failed_auto_deduct']);
-        $this->line('Total Deducted Amount: â‚¦' . number_format($stats['total_deducted_amount'], 2));
+        $this->line('Total Deducted Amount: ₦' . number_format($stats['total_deducted_amount'], 2));
 
         $this->info('Administrative charge processing completed.');
 

@@ -32,7 +32,7 @@
         <div class="space-y-4">
           <div v-for="field in section.fields" :key="field.label" class="flex flex-col gap-1">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{{ field.label }}</label>
-            <p class="text-sm font-bold text-slate-800">{{ profile[field.key] || 'Ã¢â‚¬â€' }}</p>
+            <p class="text-sm font-bold text-slate-800">{{ profile[field.key] || '—' }}</p>
           </div>
         </div>
       </div>

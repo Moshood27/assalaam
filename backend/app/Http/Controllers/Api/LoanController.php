@@ -229,7 +229,7 @@ class LoanController extends Controller
         // Use requested amount if provided, but capped at max eligibility
         $requestedAmount = (float) ($data['amount'] ?? $principal);
         if ($requestedAmount > $principal + 0.01) {
-            return response()->json(['message' => 'Requested amount exceeds your current eligibility limit of â‚¦' . number_format($principal, 2)], 422);
+            return response()->json(['message' => 'Requested amount exceeds your current eligibility limit of ₦' . number_format($principal, 2)], 422);
         }
         if ($requestedAmount <= 0) {
             $requestedAmount = $principal;
@@ -374,7 +374,7 @@ class LoanController extends Controller
             try {
                 $q->user->getAuthorizedAdmins()->each(function ($a) use ($q, $credit) {
                     $memberName = $q->user?->full_name ?: 'Member';
-                    $body = 'Loan ' . $q->qard_id_string . ' disbursed: â‚¦' . number_format($credit, 2) . ' to ' . $memberName;
+                    $body = 'Loan ' . $q->qard_id_string . ' disbursed: ₦' . number_format($credit, 2) . ' to ' . $memberName;
                     $a->notifyMember('Loan Disbursed', $body, [
                         'type' => 'loan_disbursed_admin',
                         'loan_id' => $q->id,
@@ -389,7 +389,7 @@ class LoanController extends Controller
 
             // Notify member via preferences (SMS, Push, Email, Database)
             if ($q->user) {
-                $msg = 'Loan approved instantly: â‚¦'.number_format($credit, 2).' credited. Loan ID: '.($q->qard_id_string).'. Bal: â‚¦'.number_format((float) ($q->user->balance ?? 0), 2);
+                $msg = 'Loan approved instantly: ₦'.number_format($credit, 2).' credited. Loan ID: '.($q->qard_id_string).'. Bal: ₦'.number_format((float) ($q->user->balance ?? 0), 2);
                 $q->user->notifyMember('Loan Approved', $msg, [
                     'type' => 'loan_disbursed',
                     'loan_id' => $q->id,
@@ -427,7 +427,7 @@ class LoanController extends Controller
 
             // Notify guarantors via preferences
             foreach ($guarantors as $g) {
-                $msg = 'Guarantor request: Member '.($user->name).' requested a loan (ID: '.($q->qard_id_string).', â‚¦'.number_format((float)$q->principal_amount, 2).'). Please open your Coop app > Loans to Accept or Decline.';
+                $msg = 'Guarantor request: Member '.($user->name).' requested a loan (ID: '.($q->qard_id_string).', ₦'.number_format((float)$q->principal_amount, 2).'). Please open your Coop app > Loans to Accept or Decline.';
                 $g->notifyMember('Guarantor Request', $msg, [
                     'type' => 'guarantor_request',
                     'loan_id' => $q->id,
@@ -652,7 +652,7 @@ class LoanController extends Controller
                 // Notify member via preferences
                 $remaining = number_format((float) $q->remaining_principal, 2);
                 $newBal = number_format((float) $user->balance, 2);
-                $msg = 'Loan repayment: â‚¦'.number_format($appliedAmount, 2).' applied to '.($q->qard_id_string).'. Remaining: â‚¦'.$remaining.'. Ref: '.$rep->reference.'. Wallet: â‚¦'.$newBal;
+                $msg = 'Loan repayment: ₦'.number_format($appliedAmount, 2).' applied to '.($q->qard_id_string).'. Remaining: ₦'.$remaining.'. Ref: '.$rep->reference.'. Wallet: ₦'.$newBal;
                 $user->notifyMember('Loan Repayment', $msg, [
                     'type' => 'loan_repayment',
                     'loan_id' => $q->id,

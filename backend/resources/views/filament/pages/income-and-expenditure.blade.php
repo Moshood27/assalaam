@@ -25,14 +25,14 @@
                             @foreach($r['income'] as $line)
                                 <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
                                     <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $line['name'] }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-50 dark:bg-gray-800/60">
                             <tr>
                                 <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Total Income</th>
-                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['total_income'] ?? 0, 2) }}</th>
+                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['total_income'] ?? 0, 2) }}</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -46,7 +46,7 @@
                             @forelse($r['expenses'] as $line)
                                 <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
                                     <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $line['name'] }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -57,7 +57,7 @@
                         <tfoot class="bg-gray-50 dark:bg-gray-800/60">
                             <tr>
                                 <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Total Expenses</th>
-                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['total_expense'] ?? 0, 2) }}</th>
+                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['total_expense'] ?? 0, 2) }}</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -71,7 +71,7 @@
                 <table class="min-w-full">
                     <tr class="{{ $isPositive ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20' }}">
                         <th class="px-5 py-3 text-left text-sm font-semibold {{ $isPositive ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200' }}">Surplus / (Deficit)</th>
-                        <th class="px-5 py-3 text-right font-mono tabular-nums {{ $isPositive ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200' }}">â‚¦ {{ number_format($r['surplus'] ?? 0, 2) }}</th>
+                        <th class="px-5 py-3 text-right font-mono tabular-nums {{ $isPositive ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200' }}">₦ {{ number_format($r['surplus'] ?? 0, 2) }}</th>
                     </tr>
                 </table>
             </div>

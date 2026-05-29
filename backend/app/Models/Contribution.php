@@ -154,7 +154,7 @@ class Contribution extends Model
                     }
                 }
             } catch (\Throwable $e) {
-                // Donâ€™t block creation on investment linkage failures
+                // Don't block creation on investment linkage failures
             }
         });
 
@@ -253,7 +253,7 @@ class Contribution extends Model
                         // Notify user (triggers real-time update)
                         $user->notifyMember(
                             "Contribution Successful",
-                            "Your payment of â‚¦" . number_format($model->amount, 2) . " for {$schemeName} was successful.",
+                            "Your payment of ₦" . number_format($model->amount, 2) . " for {$schemeName} was successful.",
                             ['type' => 'contribution_success', 'contribution_id' => $model->id]
                         );
 
@@ -261,7 +261,7 @@ class Contribution extends Model
                         $user->getAuthorizedAdmins()->each(function ($admin) use ($user, $model, $schemeName) {
                             $admin->notifyMember(
                                 "Payment Received: {$schemeName}",
-                                "Member {$user->name} successfully paid â‚¦" . number_format($model->amount, 2) . " for {$schemeName}.",
+                                "Member {$user->name} successfully paid ₦" . number_format($model->amount, 2) . " for {$schemeName}.",
                                 ['type' => 'contribution_success', 'contribution_id' => $model->id]
                             );
                         });

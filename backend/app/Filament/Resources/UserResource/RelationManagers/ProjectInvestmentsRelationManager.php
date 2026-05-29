@@ -26,7 +26,7 @@ class ProjectInvestmentsRelationManager extends RelationManager
                     ->disabled(),
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
-                    ->prefix('â‚¦')
+                    ->prefix('₦')
                     ->disabled(),
                 Forms\Components\DateTimePicker::make('created_at')
                     ->disabled(),

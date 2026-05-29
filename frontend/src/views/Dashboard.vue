@@ -53,66 +53,66 @@
       <div v-if="dashboardData.kpis && !dashboardData.kpis.has_pin"
            class="mt-4 p-4 rounded-3xl bg-amber-50 border border-amber-200 flex items-center gap-3"
            @click="$router.push('/profile')">
-        <div class="text-2xl">Ã°Å¸â€â€˜</div>
+        <div class="text-2xl">🔑</div>
         <div class="flex-1">
           <p class="text-sm font-bold text-amber-900">Transaction PIN not set</p>
           <p class="text-xs text-amber-700">You need a PIN to transfer or withdraw funds.</p>
         </div>
-        <div class="text-amber-400">Ã¢Å¾Â¡Ã¯Â¸Â</div>
+        <div class="text-amber-400">➡️</div>
       </div>
 
       <!-- Attendance Reminder -->
       <div v-if="dashboardData.kpis && dashboardData.kpis.has_ongoing_meeting"
            class="mt-4 p-4 rounded-3xl bg-blue-900 text-white flex items-center gap-3 shadow-lg shadow-blue-200 cursor-pointer"
            @click="$router.push('/attendance')">
-        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-pulse">Ã°Å¸â€œÂ</div>
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-pulse">📍</div>
         <div class="flex-1">
           <p class="text-sm font-bold">Meeting Ongoing</p>
           <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Tap to mark attendance</p>
         </div>
-        <div class="text-white/40">Ã¢Å¾Â¡Ã¯Â¸Â</div>
+        <div class="text-white/40">➡️</div>
       </div>
 
       <!-- Outstanding Fines Warning -->
       <div v-if="dashboardData.kpis && dashboardData.kpis.outstanding_fines > 0"
            class="mt-4 p-4 rounded-3xl bg-rose-50 border border-rose-200 flex items-center gap-3"
            @click="$router.push('/passbook')">
-        <div class="text-2xl">Ã¢Å¡Â Ã¯Â¸Â</div>
+        <div class="text-2xl">⚠️</div>
         <div class="flex-1">
-          <p class="text-sm font-bold text-rose-900">Outstanding Fines: Ã¢â€šÂ¦{{ formatMoney(dashboardData.kpis.outstanding_fines) }}</p>
+          <p class="text-sm font-bold text-rose-900">Outstanding Fines: ₦{{ formatMoney(dashboardData.kpis.outstanding_fines) }}</p>
           <p class="text-xs text-rose-700">These will be deducted from your next wallet funding.</p>
         </div>
-        <div class="text-rose-400">Ã¢Å¾Â¡Ã¯Â¸Â</div>
+        <div class="text-rose-400">➡️</div>
       </div>
 
       <!-- Tahkim Dispute Warning -->
       <div v-if="kpis.active_disputes_count > 0"
            class="mt-4 p-4 rounded-3xl bg-slate-900 text-white flex items-center gap-3 shadow-lg shadow-slate-200 cursor-pointer"
            @click="$router.push('/sharia-board/history')">
-        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-xl">Ã¢Å¡â€“Ã¯Â¸Â</div>
+        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-xl">⚖️</div>
         <div class="flex-1">
           <p class="text-sm font-bold">Active Tahkim ({{ kpis.active_disputes_count }})</p>
           <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Sharia Board Mediation in progress</p>
         </div>
-        <div class="text-white/40">Ã¢Å¾Â¡Ã¯Â¸Â</div>
+        <div class="text-white/40">➡️</div>
       </div>
 
       <!-- Shura Voting Banner -->
       <div v-if="appStatusStore.features['shura-voting-active']"
            class="mt-4 p-4 rounded-3xl bg-indigo-600 text-white flex items-center gap-3 shadow-lg shadow-indigo-200 cursor-pointer"
            @click="$router.push('/agm')">
-        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-bounce">Ã°Å¸â€”Â³Ã¯Â¸Â</div>
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl animate-bounce">🗳️</div>
         <div class="flex-1">
           <p class="text-sm font-bold">AGM Voting Live</p>
           <p class="text-[10px] text-white/70 uppercase tracking-widest font-black">Cast your vote for the Shura Council</p>
         </div>
-        <div class="text-white/40">Ã¢Å¾Â¡Ã¯Â¸Â</div>
+        <div class="text-white/40">➡️</div>
       </div>
 
       <!-- Migration Discrepancy Banner -->
       <div v-if="dashboardData.migration?.discrepancy_reported_at && !dashboardData.migration?.verified_at"
            class="mt-4 p-4 rounded-3xl bg-blue-50 border border-blue-200 flex items-center gap-3">
-        <div class="text-2xl">Ã¢ÂÂ³</div>
+        <div class="text-2xl">⏳</div>
         <div class="flex-1">
           <p class="text-sm font-bold text-blue-900">Balance Under Review</p>
           <p class="text-xs text-blue-700">You reported a discrepancy. Our officers are currently reconciling your records.</p>
@@ -125,7 +125,7 @@
            @click="$router.push('/loans')">
         <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
              :class="kpis.total_due_amount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'">
-          {{ kpis.total_due_amount > 0 ? 'Ã°Å¸Å¡Â¨' : 'Ã°Å¸â€â€' }}
+          {{ kpis.total_due_amount > 0 ? '🚨' : '🔔' }}
         </div>
         <div class="flex-1">
           <div class="flex justify-between items-start">
@@ -136,7 +136,7 @@
             <span v-if="kpis.total_due_amount > 0" class="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Action Required</span>
           </div>
           <p class="text-sm font-black text-slate-800">
-            {{ formatDate(kpis.next_due_date) }} Ã¢â‚¬Â¢ {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
+            {{ formatDate(kpis.next_due_date) }} • {{ currency }} ₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.next_due_amount) }}
           </p>
           <p v-if="kpis.total_due_amount > 0" class="text-[10px] text-rose-500 font-bold mt-1 uppercase tracking-tighter">
             Overdue Amount: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}
@@ -145,7 +145,7 @@
             Expected to Pay: {{ currency }} {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}
           </p>
         </div>
-        <div class="text-slate-300">Ã¢Å¾Â¡Ã¯Â¸Â</div>
+        <div class="text-slate-300">➡️</div>
       </div>
     </div> <!-- end left col -->
 
@@ -163,22 +163,22 @@
         
         <div class="flex items-end gap-1 mb-8" v-if="kpis.has_active_loan || kpis.total_due_amount > 0">
           <template v-if="kpis.total_due_amount > 0">
-            <span class="text-3xl font-black text-rose-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
+            <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
             <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Overdue Amount</span>
           </template>
           <template v-else-if="kpis.is_defaulted">
-            <span class="text-3xl font-black text-rose-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
+            <span class="text-3xl font-black text-rose-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount) }}</span>
             <span class="text-[10px] text-rose-500 font-bold uppercase mb-2 ml-1 tracking-wider">Defaulted Amount</span>
           </template>
           <template v-else-if="kpis.has_active_loan">
-            <span class="text-3xl font-black text-amber-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
+            <span class="text-3xl font-black text-amber-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.loans) }}</span>
             <span class="text-[10px] text-amber-500 font-bold uppercase mb-2 ml-1 tracking-wider">Outstanding Balance</span>
           </template>
         </div>
 
         <div v-if="kpis.expected_amount_to_pay > 0" class="mb-6">
            <p class="text-[10px] text-slate-400 uppercase font-black mb-1">Expected Amount to Pay (To Date)</p>
-           <p class="text-lg font-black text-blue-600">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}</p>
+           <p class="text-lg font-black text-blue-600">₦ {{ hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay) }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -197,9 +197,9 @@
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-3">
         <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="Ã°Å¸â€™Â°" />
-        <StatPill v-if="kpis.total_due_amount > 0" label="Overdue Amount" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="Ã¢Å¡Â Ã¯Â¸Â" @click="$router.push('/loans')" class="cursor-pointer" />
-        <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="Ã°Å¸â€œâ€¦" @click="$router.push('/loans')" class="cursor-pointer" />
-        <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? 'Ã¢â€°Ë† Ã¢â€šÂ¦ ***' : (kpis.gold_value_naira ? 'Ã¢â€°Ë† Ã¢â€šÂ¦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="Ã°Å¸Âªâ„¢" @click="$router.push('/gold')" class="cursor-pointer" />
+        <StatPill v-if="kpis.total_due_amount > 0" label="Overdue Amount" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="Ã°Å¸â€œ..." @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? 'Ã¢â€°Ë† ₦ ***' : (kpis.gold_value_naira ? 'Ã¢â€°Ë† ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="Ã°Å¸Âªâ„¢" @click="$router.push('/gold')" class="cursor-pointer" />
         <StatPill label="Qard Hasan" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="Ã°Å¸â€œÅ " />
         <StatPill label="Assalaam Score" :value="String(kpis.assalaam_score || 0)" hint="Credit Rating" intent="info" icon="Ã¢Â­Â" @click="$router.push('/profile')" class="cursor-pointer" />
       </div>
@@ -232,7 +232,7 @@
         <span class="text-sm font-bold text-slate-700">Sadaqah</span>
       </button>
       <button @click="$router.push('/attendance')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">📍</div>
         <span class="text-sm font-bold text-slate-700">Attendance</span>
       </button>
       <button v-if="appStatusStore.features['group-savings-enabled']" @click="$router.push('/savings-groups')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
@@ -276,11 +276,11 @@
         <span class="text-sm font-bold text-slate-700">Receive QR</span>
       </button>
       <button @click="$router.push('/agm')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-fuchsia-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€”Â³Ã¯Â¸Â</div>
+        <div class="w-14 h-14 bg-fuchsia-50 rounded-2xl flex items-center justify-center text-2xl">🗳️</div>
         <span class="text-sm font-bold text-slate-700">AGM & Voting</span>
       </button>
       <button v-if="appStatusStore.features['zakat-enabled']" @click="checkZakat" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€¢Å’</div>
+        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸•Å’</div>
         <span class="text-sm font-bold text-slate-700">Zakat</span>
       </button>
       <button v-if="dashboardData.is_ramadan && appStatusStore.features['zakat-enabled']" @click="payZakatFitr" class="bg-blue-50 p-5 rounded-3xl shadow-sm border border-blue-100 flex flex-col items-center gap-2 active:bg-blue-100 transition-all">
@@ -288,7 +288,7 @@
         <span class="text-sm font-bold text-blue-800">Zakat Al-Fitr</span>
       </button>
       <button @click="$router.push('/goals')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€¢â€¹</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸•â€¹</div>
         <span class="text-sm font-bold text-slate-700">Hajj & Umrah</span>
       </button>
       <button v-if="appStatusStore.features['junior-coop-enabled']" @click="$router.push('/junior-cooperative')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
@@ -308,7 +308,7 @@
         <span class="text-sm font-bold text-slate-700">Become a Vendor</span>
       </button>
       <button @click="$router.push('/sharia-board')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã¢Å¡â€“Ã¯Â¸Â</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã¢Å¡–Ã¯Â¸Â</div>
         <span class="text-sm font-bold text-slate-700">Sharia Board</span>
       </button>
       <button v-if="dashboardData.is_admin" @click="$router.push('/admin/vendors')" class="bg-rose-50 p-5 rounded-3xl shadow-sm border border-rose-100 flex flex-col items-center gap-2 active:bg-rose-100 transition-all">
@@ -372,7 +372,7 @@
                  class="bg-white p-4 rounded-2xl flex items-center justify-between gap-3 border-2 border-blue-100 shadow-sm animate-bounce-in">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-lg shrink-0">
-                  Ã°Å¸â€â€
+                  🔔
                 </div>
                 <div>
                   <p class="font-bold text-slate-800 text-sm">{{ action.message }}</p>
@@ -406,7 +406,7 @@
               </div>
             </div>
             <div class="text-right">
-              <p class="font-bold text-slate-800">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(tx.amount) }}</p>
+              <p class="font-bold text-slate-800">₦ {{ hideBalances ? '***,***.**' : formatMoney(tx.amount) }}</p>
             </div>
           </div>
         </div>
@@ -426,7 +426,7 @@
           <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] p-7 text-white shadow-xl relative overflow-hidden">
             <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full"></div>
             <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Yearly Cumulative</p>
-            <h2 class="text-4xl font-black tracking-tight">Ã¢â€šÂ¦ {{ formatMoney(passbookSummary.grand_total) }}</h2>
+            <h2 class="text-4xl font-black tracking-tight">₦ {{ formatMoney(passbookSummary.grand_total) }}</h2>
             
             <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
               <div>
@@ -448,7 +448,7 @@
             <div v-if="passbookSummary.agm_fee_amount" class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
               <p class="text-[10px] text-slate-400 uppercase font-black mb-1">AGM Fee</p>
               <div class="flex items-center gap-2">
-                <p class="text-xl font-black text-slate-800">Ã¢â€šÂ¦{{ formatMoney(passbookSummary.agm_fee_amount) }}</p>
+                <p class="text-xl font-black text-slate-800">₦{{ formatMoney(passbookSummary.agm_fee_amount) }}</p>
                 <span :class="passbookSummary.agm_fee_paid ? 'text-blue-500' : 'text-amber-500'" class="text-xs">
                   {{ passbookSummary.agm_fee_paid ? 'Ã¢Å“â€œ' : 'Ã¢Å’â€º' }}
                 </span>
@@ -475,7 +475,7 @@
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div :class="ux.status === 'success' ? 'bg-blue-100 text-blue-600' : (ux.status === 'failed' ? 'bg-rose-100 text-rose-600' : 'bg-yellow-100 text-yellow-600')"
                    class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
-                {{ ux.status === 'success' ? 'Ã¢Å“â€œ' : (ux.status === 'failed' ? 'Ã¢Å“â€¢' : 'Ã¢Å’â€º') }}
+                {{ ux.status === 'success' ? 'Ã¢Å“â€œ' : (ux.status === 'failed' ? 'Ã¢Å“•' : 'Ã¢Å’â€º') }}
               </div>
               <div class="min-w-0 overflow-hidden">
                 <p class="font-bold text-slate-800 text-sm capitalize truncate max-w-[180px] sm:max-w-none">{{ utilLabel(ux) }}</p>
@@ -484,7 +484,7 @@
               </div>
             </div>
             <div class="text-right shrink-0">
-              <p class="font-bold text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(ux.amount) }}</p>
+              <p class="font-bold text-slate-800">₦ {{ formatMoney(ux.amount) }}</p>
             </div>
           </div>
         </div>
@@ -575,7 +575,7 @@
                <input 
                  v-model="emailForm.password" 
                  type="password" 
-                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
+                 placeholder="••••••••"
                  class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
                />
                <p v-if="emailErrors.password" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ emailErrors.password[0] }}</p>
@@ -615,7 +615,7 @@
                  type="password" 
                  inputmode="numeric"
                  maxlength="4"
-                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
+                 placeholder="••••"
                  class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700 text-center text-2xl tracking-[0.5em]"
                />
                <p v-if="pinErrors.new_pin" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.new_pin) ? pinErrors.new_pin[0] : pinErrors.new_pin }}</p>
@@ -628,7 +628,7 @@
                  type="password" 
                  inputmode="numeric"
                  maxlength="4"
-                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
+                 placeholder="••••"
                  class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700 text-center text-2xl tracking-[0.5em]"
                />
                <p v-if="pinErrors.confirm_pin" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.confirm_pin) ? pinErrors.confirm_pin[0] : pinErrors.confirm_pin }}</p>
@@ -639,7 +639,7 @@
                <input 
                  v-model="pinForm.current_password" 
                  type="password" 
-                 placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
+                 placeholder="••••••••"
                  class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white outline-none transition-all font-bold text-slate-700"
                />
                <p v-if="pinErrors.current_password" class="text-[10px] text-rose-500 mt-1 ml-1 font-bold">{{ Array.isArray(pinErrors.current_password) ? pinErrors.current_password[0] : pinErrors.current_password }}</p>
@@ -688,7 +688,7 @@ const modal = useModal()
 const { notice, showNotice, closeNotice } = useNotice()
 const appStatusStore = useAppStatusStore()
 
-const currency = 'Ã¢â€šÂ¦'
+const currency = '₦'
 const dashboardData = ref({})
 const liveActions = ref([])
 const activeTab = ref('transactions')
@@ -820,9 +820,9 @@ const utilLabel = (ux) => {
   const type = (ux.type || '').toLowerCase()
   const net = (ux.network || '').toUpperCase()
   const phone = ux.phone_number || ''
-  if (type === 'airtime') return `Airtime Ã¢â‚¬â€ ${net} (${phone})`
-  if (type === 'data') return `Data Ã¢â‚¬â€ ${net} (${phone})`
-  return `${type || 'utility'} Ã¢â‚¬â€ ${net} (${phone})`
+  if (type === 'airtime') return `Airtime — ${net} (${phone})`
+  if (type === 'data') return `Data — ${net} (${phone})`
+  return `${type || 'utility'} — ${net} (${phone})`
 }
 
 const checkMigration = async () => {
@@ -834,7 +834,7 @@ const checkMigration = async () => {
   const total = formatMoney(m.total_balance)
   const breakdownLines = Object.entries(m.breakdown || {})
     .filter(([_, val]) => Number(val) > 0)
-    .map(([key, val]) => `Ã¢â‚¬Â¢ ${key}: ${currency} ${formatMoney(val)}`)
+    .map(([key, val]) => `• ${key}: ${currency} ${formatMoney(val)}`)
     .join('\n')
 
   const ok = await modal.prompt(
@@ -1077,9 +1077,9 @@ const payZakatFitr = async () => {
 const showPassbookInfo = () => {
   const msg = [
     'Your digital ledger with the cooperative.',
-    'Ã¢â‚¬Â¢ See every contribution, withdrawal, Qard Hasan disbursement/repayment, fines, and adjustments.',
-    'Ã¢â‚¬Â¢ Tap a row to view full details and reference.',
-    'Ã¢â‚¬Â¢ Use filters (date range, scheme/type) to find entries fast.'
+    '• See every contribution, withdrawal, Qard Hasan disbursement/repayment, fines, and adjustments.',
+    '• Tap a row to view full details and reference.',
+    '• Use filters (date range, scheme/type) to find entries fast.'
   ].join('\n')
   showNotice('Passbook', msg, 'info')
 }
@@ -1087,9 +1087,9 @@ const showPassbookInfo = () => {
 const showZakatInfo = () => {
   const msg = [
     'We help you check if Zakat is due and estimate the amount.',
-    'Ã¢â‚¬Â¢ Eligibility: compares your eligible wealth with the Nisab and timing (haul).',
-    'Ã¢â‚¬Â¢ Rate: typically 2.5% on eligible holdings once due.',
-    'Ã¢â‚¬Â¢ Data source: based on balances and assets recorded with the cooperative.',
+    '• Eligibility: compares your eligible wealth with the Nisab and timing (haul).',
+    '• Rate: typically 2.5% on eligible holdings once due.',
+    '• Data source: based on balances and assets recorded with the cooperative.',
     'You can run an estimate now and, if due, pay securely in-app.'
   ].join('\n')
   showNotice('Zakat', msg, 'info')
@@ -1098,9 +1098,9 @@ const showZakatInfo = () => {
 const showHajjInfo = () => {
   const msg = [
     'Plan and save towards your Hajj or Umrah journey.',
-    'Ã¢â‚¬Â¢ Set a goal amount and target date on the Goals page.',
-    'Ã¢â‚¬Â¢ Track progress with each deposit and stay on schedule.',
-    'Ã¢â‚¬Â¢ Withdrawals are protected to keep your pilgrimage savings intact.'
+    '• Set a goal amount and target date on the Goals page.',
+    '• Track progress with each deposit and stay on schedule.',
+    '• Withdrawals are protected to keep your pilgrimage savings intact.'
   ].join('\n')
   showNotice('Hajj & Umrah', msg, 'info')
 }

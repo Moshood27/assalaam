@@ -22,15 +22,15 @@ class BookingsRelationManager extends RelationManager
                 Forms\Components\TextInput::make('partner_name')->required()->maxLength(120),
                 Forms\Components\TextInput::make('package')->maxLength(120),
                 Forms\Components\TextInput::make('booking_amount')
-                    ->label('Booking Amount (â‚¦)')
-                    ->numeric()->minValue(0)->step('0.01')->prefix('â‚¦')->required(),
+                    ->label('Booking Amount (₦)')
+                    ->numeric()->minValue(0)->step('0.01')->prefix('₦')->required(),
                 Forms\Components\TextInput::make('commission_rate')
                     ->label('Commission Rate')
                     ->numeric()->minValue(0)->maxValue(1)->step('0.0001')
                     ->helperText('Fraction e.g. 0.05 = 5%'),
                 Forms\Components\TextInput::make('commission_amount')
-                    ->label('Commission Amount (â‚¦)')
-                    ->numeric()->minValue(0)->step('0.01')->prefix('â‚¦'),
+                    ->label('Commission Amount (₦)')
+                    ->numeric()->minValue(0)->step('0.01')->prefix('₦'),
                 Forms\Components\TextInput::make('reference')
                     ->disabled()
                     ->dehydrated(false)

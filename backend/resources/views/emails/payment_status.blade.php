@@ -24,7 +24,7 @@
     <div class="card">
       <p>{{ $messageText ?? '' }}</p>
       @if(!empty($amount))
-        <p><strong>Amount:</strong> â‚¦{{ number_format((float)$amount, 2) }}</p>
+        <p><strong>Amount:</strong> ₦{{ number_format((float)$amount, 2) }}</p>
       @endif
       @if(!empty($reference))
         <p><strong>Reference:</strong> {{ $reference }}</p>

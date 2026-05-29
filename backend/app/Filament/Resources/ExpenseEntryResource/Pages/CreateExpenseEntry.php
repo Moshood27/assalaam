@@ -35,7 +35,7 @@ class CreateExpenseEntry extends CreateRecord
 
         $notification = new \App\Notifications\GeneralNotification(
             title: 'New Expense Awaiting Approval',
-            message: "An expense for '{$record->title}' of â‚¦" . number_format($record->amount, 2) . " has been created and requires approval.",
+            message: "An expense for '{$record->title}' of ₦" . number_format($record->amount, 2) . " has been created and requires approval.",
             data: [
                 'type' => 'expense_approval',
                 'expense_id' => $record->id,

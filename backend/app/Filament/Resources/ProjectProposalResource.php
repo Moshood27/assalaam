@@ -40,7 +40,7 @@ class ProjectProposalResource extends Resource
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('target_amount')
                     ->numeric()
-                    ->prefix('â‚¦'),
+                    ->prefix('₦'),
                 Forms\Components\Select::make('status')
                     ->options([
                         'pending' => 'Pending',

@@ -26,7 +26,7 @@
 <div class="wrapper">
     <div class="container">
         <div class="header">
-            <p class="brand">{{ config('app.name') }} â€¢ Payment receipt</p>
+            <p class="brand">{{ config('app.name') }} • Payment receipt</p>
         </div>
         <div class="content">
             <p>AssalÄmu â€˜alaykum {{ $loan->user->full_name }},</p>
@@ -39,7 +39,7 @@
                 </tr>
                 <tr>
                     <td class="label">Amount paid</td>
-                    <td class="value">â‚¦{{ number_format($repayment->amount, 2) }}</td>
+                    <td class="value">₦{{ number_format($repayment->amount, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Reference</td>
@@ -51,7 +51,7 @@
                 </tr>
                 <tr>
                     <td class="label">Remaining principal</td>
-                    <td class="value">â‚¦{{ number_format($loan->remaining_principal, 2) }}</td>
+                    <td class="value">₦{{ number_format($loan->remaining_principal, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Loan status</td>

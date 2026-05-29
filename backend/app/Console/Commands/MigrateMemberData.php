@@ -324,7 +324,7 @@ EOD;
             ]);
         }
 
-        $this->line("  Imported loan: â‚¦" . number_format($principal, 2) . " (Paid: â‚¦" . number_format($paid, 2) . ")");
+        $this->line("  Imported loan: ₦" . number_format($principal, 2) . " (Paid: ₦" . number_format($paid, 2) . ")");
     }
 
     private function importContribution($user, $schemeName, $amount, $date = null)
@@ -337,7 +337,7 @@ EOD;
             'reference' => 'MIGRATION-' . Str::random(10),
             'created_at' => $date ?? now(),
         ]);
-        $this->line("  Imported $schemeName: â‚¦" . number_format($amount, 2));
+        $this->line("  Imported $schemeName: ₦" . number_format($amount, 2));
     }
 
     private function parseAmount($val)

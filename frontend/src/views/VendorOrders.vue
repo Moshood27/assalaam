@@ -43,11 +43,11 @@
             <div v-for="item in order.items" :key="item.id" class="flex justify-between items-center text-xs">
               <div class="flex-1 min-w-0 pr-4">
                 <p class="font-bold text-slate-700 truncate">{{ item.product_name }}</p>
-                <p class="text-[10px] text-slate-500">Qty: {{ item.quantity }} Ã— â‚¦{{ formatMoney(item.unit_price) }}</p>
+                <p class="text-[10px] text-slate-500">Qty: {{ item.quantity }} Ã— ₦{{ formatMoney(item.unit_price) }}</p>
               </div>
               <div class="text-right">
-                <p class="font-black text-slate-800">â‚¦{{ formatMoney(item.line_total) }}</p>
-                <p v-if="item.vendor_amount" class="text-[9px] text-blue-600 font-bold uppercase">Payout: â‚¦{{ formatMoney(item.vendor_amount) }}</p>
+                <p class="font-black text-slate-800">₦{{ formatMoney(item.line_total) }}</p>
+                <p v-if="item.vendor_amount" class="text-[9px] text-blue-600 font-bold uppercase">Payout: ₦{{ formatMoney(item.vendor_amount) }}</p>
               </div>
             </div>
           </div>

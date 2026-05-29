@@ -104,12 +104,12 @@ class MeetingResource extends Resource
                         Forms\Components\TextInput::make('fine_amount')
                             ->label('Absence Fine Amount')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->default(config('cooperative.attendance.default_fine', 500)),
                         Forms\Components\TextInput::make('apology_fine_amount')
                             ->label('Lateness Fine Amount')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->default(config('cooperative.attendance.apology_fine', 100)),
                     ])->columns(2),
             ]);

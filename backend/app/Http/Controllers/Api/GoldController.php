@@ -293,7 +293,7 @@ class GoldController extends Controller
         });
 
         return response()->json([
-            'message' => "Successfully sold $request->grams grams of gold for â‚¦" . number_format($netAmount, 2),
+            'message' => "Successfully sold $request->grams grams of gold for ₦" . number_format($netAmount, 2),
             'gold_balance' => (float) $user->refresh()->gold_balance,
             'naira_balance' => (float) $user->balance
         ]);

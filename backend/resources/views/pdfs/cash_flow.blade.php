@@ -26,7 +26,7 @@
         <thead>
             <tr>
                 <th>Activities</th>
-                <th class="right">Amount (â‚¦)</th>
+                <th class="right">Amount (₦)</th>
             </tr>
         </thead>
         <tbody>
@@ -80,7 +80,7 @@
 
             <tr class="total-row" style="background-color: #111827; color: white;">
                 <td>NET INCREASE / (DECREASE) IN CASH</td>
-                <td class="right">â‚¦ {{ number_format($net_increase, 2) }}</td>
+                <td class="right">₦ {{ number_format($net_increase, 2) }}</td>
             </tr>
         </tbody>
     </table>

@@ -52,14 +52,14 @@ class UtilityTransactionResource extends Resource
                             ->maxLength(20),
                         Forms\Components\TextInput::make('amount')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->required(),
                         Forms\Components\TextInput::make('cost_price')
                             ->numeric()
-                            ->prefix('â‚¦'),
+                            ->prefix('₦'),
                         Forms\Components\TextInput::make('profit')
                             ->numeric()
-                            ->prefix('â‚¦'),
+                            ->prefix('₦'),
                         Forms\Components\TextInput::make('reference')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('status')

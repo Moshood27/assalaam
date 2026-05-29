@@ -53,11 +53,11 @@ class SadaqahProjectResource extends Resource
                             ->columnSpanFull(),
                         TextInput::make('target_amount')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->required(),
                         TextInput::make('raised_amount')
                             ->numeric()
-                            ->prefix('â‚¦')
+                            ->prefix('₦')
                             ->disabled()
                             ->dehydrated(false),
                         FileUpload::make('media_urls')

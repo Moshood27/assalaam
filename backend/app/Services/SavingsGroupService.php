@@ -115,7 +115,7 @@ class SavingsGroupService
                     try {
                         $user->notify(new \App\Notifications\PaymentNotification(
                             title: "Monthly Contribution: {$group->name}",
-                            message: "Your monthly contribution of â‚¦" . number_format($amount, 2) . " for {$group->name} has been processed.",
+                            message: "Your monthly contribution of ₦" . number_format($amount, 2) . " for {$group->name} has been processed.",
                             amount: (float) $amount,
                             reference: $referencePrefix,
                             source: 'savings_group_auto'

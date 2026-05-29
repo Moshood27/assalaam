@@ -35,7 +35,7 @@
                 <div class="bg-gray-50 dark:bg-gray-800/60 px-5 py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ $branch['branch_name'] }}</h3>
                     <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Total for Branch: <span class="text-primary-600 dark:text-primary-400 font-bold">â‚¦{{ number_format($branch['branch_total'], 2) }}</span>
+                        Total for Branch: <span class="text-primary-600 dark:text-primary-400 font-bold">₦{{ number_format($branch['branch_total'], 2) }}</span>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -57,11 +57,11 @@
                                     <td class="px-3 py-2 text-gray-600 dark:text-gray-400 font-mono text-[10px]">{{ $member['membership_number'] }}</td>
                                     @foreach($report['schemes'] as $scheme)
                                         <td class="px-3 py-2 text-right tabular-nums text-gray-700 dark:text-gray-300">
-                                            {{ $member['schemes'][$scheme['id']] > 0 ? 'â‚¦' . number_format($member['schemes'][$scheme['id']], 0) : '-' }}
+                                            {{ $member['schemes'][$scheme['id']] > 0 ? '₦' . number_format($member['schemes'][$scheme['id']], 0) : '-' }}
                                         </td>
                                     @endforeach
                                     <td class="px-3 py-2 text-right tabular-nums font-bold text-gray-900 dark:text-gray-100 bg-gray-50/30 dark:bg-gray-800/20">
-                                        â‚¦{{ number_format($member['total'], 2) }}
+                                        ₦{{ number_format($member['total'], 2) }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -71,11 +71,11 @@
                                 <td colspan="2" class="px-3 py-4 text-gray-900 dark:text-gray-100 uppercase tracking-tight">Branch Totals</td>
                                 @foreach($report['schemes'] as $scheme)
                                     <td class="px-3 py-4 text-right tabular-nums text-gray-900 dark:text-gray-100">
-                                        â‚¦{{ number_format($branch['totals'][$scheme['id']], 0) }}
+                                        ₦{{ number_format($branch['totals'][$scheme['id']], 0) }}
                                     </td>
                                 @endforeach
                                 <td class="px-3 py-4 text-right tabular-nums text-primary-600 dark:text-primary-400 bg-gray-50 dark:bg-gray-800">
-                                    â‚¦{{ number_format($branch['branch_total'], 2) }}
+                                    ₦{{ number_format($branch['branch_total'], 2) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -106,9 +106,9 @@
                             <tr class="text-lg font-black text-gray-900 dark:text-gray-100 border-t border-gray-200 dark:border-gray-700 pt-4">
                                 <td class="py-4 pr-4">All Branches</td>
                                 @foreach($report['schemes'] as $scheme)
-                                    <td class="py-4 px-4 text-right tabular-nums">â‚¦{{ number_format($report['grand_totals'][$scheme['id']], 0) }}</td>
+                                    <td class="py-4 px-4 text-right tabular-nums">₦{{ number_format($report['grand_totals'][$scheme['id']], 0) }}</td>
                                 @endforeach
-                                <td class="py-4 pl-4 text-right tabular-nums text-primary-700 dark:text-primary-300">â‚¦{{ number_format($report['grand_total_all'], 2) }}</td>
+                                <td class="py-4 pl-4 text-right tabular-nums text-primary-700 dark:text-primary-300">₦{{ number_format($report['grand_total_all'], 2) }}</td>
                             </tr>
                         </tbody>
                     </table>

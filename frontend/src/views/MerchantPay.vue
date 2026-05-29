@@ -26,7 +26,7 @@
         <div class="flex flex-wrap gap-2">
           <button @click="paste" class="btn-muted px-4 py-2">Paste</button>
           <button v-if="canScan" @click="scan" class="bg-white border border-blue-200 text-blue-700 px-4 py-2 rounded-xl font-bold hover:bg-blue-50 transition">Scan QR</button>
-          <button @click="resolve" :disabled="!qr || loading" class="btn-primary flex-1 py-2">{{ loading ? 'ResolvingÃ¢â‚¬Â¦' : 'Resolve' }}</button>
+          <button @click="resolve" :disabled="!qr || loading" class="btn-primary flex-1 py-2">{{ loading ? 'Resolving...' : 'Resolve' }}</button>
         </div>
         <p v-if="scanError" class="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-sm">{{ scanError }}</p>
         <p v-if="error" class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-sm">{{ error }}</p>
@@ -66,7 +66,7 @@
           <div>
             <label class="lbl">Amount</label>
             <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Ã¢â€šÂ¦</span>
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
               <input v-model.number="amount" type="number" min="1" placeholder="0.00" class="inp pl-8 font-bold text-lg" />
             </div>
           </div>
@@ -80,7 +80,7 @@
           </div>
           <div class="flex gap-3 pt-2">
             <button @click="pay" :disabled="loading || !amount || !pin || pin.length !== 4" class="btn-primary flex-1 py-4 text-lg">
-              {{ loading ? 'PayingÃ¢â‚¬Â¦' : 'Pay Now' }}
+              {{ loading ? 'Paying...' : 'Pay Now' }}
             </button>
             <button @click="reset" class="btn-muted px-6 py-4">Clear</button>
           </div>

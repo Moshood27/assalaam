@@ -42,7 +42,7 @@
             <p class="salam">AssalÄmu â€˜alaykum {{ $user->full_name }},</p>
             <p>AlhamdulillÄh, your cooperative wallet has just been credited.</p>
 
-            <p class="amount">+ {{ 'â‚¦' . number_format($amount, 2) }}</p>
+            <p class="amount">+ {{ '₦' . number_format($amount, 2) }}</p>
 
             <table class="meta" role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
@@ -55,12 +55,12 @@
                 </tr>
                 <tr>
                     <th>Credited Amount</th>
-                    <td>{{ 'â‚¦' . number_format($amount, 2) }}</td>
+                    <td>{{ '₦' . number_format($amount, 2) }}</td>
                 </tr>
                 @if(isset($newBalance))
                 <tr>
                     <th>New Wallet Balance</th>
-                    <td>{{ 'â‚¦' . number_format($newBalance, 2) }}</td>
+                    <td>{{ '₦' . number_format($newBalance, 2) }}</td>
                 </tr>
                 @endif
                 @if(!empty($note))

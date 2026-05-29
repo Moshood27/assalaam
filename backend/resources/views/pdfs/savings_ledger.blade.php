@@ -23,10 +23,10 @@
     <div style="margin-bottom: 20px;">
         <strong>Member Name:</strong> {{ $member_name }}<br>
         <strong>Membership Number:</strong> {{ $membership_number }}<br>
-        <strong>Current Savings:</strong> â‚¦ {{ number_format($current_savings, 2) }}<br>
-        <strong>Current Shares:</strong> â‚¦ {{ number_format($current_shares, 2) }}<br>
+        <strong>Current Savings:</strong> ₦ {{ number_format($current_savings, 2) }}<br>
+        <strong>Current Shares:</strong> ₦ {{ number_format($current_shares, 2) }}<br>
         <strong>Current Gold:</strong> {{ number_format($current_gold, 4) }}g<br>
-        <strong>Total Takaful Paid:</strong> â‚¦ {{ number_format($total_takaful_paid, 2) }}
+        <strong>Total Takaful Paid:</strong> ₦ {{ number_format($total_takaful_paid, 2) }}
     </div>
 
     <table>
@@ -35,7 +35,7 @@
                 <th>Date</th>
                 <th>Scheme</th>
                 <th>Type</th>
-                <th class="right">Amount (â‚¦)</th>
+                <th class="right">Amount (₦)</th>
                 <th>Status</th>
             </tr>
         </thead>

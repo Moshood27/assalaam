@@ -26,7 +26,7 @@
                 <div class="bg-gray-50 dark:bg-gray-800/60 px-5 py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ $branch['branch_name'] }}</h3>
                     <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Total Wealth: <span class="text-primary-600 dark:text-primary-400 font-bold">â‚¦{{ number_format($branch['total_savings'] + $branch['total_special_savings'] + $branch['total_shares'] + $branch['total_gold_value'] + $branch['total_other'], 2) }}</span>
+                        Total Wealth: <span class="text-primary-600 dark:text-primary-400 font-bold">₦{{ number_format($branch['total_savings'] + $branch['total_special_savings'] + $branch['total_shares'] + $branch['total_gold_value'] + $branch['total_other'], 2) }}</span>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -48,24 +48,24 @@
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     <td class="px-5 py-3 text-gray-900 dark:text-gray-100 font-medium">{{ $member['member_name'] }}</td>
                                     <td class="px-5 py-3 text-gray-600 dark:text-gray-400 font-mono text-xs">{{ $member['membership_number'] }}</td>
-                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">â‚¦{{ number_format($member['savings'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">â‚¦{{ number_format($member['special_savings'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">â‚¦{{ number_format($member['shares'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100" title="{{ number_format($member['gold_weight'], 2) }}g">â‚¦{{ number_format($member['gold_value'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">â‚¦{{ number_format($member['other_funds'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right tabular-nums font-bold text-primary-600 dark:text-primary-400">â‚¦{{ number_format($member['total_wealth'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($member['savings'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($member['special_savings'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($member['shares'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100" title="{{ number_format($member['gold_weight'], 2) }}g">₦{{ number_format($member['gold_value'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right tabular-nums text-gray-900 dark:text-gray-100">₦{{ number_format($member['other_funds'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right tabular-nums font-bold text-primary-600 dark:text-primary-400">₦{{ number_format($member['total_wealth'], 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-50/50 dark:bg-gray-800/40 font-bold border-t border-gray-200 dark:border-gray-800">
                             <tr>
                                 <td colspan="2" class="px-5 py-4 text-gray-900 dark:text-gray-100 uppercase tracking-tight">Branch Totals</td>
-                                <td class="px-5 py-4 text-right tabular-nums">â‚¦{{ number_format($branch['total_savings'], 2) }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums">â‚¦{{ number_format($branch['total_special_savings'], 2) }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums">â‚¦{{ number_format($branch['total_shares'], 2) }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums">â‚¦{{ number_format($branch['total_gold_value'], 2) }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums">â‚¦{{ number_format($branch['total_other'], 2) }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums text-primary-600 dark:text-primary-400">â‚¦{{ number_format($branch['total_savings'] + $branch['total_special_savings'] + $branch['total_shares'] + $branch['total_gold_value'] + $branch['total_other'], 2) }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums">₦{{ number_format($branch['total_savings'], 2) }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums">₦{{ number_format($branch['total_special_savings'], 2) }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums">₦{{ number_format($branch['total_shares'], 2) }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums">₦{{ number_format($branch['total_gold_value'], 2) }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums">₦{{ number_format($branch['total_other'], 2) }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums text-primary-600 dark:text-primary-400">₦{{ number_format($branch['total_savings'] + $branch['total_special_savings'] + $branch['total_shares'] + $branch['total_gold_value'] + $branch['total_other'], 2) }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -87,27 +87,27 @@
                     </div>
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Savings</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">â‚¦{{ number_format($report['grand_total_savings'], 2) }}</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">₦{{ number_format($report['grand_total_savings'], 2) }}</div>
                     </div>
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Special Savings</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">â‚¦{{ number_format($report['grand_total_special_savings'], 2) }}</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">₦{{ number_format($report['grand_total_special_savings'], 2) }}</div>
                     </div>
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Shares</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">â‚¦{{ number_format($report['grand_total_shares'], 2) }}</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">₦{{ number_format($report['grand_total_shares'], 2) }}</div>
                     </div>
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Gold (Val)</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">â‚¦{{ number_format($report['grand_total_gold_value'], 2) }}</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">₦{{ number_format($report['grand_total_gold_value'], 2) }}</div>
                     </div>
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Other Funds</div>
-                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">â‚¦{{ number_format($report['grand_total_other'], 2) }}</div>
+                        <div class="text-xl font-bold text-gray-900 dark:text-gray-100">₦{{ number_format($report['grand_total_other'], 2) }}</div>
                     </div>
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-primary-200 dark:border-primary-800 ring-2 ring-primary-500/20">
                         <div class="text-xs text-primary-600 dark:text-primary-400 uppercase font-bold">Grand Total</div>
-                        <div class="text-xl font-black text-primary-700 dark:text-primary-300">â‚¦{{ number_format($report['grand_total_savings'] + $report['grand_total_special_savings'] + $report['grand_total_shares'] + $report['grand_total_gold_value'] + $report['grand_total_other'], 2) }}</div>
+                        <div class="text-xl font-black text-primary-700 dark:text-primary-300">₦{{ number_format($report['grand_total_savings'] + $report['grand_total_special_savings'] + $report['grand_total_shares'] + $report['grand_total_gold_value'] + $report['grand_total_other'], 2) }}</div>
                     </div>
                 </div>
             </div>

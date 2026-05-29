@@ -95,7 +95,7 @@
                <div class="flex items-center justify-between p-4 bg-blue-50 rounded-2xl border border-blue-100">
                  <div>
                    <p class="text-xs font-bold text-blue-900">Order #{{ selectedDispute.order.reference }}</p>
-                   <p class="text-[10px] text-blue-700">Total: Ã¢â€šÂ¦ {{ numberFormat(selectedDispute.order.total_amount) }}</p>
+                   <p class="text-[10px] text-blue-700">Total: ₦ {{ numberFormat(selectedDispute.order.total_amount) }}</p>
                  </div>
                  <router-link :to="'/store/orders/' + selectedDispute.order.id" class="text-[10px] font-black text-blue-700 underline uppercase tracking-widest">View Receipt</router-link>
                </div>

@@ -23,11 +23,11 @@ class SavingsGoalsRelationManager extends RelationManager
                     ->disabled(),
                 Forms\Components\TextInput::make('target_amount')
                     ->numeric()
-                    ->prefix('â‚¦')
+                    ->prefix('₦')
                     ->disabled(),
                 Forms\Components\TextInput::make('saved_amount')
                     ->numeric()
-                    ->prefix('â‚¦')
+                    ->prefix('₦')
                     ->disabled(),
                 Forms\Components\DatePicker::make('target_date')
                     ->disabled(),

@@ -27,7 +27,7 @@
                 <th>Date</th>
                 <th class="right">Present</th>
                 <th class="right">Absent</th>
-                <th class="right">Fines Generated (â‚¦)</th>
+                <th class="right">Fines Generated (₦)</th>
             </tr>
         </thead>
         <tbody>

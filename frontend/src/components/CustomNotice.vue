@@ -8,8 +8,8 @@
                'bg-red-100 text-red-600': type === 'error',
                'bg-amber-100 text-amber-600': type !== 'success' && type !== 'error'
              }">
-          <span v-if="type==='success'">Ã¢Å“â€¦</span>
-          <span v-else-if="type==='error'">Ã¢Å¡Â Ã¯Â¸Â</span>
+          <span v-if="type==='success'">Ã¢Å“...</span>
+          <span v-else-if="type==='error'">⚠️</span>
           <span v-else>Ã¢â€žÂ¹Ã¯Â¸Â</span>
         </div>
         <h3 class="text-xl font-black mb-2 text-slate-800">{{ title }}</h3>
@@ -25,7 +25,7 @@
             :maxlength="inputMaxlength"
             inputmode="numeric"
             class="w-full border border-slate-200 rounded-xl p-3 text-center tracking-[0.5em] font-black text-slate-900"
-            placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
+            placeholder="••••"
             @keyup.enter="onConfirm"
           />
         </div>

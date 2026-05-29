@@ -38,7 +38,7 @@ class IncomeEntryResource extends Resource
                     ->required()
                     ->numeric()
                     ->minValue(0.01)
-                    ->prefix('â‚¦'),
+                    ->prefix('₦'),
                 Forms\Components\Textarea::make('notes')
                     ->columnSpanFull()
                     ->rows(3),

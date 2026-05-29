@@ -79,7 +79,7 @@
                 <th>Scheme</th>
                 <th style="width: 25%">Reference</th>
                 <th class="right" style="width: 15%">Units</th>
-                <th class="right" style="width: 15%">Amount (â‚¦)</th>
+                <th class="right" style="width: 15%">Amount (₦)</th>
             </tr>
         </thead>
         <tbody>

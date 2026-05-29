@@ -21,14 +21,14 @@
                             @foreach($r['assets'] as $line)
                                 <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
                                     <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $line['name'] }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-50 dark:bg-gray-800/60">
                             <tr>
                                 <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Total Assets</th>
-                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['total_assets'] ?? 0, 2) }}</th>
+                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['total_assets'] ?? 0, 2) }}</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -42,14 +42,14 @@
                             @foreach($r['liabilities'] as $line)
                                 <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
                                     <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $line['name'] }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($line['amount'] ?? 0, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-50 dark:bg-gray-800/60">
                             <tr>
                                 <th class="px-5 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Total Liabilities & Equity</th>
-                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">â‚¦ {{ number_format($r['total_liabilities_and_equity'] ?? 0, 2) }}</th>
+                                <th class="px-5 py-3 text-right font-mono tabular-nums text-gray-900 dark:text-gray-100">₦ {{ number_format($r['total_liabilities_and_equity'] ?? 0, 2) }}</th>
                             </tr>
                         </tfoot>
                     </table>

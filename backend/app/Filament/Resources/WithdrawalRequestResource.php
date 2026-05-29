@@ -228,7 +228,7 @@ class WithdrawalRequestResource extends Resource
                         // Notify member via preferences
                         $user = $record->user?->fresh();
                         if ($user) {
-                            $msg = 'Withdrawal paid: â‚¦'.number_format((float)$record->amount, 2).' to bank '.$record->bank_name.' (Acct '.$record->account_number.'). Ref: '.$record->reference;
+                            $msg = 'Withdrawal paid: ₦'.number_format((float)$record->amount, 2).' to bank '.$record->bank_name.' (Acct '.$record->account_number.'). Ref: '.$record->reference;
                             $user->notifyMember('Withdrawal Paid', $msg, [
                                 'type' => 'withdrawal_paid',
                                 'amount' => (float)$record->amount,
@@ -272,7 +272,7 @@ class WithdrawalRequestResource extends Resource
                         // Notify member via preferences
                         $user = $record->user?->fresh();
                         if ($user) {
-                            $msg = 'Withdrawal declined: â‚¦'.number_format((float)$record->amount, 2).'. Reason: '.$reason.' Ref: '.$record->reference;
+                            $msg = 'Withdrawal declined: ₦'.number_format((float)$record->amount, 2).'. Reason: '.$reason.' Ref: '.$record->reference;
                             $user->notifyMember('Withdrawal Declined', $msg, [
                                 'type' => 'withdrawal_declined',
                                 'amount' => (float)$record->amount,
@@ -349,7 +349,7 @@ class WithdrawalRequestResource extends Resource
                             foreach ($admins as $admin) {
                                 $admin->notifyMember(
                                     'High-Value Withdrawal Approval Required',
-                                    "A withdrawal of â‚¦" . number_format((float)$record->amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
+                                    "A withdrawal of ₦" . number_format((float)$record->amount, 2) . " for {$record->user?->name} requires your multi-sig approval.",
                                     [
                                         'type' => 'high_value_withdrawal_approval',
                                         'withdrawal_id' => $record->id,

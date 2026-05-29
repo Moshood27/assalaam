@@ -24,7 +24,7 @@
           <div>
             <label class="lbl">Amount (optional)</label>
             <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Ã¢â€šÂ¦</span>
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
               <input v-model.number="amount" type="number" min="1" placeholder="0.00" class="inp pl-8" />
             </div>
           </div>
@@ -34,7 +34,7 @@
           </div>
           <div class="flex gap-2 pt-2">
             <button @click="generate" :disabled="loading" class="btn-primary flex-1 py-4">
-              {{ loading ? 'GeneratingÃ¢â‚¬Â¦' : 'Generate QR' }}
+              {{ loading ? 'Generating...' : 'Generate QR' }}
             </button>
             <button v-if="payload" @click="reset" class="btn-muted px-6 py-4">Clear</button>
           </div>
@@ -81,7 +81,7 @@
         <div class="mt-8 space-y-3 pt-6 border-t border-slate-50">
           <div class="flex justify-between items-center"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Merchant</span><span class="font-bold text-slate-800 text-sm text-right">{{ display.merchant?.name }}</span></div>
           <div class="flex justify-between items-center" v-if="display.merchant?.membership_number"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Member ID</span><span class="font-bold text-slate-700 text-sm">{{ display.merchant.membership_number }}</span></div>
-          <div class="flex justify-between items-center" v-if="display.suggested_amount"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Suggested Amount</span><span class="font-black text-blue-700 text-sm">Ã¢â€šÂ¦ {{ formatMoney(display.suggested_amount) }}</span></div>
+          <div class="flex justify-between items-center" v-if="display.suggested_amount"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Suggested Amount</span><span class="font-black text-blue-700 text-sm">₦ {{ formatMoney(display.suggested_amount) }}</span></div>
           <div class="flex justify-between items-center" v-if="display.note"><span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Note</span><span class="font-medium text-slate-600 text-sm text-right italic">"{{ display.note }}"</span></div>
         </div>
       </div>

@@ -54,7 +54,7 @@
               </div>
               <h3 class="text-sm font-black text-slate-800 truncate">{{ p.name }}</h3>
               <div class="flex items-baseline gap-2">
-                <p class="text-base font-black text-slate-900">â‚¦{{ formatMoney(p.selling_price) }}</p>
+                <p class="text-base font-black text-slate-900">₦{{ formatMoney(p.selling_price) }}</p>
                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Markup: {{ p.markup_percentage }}%</p>
               </div>
             </div>
@@ -109,7 +109,7 @@
               </select>
             </div>
             <div>
-              <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Cost Price (â‚¦)</label>
+              <label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Cost Price (₦)</label>
               <input v-model="form.cost_price" type="number" step="0.01" class="w-full mt-1 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-800" placeholder="0.00" />
             </div>
           </div>
@@ -121,7 +121,7 @@
             </div>
             <div class="flex flex-col justify-end pb-1">
               <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest ml-1">Selling Price (Est.)</p>
-              <p class="text-lg font-black text-blue-700 ml-1">â‚¦{{ formatMoney(calculatedSellingPrice) }}</p>
+              <p class="text-lg font-black text-blue-700 ml-1">₦{{ formatMoney(calculatedSellingPrice) }}</p>
             </div>
           </div>
 

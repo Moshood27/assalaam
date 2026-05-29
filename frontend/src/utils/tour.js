@@ -8,8 +8,8 @@ export const startDashboardTour = () => {
     const driverObj = driver({
       showProgress: true,
       animate: true,
-      nextBtnText: 'Next Ã¢â‚¬â€>',
-      prevBtnText: '<Ã¢â‚¬â€ Back',
+      nextBtnText: 'Next —>',
+      prevBtnText: '<— Back',
       doneBtnText: 'Got it!',
       steps: [
         {

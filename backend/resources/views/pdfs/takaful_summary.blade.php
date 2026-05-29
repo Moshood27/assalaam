@@ -23,9 +23,9 @@
 
     <div class="summary-box">
         <strong>Community Insurance Fund Health</strong><br>
-        Total Contributions: â‚¦ {{ number_format($total_contributions, 2) }}<br>
-        Total Claims Paid: â‚¦ {{ number_format($total_claims_paid, 2) }}<br>
-        <strong>Net Pool Balance: â‚¦ {{ number_format($net_pool_balance, 2) }}</strong>
+        Total Contributions: ₦ {{ number_format($total_contributions, 2) }}<br>
+        Total Claims Paid: ₦ {{ number_format($total_claims_paid, 2) }}<br>
+        <strong>Net Pool Balance: ₦ {{ number_format($net_pool_balance, 2) }}</strong>
     </div>
 
     <div style="font-weight: bold; margin-top: 20px;">Recent Pool Activity</div>
@@ -35,7 +35,7 @@
                 <th>Date</th>
                 <th>Member</th>
                 <th>Type</th>
-                <th class="right">Amount (â‚¦)</th>
+                <th class="right">Amount (₦)</th>
             </tr>
         </thead>
         <tbody>

@@ -72,15 +72,15 @@
         </div>
         <div class="card p-4 border-sky-200 bg-sky-50">
           <p class="text-xs uppercase text-sky-700 font-bold">Gross Amount</p>
-          <p class="text-2xl font-extrabold text-sky-900">Ã¢â€šÂ¦ {{ money(summary.amount) }}</p>
+          <p class="text-2xl font-extrabold text-sky-900">₦ {{ money(summary.amount) }}</p>
         </div>
         <div class="card p-4 border-amber-200 bg-amber-50">
           <p class="text-xs uppercase text-amber-700 font-bold">Cost Price</p>
-          <p class="text-2xl font-extrabold text-amber-900">Ã¢â€šÂ¦ {{ money(summary.cost_price) }}</p>
+          <p class="text-2xl font-extrabold text-amber-900">₦ {{ money(summary.cost_price) }}</p>
         </div>
         <div class="card p-4 border-indigo-200 bg-indigo-50">
           <p class="text-xs uppercase text-indigo-700 font-bold">Profit</p>
-          <p class="text-2xl font-extrabold text-indigo-900">Ã¢â€šÂ¦ {{ money(summary.profit) }}</p>
+          <p class="text-2xl font-extrabold text-indigo-900">₦ {{ money(summary.profit) }}</p>
         </div>
       </div>
 
@@ -107,17 +107,17 @@
               <td class="td capitalize">{{ tx.type }}</td>
               <td class="td uppercase">{{ tx.network }}</td>
               <td class="td">{{ tx.phone_number }}</td>
-              <td class="td text-right">Ã¢â€šÂ¦ {{ money(tx.amount) }}</td>
-              <td class="td text-right">Ã¢â€šÂ¦ {{ money(tx.cost_price) }}</td>
-              <td class="td text-right font-bold" :class="tx.profit >= 0 ? 'text-blue-700' : 'text-rose-700'">Ã¢â€šÂ¦ {{ money(tx.profit) }}</td>
+              <td class="td text-right">₦ {{ money(tx.amount) }}</td>
+              <td class="td text-right">₦ {{ money(tx.cost_price) }}</td>
+              <td class="td text-right font-bold" :class="tx.profit >= 0 ? 'text-blue-700' : 'text-rose-700'">₦ {{ money(tx.profit) }}</td>
               <td class="td">
                 <span :class="badgeClass(tx.status)" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase">{{ tx.status }}</span>
               </td>
               <td class="td">
                 <div class="leading-tight">
-                  <p class="font-semibold text-slate-800">{{ tx.user?.name || 'Ã¢â‚¬â€' }}</p>
+                  <p class="font-semibold text-slate-800">{{ tx.user?.name || '—' }}</p>
                   <p class="text-[10px] text-slate-500">{{ tx.user?.email }}</p>
-                  <p class="text-[10px] text-slate-400">ID: {{ tx.user?.membership_number || 'Ã¢â‚¬â€' }}</p>
+                  <p class="text-[10px] text-slate-400">ID: {{ tx.user?.membership_number || '—' }}</p>
                 </div>
               </td>
               <td class="td font-mono text-[11px] text-slate-600">{{ tx.reference }}</td>

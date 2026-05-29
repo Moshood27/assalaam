@@ -21,10 +21,10 @@
           </div>
           <div class="flex-1 min-w-0">
             <h3 class="font-bold text-slate-800 text-sm truncate">{{ c.project?.name || 'Project Deleted' }}</h3>
-            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{{ formatDate(c.created_at) }} Ã¢â‚¬Â¢ {{ c.reference }}</p>
+            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{{ formatDate(c.created_at) }} • {{ c.reference }}</p>
           </div>
           <div class="text-right">
-            <p class="text-sm font-black text-blue-600">Ã¢â€šÂ¦ {{ formatMoney(c.amount) }}</p>
+            <p class="text-sm font-black text-blue-600">₦ {{ formatMoney(c.amount) }}</p>
             <p v-if="c.is_anonymous" class="text-[9px] font-bold text-slate-300 uppercase italic">Anonymous</p>
           </div>
         </div>

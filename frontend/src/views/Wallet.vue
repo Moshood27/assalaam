@@ -19,10 +19,10 @@
             </svg>
           </button>
         </div>
-        <h2 class="text-4xl font-bold mt-1 relative z-10">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.balance) }}</h2>
+        <h2 class="text-4xl font-bold mt-1 relative z-10">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.balance) }}</h2>
         <div class="mt-2 text-blue-100 text-xs flex justify-between gap-2 relative z-10">
           <span>Available for Withdrawal</span>
-          <span class="font-bold">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.available_for_withdrawal || 0) }}</span>
+          <span class="font-bold">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet.available_for_withdrawal || 0) }}</span>
         </div>
         <div class="mt-6 flex gap-2 flex-wrap relative z-10">
           <button @click="goAllocate" class="bg-white/20 hover:bg-white/30 px-4 py-2.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all border border-white/10">Allocate Funds</button>
@@ -110,7 +110,7 @@
             <h3 class="font-bold text-slate-800">Bank Transfer Account</h3>
             <button v-if="!wallet.virtual_account?.account_number" @click="assignVirtualAccount" :disabled="assigning || (!!bvn && !bvnValid)"
                     class="text-[10px] font-black uppercase bg-blue-700 text-white px-3 py-2 rounded-xl disabled:opacity-50">
-              {{ assigning ? 'CreatingÃ¢â‚¬Â¦' : 'Generate' }}
+              {{ assigning ? 'Creating...' : 'Generate' }}
             </button>
           </div>
           
@@ -137,7 +137,7 @@
               </div>
             </div>
             <p class="text-[11px] text-slate-500 text-center px-4">Transfer funds to this account to top up your wallet instantly.</p>
-              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max Ã¢â€šÂ¦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
             </div>
 
             <div v-else class="space-y-3">
@@ -165,7 +165,7 @@
               <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt)</h3>
               <button v-if="!wallet.flw_virtual_account?.account_number" @click="assignFlutterwaveDva" :disabled="assigningFlw || !flwBvnValid"
                       class="text-[10px] font-black uppercase bg-orange-600 text-white px-3 py-2 rounded-xl disabled:opacity-50">
-                {{ assigningFlw ? 'CreatingÃ¢â‚¬Â¦' : 'Generate' }}
+                {{ assigningFlw ? 'Creating...' : 'Generate' }}
               </button>
             </div>
 
@@ -191,8 +191,8 @@
                   </button>
                 </div>
               </div>
-              <p class="text-[11px] text-slate-500 text-center px-4">Alternative account Ã¢â‚¬â€ transfer funds here to top up your wallet.</p>
-              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max Ã¢â€šÂ¦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+              <p class="text-[11px] text-slate-500 text-center px-4">Alternative account — transfer funds here to top up your wallet.</p>
+              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
             </div>
 
             <div v-else class="space-y-3">
@@ -220,7 +220,7 @@
                 <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt 2)</h3>
                 <button v-if="!wallet.monnify_virtual_account?.account_number" @click="assignMonnifyDva" :disabled="assigningMonnify"
                         class="text-[10px] font-black uppercase bg-sky-600 text-white px-3 py-2 rounded-xl disabled:opacity-50">
-                  {{ assigningMonnify ? 'CreatingÃ¢â‚¬Â¦' : 'Generate' }}
+                  {{ assigningMonnify ? 'Creating...' : 'Generate' }}
                 </button>
               </div>
 
@@ -246,8 +246,8 @@
                     </button>
                   </div>
                 </div>
-                <p class="text-[11px] text-slate-500 text-center px-4">Monnify account Ã¢â‚¬â€ transfer funds here to top up your wallet.</p>
-                <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max Ã¢â€šÂ¦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+                <p class="text-[11px] text-slate-500 text-center px-4">Monnify account — transfer funds here to top up your wallet.</p>
+                <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
               </div>
 
               <div v-else class="space-y-3">
@@ -261,7 +261,7 @@
               <h3 class="font-bold text-slate-800">Bank Transfer Account (Alt 3)</h3>
               <button v-if="!wallet.opay_virtual_account?.account_number" @click="assignOpayDva" :disabled="assigningOpay"
                       class="text-[10px] font-black uppercase bg-indigo-600 text-white px-3 py-2 rounded-xl disabled:opacity-50">
-                {{ assigningOpay ? 'CreatingÃ¢â‚¬Â¦' : 'Generate' }}
+                {{ assigningOpay ? 'Creating...' : 'Generate' }}
               </button>
             </div>
 
@@ -287,8 +287,8 @@
                   </button>
                 </div>
               </div>
-              <p class="text-[11px] text-slate-500 text-center px-4">Opay account Ã¢â‚¬â€ transfer funds here to top up your wallet.</p>
-              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max Ã¢â€šÂ¦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
+              <p class="text-[11px] text-slate-500 text-center px-4">Opay account — transfer funds here to top up your wallet.</p>
+              <p class="text-[10px] text-rose-500 font-bold text-center mt-2">Note: A maintenance charge of {{ wallet?.maintenance_charge_config?.percentage || 1 }}% (max ₦{{ wallet?.maintenance_charge_config?.max_amount || 500 }}) applies.</p>
             </div>
 
             <div v-else class="space-y-3">
@@ -302,15 +302,15 @@
           <div class="relative z-10 flex justify-between items-center">
             <div>
               <h3 class="font-bold text-rose-900">Administrative Charges</h3>
-              <p class="text-2xl font-black text-rose-700 mt-1">Ã¢â€šÂ¦ {{ formatMoney(wallet.admin_charge_balance) }}</p>
+              <p class="text-2xl font-black text-rose-700 mt-1">₦ {{ formatMoney(wallet.admin_charge_balance) }}</p>
               <p class="text-[10px] text-rose-500 font-bold uppercase mt-1 tracking-wider">Accumulated Balance</p>
             </div>
             <button @click="payAdminCharge" :disabled="payingAdminCharge" 
                     class="bg-rose-600 text-white px-5 py-3 rounded-2xl text-xs font-black uppercase shadow-lg active:scale-95 disabled:opacity-50 transition-all">
-              {{ payingAdminCharge ? 'PayingÃ¢â‚¬Â¦' : 'Pay Now' }}
+              {{ payingAdminCharge ? 'Paying...' : 'Pay Now' }}
             </button>
           </div>
-          <p class="text-[11px] text-rose-600 mt-3 leading-relaxed opacity-80 italic">A monthly administrative charge of Ã¢â€šÂ¦300 applies. You can enable auto-deduction in settings.</p>
+          <p class="text-[11px] text-rose-600 mt-3 leading-relaxed opacity-80 italic">A monthly administrative charge of ₦300 applies. You can enable auto-deduction in settings.</p>
         </div>
       </div>
 
@@ -332,7 +332,7 @@
 
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount to Fund</label>
               <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600 text-slate-400 font-bold">Ã¢â€šÂ¦</div>
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600 text-slate-400 font-bold">₦</div>
                 <input v-model.number="topupAmount" type="number" min="1" placeholder="0.00"
                        class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
               </div>
@@ -341,17 +341,17 @@
               <div v-if="topupAmount > 0 && wallet?.maintenance_charge_config" class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
                 <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                   <span class="text-slate-500">System Maintenance Charge</span>
-                  <span class="text-rose-600">Ã¢â€šÂ¦ {{ formatMoney(calculatedCharge) }}</span>
+                  <span class="text-rose-600">₦ {{ formatMoney(calculatedCharge) }}</span>
                 </div>
                 <div class="flex justify-between text-xs font-black uppercase tracking-wider pt-2 border-t border-slate-200">
                   <span class="text-slate-800">Net Credit to Wallet</span>
-                  <span class="text-blue-700 font-black">Ã¢â€šÂ¦ {{ formatMoney(Math.max(0, topupAmount - calculatedCharge)) }}</span>
+                  <span class="text-blue-700 font-black">₦ {{ formatMoney(Math.max(0, topupAmount - calculatedCharge)) }}</span>
                 </div>
               </div>
             </div>
             <button @click="initTopup" :disabled="loading || !topupAmount"
                     class="w-full bg-blue-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-blue-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
-              {{ loading ? 'ProcessingÃ¢â‚¬Â¦' : 'Proceed to Payment' }}
+              {{ loading ? 'Processing...' : 'Proceed to Payment' }}
             </button>
           </div>
           <p class="mt-3 text-[10px] text-slate-500 text-center">Powered by Paystack. Securely top up using your debit card.</p>
@@ -402,7 +402,7 @@
                 <div class="min-w-0">
                   <p class="text-[10px] font-black text-blue-800 uppercase tracking-widest leading-none mb-1">Recipient Found</p>
                   <p class="text-sm font-bold text-slate-800 truncate">{{ recipient.name }}</p>
-                  <p class="text-[10px] text-blue-600 font-medium">{{ recipient.membership_number }} Ã¢â‚¬Â¢ {{ recipient.branch_name }}</p>
+                  <p class="text-[10px] text-blue-600 font-medium">{{ recipient.membership_number }} • {{ recipient.branch_name }}</p>
                 </div>
               </div>
 
@@ -420,7 +420,7 @@
             <div>
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
               <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">Ã¢â€šÂ¦</div>
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
                 <input v-model.number="transferAmount" type="number" min="1" placeholder="0.00"
                        class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-blue-500 transition-all" />
               </div>
@@ -435,7 +435,7 @@
 
             <button @click="startTransfer" :disabled="loading || !canSend"
                     class="w-full bg-blue-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-blue-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
-              {{ loading ? 'TransferringÃ¢â‚¬Â¦' : 'Send Funds' }}
+              {{ loading ? 'Transferring...' : 'Send Funds' }}
             </button>
             <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN or Biometrics required.</p>
           </div>
@@ -451,14 +451,14 @@
             <div>
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</label>
               <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">Ã¢â€šÂ¦</div>
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 font-bold">₦</div>
                 <input v-model.number="withdrawAmount" type="number" min="1" :max="Number(wallet?.available_for_withdrawal || 0)"
                        class="w-full bg-slate-50 pl-11 p-4 rounded-2xl border border-slate-100 text-sm outline-none focus:border-blue-500 transition-all"
                        placeholder="0.00" />
               </div>
               <div class="mt-2 flex justify-between items-center px-1">
                 <span class="text-[10px] text-slate-400 font-bold uppercase">Available</span>
-                <span class="text-[10px] text-blue-700 font-black">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.available_for_withdrawal || 0) }}</span>
+                <span class="text-[10px] text-blue-700 font-black">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.available_for_withdrawal || 0) }}</span>
               </div>
             </div>
             <div>
@@ -469,7 +469,7 @@
             </div>
             <button @click="startWithdraw" :disabled="loading || !canWithdraw"
                     class="w-full bg-blue-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-blue-700/20 disabled:opacity-50 transition-all active:scale-[0.98]">
-              {{ loading ? 'SubmittingÃ¢â‚¬Â¦' : 'Request Cashout' }}
+              {{ loading ? 'Submitting...' : 'Request Cashout' }}
             </button>
             <p class="text-[10px] text-slate-500 text-center">Confirmation with Transaction PIN required.</p>
           </div>
@@ -482,19 +482,19 @@
           <div class="space-y-3 relative z-10">
             <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
               <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Withdrawable)</span>
-              <span class="font-bold text-slate-800 text-sm">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_withdrawable || 0) }}</span>
+              <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_withdrawable || 0) }}</span>
             </div>
             <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
               <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Credits (Restricted)</span>
-              <span class="font-bold text-slate-800 text-sm">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_restricted || 0) }}</span>
+              <span class="font-bold text-slate-800 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.credits_restricted || 0) }}</span>
             </div>
             <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 border border-slate-100">
               <span class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Total Debits</span>
-              <span class="font-bold text-rose-600 text-sm">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.total_debits || 0) }}</span>
+              <span class="font-bold text-rose-600 text-sm">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.total_debits || 0) }}</span>
             </div>
             <div class="flex justify-between items-center p-4 rounded-xl bg-blue-50 border border-blue-100 mt-2">
               <span class="text-blue-800 text-[10px] font-black uppercase tracking-wider">Net Withdrawable</span>
-              <span class="font-black text-blue-700 text-lg">Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.remaining_withdrawable || 0) }}</span>
+              <span class="font-black text-blue-700 text-lg">₦ {{ hideBalances ? '***,***.**' : formatMoney(wallet?.breakdown?.remaining_withdrawable || 0) }}</span>
             </div>
           </div>
           <p class="text-[10px] text-slate-400 mt-4 leading-relaxed italic">Restricted funds (e.g. loan disbursements) can be spent on utilities/store but cannot be withdrawn to bank unless unlocked.</p>
@@ -524,7 +524,7 @@
           <div v-for="wr in filteredWithdrawals" :key="wr.id" class="group border border-slate-100 rounded-2xl p-4 active:bg-slate-50 transition-colors">
             <div class="flex items-center justify-between gap-3 mb-2">
               <div class="min-w-0">
-                <p class="text-base font-black text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(wr.amount) }}</p>
+                <p class="text-base font-black text-slate-800">₦ {{ formatMoney(wr.amount) }}</p>
                 <p class="text-[10px] uppercase font-mono text-slate-400 tracking-tighter">REF: {{ wr.reference }}</p>
               </div>
               <div class="shrink-0 flex items-center gap-2">
@@ -533,7 +533,7 @@
               </div>
             </div>
             <div class="flex items-center justify-between mt-1 pt-2 border-t border-slate-50">
-              <p class="text-[10px] text-slate-400 font-medium">{{ new Date(wr.created_at).toLocaleDateString() }} Ã¢â‚¬Â¢ {{ new Date(wr.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</p>
+              <p class="text-[10px] text-slate-400 font-medium">{{ new Date(wr.created_at).toLocaleDateString() }} • {{ new Date(wr.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</p>
               <p v-if="wr.bank?.account_number || wr.account_number" class="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[140px]">
                 {{ wr.bank?.bank_name || wr.bank_name }}
               </p>
@@ -580,17 +580,17 @@
               <div class="min-w-0">
                 <p class="text-sm font-bold text-slate-800 truncate leading-none mb-1">{{ titleFor(tx) }}</p>
                 <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter leading-relaxed">
-                  {{ new Date(tx.created_at).toLocaleDateString() }} Ã¢â‚¬Â¢ {{ tx.reference.slice(0, 12) }}...
+                  {{ new Date(tx.created_at).toLocaleDateString() }} • {{ tx.reference.slice(0, 12) }}...
                 </p>
                 <div v-if="tx.meta?.maintenance_charge" class="mt-1 flex gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-tighter bg-slate-50 px-2 py-1 rounded-lg w-fit">
-                  <span>Gross: Ã¢â€šÂ¦{{ formatMoney(tx.meta.gross_amount) }}</span>
-                  <span class="text-rose-600">Fee: Ã¢â€šÂ¦{{ formatMoney(tx.meta.maintenance_charge) }}</span>
+                  <span>Gross: ₦{{ formatMoney(tx.meta.gross_amount) }}</span>
+                  <span class="text-rose-600">Fee: ₦{{ formatMoney(tx.meta.maintenance_charge) }}</span>
                 </div>
               </div>
             </div>
             <div class="text-right shrink-0">
               <p class="font-black text-sm" :class="tx.type === 'credit' ? 'text-blue-700' : 'text-slate-800'">
-                {{ tx.type === 'credit' ? '+' : '-' }}Ã¢â€šÂ¦{{ formatMoney(tx.amount) }}
+                {{ tx.type === 'credit' ? '+' : '-' }}₦{{ formatMoney(tx.amount) }}
               </p>
               <a :href="getReceiptDownloadUrl(tx)" target="_blank" class="text-blue-700 text-[9px] font-black uppercase tracking-widest hover:underline">Receipt</a>
             </div>
@@ -698,7 +698,7 @@ const payAdminCharge = async () => {
     return
   }
   
-  if (!confirm(`Are you sure you want to pay Ã¢â€šÂ¦${formatMoney(wallet.value.admin_charge_balance)} for outstanding administrative charges?`)) return
+  if (!confirm(`Are you sure you want to pay ₦${formatMoney(wallet.value.admin_charge_balance)} for outstanding administrative charges?`)) return
 
   payingAdminCharge.value = true
   try {
@@ -970,7 +970,7 @@ const startTransfer = async () => {
     if (bioAvailable) {
       const ok = await verifyBiometricIdentity({
         reason: 'Authorize transfer',
-        description: `Send Ã¢â€šÂ¦ ${Number(transferAmount.value).toLocaleString()} to ${toType.value === 'phone' ? 'phone' : 'member'} ${toValue.value}`,
+        description: `Send ₦ ${Number(transferAmount.value).toLocaleString()} to ${toType.value === 'phone' ? 'phone' : 'member'} ${toValue.value}`,
       })
       if (!ok) {
         showNotice('Authentication required', 'Biometric verification was cancelled or failed. Unable to send transfer.', 'warning')
@@ -1004,7 +1004,7 @@ const startWithdraw = async () => {
     if (bioAvailable) {
       const ok = await verifyBiometricIdentity({
         reason: 'Authorize withdrawal',
-        description: `Withdraw Ã¢â€šÂ¦ ${amt.toLocaleString()} to your saved bank account`,
+        description: `Withdraw ₦ ${amt.toLocaleString()} to your saved bank account`,
       })
       if (!ok) {
         showNotice('Authentication required', 'Biometric verification was cancelled or failed. Unable to request withdrawal.', 'warning')

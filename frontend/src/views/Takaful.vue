@@ -11,7 +11,7 @@
           </div>
           <div class="text-right">
             <p class="text-xs text-slate-500">Monthly Amount</p>
-            <p class="text-sm font-bold text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(summary.monthly_amount) }}</p>
+            <p class="text-sm font-bold text-slate-800">₦ {{ formatMoney(summary.monthly_amount) }}</p>
           </div>
         </div>
         <div class="mt-3 flex items-center gap-2 flex-wrap">
@@ -26,7 +26,7 @@
             </span>
             <button @click="payNow" :disabled="payLoading" class="btn-primary text-xs">
               <span v-if="!payLoading">Pay now</span>
-              <span v-else>ProcessingÃ¢â‚¬Â¦</span>
+              <span v-else>Processing...</span>
             </button>
           </template>
         </div>
@@ -35,11 +35,11 @@
       <div class="grid grid-cols-2 gap-3">
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <p class="text-xs text-slate-500">My Total Contributions</p>
-          <p class="text-xl font-extrabold text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(summary.my_total_contributions) }}</p>
+          <p class="text-xl font-extrabold text-slate-800">₦ {{ formatMoney(summary.my_total_contributions) }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <p class="text-xs text-slate-500">Pool Balance</p>
-          <p class="text-xl font-extrabold text-slate-800">Ã¢â€šÂ¦ {{ formatMoney(summary.pool_balance) }}</p>
+          <p class="text-xl font-extrabold text-slate-800">₦ {{ formatMoney(summary.pool_balance) }}</p>
         </div>
       </div>
 
@@ -52,17 +52,17 @@
           <div v-for="row in rows" :key="row.id" class="p-4 flex items-center justify-between">
             <div>
               <p class="text-sm font-bold text-slate-800">{{ row.period }}</p>
-              <p class="text-xs text-slate-500">{{ formatDate(row.created_at) }} Ã¢â‚¬Â¢ Ref: {{ row.reference || 'Ã¢â‚¬â€' }}</p>
+              <p class="text-xs text-slate-500">{{ formatDate(row.created_at) }} • Ref: {{ row.reference || '—' }}</p>
             </div>
             <div class="text-right">
               <p class="text-sm font-bold" :class="row.status==='success' ? 'text-blue-700' : row.status==='pending' ? 'text-amber-700' : 'text-rose-700'">
-                Ã¢â€šÂ¦ {{ formatMoney(row.amount) }}
+                ₦ {{ formatMoney(row.amount) }}
               </p>
               <p class="text-[11px] uppercase tracking-wide" :class="row.status==='success' ? 'text-blue-600' : row.status==='pending' ? 'text-amber-600' : 'text-rose-600'">{{ row.status }}</p>
             </div>
           </div>
           <div v-if="!loading && rows.length === 0" class="p-8 text-center text-slate-500 text-sm">No contributions yet.</div>
-          <div v-if="loading" class="p-8 text-center text-slate-500 text-sm">LoadingÃ¢â‚¬Â¦</div>
+          <div v-if="loading" class="p-8 text-center text-slate-500 text-sm">Loading...</div>
         </div>
         <div class="p-4 flex items-center justify-between">
           <button class="px-3 py-2 rounded-lg bg-slate-100 disabled:opacity-50" :disabled="page<=0" @click="prev">Previous</button>

@@ -49,9 +49,9 @@
                     <tr>
                         <th style="width:22%;">Loan ID</th>
                         <th style="width:20%;">Status</th>
-                        <th style="width:20%;">Principal (â‚¦)</th>
-                        <th style="width:18%;">Paid (â‚¦)</th>
-                        <th style="width:20%;">Outstanding (â‚¦)</th>
+                        <th style="width:20%;">Principal (₦)</th>
+                        <th style="width:18%;">Paid (₦)</th>
+                        <th style="width:20%;">Outstanding (₦)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,7 +66,7 @@
                 @endforeach
                     <tr class="total">
                         <td colspan="4">Total Outstanding</td>
-                        <td>â‚¦{{ number_format($totalOutstanding, 2) }}</td>
+                        <td>₦{{ number_format($totalOutstanding, 2) }}</td>
                     </tr>
                 </tbody>
             </table>

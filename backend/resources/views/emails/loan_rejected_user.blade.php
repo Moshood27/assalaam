@@ -25,7 +25,7 @@
 <div class="wrapper">
     <div class="container">
         <div class="header">
-            <p class="brand">{{ config('app.name') }} â€¢ Loan Request Rejected</p>
+            <p class="brand">{{ config('app.name') }} • Loan Request Rejected</p>
         </div>
         <div class="content">
             <p>AssalÄmu â€˜alaykum {{ $member?->name ?? 'Member' }},</p>
@@ -37,11 +37,11 @@
             <table class="table" role="presentation">
                 <tr>
                     <td class="label">Principal</td>
-                    <td class="value">â‚¦{{ number_format((float) $loan->principal_amount, 2) }}</td>
+                    <td class="value">₦{{ number_format((float) $loan->principal_amount, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="label">Installments</td>
-                    <td class="value">{{ $loan->total_installments }} Ã— â‚¦{{ number_format((float) $loan->per_installment, 2) }} ({{ ucfirst((string) $loan->interval) }})</td>
+                    <td class="value">{{ $loan->total_installments }} Ã— ₦{{ number_format((float) $loan->per_installment, 2) }} ({{ ucfirst((string) $loan->interval) }})</td>
                 </tr>
             </table>
 

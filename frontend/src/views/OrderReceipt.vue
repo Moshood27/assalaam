@@ -25,7 +25,7 @@
           </div>
           <div class="text-left sm:text-right">
             <div class="text-xs text-slate-500">Total Amount</div>
-            <div class="text-lg font-extrabold text-blue-700">Ã¢â€šÂ¦ {{ money(order.total_amount) }}</div>
+            <div class="text-lg font-extrabold text-blue-700">₦ {{ money(order.total_amount) }}</div>
           </div>
         </div>
 
@@ -35,11 +35,11 @@
               <div class="font-bold text-slate-800 truncate">{{ it.product_name }}</div>
               <div class="text-[10px] text-slate-500">
                 <span v-if="it.vendor" class="font-bold text-blue-700">Vendor: {{ it.vendor.name }}</span>
-                <span v-if="it.vendor" class="mx-1">Ã¢â‚¬Â¢</span>
-                <span>Ã¢â€šÂ¦ {{ money(it.unit_price) }} x {{ it.quantity }}</span>
+                <span v-if="it.vendor" class="mx-1">•</span>
+                <span>₦ {{ money(it.unit_price) }} x {{ it.quantity }}</span>
               </div>
             </div>
-            <div class="text-sm font-bold text-slate-800">Ã¢â€šÂ¦ {{ money(it.line_total) }}</div>
+            <div class="text-sm font-bold text-slate-800">₦ {{ money(it.line_total) }}</div>
           </li>
         </ul>
 
@@ -64,10 +64,10 @@
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div>Tenor: <span class="font-bold">{{ financing.months }} months</span></div>
             <div>Profit Rate: <span class="font-bold">{{ financingRate }}</span></div>
-            <div v-if="monthlyDue !== null">Monthly (min): <span class="font-bold">Ã¢â€šÂ¦ {{ money(monthlyDue) }}</span></div>
+            <div v-if="monthlyDue !== null">Monthly (min): <span class="font-bold">₦ {{ money(monthlyDue) }}</span></div>
             <div v-if="financingNextDue">Next Due: <span class="font-bold">{{ financingNextDue }}</span></div>
-            <div>Total Paid: <span class="font-bold text-blue-700">Ã¢â€šÂ¦ {{ money(totalPaid) }}</span></div>
-            <div>Remaining: <span class="font-bold text-rose-700">Ã¢â€šÂ¦ {{ money(remaining) }}</span></div>
+            <div>Total Paid: <span class="font-bold text-blue-700">₦ {{ money(totalPaid) }}</span></div>
+            <div>Remaining: <span class="font-bold text-rose-700">₦ {{ money(remaining) }}</span></div>
           </div>
 
           <div class="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
@@ -75,11 +75,11 @@
             <div class="flex items-center gap-2">
               <input v-model.number="payAmount" :min="monthlyDue || 0" :max="remaining || undefined" step="0.01" type="number" inputmode="decimal" class="input !py-1 !px-2 w-40" placeholder="e.g. 10000"/>
               <button class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold disabled:opacity-50" :disabled="paying || !canPayInstallment || !validPayAmount" @click="openPin()">
-                <span v-if="paying" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> ProcessingÃ¢â‚¬Â¦</span>
+                <span v-if="paying" class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Processing...</span>
                 <span v-else>Pay Installment</span>
               </button>
             </div>
-            <div class="text-[11px] text-slate-500">Min: Ã¢â€šÂ¦ {{ money(monthlyDue || 0) }} Ã¢â‚¬Â¢ Max: Ã¢â€šÂ¦ {{ money(remaining || 0) }}</div>
+            <div class="text-[11px] text-slate-500">Min: ₦ {{ money(monthlyDue || 0) }} • Max: ₦ {{ money(remaining || 0) }}</div>
           </div>
 
           <div v-if="payError" class="mt-2 text-rose-700 bg-rose-50 border border-rose-200 p-2 rounded">{{ payError }}</div>

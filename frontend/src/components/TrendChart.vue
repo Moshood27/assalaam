@@ -19,7 +19,7 @@ import { computed, onMounted, ref } from 'vue'
 const props = defineProps({
   series: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
-  currency: { type: String, default: 'Ã¢â€šÂ¦' },
+  currency: { type: String, default: '₦' },
 })
 
 const isReady = ref(false)

@@ -50,7 +50,7 @@
                   </div>
                 </div>
                 <div class="text-right">
-                  <div class="text-lg font-black text-slate-900">Ã¢â€šÂ¦ {{ money(o.total_amount) }}</div>
+                  <div class="text-lg font-black text-slate-900">₦ {{ money(o.total_amount) }}</div>
                   <div class="flex items-center justify-end gap-2 mt-1">
                      <span v-if="o.dispute" class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 text-[8px] font-black uppercase tracking-widest border border-rose-200">Tahkim / Dispute</span>
                      <div :class="statusClass(o.status)" class="px-2 py-0.5 rounded-md bg-white border border-slate-100 shadow-sm text-[8px] font-black uppercase tracking-widest">

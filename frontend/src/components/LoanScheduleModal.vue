@@ -13,7 +13,7 @@
             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1" v-if="loan">{{ loan.qard_id_string }}</p>
           </div>
           <button @click="close" class="w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
-            Ã¢Å“â€¢
+            Ã¢Å“•
           </button>
         </div>
 
@@ -25,7 +25,7 @@
           </div>
 
           <div v-else-if="error" class="p-8 text-center bg-rose-50 rounded-3xl border border-rose-100">
-            <span class="text-3xl mb-3 block">Ã¢Å¡Â Ã¯Â¸Â</span>
+            <span class="text-3xl mb-3 block">⚠️</span>
             <p class="text-sm font-bold text-rose-800">{{ error }}</p>
             <button @click="fetchSchedule" class="mt-4 text-xs font-black text-rose-700 underline">Try Again</button>
           </div>
@@ -35,23 +35,23 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Principal</p>
-                <p class="text-sm font-black text-slate-800">Ã¢â€šÂ¦ {{ n(scheduleData.loan.principal_amount) }}</p>
+                <p class="text-sm font-black text-slate-800">₦ {{ n(scheduleData.loan.principal_amount) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Paid</p>
-                <p class="text-sm font-black text-blue-600">Ã¢â€šÂ¦ {{ n(scheduleData.paid_total) }}</p>
+                <p class="text-sm font-black text-blue-600">₦ {{ n(scheduleData.paid_total) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Expected to Pay</p>
-                <p class="text-sm font-black text-blue-600">Ã¢â€šÂ¦ {{ n(scheduleData.loan.expected_amount_to_pay) }}</p>
+                <p class="text-sm font-black text-blue-600">₦ {{ n(scheduleData.loan.expected_amount_to_pay) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Overdue</p>
-                <p class="text-sm font-black text-rose-600">Ã¢â€šÂ¦ {{ n(scheduleData.loan.overdue_amount) }}</p>
+                <p class="text-sm font-black text-rose-600">₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Balance</p>
-                <p class="text-sm font-black text-slate-700">Ã¢â€šÂ¦ {{ n(scheduleData.remaining_principal) }}</p>
+                <p class="text-sm font-black text-slate-700">₦ {{ n(scheduleData.remaining_principal) }}</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Progress</p>
@@ -74,7 +74,7 @@
                   <tr v-for="item in scheduleData.schedule" :key="item.sequence" class="hover:bg-slate-50 transition-colors">
                     <td class="p-4 text-xs font-bold text-slate-500">{{ item.sequence }}</td>
                     <td class="p-4 text-xs font-black text-slate-800">{{ formatDate(item.due_date) }}</td>
-                    <td class="p-4 text-xs font-black text-slate-800 text-right">Ã¢â€šÂ¦ {{ n(item.installment_amount) }}</td>
+                    <td class="p-4 text-xs font-black text-slate-800 text-right">₦ {{ n(item.installment_amount) }}</td>
                     <td class="p-4 text-center">
                       <span :class="getStatusBadgeClass(item.status)" class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider">
                         {{ item.status }}
@@ -87,12 +87,12 @@
 
             <div v-if="scheduleData.next_due" class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-between">
                <div class="flex items-center gap-3">
-                 <span class="text-xl">Ã°Å¸â€â€</span>
+                 <span class="text-xl">🔔</span>
                  <div>
                    <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Next Due Installment</p>
-                   <p class="text-sm font-black text-indigo-900">{{ formatDate(scheduleData.next_due.due_date) }} Ã¢â‚¬Â¢ Ã¢â€šÂ¦ {{ n(scheduleData.next_due.amount_due) }}</p>
-                   <p v-if="scheduleData.loan.expected_amount_to_pay > 0" class="text-[10px] text-blue-600 font-bold uppercase mt-1">Expected to Pay (To Date): Ã¢â€šÂ¦ {{ n(scheduleData.loan.expected_amount_to_pay) }}</p>
-                   <p v-if="scheduleData.loan.overdue_amount > 0" class="text-[10px] text-rose-600 font-bold uppercase mt-1">Overdue Amount: Ã¢â€šÂ¦ {{ n(scheduleData.loan.overdue_amount) }}</p>
+                   <p class="text-sm font-black text-indigo-900">{{ formatDate(scheduleData.next_due.due_date) }} • ₦ {{ n(scheduleData.next_due.amount_due) }}</p>
+                   <p v-if="scheduleData.loan.expected_amount_to_pay > 0" class="text-[10px] text-blue-600 font-bold uppercase mt-1">Expected to Pay (To Date): ₦ {{ n(scheduleData.loan.expected_amount_to_pay) }}</p>
+                   <p v-if="scheduleData.loan.overdue_amount > 0" class="text-[10px] text-rose-600 font-bold uppercase mt-1">Overdue Amount: ₦ {{ n(scheduleData.loan.overdue_amount) }}</p>
                  </div>
                </div>
                <span class="text-[10px] font-black text-indigo-600 bg-white px-3 py-1 rounded-full border border-indigo-200 uppercase">Item #{{ scheduleData.next_due.sequence }}</span>

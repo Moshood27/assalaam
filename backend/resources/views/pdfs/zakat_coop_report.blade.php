@@ -23,19 +23,19 @@
 
     <div class="summary-box">
         <strong>Zakat Parameters</strong><br>
-        Current Gold Price: â‚¦ {{ number_format($gold_price, 2) }} / gram<br>
-        Nisab Threshold: â‚¦ {{ number_format($nisab_ngn, 2) }}<br>
+        Current Gold Price: ₦ {{ number_format($gold_price, 2) }} / gram<br>
+        Nisab Threshold: ₦ {{ number_format($nisab_ngn, 2) }}<br>
         Zakat Rate: {{ $rate }}<br>
         <br>
         <strong>Cooperative's Zakat Liability (Assets)</strong><br>
-        Cash & Bank: â‚¦ {{ number_format($coop_cash_balance, 2) }}<br>
-        Murabahah Receivables: â‚¦ {{ number_format($coop_murabahah_receivables, 2) }}<br>
-        Gold Inventory Value: â‚¦ {{ number_format($coop_gold_inventory, 2) }}<br>
-        Total Zakatable Assets: â‚¦ {{ number_format($coop_zakatable_total, 2) }}<br>
-        <strong>Coop Zakat Due: â‚¦ {{ number_format($coop_zakat_due, 2) }}</strong>
+        Cash & Bank: ₦ {{ number_format($coop_cash_balance, 2) }}<br>
+        Murabahah Receivables: ₦ {{ number_format($coop_murabahah_receivables, 2) }}<br>
+        Gold Inventory Value: ₦ {{ number_format($coop_gold_inventory, 2) }}<br>
+        Total Zakatable Assets: ₦ {{ number_format($coop_zakatable_total, 2) }}<br>
+        <strong>Coop Zakat Due: ₦ {{ number_format($coop_zakat_due, 2) }}</strong>
         <br><br>
         <strong>Collection Summary (Amanah)</strong><br>
-        Total Member Zakat Collected: â‚¦ {{ number_format($total_collected_zakat, 2) }}
+        Total Member Zakat Collected: ₦ {{ number_format($total_collected_zakat, 2) }}
     </div>
 
     <div style="font-weight: bold; margin-top: 20px;">Member Zakat Summary</div>
@@ -44,8 +44,8 @@
             <tr>
                 <th>Member Name</th>
                 <th>Membership ID</th>
-                <th class="right">Base Wealth (â‚¦)</th>
-                <th class="right">Zakat Due (â‚¦)</th>
+                <th class="right">Base Wealth (₦)</th>
+                <th class="right">Zakat Due (₦)</th>
             </tr>
         </thead>
         <tbody>
@@ -61,7 +61,7 @@
         <tfoot>
             <tr style="font-weight: bold; background-color: #eee;">
                 <td colspan="3">Total Member Zakat Portfolio</td>
-                <td class="right">â‚¦ {{ number_format($total_member_zakat_due, 2) }}</td>
+                <td class="right">₦ {{ number_format($total_member_zakat_due, 2) }}</td>
             </tr>
         </tfoot>
     </table>
