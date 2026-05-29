@@ -22,6 +22,9 @@ services:
       dockerfile: ../docker/php/Dockerfile
     restart: unless-stopped
     env_file: [ ".env" ]
+    environment:
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
     volumes:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
@@ -34,6 +37,7 @@ services:
 
   mysql:
     image: mysql:8.4
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
@@ -65,6 +69,9 @@ services:
     restart: unless-stopped
     command: php artisan horizon
     env_file: [ ".env" ]
+    environment:
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
     volumes:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini
@@ -82,6 +89,9 @@ services:
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     env_file:
       - .env
+    environment:
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
     volumes:
       - ./backend:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini

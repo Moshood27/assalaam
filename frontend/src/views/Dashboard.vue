@@ -31,7 +31,7 @@
           </button>
         </div>
         <h1 class="text-3xl sm:text-4xl leading-tight font-bold relative z-10 tracking-tight">
-          Ã¢â€šÂ¦ {{ hideBalances ? '***,***.**' : formatMoney(dashboardData.balance) }}
+          ₦ {{ hideBalances ? '***,***.**' : formatMoney(dashboardData.balance) }}
         </h1>
         <div class="mt-8 flex items-center justify-between flex-wrap gap-2 relative z-10">
           <div class="flex items-center gap-2">
