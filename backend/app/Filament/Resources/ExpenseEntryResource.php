@@ -377,22 +377,26 @@ class ExpenseEntryResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_expense_entry');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_expense_entry');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_expense_entry');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_expense_entry');
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('update_expense_entry');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('update_expense_entry');
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_expense_entry');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->can('delete_expense_entry');
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder

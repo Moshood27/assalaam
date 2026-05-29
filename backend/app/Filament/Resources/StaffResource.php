@@ -20,7 +20,9 @@ class StaffResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-identification';
 
-    protected static ?string $navigationGroup = 'Communication';
+    protected static ?string $navigationGroup = 'User Management';
+
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $slug = 'chat-staff';
 
@@ -171,5 +173,11 @@ class StaffResource extends Resource
             'index' => Pages\ListStaff::route('/'),
             'edit' => Pages\EditStaff::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_user');
     }
 }

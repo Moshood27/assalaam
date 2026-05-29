@@ -30,7 +30,9 @@ class MemberApplicationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-plus';
 
-    protected static ?string $navigationGroup = 'Member Management';
+    protected static ?string $navigationGroup = 'User Management';
+
+    protected static ?int $navigationSort = 15;
 
     public static function form(Form $form): Form
     {
@@ -487,22 +489,26 @@ class MemberApplicationResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('view_any_member_application');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('view_any_member_application');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('create_member_application');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('create_member_application');
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->can('update_member_application');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->is_admin || $user->can('update_member_application');
     }
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->can('delete_member_application');
+        $user = auth()->user();
+        return $user->hasRole('super_admin') || $user->can('delete_member_application');
     }
 
     public static function getEloquentQuery(): Builder

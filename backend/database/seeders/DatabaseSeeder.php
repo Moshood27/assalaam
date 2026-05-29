@@ -24,15 +24,15 @@ class DatabaseSeeder extends Seeder
         // Conditionally import old data if enabled
         if (env('SEED_OLD_DATA', false)) {
             $this->call([
-                ImportOldSqlSeeder::class,
-                SchemesSeederOldMap::class,
-                MembersFromOldSeeder::class,
-                MemberPassportsFromOldSeeder::class,
-                UnitsAndBranchMappingSeeder::class,
-             //   LoansFromOldSeeder::class,
-             //   LoanGuarantorsFromOldSeeder::class,
-              //  InvestmentRecordsFromOldSeeder::class,
-               // MigrateLoanRepaymentsSeeder::class,
+               // ImportOldSqlSeeder::class,
+                //SchemesSeederOldMap::class,
+                //MembersFromOldSeeder::class,
+                //MemberPassportsFromOldSeeder::class,
+                //UnitsAndBranchMappingSeeder::class,
+               LoansFromOldSeeder::class,
+               LoanGuarantorsFromOldSeeder::class,
+              InvestmentRecordsFromOldSeeder::class,
+               MigrateLoanRepaymentsSeeder::class,
             ]);
         }
 
