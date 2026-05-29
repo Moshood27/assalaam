@@ -12,20 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Move existing branch_id to branch_meeting pivot table
-        $meetings = DB::table('meetings')->whereNotNull('branch_id')->get();
-        foreach ($meetings as $meeting) {
-            DB::table('branch_meeting')->insert([
-                'meeting_id' => $meeting->id,
-                'branch_id' => $meeting->branch_id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        if (Schema::hasColumn('meetings', 'branch_id')) {
+            // Move existing branch_id to branch_meeting pivot table
+            $meetings = DB::table('meetings')->whereNotNull('branch_id')->get();
+            foreach ($meetings as $meeting) {
+                DB::table('branch_meeting')->updateOrInsert(
+                    ['meeting_id' => $meeting->id, 'branch_id' => $meeting->branch_id],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
 
-        Schema::table('meetings', function (Blueprint $table) {
-            // Check if column exists before dropping (safe migration)
-            if (Schema::hasColumn('meetings', 'branch_id')) {
+            Schema::table('meetings', function (Blueprint $table) {
                 // Drop foreign key if it exists.
                 // Note: The foreign key name might vary, but dropping by array works in most cases.
                 try {
@@ -34,8 +31,8 @@ return new class extends Migration
                     // Ignore if foreign key doesn't exist
                 }
                 $table->dropColumn('branch_id');
-            }
-        });
+            });
+        }
     }
 
     /**
