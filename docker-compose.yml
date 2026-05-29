@@ -1,6 +1,7 @@
 services:
   proxy:
     image: nginx:1.25-alpine
+    container_name: assalaam-nginx
     # container_name removed to avoid conflict
     restart: unless-stopped
     ports:
