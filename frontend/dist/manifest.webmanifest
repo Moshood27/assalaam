@@ -1,12 +1,12 @@
 {
-  "name": "ATTAQWA COOP",
-  "short_name": "ATTAQWA",
+  "name": "AS-SALAAM COOP",
+  "short_name": "AS-SALAAM",
   "start_url": ".",
   "scope": "/",
   "display": "standalone",
   "background_color": "#065f46",
   "theme_color": "#065f46",
-  "description": "ATTAQWA Cooperative mobile/web app",
+  "description": "AS-SALAAM Cooperative mobile/web app",
   "icons": [
     {
       "src": "../icons/icon-48.webp",
