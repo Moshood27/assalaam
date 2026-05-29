@@ -29,9 +29,9 @@ class DatabaseSeeder extends Seeder
                 //MembersFromOldSeeder::class,
                 //MemberPassportsFromOldSeeder::class,
                 //UnitsAndBranchMappingSeeder::class,
-               LoansFromOldSeeder::class,
-               LoanGuarantorsFromOldSeeder::class,
-              InvestmentRecordsFromOldSeeder::class,
+               //LoansFromOldSeeder::class,
+              // LoanGuarantorsFromOldSeeder::class,
+              //InvestmentRecordsFromOldSeeder::class,
                MigrateLoanRepaymentsSeeder::class,
             ]);
         }
