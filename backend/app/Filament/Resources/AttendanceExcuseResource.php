@@ -103,7 +103,7 @@ class AttendanceExcuseResource extends Resource
                         ]);
 
                         $record->user->notifyMember(
-                            "ðŸ™ Excuse Approved",
+                            "🙏 Excuse Approved",
                             "Your excuse for meeting '{$record->meeting->name}' has been approved.",
                             ['type' => 'excuse_approved', 'meeting_id' => (string) $record->meeting_id]
                         );

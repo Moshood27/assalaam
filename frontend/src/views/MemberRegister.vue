@@ -30,7 +30,7 @@
               <div :class="['w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300',
                 step === s ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-110' :
                 step > s ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400']">
-                <span v-if="step > s">Ã¢Å“â€œ</span>
+                <span v-if="step > s">✓œ</span>
                 <span v-else>{{ s }}</span>
               </div>
               <span v-if="step === s" class="text-[10px] font-bold text-blue-800 uppercase tracking-widest hidden sm:block">
@@ -373,7 +373,7 @@
             <button @click="() => step = 1" type="button" class="h-14 px-8 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold transition-all">Back</button>
           </div>
           <p v-if="errorUpload" class="text-center p-3 bg-rose-50 rounded-xl text-rose-600 text-sm font-medium">{{ errorUpload }}</p>
-          <div v-if="uploaded.passport_path && uploaded.id_card_path && uploaded.proof_of_address_path" class="text-center text-xs text-blue-700 font-bold bg-blue-50 p-2 rounded-lg">Required documents uploaded successfully Ã¢Å“â€œ</div>
+          <div v-if="uploaded.passport_path && uploaded.id_card_path && uploaded.proof_of_address_path" class="text-center text-xs text-blue-700 font-bold bg-blue-50 p-2 rounded-lg">Required documents uploaded successfully ✓œ</div>
         </div>
 
         <!-- Step 3: Verify -->
@@ -426,7 +426,7 @@
 
           <div class="rounded-2xl border border-slate-200/60 p-5 bg-blue-50/30 space-y-3">
             <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Identity Verification (BVN)</div>
-            <p class="text-[10px] text-slate-500 font-medium">Enter your 11Ã¢â‚¬â€˜digit Bank Verification Number.</p>
+            <p class="text-[10px] text-slate-500 font-medium">Enter your 11‐digit Bank Verification Number.</p>
             <div class="relative">
               <input v-model="bvn" @input="onBvnInput" type="text" inputmode="numeric" maxlength="11" class="input w-full h-12 text-center text-lg font-black tracking-[0.2em] bg-white border-slate-200" placeholder="***********" />
               <p v-if="bvn && !isBvnValid" class="text-rose-600 text-[10px] font-bold mt-1 text-center">BVN must be exactly 11 digits.</p>
@@ -446,7 +446,7 @@
         <!-- Step 4: Complete -->
         <div v-if="step === 4" class="text-center space-y-8 py-4">
           <div class="relative">
-            <div class="w-24 h-24 mx-auto rounded-[2rem] bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-4xl flex items-center justify-center shadow-xl shadow-blue-500/20 transform rotate-12">Ã¢Å“â€œ</div>
+            <div class="w-24 h-24 mx-auto rounded-[2rem] bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-4xl flex items-center justify-center shadow-xl shadow-blue-500/20 transform rotate-12">✓œ</div>
             <div class="absolute -top-2 -right-2 w-8 h-8 bg-blue-100 rounded-full blur-md opacity-50"></div>
           </div>
           <div class="space-y-2">
@@ -488,7 +488,7 @@
       <div class="relative w-full max-w-md bg-slate-50 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div class="p-6 bg-white border-b flex items-center justify-between text-left">
           <h2 class="text-xl font-bold text-slate-800">Contact Support</h2>
-          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“•</button>
+          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">✖</button>
         </div>
         <div class="p-6 text-left">
           <SupportContacts />

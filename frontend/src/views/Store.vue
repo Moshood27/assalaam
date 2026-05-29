@@ -52,7 +52,7 @@
               <option value="newest">Newest</option>
               <option value="price_asc">Price: Low-High</option>
               <option value="price_desc">Price: High-Low</option>
-              <option value="name_asc">AÃ¢â‚¬â€œZ</option>
+              <option value="name_asc">A–Z</option>
             </select>
           </div>
         </div>
@@ -70,7 +70,7 @@
         </div>
         <div v-else>
           <div v-if="!items.length" class="bg-white rounded-[2rem] p-20 text-center border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">Ã°Å¸â€ºÂÃ¯Â¸Â</div>
+            <div class="text-5xl mb-4">🛒</div>
             <h3 class="text-lg font-black text-slate-800 uppercase mb-1">No products found</h3>
             <p class="text-sm text-slate-500">Try adjusting your search or category filters.</p>
           </div>
@@ -80,7 +80,7 @@
               <!-- Product Image Area -->
               <div class="aspect-square relative overflow-hidden bg-slate-50" @click="openQuick(p)">
                 <img v-if="p.image_url" :src="getImageUrl(p.image_url)" alt="image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-6xl">Ã°Å¸â€œÂ¦</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-6xl">📦</div>
                 
                 <!-- Badges overlay -->
                 <div class="absolute top-4 left-4 flex flex-col gap-2">
@@ -183,7 +183,7 @@
             <div v-for="ci in cartList" :key="ci.id" class="flex items-center gap-4 p-4 rounded-[1.5rem] bg-slate-50 border border-slate-100 group transition-all">
               <div class="w-16 h-16 rounded-xl bg-white overflow-hidden border border-slate-200 shrink-0">
                 <img v-if="ci.image_url" :src="getImageUrl(ci.image_url)" class="w-full h-full object-cover" />
-                <div v-else class="w-full h-full flex items-center justify-center text-slate-200">Ã°Å¸â€œÂ¦</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-slate-200">📦</div>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-bold text-slate-800 truncate mb-0.5">{{ ci.name }}</div>
@@ -219,7 +219,7 @@
               <!-- Financing Option -->
               <div v-if="hasInsufficient" class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-lg">Ã°Å¸â€™Â³</div>
+                  <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-lg">💳</div>
                   <div>
                     <p class="text-xs font-black uppercase tracking-widest text-amber-500">Murabaha Financing</p>
                     <p class="text-[10px] text-slate-400">Insufficient balance. Buy on credit.</p>
@@ -304,7 +304,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="aspect-square rounded-3xl bg-slate-50 overflow-hidden border border-slate-100">
                <img v-if="selectedProduct.image_url" :src="getImageUrl(selectedProduct.image_url)" alt="image" class="w-full h-full object-cover" />
-               <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-5xl">Ã°Å¸â€œÂ¦</div>
+               <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-5xl">📦</div>
             </div>
             
             <div class="flex flex-col">
@@ -337,7 +337,7 @@
 
           <!-- Admin Actions -->
           <div v-if="isAdmin" class="flex items-center gap-3 mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">Ã°Å¸â€ºÂ¡Ã¯Â¸Â</div>
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">🛡️</div>
             <div class="flex-1">
               <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Admin Control</p>
               <div class="flex gap-2 mt-1">
@@ -576,7 +576,7 @@ const exceedsLimit = computed(() => {
 
 // Murabaha (credit) controls
 const creditMonths = ref(12)
-const creditProfit = ref(0.12) // 12% default within 10Ã¢â‚¬â€œ15%
+const creditProfit = ref(0.12) // 12% default within 10–15%
 const creditEstimateTotal = computed(() => {
   const rate = Number(creditProfit.value || 0)
   const base = Number(subtotal.value || 0)

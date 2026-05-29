@@ -43,8 +43,8 @@
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-xl shadow-sm">
-                    <span v-if="row.type==='project'">Ã°Å¸Ââ€”Ã¯Â¸Â</span>
-                    <span v-else>Ã°Å¸â€™Âµ</span>
+                    <span v-if="row.type==='project'">🏗️</span>
+                    <span v-else>💵</span>
                   </div>
                   <div>
                     <div class="font-black text-slate-800 text-sm tracking-tight">{{ row.name }}</div>

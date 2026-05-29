@@ -29,7 +29,7 @@
         </div>
         <div v-else>
           <div v-if="!items.length" class="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2rem]">
-            <div class="text-5xl mb-4">Ã°Å¸â€ºâ€™</div>
+            <div class="text-5xl mb-4">🛒</div>
             <p class="text-slate-400 text-sm font-medium">You haven't placed any orders yet.</p>
             <button @click="$router.push('/store')" class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-900/10">Start Shopping</button>
           </div>

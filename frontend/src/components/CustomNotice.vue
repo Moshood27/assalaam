@@ -8,9 +8,9 @@
                'bg-red-100 text-red-600': type === 'error',
                'bg-amber-100 text-amber-600': type !== 'success' && type !== 'error'
              }">
-          <span v-if="type==='success'">Ã¢Å“...</span>
+          <span v-if="type==='success'">✓...</span>
           <span v-else-if="type==='error'">⚠️</span>
-          <span v-else>Ã¢â€žÂ¹Ã¯Â¸Â</span>
+          <span v-else>ℹ️</span>
         </div>
         <h3 class="text-xl font-black mb-2 text-slate-800">{{ title }}</h3>
         <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line">{{ message }}</p>

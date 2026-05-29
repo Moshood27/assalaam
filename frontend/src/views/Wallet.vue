@@ -32,11 +32,11 @@
 
       <div class="grid grid-cols-2 gap-3">
         <button @click="activeTab = 'transfer'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-          <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">Ã°Å¸â€™Â¸</div>
+          <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">💸</div>
           <span class="text-xs font-bold text-slate-700">Transfer</span>
         </button>
         <button v-if="appStatusStore.features['withdrawals-enabled']" @click="activeTab = 'withdraw'" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-          <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-xl">Ã°Å¸ÂÂ¦</div>
+          <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-xl">🏦</div>
           <span class="text-xs font-bold text-slate-700">Withdraw</span>
         </button>
       </div>
@@ -64,7 +64,7 @@
           <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
           <div class="relative z-10 space-y-6">
             <div class="w-20 h-20 bg-blue-100 rounded-[2.5rem] flex items-center justify-center mx-auto text-4xl shadow-inner">
-              Ã°Å¸â€œÂ±
+              📲
             </div>
             <div>
               <h3 class="text-xl font-black text-slate-800">Merchant Pay (QR)</h3>
@@ -72,11 +72,11 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
               <button v-if="appStatusStore.features['merchant-pay-enabled']" @click="$router.push('/merchant/pay')" class="bg-blue-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-blue-700/20 active:scale-95 transition-all flex flex-col items-center gap-2">
-                <span class="text-xl">Ã°Å¸â€Â</span>
+                <span class="text-xl">👤</span>
                 <span class="text-xs uppercase tracking-widest">Scan & Pay</span>
               </button>
               <button v-if="appStatusStore.features['receive-qr-enabled']" @click="$router.push('/merchant/receive')" class="bg-white text-blue-700 border-2 border-blue-100 p-4 rounded-2xl font-bold active:scale-95 transition-all flex flex-col items-center gap-2">
-                <span class="text-xl">Ã°Å¸â€œÂ¥</span>
+                <span class="text-xl">📥</span>
                 <span class="text-xs uppercase tracking-widest">Receive</span>
               </button>
             </div>
@@ -781,7 +781,7 @@ const canSend = computed(() => {
     if (branchesOptions.value.length) return false // force disambiguation
     if (recipient.value) return true
     if (Number(branchId.value)) return true
-    // allow if backend wonÃ¢â‚¬â„¢t detect ambiguity; safer to require Verify
+    // allow if backend won't detect ambiguity; safer to require Verify
     return false
   }
   return true

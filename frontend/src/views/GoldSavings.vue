@@ -20,7 +20,7 @@
       <!-- Feature Disabled Alert -->
       <div v-if="!appStatusStore.features['gold-savings-beta']" class="bg-amber-50 border border-amber-200 p-8 rounded-[2rem] text-center space-y-4 shadow-sm">
         <div class="w-20 h-20 bg-amber-100 rounded-[2.5rem] flex items-center justify-center mx-auto text-4xl shadow-inner">
-          Ã¢Å“Â¨
+          ✨
         </div>
         <div>
           <h3 class="text-xl font-black text-slate-800">Exclusive Feature</h3>
@@ -299,7 +299,7 @@
           <div class="relative">
             <input v-model="form.amount" type="number" placeholder="e.g. 5000" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-lg font-bold focus:ring-2 focus:ring-blue-500" />
             <p v-if="form.amount" class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
-              Ã¢â€°Ë† {{ ((form.amount * 0.995) / goldData.buy_price).toFixed(6) }} g
+              ≈ {{ ((form.amount * 0.995) / goldData.buy_price).toFixed(6) }} g
             </p>
           </div>
           <p class="text-[10px] text-slate-400 mt-2 px-1">Includes 0.5% fee: ₦{{ (form.amount * 0.005).toFixed(2) }}</p>
@@ -328,7 +328,7 @@
           <div class="relative">
             <input v-model="form.grams" type="number" step="0.000001" placeholder="e.g. 0.05" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-lg font-bold focus:ring-2 focus:ring-amber-500" />
             <p v-if="form.grams" class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
-              Ã¢â€°Ë† ₦ {{ formatMoney(form.grams * goldData.sell_price * 0.995) }}
+              ≈ ₦ {{ formatMoney(form.grams * goldData.sell_price * 0.995) }}
             </p>
           </div>
           <p class="text-[10px] text-slate-400 mt-2 px-1">Est. Credit: ₦{{ formatMoney(form.grams * goldData.sell_price * 0.995) }} (after 0.5% fee)</p>

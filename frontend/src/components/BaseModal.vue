@@ -13,7 +13,7 @@
       >
         <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <h3 class="text-base sm:text-lg font-bold text-slate-800">{{ state.title || 'Notice' }}</h3>
-          <button class="text-slate-400 hover:text-slate-600" @click="close()" aria-label="Close">Ã¢Å“•</button>
+          <button class="text-slate-400 hover:text-slate-600" @click="close()" aria-label="Close">✖</button>
         </div>
         <div class="p-4 sm:p-5 text-slate-700 whitespace-pre-line">
           {{ state.message }}

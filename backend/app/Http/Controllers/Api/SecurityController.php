@@ -143,7 +143,7 @@ class SecurityController extends Controller
             return response()->json(['message' => 'Invalid code'], 403);
         }
 
-        // Valid code â€” set new PIN
+        // Valid code — set new PIN
         $user->transaction_pin_hash = Hash::make($validated['new_pin']);
         $user->pin_set_at = now();
         $user->save();
@@ -188,7 +188,7 @@ class SecurityController extends Controller
         $title = 'Transaction Authorization';
         $message = "Your OTP for {$type} is {$code}. It expires in 10 minutes.";
         if (!empty($validated['amount'])) {
-            $message = "Your OTP for {$type} of ₦" . number_format($validated['amount'], 2) . " is {$code}. It expires in 10 minutes.";
+            $message = "Your OTP for {$type} of " . number_format($validated['amount'], 2) . " is {$code}. It expires in 10 minutes.";
         }
 
         // Determine channel: push is prioritized for transactions as per instructions

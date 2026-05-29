@@ -184,7 +184,7 @@ class AttendanceRecordsRelationManager extends RelationManager
                         ]);
 
                         $record->user->notifyMember(
-                            "ðŸ™ Excuse Approved",
+                            "🙏 Excuse Approved",
                             "Your excuse for meeting '{$record->meeting->name}' has been approved. You will not be charged any fine.",
                             [
                                 'type' => 'excuse_approved',

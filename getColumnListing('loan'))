@@ -1,0 +1,10 @@
+
+Warning: require(W:\home\moshiano\development\assalaam\backend\vendor\composer/../symfony/polyfill-mbstring/bootstrap.php): Failed to open stream: No such file or directory in W:\home\moshiano\development\assalaam\backend\vendor\composer\autoload_real.php on line 41
+
+Fatal error: Uncaught Error: Failed opening required 'W:\home\moshiano\development\assalaam\backend\vendor\composer/../symfony/polyfill-mbstring/bootstrap.php' (include_path='.;C:\php\pear') in W:\home\moshiano\development\assalaam\backend\vendor\composer\autoload_real.php:41
+Stack trace:
+#0 W:\home\moshiano\development\assalaam\backend\vendor\composer\autoload_real.php(45): {closure:ComposerAutoloaderInit19b21fff8d5a641822e8695dec1c544a::getLoader():37}('0e6d7bf4a5811bf...', 'W:\\home\\moshian...')
+#1 W:\home\moshiano\development\assalaam\backend\vendor\autoload.php(22): ComposerAutoloaderInit19b21fff8d5a641822e8695dec1c544a::getLoader()
+#2 W:\home\moshiano\development\assalaam\backend\artisan(10): require('W:\\home\\moshian...')
+#3 {main}
+  thrown in W:\home\moshiano\development\assalaam\backend\vendor\composer\autoload_real.php on line 41

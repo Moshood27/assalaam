@@ -84,7 +84,7 @@ class StoreOrderObserver
             switch ($newStatus) {
                 case 'murabaha_active':
                     if ($oldStatus === 'murabaha_pending') {
-                        $title = "Financing Approved! ðŸŽ‰";
+                        $title = "Financing Approved! �Ž‰";
                         $body = "Your Murabaha financing application for order #{$order->reference} has been approved. You can now view your installment schedule.";
                     }
                     break;

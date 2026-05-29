@@ -16,7 +16,7 @@
     <div class="p-4 space-y-6">
       <!-- Bank Info Missing Warning -->
       <div v-if="!vendor.settlement_account_number || !vendor.settlement_bank_code || !vendor.settlement_account_name" class="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3">
-        <div class="text-xl">âš ï¸</div>
+        <div class="text-xl">âš ï¸</div>
         <div class="flex-1">
           <p class="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-0.5">Bank Details Missing</p>
           <p class="text-[11px] text-amber-700 font-medium">Please update your bank details in your profile to request payouts.</p>
@@ -80,7 +80,7 @@
       <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-slide-up">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Request Payout</h2>
-          <button @click="showRequestModal = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">âœ•</button>
+          <button @click="showRequestModal = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">✕</button>
         </div>
         
         <div class="bg-blue-50 p-4 rounded-2xl mb-6">
@@ -152,7 +152,7 @@ const getStatusIcon = (s) => {
     case 'processed':
     case 'completed': return 'âœ“'
     case 'pending': return 'âŒ›'
-    case 'failed': return 'âœ•'
+    case 'failed': return '✕'
     default: return '?'
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-5 flex items-center gap-4">
     <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
-      {{ group.icon || 'Ã°Å¸Â¤Â' }}
+      {{ group.icon || '🤝' }}
     </div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2">

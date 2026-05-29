@@ -478,7 +478,7 @@ class MemberRegistrationController extends Controller
             ], 422);
         }
 
-        // KYC passed â€” log minimal observability fields for support
+        // KYC passed — log minimal observability fields for support
         Log::info('KYC verification passed', [
             'provider' => $kyc['provider'] ?? null,
             'status' => $kyc['status'] ?? null,

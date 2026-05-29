@@ -734,7 +734,7 @@ class UserResource extends Resource
                             ->numeric()
                             ->minValue(0.01)
                             ->required()
-                            ->prefix('â‚¦'),
+                            ->prefix('₦'),
                         Forms\Components\TextInput::make('note')
                             ->label('Note')
                             ->maxLength(255)
@@ -752,9 +752,9 @@ class UserResource extends Resource
 
                             Notification::make()
                                 ->title('Wallet credited successfully')
-                                ->body("Principal: â‚¦" . number_format($amount, 2) .
-                                      ($maintenanceCharge > 0 ? ". Maintenance charge of â‚¦" . number_format($maintenanceCharge, 2) . " deducted." : "") .
-                                      ($adminChargeDeducted > 0 ? ". Pending admin charge of â‚¦" . number_format($adminChargeDeducted, 2) . " was also deducted." : ""))
+                                ->body("Principal: ₦" . number_format($amount, 2) .
+                                      ($maintenanceCharge > 0 ? ". Maintenance charge of ₦" . number_format($maintenanceCharge, 2) . " deducted." : "") .
+                                      ($adminChargeDeducted > 0 ? ". Pending admin charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted." : ""))
                                 ->success()
                                 ->send();
 
@@ -769,14 +769,14 @@ class UserResource extends Resource
                                     'new_balance' => $newBalance,
                                 ]);
 
-                                $msg = "Your wallet has been credited with â‚¦" . number_format($actualAmount, 2);
+                                $msg = "Your wallet has been credited with ₦" . number_format($actualAmount, 2);
                                 if ($maintenanceCharge > 0) {
-                                    $msg .= " after a maintenance charge of â‚¦" . number_format($maintenanceCharge, 2);
+                                    $msg .= " after a maintenance charge of ₦" . number_format($maintenanceCharge, 2);
                                 }
                                 if ($adminChargeDeducted > 0) {
-                                    $msg .= ". An outstanding administrative charge of â‚¦" . number_format($adminChargeDeducted, 2) . " was also deducted.";
+                                    $msg .= ". An outstanding administrative charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted.";
                                 }
-                                $msg .= ". New balance: â‚¦" . number_format($newBalance, 2);
+                                $msg .= ". New balance: ₦" . number_format($newBalance, 2);
 
                                 $record->notifyMember(
                                     'Wallet Credited',
@@ -810,7 +810,7 @@ class UserResource extends Resource
                             ->numeric()
                             ->minValue(0.01)
                             ->required()
-                            ->prefix('â‚¦'),
+                            ->prefix('₦'),
                         Forms\Components\TextInput::make('note')
                             ->label('Note')
                             ->maxLength(255)
@@ -828,9 +828,9 @@ class UserResource extends Resource
 
                             Notification::make()
                                 ->title('Wallet debited successfully')
-                                ->body("Principal: â‚¦" . number_format($amount, 2) .
-                                      ($maintenanceCharge > 0 ? ". Maintenance charge of â‚¦" . number_format($maintenanceCharge, 2) . " added to debit." : "") .
-                                      ($adminChargeDeducted > 0 ? ". Pending admin charge of â‚¦" . number_format($adminChargeDeducted, 2) . " was also deducted." : ""))
+                                ->body("Principal: ₦" . number_format($amount, 2) .
+                                      ($maintenanceCharge > 0 ? ". Maintenance charge of ₦" . number_format($maintenanceCharge, 2) . " added to debit." : "") .
+                                      ($adminChargeDeducted > 0 ? ". Pending admin charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted." : ""))
                                 ->success()
                                 ->send();
 
@@ -845,14 +845,14 @@ class UserResource extends Resource
                                     'new_balance' => $newBalance,
                                 ]);
 
-                                $msg = "Your wallet has been debited by â‚¦" . number_format($actualAmount, 2);
+                                $msg = "Your wallet has been debited by ₦" . number_format($actualAmount, 2);
                                 if ($maintenanceCharge > 0) {
-                                    $msg .= " (includes â‚¦" . number_format($maintenanceCharge, 2) . " maintenance charge)";
+                                    $msg .= " (includes ₦" . number_format($maintenanceCharge, 2) . " maintenance charge)";
                                 }
                                 if ($adminChargeDeducted > 0) {
-                                    $msg .= ". An outstanding administrative charge of â‚¦" . number_format($adminChargeDeducted, 2) . " was also deducted.";
+                                    $msg .= ". An outstanding administrative charge of ₦" . number_format($adminChargeDeducted, 2) . " was also deducted.";
                                 }
-                                $msg .= ". New balance: â‚¦" . number_format($newBalance, 2);
+                                $msg .= ". New balance: ₦" . number_format($newBalance, 2);
 
                                 $record->notifyMember(
                                     'Wallet Debited',
@@ -899,7 +899,7 @@ class UserResource extends Resource
                         $summary = $svc->settleMemberLoans($record, 'deceased');
                         Notification::make()
                             ->title('Member marked deceased; settlement attempted')
-                            ->body('Total settled: â‚¦'.number_format((float) ($summary['total_settled'] ?? 0), 2).'. Pool after: â‚¦'.number_format((float) ($summary['pool_after'] ?? 0), 2))
+                            ->body('Total settled: ₦'.number_format((float) ($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float) ($summary['pool_after'] ?? 0), 2))
                             ->success()
                             ->send();
                     }),
@@ -925,7 +925,7 @@ class UserResource extends Resource
                         $summary = $svc->settleMemberLoans($record, 'major_loss');
                         Notification::make()
                             ->title('Member marked major loss; settlement attempted')
-                            ->body('Total settled: â‚¦'.number_format((float) ($summary['total_settled'] ?? 0), 2).'. Pool after: â‚¦'.number_format((float) ($summary['pool_after'] ?? 0), 2))
+                            ->body('Total settled: ₦'.number_format((float) ($summary['total_settled'] ?? 0), 2).'. Pool after: ₦'.number_format((float) ($summary['pool_after'] ?? 0), 2))
                             ->success()
                             ->send();
                     }),

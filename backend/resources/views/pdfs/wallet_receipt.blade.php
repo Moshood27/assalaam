@@ -51,20 +51,20 @@
                 @if(is_array($m) && isset($m['maintenance_charge']))
                 <tr>
                     <td style="width: 40%">Gross Amount</td>
-                    <td class="right">₦ {{ number_format((float)($m['gross_amount'] ?? 0), 2) }}</td>
+                    <td class="right"> {{ number_format((float)($m['gross_amount'] ?? 0), 2) }}</td>
                 </tr>
                 <tr>
                     <td>Maintenance Charge</td>
-                    <td class="right" style="color: #991b1b;">- ₦ {{ number_format((float)($m['maintenance_charge'] ?? 0), 2) }}</td>
+                    <td class="right" style="color: #991b1b;">-  {{ number_format((float)($m['maintenance_charge'] ?? 0), 2) }}</td>
                 </tr>
                 <tr>
                     <td><strong>Net Credited Amount</strong></td>
-                    <td class="right"><strong>₦ {{ number_format((float)($tx->amount ?? 0), 2) }}</strong></td>
+                    <td class="right"><strong> {{ number_format((float)($tx->amount ?? 0), 2) }}</strong></td>
                 </tr>
                 @else
                 <tr>
                     <td style="width: 40%">Amount</td>
-                    <td class="right">₦ {{ number_format((float)($tx->amount ?? 0), 2) }}</td>
+                    <td class="right"> {{ number_format((float)($tx->amount ?? 0), 2) }}</td>
                 </tr>
                 @endif
                 <tr>
@@ -85,7 +85,7 @@
                         @elseif($src === 'wallet_allocation') Allocation to Schemes
                         @elseif($src === 'p2p_transfer') Member P2P Transfer
                         @elseif(str_starts_with($src, 'vtu_')) Value-added Services (VTU)
-                        @else {{ $src ?: 'â€”' }}
+                        @else {{ $src ?: '—' }}
                         @endif
                     </td>
                 </tr>
@@ -99,7 +99,7 @@
                                 @if(isset($m['to_name'])) To: {{ $m['to_name'] }} @endif
                                 @if(isset($m['from_name'])) From: {{ $m['from_name'] }} @endif
                             @else
-                                â€”
+                                —
                             @endif
                         </td>
                     </tr>

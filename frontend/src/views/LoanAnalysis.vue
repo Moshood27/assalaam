@@ -4,7 +4,7 @@
       <template #right>
         <a :href="downloadUrl" target="_blank" class="p-2 text-xs font-bold text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1">
           <span>Report</span>
-          <span class="text-[10px]">Ã°Å¸â€œÂ¥</span>
+          <span class="text-[10px]">📥</span>
         </a>
       </template>
     </AppHeader>

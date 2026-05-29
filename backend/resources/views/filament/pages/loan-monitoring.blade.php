@@ -18,8 +18,8 @@
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Email</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Loans</th>
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Received At</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (₦)</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (₦)</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue ()</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding ()</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Actions</th>
                     </tr>
                 </thead>
@@ -34,8 +34,8 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $m['branch'] ?? 'â€”' }}</td>
-                            <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $m['email'] ?? 'â€”' }}</td>
+                            <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $m['branch'] ?? '—' }}</td>
+                            <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $m['email'] ?? '—' }}</td>
                             <td class="px-5 py-3 text-right text-gray-900 dark:text-gray-100">{{ $m['loans_count'] }}</td>
                             <td class="px-5 py-3 text-left text-gray-900 dark:text-gray-100">{{ $m['received_at'] }}</td>
                             <td class="px-5 py-3 text-right font-mono tabular-nums text-red-600 dark:text-red-400 font-bold">
@@ -72,8 +72,8 @@
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Branch</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Loans</th>
                         <th class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">Default Since</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue (₦)</th>
-                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding (₦)</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Overdue ()</th>
+                        <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Outstanding ()</th>
                         <th class="px-5 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-100">Actions</th>
                     </tr>
                 </thead>
@@ -81,7 +81,7 @@
                     @forelse($this->defaulters as $d)
                         <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
                             <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $d['name'] }}</td>
-                            <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $d['branch'] ?? 'â€”' }}</td>
+                            <td class="px-5 py-3 text-gray-900 dark:text-gray-100">{{ $d['branch'] ?? '—' }}</td>
                             <td class="px-5 py-3 text-right text-gray-900 dark:text-gray-100">{{ $d['loans_count'] }}</td>
                             <td class="px-5 py-3 text-left text-gray-900 dark:text-gray-100">{{ $d['defaulted_at'] }}</td>
                             <td class="px-5 py-3 text-right font-mono tabular-nums text-red-600 dark:text-red-400 font-bold">

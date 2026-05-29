@@ -158,7 +158,7 @@
           <div class="flex items-center gap-3">
             <router-link v-if="appStatusStore.features['apply-for-loan']" to="/loans" class="text-xs font-bold text-blue-600 hover:text-blue-700">Apply for Qard Hasan</router-link>
           </div>
-          <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">Ã°Å¸â€™Å½</div>
+          <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl">💎</div>
         </div>
         
         <div class="flex items-end gap-1 mb-8" v-if="kpis.has_active_loan || kpis.total_due_amount > 0">
@@ -182,12 +182,12 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2">
-          <StatPill label="Savings" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.savings_balance))" icon="Ã°Å¸â€™Â°" />
-          <StatPill label="Shares" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.shares_balance))" icon="Ã°Å¸â€œË†" />
+          <StatPill label="Savings" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.savings_balance))" icon="💰" />
+          <StatPill label="Shares" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.shares_balance))" icon="📈" />
         </div>
         
         <div v-if="kpis.is_defaulted" class="mt-6 flex items-center gap-3 bg-rose-50 p-4 rounded-3xl border border-rose-100">
-          <div class="text-lg">Ã°Å¸â€ºâ€˜</div>
+          <div class="text-lg">🛒</div>
           <p class="text-[10px] text-rose-700 leading-tight font-medium">
             Your account is currently <span class="font-bold">in default</span> due to an unpaid Qard Hasan repayment. You must clear your outstanding balance before you can access further credit.
           </p>
@@ -196,12 +196,12 @@
 
       <!-- KPI row -->
       <div class="mt-4 grid grid-cols-2 gap-3">
-        <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="Ã°Å¸â€™Â°" />
+        <StatPill label="Contributions" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.contributions))" hint="Total" intent="success" icon="💰" />
         <StatPill v-if="kpis.total_due_amount > 0" label="Overdue Amount" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.total_due_amount))" hint="Pay Now" intent="danger" icon="⚠️" @click="$router.push('/loans')" class="cursor-pointer" />
-        <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="Ã°Å¸â€œ..." @click="$router.push('/loans')" class="cursor-pointer" />
-        <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? 'Ã¢â€°Ë† ₦ ***' : (kpis.gold_value_naira ? 'Ã¢â€°Ë† ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="Ã°Å¸Âªâ„¢" @click="$router.push('/gold')" class="cursor-pointer" />
-        <StatPill label="Qard Hasan" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="Ã°Å¸â€œÅ " />
-        <StatPill label="Assalaam Score" :value="String(kpis.assalaam_score || 0)" hint="Credit Rating" intent="info" icon="Ã¢Â­Â" @click="$router.push('/profile')" class="cursor-pointer" />
+        <StatPill v-else-if="kpis.expected_amount_to_pay > 0" label="Expected to Pay" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.expected_amount_to_pay))" hint="Cumulative" intent="info" icon="📋" @click="$router.push('/loans')" class="cursor-pointer" />
+        <StatPill v-else-if="appStatusStore.features['gold-savings-beta']" label="Gold Balance" :value="(hideBalances ? '***.**' : kpis.gold_balance?.toFixed(4)) + ' g'" :hint="hideBalances ? '≈ ₦ ***' : (kpis.gold_value_naira ? '≈ ₦ ' + formatMoney(kpis.gold_value_naira) : 'Digital Gold')" intent="warning" icon="🪙" @click="$router.push('/gold')" class="cursor-pointer" />
+        <StatPill label="Qard Hasan" :value="currency + ' ' + (hideBalances ? '***,***.**' : formatMoney(kpis.loans))" hint="Outstanding" intent="danger" icon="📊" />
+        <StatPill label="Assalaam Score" :value="String(kpis.assalaam_score || 0)" hint="Credit Rating" intent="info" icon="⭐" @click="$router.push('/profile')" class="cursor-pointer" />
       </div>
     </div> <!-- end right col -->
   </div> <!-- end grid -->
@@ -216,19 +216,19 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-8">
       <button @click="$router.push('/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€™Â³</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">💳</div>
         <span class="text-sm font-bold text-slate-700">Allocate Fund</span>
       </button>
       <button v-if="appStatusStore.features['chat-help-enabled']" @click="$router.push('/chat')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€™Â¬</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">💬</div>
         <span class="text-sm font-bold text-slate-700">Chat & Help</span>
       </button>
       <button v-if="appStatusStore.features['projects-enabled']" @click="$router.push('/projects')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ¦</div>
+        <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl">📦</div>
         <span class="text-sm font-bold text-slate-700">Projects</span>
       </button>
       <button @click="$router.push('/sadaqah')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Å’â„¢</div>
+        <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl">🌙</div>
         <span class="text-sm font-bold text-slate-700">Sadaqah</span>
       </button>
       <button @click="$router.push('/attendance')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
@@ -236,43 +236,43 @@
         <span class="text-sm font-bold text-slate-700">Attendance</span>
       </button>
       <button v-if="appStatusStore.features['group-savings-enabled']" @click="$router.push('/savings-groups')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Â¤Â</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">🤝</div>
         <span class="text-sm font-bold text-slate-700">Group Savings</span>
       </button>
       <button @click="$router.push('/vtu')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ¶</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📶</div>
         <span class="text-sm font-bold text-slate-700">Airtime/Data</span>
       </button>
       <button id="loan-btn" @click="$router.push('/loans')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÅ </div>
+        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl">📊</div>
         <span class="text-sm font-bold text-slate-700">Qard Hasan Records</span>
       </button>
       <button @click="$router.push('/reports')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œË†</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">📈</div>
         <span class="text-sm font-bold text-slate-700">Reports</span>
       </button>
       <button v-if="appStatusStore.features['takaful-enabled']" @click="$router.push('/takaful')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-cyan-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€ºÂ¡Ã¯Â¸Â</div>
+        <div class="w-14 h-14 bg-cyan-50 rounded-2xl flex items-center justify-center text-2xl">🛡️</div>
         <span class="text-sm font-bold text-slate-700">Takaful</span>
       </button>
       <button @click="$router.push('/transparency')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-lime-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Â§Â¾</div>
+        <div class="w-14 h-14 bg-lime-50 rounded-2xl flex items-center justify-center text-2xl">🧾</div>
         <span class="text-sm font-bold text-slate-700">Transparency</span>
       </button>
       <button @click="$router.push('/store')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€ºâ€™</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">🛒</div>
         <span class="text-sm font-bold text-slate-700">Store</span>
       </button>
       <button v-if="appStatusStore.features['gold-savings-enabled'] || appStatusStore.features['gold-savings-beta']" @click="$router.push('/gold')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-yellow-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Âªâ„¢</div>
+        <div class="w-14 h-14 bg-yellow-50 rounded-2xl flex items-center justify-center text-2xl">🪙</div>
         <span class="text-sm font-bold text-slate-700">Gold Savings</span>
       </button>
       <button v-if="appStatusStore.features['merchant-pay-enabled']" @click="$router.push('/merchant/pay')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œÂ¸</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">📸</div>
         <span class="text-sm font-bold text-slate-700">Pay Merchant</span>
       </button>
       <button v-if="appStatusStore.features['receive-qr-enabled']" @click="$router.push('/merchant/receive')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€Â²</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">🔳</div>
         <span class="text-sm font-bold text-slate-700">Receive QR</span>
       </button>
       <button @click="$router.push('/agm')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
@@ -280,39 +280,39 @@
         <span class="text-sm font-bold text-slate-700">AGM & Voting</span>
       </button>
       <button v-if="appStatusStore.features['zakat-enabled']" @click="checkZakat" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸•Å’</div>
+        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">🕌</div>
         <span class="text-sm font-bold text-slate-700">Zakat</span>
       </button>
       <button v-if="dashboardData.is_ramadan && appStatusStore.features['zakat-enabled']" @click="payZakatFitr" class="bg-blue-50 p-5 rounded-3xl shadow-sm border border-blue-100 flex flex-col items-center gap-2 active:bg-blue-100 transition-all">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸Â¥Â£</div>
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">🥣</div>
         <span class="text-sm font-bold text-blue-800">Zakat Al-Fitr</span>
       </button>
       <button @click="$router.push('/goals')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸•â€¹</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">🕋</div>
         <span class="text-sm font-bold text-slate-700">Hajj & Umrah</span>
       </button>
       <button v-if="appStatusStore.features['junior-coop-enabled']" @click="$router.push('/junior-cooperative')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€˜Â¶</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">👶</div>
         <span class="text-sm font-bold text-slate-700">Junior Coop</span>
       </button>
       <button @click="$router.push('/wasiyyah')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€œâ€¹</div>
+        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl">📋</div>
         <span class="text-sm font-bold text-slate-700">Wasiyyah</span>
       </button>
       <button v-if="kpis.vendor && kpis.vendor.is_vendor" @click="$router.push('/vendor/dashboard')" class="bg-blue-50 p-5 rounded-3xl shadow-sm border border-blue-100 flex flex-col items-center gap-2 active:bg-blue-100 transition-all">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸ÂÂª</div>
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">🏪</div>
         <span class="text-sm font-bold text-blue-800">Vendor Portal</span>
       </button>
       <button v-else @click="$router.push('/vendor/apply')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸ÂÂª</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">🏪</div>
         <span class="text-sm font-bold text-slate-700">Become a Vendor</span>
       </button>
       <button @click="$router.push('/sharia-board')" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center gap-2 active:bg-slate-50 transition-all">
-        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">Ã¢Å¡–Ã¯Â¸Â</div>
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl">⚖️</div>
         <span class="text-sm font-bold text-slate-700">Sharia Board</span>
       </button>
       <button v-if="dashboardData.is_admin" @click="$router.push('/admin/vendors')" class="bg-rose-50 p-5 rounded-3xl shadow-sm border border-rose-100 flex flex-col items-center gap-2 active:bg-rose-100 transition-all">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">Ã°Å¸â€˜Â®</div>
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl">👮</div>
         <span class="text-sm font-bold text-rose-800">Admin Portal</span>
       </button>
     </div>
@@ -394,7 +394,7 @@
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div :class="tx.type === 'credit' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'"
                    class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
-                {{ tx.type === 'credit' ? '+' : 'Ã¢Ë†â€™' }}
+                {{ tx.type === 'credit' ? '+' : '−' }}
               </div>
               <div class="min-w-0 overflow-hidden">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -450,7 +450,7 @@
               <div class="flex items-center gap-2">
                 <p class="text-xl font-black text-slate-800">₦{{ formatMoney(passbookSummary.agm_fee_amount) }}</p>
                 <span :class="passbookSummary.agm_fee_paid ? 'text-blue-500' : 'text-amber-500'" class="text-xs">
-                  {{ passbookSummary.agm_fee_paid ? 'Ã¢Å“â€œ' : 'Ã¢Å’â€º' }}
+                  {{ passbookSummary.agm_fee_paid ? '✓' : '⌛' }}
                 </span>
               </div>
             </div>
@@ -475,7 +475,7 @@
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div :class="ux.status === 'success' ? 'bg-blue-100 text-blue-600' : (ux.status === 'failed' ? 'bg-rose-100 text-rose-600' : 'bg-yellow-100 text-yellow-600')"
                    class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
-                {{ ux.status === 'success' ? 'Ã¢Å“â€œ' : (ux.status === 'failed' ? 'Ã¢Å“•' : 'Ã¢Å’â€º') }}
+                {{ ux.status === 'success' ? '✓' : (ux.status === 'failed' ? '✖' : '⌛') }}
               </div>
               <div class="min-w-0 overflow-hidden">
                 <p class="font-bold text-slate-800 text-sm capitalize truncate max-w-[180px] sm:max-w-none">{{ utilLabel(ux) }}</p>
@@ -508,7 +508,7 @@
     <div v-if="showGenderModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[100] p-6">
       <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
         <div class="p-8">
-           <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-blue-100">Ã°Å¸â€˜Â¤</div>
+           <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-blue-100">👤</div>
            
            <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Update Gender</h3>
            <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">To provide you with tailored services and accurate records, please select your gender.</p>
@@ -520,7 +520,7 @@
                class="w-full p-5 rounded-2xl border-2 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-between"
              >
                <span>Male</span>
-               <span v-if="selectedGender === 'male'" class="text-lg">Ã¢Å“â€œ</span>
+               <span v-if="selectedGender === 'male'" class="text-lg">✓</span>
              </button>
              
              <button 
@@ -529,7 +529,7 @@
                class="w-full p-5 rounded-2xl border-2 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-between"
              >
                <span>Female</span>
-               <span v-if="selectedGender === 'female'" class="text-lg">Ã¢Å“â€œ</span>
+               <span v-if="selectedGender === 'female'" class="text-lg">✓</span>
              </button>
            </div>
         </div>
@@ -553,7 +553,7 @@
     <div v-if="showEmailModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[101] p-6">
       <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
         <div class="p-8">
-           <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-blue-100">Ã°Å¸â€œÂ§</div>
+           <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-blue-100">📧</div>
            
            <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Update Email</h3>
            <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">Your current email address is invalid. Please provide a valid email to receive notifications and secure your account.</p>
@@ -602,7 +602,7 @@
     <div v-if="showPinModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[101] p-6">
       <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
         <div class="p-8">
-           <div class="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-amber-100">Ã°Å¸â€Â</div>
+           <div class="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm border border-amber-100">🔐</div>
            
            <h3 class="text-2xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">Set Security PIN</h3>
            <p class="text-slate-500 text-center text-xs mb-8 leading-relaxed font-medium">Please set a 4-digit transaction PIN to secure your withdrawals and transfers.</p>

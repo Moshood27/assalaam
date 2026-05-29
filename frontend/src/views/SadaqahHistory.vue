@@ -9,7 +9,7 @@
       </div>
 
       <div v-else-if="contributions.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
-        <div class="text-4xl mb-4">Ã°Å¸Å½Â</div>
+        <div class="text-4xl mb-4">🎁</div>
         <p class="text-slate-500 text-sm">You haven't made any contributions yet.</p>
         <button @click="$router.push('/sadaqah')" class="mt-4 text-blue-600 font-bold text-sm">Browse Projects</button>
       </div>

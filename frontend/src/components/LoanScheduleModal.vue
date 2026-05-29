@@ -13,7 +13,7 @@
             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1" v-if="loan">{{ loan.qard_id_string }}</p>
           </div>
           <button @click="close" class="w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
-            Ã¢Å“•
+            ✖
           </button>
         </div>
 
@@ -106,7 +106,7 @@
             Close
           </button>
           <a v-if="scheduleData" :href="downloadUrl" target="_blank" class="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2 text-xs">
-            <span>Ã°Å¸â€œÂ¥</span> Download PDF
+            <span>📥</span> Download PDF
           </a>
         </div>
       </div>

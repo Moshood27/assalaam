@@ -50,7 +50,7 @@ class SendMeetingRemindersCommand extends Command
         foreach ($meetings as $meeting) {
             $this->info("Sending reminders for meeting: {$meeting->name} (ID: {$meeting->id})");
 
-            $title = "ðŸ“Œ Meeting Reminder: {$meeting->name}";
+            $title = "�“Œ Meeting Reminder: {$meeting->name}";
             $body = "Meeting starts at " . date('h:i A', strtotime($meeting->start_time)) . ". Please be at the venue on time to mark your attendance and avoid the ₦500 fine.";
 
             $meeting->notifyMembers($title, $body, [

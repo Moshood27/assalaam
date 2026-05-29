@@ -19,7 +19,7 @@
     <div v-if="vendor.id" class="p-4 space-y-6">
       <!-- Pending Approval Banner -->
       <div v-if="!vendor.is_approved" class="bg-amber-50 border border-amber-100 p-6 rounded-[2rem] text-center space-y-4">
-        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center text-3xl mx-auto">â³</div>
+        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center text-3xl mx-auto">⏳</div>
         <h2 class="text-xl font-black text-slate-800 uppercase">Approval Pending</h2>
         <p class="text-sm text-slate-600 leading-relaxed">
           Your vendor profile is currently being reviewed by our administrative team. 
@@ -81,15 +81,15 @@
         <!-- Enhanced Quick Actions -->
         <div class="grid grid-cols-3 gap-4">
           <button @click="$router.push('/vendor/products')" class="group bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-900/5">
-            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">ðŸ“¦</div>
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">📦</div>
             <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Inventory</span>
           </button>
           <button @click="$router.push('/vendor/orders')" class="group bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-orange-500/20 hover:shadow-lg hover:shadow-orange-900/5">
-            <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">ðŸ“‹</div>
+            <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">📋</div>
             <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Orders</span>
           </button>
           <button @click="$router.push('/vendor/settlements')" class="group bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-900/5">
-            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">ðŸ’°</div>
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">💰</div>
             <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Payouts</span>
           </button>
         </div>
@@ -108,7 +108,7 @@
           <div v-else class="space-y-3">
             <div v-for="act in activities" :key="act.id" class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4">
               <div :class="act.type === 'payout' ? 'bg-blue-50 text-blue-600' : 'bg-blue-50 text-blue-600'" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold">
-                {{ act.type === 'payout' ? '₦' : 'ðŸ“¦' }}
+                {{ act.type === 'payout' ? '₦' : '📦' }}
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-slate-800 truncate">{{ act.title }}</p>

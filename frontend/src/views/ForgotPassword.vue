@@ -152,7 +152,7 @@
             </div>
 
             <div class="relative group">
-              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">6Ã¢â‚¬â€˜digit Code</label>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">6‐digit Code</label>
               <input v-model="resetForm.code" type="text" maxlength="6" inputmode="numeric" placeholder="000000" class="input h-14 text-center text-2xl font-black tracking-[0.5em] bg-slate-50/50 border-slate-200/60" />
             </div>
 
@@ -225,7 +225,7 @@
       <div class="relative w-full max-w-md bg-slate-50 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300 text-left">
         <div class="p-6 bg-white border-b flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-800">Contact Support</h2>
-          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">Ã¢Å“•</button>
+          <button @click="showSupportModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 transition-colors">✖</button>
         </div>
         <div class="p-6">
           <SupportContacts />

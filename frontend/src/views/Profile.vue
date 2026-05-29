@@ -58,7 +58,7 @@
 
       <!-- No Results State -->
       <div v-if="visibleSections.length === 0" class="bg-white p-12 rounded-[2rem] border border-slate-100 text-center space-y-4">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-2xl">Ã°Å¸â€Â</div>
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-2xl">👤</div>
         <div>
           <h3 class="font-bold text-slate-800">No results found</h3>
           <p class="text-xs text-slate-500 mt-1">We couldn't find any settings matching "{{ searchQuery }}"</p>
@@ -157,12 +157,12 @@
             <div class="flex flex-wrap gap-2">
               <div v-for="badge in profile.badges" :key="badge.id" 
                    class="flex items-center gap-2 bg-blue-50 border border-blue-100 px-3 py-2 rounded-xl group relative cursor-help">
-                <span class="text-lg" v-if="badge.type === 'consistency_savings_12'">Ã°Å¸â€œ...</span>
-                <span class="text-lg" v-else-if="badge.type === 'early_loan_repayment'">Ã°Å¸Å¡â‚¬</span>
-                <span class="text-lg" v-else-if="badge.type === 'savings_milestone_100k'">Ã°Å¸â€™Â°</span>
-                <span class="text-lg" v-else-if="badge.type === 'vtu_power_user'">Ã¢Å¡Â¡</span>
-                <span class="text-lg" v-else-if="badge.type === 'loan_master'">Ã°Å¸Å½â€œ</span>
-                <span class="text-lg" v-else>Ã°Å¸Ââ€ </span>
+                <span class="text-lg" v-if="badge.type === 'consistency_savings_12'">📋...</span>
+                <span class="text-lg" v-else-if="badge.type === 'early_loan_repayment'">💰</span>
+                <span class="text-lg" v-else-if="badge.type === 'savings_milestone_100k'">💰</span>
+                <span class="text-lg" v-else-if="badge.type === 'vtu_power_user'">⚖️</span>
+                <span class="text-lg" v-else-if="badge.type === 'loan_master'">🔑</span>
+                <span class="text-lg" v-else>🔔 </span>
                 <div class="min-w-0">
                   <p class="text-[10px] font-bold text-blue-800 leading-none">{{ badge.name }}</p>
                 </div>
@@ -220,7 +220,7 @@
       <div v-if="isSectionVisible('membership_data')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Membership Data</p>
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-2xl">Ã°Å¸â€œâ€˜</div>
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-2xl">📄</div>
           <div class="flex-1">
             <h3 class="text-sm font-bold text-slate-800">My Enrolment Details</h3>
             <p class="text-xs text-slate-500">View your full membership data and download enrolment forms.</p>
@@ -256,7 +256,7 @@
       <div v-else-if="isSectionVisible('vendor')" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Local Business</p>
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl">Ã°Å¸ÂÂª</div>
+          <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl">🏪</div>
           <div class="flex-1">
             <h3 class="text-sm font-bold text-slate-800">Become a Vendor</h3>
             <p class="text-xs text-slate-500">Sell your products to other members with cooperative financing.</p>
@@ -270,7 +270,7 @@
         <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3">Islamic Finance</p>
         <div class="space-y-4">
           <button @click="$router.push('/wasiyyah')" class="w-full flex items-center gap-4 text-left group">
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-lg group-active:scale-90 transition-transform">Ã°Å¸â€œâ€¹</div>
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-lg group-active:scale-90 transition-transform">📋</div>
             <div class="flex-1">
               <h3 class="text-sm font-bold text-slate-800">Wasiyyah (Next of Kin)</h3>
               <p class="text-[11px] text-slate-500 font-medium">Manage your beneficiaries and legacy details.</p>
@@ -281,7 +281,7 @@
           </button>
           
           <button v-if="appStatusStore.features['junior-coop-enabled']" @click="$router.push('/junior-cooperative')" class="w-full flex items-center gap-4 text-left group pt-4 border-t border-slate-50">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg group-active:scale-90 transition-transform">Ã°Å¸â€˜Â¶</div>
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg group-active:scale-90 transition-transform">👶</div>
             <div class="flex-1">
               <h3 class="text-sm font-bold text-slate-800">Junior Cooperative</h3>
               <p class="text-[11px] text-slate-500 font-medium">Locked savings for your children's education.</p>
@@ -320,7 +320,7 @@
               <!-- Searchable bank picker -->
               <div class="mt-1 relative">
                 <div class="flex items-center gap-2 border rounded-xl bg-slate-50 px-3 py-2.5 focus-within:ring-2 focus-within:ring-blue-200">
-                  <span class="text-slate-400">Ã°Å¸ÂÂ¦</span>
+                  <span class="text-slate-400">🏦</span>
                   <input
                     v-model="bankSearch"
                     @focus="openBankDropdown"
@@ -371,7 +371,7 @@
             <button @click="saveBank" :disabled="bankBusy" class="px-4 py-2 rounded-xl text-white font-bold" :class="bankBusy ? 'bg-slate-400' : 'bg-blue-700 hover:bg-blue-800'">{{ bankBusy ? 'Saving...' : 'Save Bank Details' }}</button>
             <button @click="clearResolved" :disabled="bankBusy" class="px-4 py-2 rounded-xl text-blue-700 font-bold bg-blue-50 hover:bg-blue-100">Change</button>
           </div>
-          <p class="text-[10px] text-slate-500">We verify your bank account via Paystack/Flutterwave to prevent errors. YouÃ¢â‚¬â„¢ll see the registered account name before saving.</p>
+          <p class="text-[10px] text-slate-500">We verify your bank account via Paystack/Flutterwave to prevent errors. You'll see the registered account name before saving.</p>
         </div>
       </div>
 
@@ -503,7 +503,7 @@
             <p v-if="resetSentTo" class="text-[11px] text-amber-700 mt-1">Code sent to: {{ resetSentTo }} (expires in ~10 minutes)</p>
             <div class="grid grid-cols-3 gap-2 mt-3">
               <div>
-                <label class="text-[10px] text-slate-500 font-bold uppercase">6Ã¢â‚¬â€˜digit Code</label>
+                <label class="text-[10px] text-slate-500 font-bold uppercase">6‐digit Code</label>
                 <input v-model="resetForm.code" type="text" inputmode="numeric" pattern="\\d*" maxlength="6" class="mt-1 w-full border rounded-xl p-3 text-center" placeholder="123456" />
               </div>
               <div>
@@ -530,7 +530,7 @@
     <div v-if="showNursingMotherModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
         <div class="flex items-center gap-3 mb-6">
-           <div class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm">Ã°Å¸Â¤Â±</div>
+           <div class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm">🛡️</div>
            <div>
              <h3 class="text-xl font-black text-slate-800 tracking-tight">Apply for Grace</h3>
              <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Nursing Mother</p>

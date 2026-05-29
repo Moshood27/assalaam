@@ -79,7 +79,7 @@ class ChatRoomResource extends Resource
                     ->options(fn () => User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))
                         ->get()
                         ->mapWithKeys(function ($user) {
-                            $status = ($user->last_activity_at && $user->last_activity_at->gt(now()->subMinutes(10))) ? 'ðŸŸ¢' : 'âšª';
+                            $status = ($user->last_activity_at && $user->last_activity_at->gt(now()->subMinutes(10))) ? '' : '';
                             return [$user->id => "{$status} {$user->name}"];
                         })
                     )
@@ -216,7 +216,7 @@ class ChatRoomResource extends Resource
                             ->options(fn () => User::whereHas('roles', fn($q) => $q->whereIn('name', ['Staff', 'Admin']))
                                 ->get()
                                 ->mapWithKeys(function ($user) {
-                                    $status = ($user->last_activity_at && $user->last_activity_at->gt(now()->subMinutes(10))) ? 'ðŸŸ¢' : 'âšª';
+                                    $status = ($user->last_activity_at && $user->last_activity_at->gt(now()->subMinutes(10))) ? '' : '';
                                     $assignedCount = ChatRoom::where('metadata->assigned_staff_id', $user->id)->count();
                                     return [$user->id => "{$status} {$user->name} ({$assignedCount} rooms)"];
                                 })

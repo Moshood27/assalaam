@@ -67,7 +67,7 @@
                 </p>
             @endif
 
-            <p class="muted" style="margin-top:16px;">If you didnâ€™t make this payment, please contact support immediately.</p>
+            <p class="muted" style="margin-top:16px;">If you didn’t make this payment, please contact support immediately.</p>
         </div>
         <div class="footer">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>

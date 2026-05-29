@@ -39,7 +39,7 @@
             </div>
             <div class="card p-3 border-indigo-200 bg-indigo-50">
               <p class="text-xs uppercase text-indigo-700 font-bold">Status</p>
-              <p class="text-sm text-indigo-900">Ã¢Å“... {{ summary.contributions?.by_status?.success || 0 }} • Ã¢Å’â€º {{ summary.contributions?.by_status?.pending || 0 }} • Ã¢Å“• {{ summary.contributions?.by_status?.failed || 0 }}</p>
+              <p class="text-sm text-indigo-900">✓... {{ summary.contributions?.by_status?.success || 0 }} • ⌛ {{ summary.contributions?.by_status?.pending || 0 }} • ✖ {{ summary.contributions?.by_status?.failed || 0 }}</p>
             </div>
           </div>
           <div class="mt-4 flex flex-wrap gap-2">

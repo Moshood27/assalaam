@@ -19,7 +19,7 @@
       </div>
       
       <div v-else-if="orders.length === 0" class="bg-white rounded-[2rem] p-12 text-center border border-dashed border-slate-200">
-        <div class="text-4xl mb-4">{{ vendor.is_approved ? 'ðŸ“‹' : 'â³' }}</div>
+        <div class="text-4xl mb-4">{{ vendor.is_approved ? '📋' : '⏳' }}</div>
         <h3 class="text-sm font-bold text-slate-800 mb-1">{{ vendor.is_approved ? 'No orders yet' : 'Approval Pending' }}</h3>
         <p class="text-xs text-slate-500">
           {{ vendor.is_approved ? 'When members buy your products, they will appear here.' : 'Once your vendor profile is approved, you can start receiving orders.' }}
@@ -43,7 +43,7 @@
             <div v-for="item in order.items" :key="item.id" class="flex justify-between items-center text-xs">
               <div class="flex-1 min-w-0 pr-4">
                 <p class="font-bold text-slate-700 truncate">{{ item.product_name }}</p>
-                <p class="text-[10px] text-slate-500">Qty: {{ item.quantity }} Ã— ₦{{ formatMoney(item.unit_price) }}</p>
+                <p class="text-[10px] text-slate-500">Qty: {{ item.quantity }} × ₦{{ formatMoney(item.unit_price) }}</p>
               </div>
               <div class="text-right">
                 <p class="font-black text-slate-800">₦{{ formatMoney(item.line_total) }}</p>
@@ -54,7 +54,7 @@
           
           <div class="p-4 flex items-center justify-between">
             <a :href="'tel:' + order.user?.phone" class="flex items-center gap-2 text-[10px] font-black text-blue-700 uppercase tracking-widest">
-              <span class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-xs">ðŸ“ž</span>
+              <span class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-xs">📞</span>
               Contact Member
             </a>
             <button @click="openStatusModal(order)" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Status</button>
@@ -68,7 +68,7 @@
       <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-slide-up">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Update Order Status</h2>
-          <button @click="selectedOrder = null" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">âœ•</button>
+          <button @click="selectedOrder = null" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">✕</button>
         </div>
         
         <p class="text-xs text-slate-500 mb-6 font-medium">Updating status for order <span class="font-bold text-slate-800">{{ selectedOrder.reference }}</span></p>
@@ -113,10 +113,10 @@ const updating = ref(false)
 
 const availableStatuses = [
   { id: 'processing', label: 'Processing', description: 'Currently preparing the order', icon: 'âš™ï¸', class: 'bg-blue-50 text-blue-600' },
-  { id: 'shipped', label: 'Shipped', description: 'Item has been handed to courier', icon: 'ðŸšš', class: 'bg-amber-50 text-amber-600' },
-  { id: 'delivered', label: 'Delivered', description: 'Item reached the customer', icon: 'ðŸ ', class: 'bg-blue-50 text-blue-600' },
-  { id: 'completed', label: 'Completed', description: 'Finalized and payout triggered', icon: 'âœ…', class: 'bg-blue-100 text-blue-700' },
-  { id: 'cancelled', label: 'Cancelled', description: 'Order will not be fulfilled', icon: 'âœ•', class: 'bg-rose-50 text-rose-600' },
+  { id: 'shipped', label: 'Shipped', description: 'Item has been handed to courier', icon: '✨š', class: 'bg-amber-50 text-amber-600' },
+  { id: 'delivered', label: 'Delivered', description: 'Item reached the customer', icon: '✨ ', class: 'bg-blue-50 text-blue-600' },
+  { id: 'completed', label: 'Completed', description: 'Finalized and payout triggered', icon: '✔', class: 'bg-blue-100 text-blue-700' },
+  { id: 'cancelled', label: 'Cancelled', description: 'Order will not be fulfilled', icon: '✕', class: 'bg-rose-50 text-rose-600' },
 ]
 
 const formatMoney = (val) => {

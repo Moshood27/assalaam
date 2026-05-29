@@ -54,9 +54,9 @@ onMounted(load)
 
 <template>
   <div class="max-w-3xl mx-auto text-left">
-    <h1 class="text-2xl font-bold mb-2">Qard Hasan (InterestÃ¢â‚¬â€˜Free)</h1>
+    <h1 class="text-2xl font-bold mb-2">Qard Hasan (Interest‐Free)</h1>
     <p class="text-sm text-slate-600 mb-6">
-      This is a Qard Hasan (benevolent, interestÃ¢â‚¬â€˜free loan). No interest (riba) will ever be charged.
+      This is a Qard Hasan (benevolent, interest‐free loan). No interest (riba) will ever be charged.
       Optional administrative fee only covers real processing costs and is capped by policy.
       Any late penalty, if applied, goes to charity and is not cooperative income.
     </p>

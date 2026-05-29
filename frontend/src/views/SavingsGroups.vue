@@ -55,7 +55,7 @@
       <div v-else>
         <div v-if="activeTab === 'my'">
           <div v-if="myGroups.length === 0" class="text-center py-16 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">Ã°Å¸Â¤Â</div>
+            <div class="text-5xl mb-4">🤝</div>
             <p class="text-slate-500 text-sm mb-6">You haven't joined any group yet.</p>
             <button @click="activeTab = 'discover'" class="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-bold shadow-lg shadow-indigo-100">Browse Groups</button>
           </div>
@@ -71,7 +71,7 @@
 
         <div v-if="activeTab === 'invitations'">
           <div v-if="invitations.length === 0" class="text-center py-16 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">Ã°Å¸â€œÂ§</div>
+            <div class="text-5xl mb-4">📩</div>
             <p class="text-slate-500 text-sm">No pending invitations.</p>
           </div>
           <div v-else class="space-y-4">
@@ -87,7 +87,7 @@
 
         <div v-if="activeTab === 'discover'">
           <div v-if="discoverGroups.length === 0" class="text-center py-16 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
-            <div class="text-5xl mb-4">Ã°Å¸Å’Â</div>
+            <div class="text-5xl mb-4">✨’Â</div>
             <p class="text-slate-500 text-sm">No public groups available right now.</p>
           </div>
           <div v-else class="space-y-4">

@@ -51,7 +51,7 @@
       </div>
 
       <div v-else class="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">Ã°Å¸â€˜Â¶</div>
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">👶</div>
         <p class="text-slate-500 font-medium mb-4">No junior accounts yet.</p>
         <button @click="openCreate" class="btn-primary">Open an account for your child</button>
       </div>

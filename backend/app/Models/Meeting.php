@@ -47,7 +47,7 @@ class Meeting extends Model
         static::created(function ($meeting) {
             if ($meeting->status === 'scheduled') {
                 $meeting->notifyMembers(
-                    "ðŸ“… New Meeting Scheduled: {$meeting->name}",
+                    "�“… New Meeting Scheduled: {$meeting->name}",
                     "A new meeting has been scheduled for " . $meeting->date->format('M d, Y') . " at " . $meeting->start_time . ".",
                     ['type' => 'meeting_scheduled']
                 );
@@ -74,7 +74,7 @@ class Meeting extends Model
                     );
                 } elseif ($oldStatus !== 'audited' && $newStatus === 'audited') {
                     $meeting->notifyMembers(
-                        "âœ… Meeting Audited: {$meeting->name}",
+                        "✔ Meeting Audited: {$meeting->name}",
                         "The attendance for '{$meeting->name}' has been audited. You can check your status in the app.",
                         ['type' => 'meeting_audited']
                     );

@@ -14,7 +14,7 @@
 <div class="print-only" style="padding: 0 0 12px; margin: 0 0 12px; border-bottom: 1px solid #000;">
     <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 12px;">
         <div>
-            <div style="font-size: 18px; font-weight: 700;">{{ $app }} â€” Admin</div>
+            <div style="font-size: 18px; font-weight: 700;">{{ $app }} — Admin</div>
             <div style="font-size: 14px;">{{ $page ?: 'Listing' }}</div>
         </div>
         <div style="text-align: right; font-size: 12px; line-height: 1.2;">

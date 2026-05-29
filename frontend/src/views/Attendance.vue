@@ -9,7 +9,7 @@
       </div>
 
       <div v-else-if="!meeting" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 text-center">
-        <div class="text-5xl mb-4">Ã°Å¸â€”â€œÃ¯Â¸Â</div>
+        <div class="text-5xl mb-4">🗓️</div>
         <h2 class="text-xl font-bold text-slate-800">No active or upcoming meeting</h2>
         <p class="text-slate-500 mt-2 text-sm">There is no meeting currently active or scheduled for your branch.</p>
         <button @click="fetchCurrentMeeting" class="mt-8 w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-100 uppercase tracking-widest text-xs active:scale-95 transition-all">Refresh</button>
@@ -27,7 +27,7 @@
           <p class="text-slate-500 text-xs mt-1 relative z-10 leading-relaxed">{{ meeting.description }}</p>
           
           <div class="mt-4 flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest relative z-10">
-            <span>Ã°Å¸•â€™ {{ meeting.start_time }} - {{ meeting.end_time }}</span>
+            <span>🕙 {{ meeting.start_time }} - {{ meeting.end_time }}</span>
           </div>
         </div>
 
@@ -43,7 +43,7 @@
 
         <!-- Already Marked -->
         <div v-if="record && record.status === 'present'" class="bg-blue-600 p-8 rounded-[2.5rem] text-center shadow-xl shadow-blue-100 text-white">
-          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">Ã¢Å“...</div>
+          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">✅</div>
           <h3 class="text-xl font-black uppercase tracking-tight">Attendance Marked</h3>
           <p class="text-blue-50 text-xs mt-2 font-medium">You successfully marked your attendance at {{ formatTime(record.attended_at) }}.</p>
         </div>
@@ -54,7 +54,7 @@
           record.status === 'excused' ? 'bg-blue-600 shadow-blue-100' : 'bg-slate-600 shadow-slate-100'
         ]">
           <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 backdrop-blur-md">
-            {{ record.status === 'excused' ? 'Ã°Å¸â„¢Â' : '⏳' }}
+            {{ record.status === 'excused' ? '🙏' : '⏳' }}
           </div>
           <h3 class="text-xl font-black uppercase tracking-tight">
             {{ record.status === 'excused' ? 'Apology Approved' : 'Apology Pending' }}
@@ -81,7 +81,7 @@
             <div class="space-y-6">
               <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Enter Meeting PIN</label>
-                <input v-model="pin" type="text" maxlength="10" placeholder="••••••" 
+                <input v-model="pin" type="text" maxlength="10" placeholder="••••••"
                        class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl p-5 text-center text-3xl font-black tracking-[0.4em] focus:bg-white focus:border-blue-500 focus:ring-0 transition-all placeholder:tracking-normal placeholder:text-slate-200" />
                 <p class="text-[9px] text-slate-400 mt-2 text-center font-bold uppercase">The PIN is announced by the Imam or Chairman</p>
               </div>
@@ -111,7 +111,7 @@
         <!-- Apology Form -->
         <div v-if="canSubmitApology && !inGracePeriod && (!record || record.status === 'absent')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
              <div class="flex items-center gap-2 mb-4">
-               <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">Ã°Å¸â€œÂ</div>
+               <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-lg">📝</div>
                <h3 class="font-black text-slate-800 text-sm uppercase tracking-tight">Submit Apology</h3>
             </div>
             <p class="text-[11px] text-slate-500 mb-4">If you cannot attend or will be late, provide a reason here before the meeting starts to avoid fines.</p>
@@ -150,7 +150,7 @@
 
           <!-- Grace Period Info -->
           <div v-if="inGracePeriod && !record" class="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-start gap-4">
-            <div class="text-2xl">Ã°Å¸ÂÂ¼</div>
+            <div class="text-2xl">🍼</div>
             <div>
               <h4 class="text-xs font-black text-blue-800 uppercase tracking-tight">Automatic Grace Period</h4>
               <p class="text-[10px] text-blue-600 font-medium mt-1">You are currently in the nursing mother grace period. You will not be charged for absence or lateness in this meeting.</p>
@@ -180,8 +180,8 @@
                  item.status === 'pending_excuse' ? 'bg-slate-50 text-slate-600' :
                  item.status === 'fine_pending' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-400'
                ]">
-                 {{ item.status === 'present' ? 'Ã¢Å“...' : item.status === 'fine_paid' ? 'Ã°Å¸â€™Â°' : 
-                    item.status === 'excused' ? 'Ã°Å¸â„¢Â' : item.status === 'pending_excuse' ? '⏳' : 'Ã¢ÂÅ’' }}
+                 {{ item.status === 'present' ? '✅' : item.status === 'fine_paid' ? '💰' : 
+                    item.status === 'excused' ? '🙏' : item.status === 'pending_excuse' ? '⏳' : '❌' }}
                </div>
                
                <div class="flex-1 min-w-0">

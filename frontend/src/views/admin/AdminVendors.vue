@@ -36,7 +36,7 @@
                   <h3 class="font-bold text-slate-800 truncate">{{ v.name }}</h3>
                   <p class="text-xs text-slate-500">Owner: {{ v.owner?.name || 'Unknown' }}</p>
                   <p v-if="v.owner?.email" class="text-[10px] text-slate-400">{{ v.owner.email }}</p>
-                  <p v-if="v.phone" class="text-xs text-slate-500 mt-1">ðŸ“ž {{ v.phone }}</p>
+                  <p v-if="v.phone" class="text-xs text-slate-500 mt-1">📞 {{ v.phone }}</p>
                 </div>
                 <div class="flex flex-col items-end gap-1 shrink-0 ml-2">
                   <span v-if="v.is_approved" class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-widest border border-blue-100">Approved</span>
@@ -108,7 +108,7 @@
     <div v-if="prompting" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden border border-white/20">
         <div class="p-6">
-          <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-xl mb-4">âœ•</div>
+          <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-xl mb-4">✕</div>
           <h3 class="text-lg font-black text-slate-800 mb-1">Decline Request</h3>
           <p class="text-sm text-slate-500 mb-4">Provide a reason for declining ₦{{ formatMoney(prompting.amount) }}.</p>
           <textarea v-model="declineReason" class="w-full border border-slate-200 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" rows="3" placeholder="e.g. Incomplete verification, Name mismatch..."></textarea>
@@ -223,7 +223,7 @@ const formatMoney = (val) => {
   return Number(val || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 const formatDate = (dateStr) => {
-  if (!dateStr) return 'â€”'
+  if (!dateStr) return '—'
   return new Date(dateStr).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 const statusClass = (status) => {

@@ -85,7 +85,7 @@
           </div>
 
           <div class="p-6 bg-blue-50 rounded-3xl border border-blue-100 flex items-start gap-4">
-            <div class="text-2xl mt-1">ðŸ“</div>
+            <div class="text-2xl mt-1">📍</div>
             <p class="text-xs text-blue-800 leading-relaxed font-medium">Providing an accurate address helps members trust your business and facilitates smoother logistics.</p>
           </div>
 
@@ -137,7 +137,7 @@
 
           <div v-if="resolvedAccountName" class="p-6 rounded-[2rem] bg-blue-600 text-white shadow-lg shadow-blue-200 animate-in zoom-in duration-300">
             <div class="flex items-center gap-4">
-               <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl">ðŸ›ï¸</div>
+               <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl">✨›ï¸</div>
                <div>
                   <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Verified Account Holder</p>
                   <p class="text-base font-black uppercase">{{ resolvedAccountName }}</p>

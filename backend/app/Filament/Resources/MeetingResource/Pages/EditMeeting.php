@@ -27,7 +27,7 @@ class EditMeeting extends EditRecord
             $time = date('h:i A', strtotime($meeting->start_time));
 
             $meeting->notifyMembers(
-                "ðŸ“ Meeting Updated: {$meeting->name}",
+                "📝 Meeting Updated: {$meeting->name}",
                 "The meeting schedule has been updated to {$date} at {$time}. Please take note.",
                 ['type' => 'meeting_updated']
             );

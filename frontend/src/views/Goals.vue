@@ -48,7 +48,7 @@
       </div>
 
       <div v-else class="text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">Ã°Å¸Å½Â¯</div>
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">✨½Â¯</div>
         <p class="text-slate-500 font-medium mb-4">No savings goals yet.</p>
         <button @click="openCreate" class="btn-primary">Create your first goal</button>
       </div>

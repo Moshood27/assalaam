@@ -176,7 +176,7 @@ class PrintController extends Controller
             'amount' => $transaction->amount,
             'reference' => $transaction->reference,
             'created_at' => $transaction->created_at,
-            'source' => 'Utility: '.ucfirst((string) $transaction->type).' ('.($transaction->network ?? 'â€”').')',
+            'source' => 'Utility: '.ucfirst((string) $transaction->type).' ('.($transaction->network ?? '—').')',
             'meta' => array_merge(
                 is_array($transaction->provider_response) ? $transaction->provider_response : [],
                 ['note' => 'Phone: '.$transaction->phone_number]

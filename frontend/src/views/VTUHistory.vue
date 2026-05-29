@@ -80,7 +80,7 @@ const filters = ref({ type: '', status: '' })
 
 const formatMoney = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
 const badgeClass = (status) => status === 'success' ? 'bg-blue-100 text-blue-700' : (status === 'failed' ? 'bg-rose-100 text-rose-700' : 'bg-yellow-100 text-yellow-700')
-const statusIcon = (status) => status === 'success' ? 'Ã¢Å“â€œ' : (status === 'failed' ? 'Ã¢Å“•' : 'Ã¢Å’â€º')
+const statusIcon = (status) => status === 'success' ? '✓œ' : (status === 'failed' ? '✖' : '⌛')
 
 const getToken = (tx) => {
   if (tx.type !== 'electricity' || !tx.provider_response) return null

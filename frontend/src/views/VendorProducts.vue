@@ -23,7 +23,7 @@
       </div>
       
       <div v-else-if="products.length === 0" class="bg-white rounded-[2.5rem] p-16 text-center border-2 border-dashed border-slate-100">
-        <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">ðŸ“¦</div>
+        <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">📦</div>
         <h3 class="text-xl font-black text-slate-800 uppercase mb-2">No products yet</h3>
         <p class="text-sm text-slate-500 mb-8 max-w-[240px] mx-auto">Start listing your products to grow your business with our members.</p>
         <button v-if="vendor.is_approved" @click="openCreateModal" class="px-8 py-4 rounded-2xl bg-blue-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-700/20 active:scale-95 transition-all">Add your first product</button>
@@ -36,7 +36,7 @@
         <div v-for="p in products" :key="p.id" class="group bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex gap-5 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300">
           <div class="w-28 h-28 rounded-3xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 relative">
             <img v-if="p.image_url" :src="getImageUrl(p.image_url)" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-            <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-3xl">ðŸ–¼ï¸</div>
+            <div v-else class="w-full h-full flex items-center justify-center text-slate-200 text-3xl">✨¼ï¸</div>
             
             <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                <button @click="openEditModal(p)" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-lg scale-0 group-hover:scale-100 transition-transform duration-300">
@@ -141,7 +141,7 @@
             <div class="mt-2 flex items-center gap-4">
               <div class="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden flex-shrink-0">
                 <img v-if="imagePreview" :src="imagePreview" class="w-full h-full object-cover" />
-                <div v-else class="w-full h-full flex items-center justify-center text-2xl">ðŸ–¼ï¸</div>
+                <div v-else class="w-full h-full flex items-center justify-center text-2xl">✨¼ï¸</div>
               </div>
               <div class="flex-1">
                 <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*" class="hidden" />

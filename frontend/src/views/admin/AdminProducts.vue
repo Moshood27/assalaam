@@ -27,7 +27,7 @@
             <li v-for="p in items" :key="p.id" class="p-3 bg-white border rounded-xl shadow-sm flex gap-3">
               <div class="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                 <img v-if="p.image_url" :src="getImageUrl(p.image_url) + cacheBust" alt="image" class="w-full h-full object-cover" />
-                <div v-else class="text-slate-400 text-2xl">Ã°Å¸–Â¼Ã¯Â¸Â</div>
+                <div v-else class="text-slate-400 text-2xl">✨Â¼Ã¯Â¸Â</div>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-bold text-slate-800 truncate">{{ p.name }}</div>

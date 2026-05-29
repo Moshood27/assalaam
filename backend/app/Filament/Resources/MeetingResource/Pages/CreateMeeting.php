@@ -18,7 +18,7 @@ class CreateMeeting extends CreateRecord
             $time = date('h:i A', strtotime($meeting->start_time));
 
             $meeting->notifyMembers(
-                "ðŸ“… New Meeting Scheduled: {$meeting->name}",
+                "�“… New Meeting Scheduled: {$meeting->name}",
                 "A new meeting has been scheduled for {$date} at {$time}. Please mark your calendar.",
                 ['type' => 'meeting_scheduled']
             );

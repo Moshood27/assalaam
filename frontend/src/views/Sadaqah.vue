@@ -22,7 +22,7 @@
       </div>
       
       <div v-else-if="projects.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
-        <div class="text-4xl mb-4">Ã°Å¸Å’Å¸</div>
+        <div class="text-4xl mb-4">🌟</div>
         <p class="text-slate-500 text-sm">No active projects at the moment.</p>
       </div>
 
@@ -56,8 +56,8 @@
             
             <div class="space-y-2">
               <div class="flex justify-between text-[11px] font-bold">
-                <span class="text-blue-600">₦ {{ formatMoney(p.raised_amount) }} raised</span>
-                <span class="text-slate-400">Target: ₦ {{ formatMoney(p.target_amount) }}</span>
+                <span class="text-blue-600"> {{ formatMoney(p.raised_amount) }} raised</span>
+                <span class="text-slate-400">Target:  {{ formatMoney(p.target_amount) }}</span>
               </div>
               <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div 

@@ -11,7 +11,7 @@
       <!-- Group Header Card -->
       <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 relative overflow-hidden text-center">
         <div class="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-4xl mx-auto mb-4">
-          {{ group.icon || 'Ã°Å¸Â¤Â' }}
+          {{ group.icon || '🤝' }}
         </div>
         <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">{{ group.name }}</h2>
         <p class="text-slate-500 text-xs mt-1 font-medium">{{ group.purpose || 'Community savings & investment group' }}</p>
@@ -179,7 +179,7 @@
             class="w-full flex items-center justify-between bg-slate-900 text-white p-5 rounded-3xl active:scale-95 transition-all disabled:opacity-50"
           >
             <div class="flex items-center gap-3">
-              <div class="text-xl">Ã°Å¸â€™Â³</div>
+              <div class="text-xl">💳</div>
               <div class="text-left">
                 <p class="text-xs font-bold uppercase tracking-widest">Pay via Wallet</p>
                 <p class="text-[10px] opacity-60">Balance: ₦ {{ formatMoney(userBalance) }}</p>
@@ -195,7 +195,7 @@
             class="w-full flex items-center justify-between bg-white border-2 border-slate-100 p-5 rounded-3xl active:scale-95 transition-all disabled:opacity-50"
           >
             <div class="flex items-center gap-3">
-              <div class="text-xl">Ã°Å¸ÂÂ¦</div>
+              <div class="text-xl">🏦</div>
               <div class="text-left">
                 <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Pay via {{ gw }}</p>
                 <p class="text-[10px] text-slate-400">Secure online payment</p>

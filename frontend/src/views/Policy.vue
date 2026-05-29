@@ -64,7 +64,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-              Use the services only for lawful purposes and in accordance with coÃ¢â‚¬â€˜operative rules.
+              Use the services only for lawful purposes and in accordance with co‐operative rules.
             </li>
             <li class="flex gap-3 items-start text-sm text-slate-600">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0">
